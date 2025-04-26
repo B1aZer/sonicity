@@ -1,12 +1,12 @@
 {
-  "name": "Sonicity Land #2",
-  "description": "A district focused on renewable energy production",
-  "image": "http://localhost:5173/images/2.png",
+  "name": "Sonicity Land Plot #2",
+  "description": "A strategic land plot in the Sonicity metaverse",
+  "image": "/images/nft2.jpg",
   "attributes": [
-    { "trait_type": "District", "value": 1 },
-    { "trait_type": "Size", "value": 4 },
-    { "trait_type": "Elevation", "value": 5 },
-    { "trait_type": "Resource Type", "value": 2 },
-    { "trait_type": "Resource Level", "value": 8 }
+    { "trait_type": "District", "value": "North" },
+    { "trait_type": "Size", "value": "Medium" },
+    { "trait_type": "Elevation", "value": "Medium" },
+    { "trait_type": "Resource Type", "value": "Water" },
+    { "trait_type": "Resource Level", "value": "Moderate" }
   ]
 } 

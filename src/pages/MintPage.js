@@ -1,5 +1,7 @@
 import { ethers } from 'ethers';
 import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
+import { NFTCollection } from '../components/NFTCollection.js';
+import '../styles/nft-collection.css';
 
 export class MintPage {
     constructor() {
@@ -14,6 +16,7 @@ export class MintPage {
         this.maxSupply = 10000;
         this.mintPrice = "0.01"; // ETH
         this.contractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+        this.nftCollection = new NFTCollection();
         this.render();
     }
 
@@ -22,10 +25,6 @@ export class MintPage {
             <div class="mint-container">
                 <h1>Mint Your Sonicity NFT</h1>
                 <p>Own a piece of virtual land in the Sonicity metaverse!</p>
-                
-                <div class="nft-preview">
-                    <img src="https://place-hold.it/300x300/4caf50/ffffff&text=Sonicity+Land+NFT" alt="Sonicity NFT" />
-                </div>
                 
                 <div class="mint-info">
                     <div class="mint-progress">
@@ -57,6 +56,8 @@ export class MintPage {
                 
                 <div id="mint-status" class="mint-status"></div>
                 
+                <div class="nft-collection-container"></div>
+                
                 <div class="mint-details">
                     <h2>About Sonicity NFTs</h2>
                     <p>Each Sonicity NFT represents virtual land ownership in our metaverse city. NFT holders gain exclusive benefits:</p>
@@ -69,6 +70,10 @@ export class MintPage {
                 </div>
             </div>
         `;
+
+        // Mount NFT collection
+        const collectionContainer = this.element.querySelector('.nft-collection-container');
+        this.nftCollection.mount(collectionContainer);
 
         // Connect wallet button
         const connectWalletBtn = this.element.querySelector('#connect-wallet');

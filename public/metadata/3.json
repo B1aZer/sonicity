@@ -1,12 +1,12 @@
 {
-  "name": "Sonicity Land #3",
-  "description": "A district rich in mineral resources",
-  "image": "http://localhost:5173/images/3.png",
+  "name": "Sonicity Land Plot #3",
+  "description": "A resource-rich land plot in the Sonicity metaverse",
+  "image": "/images/nft3.jpg",
   "attributes": [
-    { "trait_type": "District", "value": 2 },
-    { "trait_type": "Size", "value": 2 },
-    { "trait_type": "Elevation", "value": 7 },
-    { "trait_type": "Resource Type", "value": 3 },
-    { "trait_type": "Resource Level", "value": 7 }
+    { "trait_type": "District", "value": "East" },
+    { "trait_type": "Size", "value": "Small" },
+    { "trait_type": "Elevation", "value": "Low" },
+    { "trait_type": "Resource Type", "value": "Minerals" },
+    { "trait_type": "Resource Level", "value": "High" }
   ]
 } 

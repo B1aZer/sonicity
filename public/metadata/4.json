@@ -1,12 +1,12 @@
 {
-  "name": "Sonicity Land #4",
-  "description": "A district with crystal formations",
-  "image": "http://localhost:5173/images/4.png",
+  "name": "Sonicity Land Plot #4",
+  "description": "A coastal land plot in the Sonicity metaverse",
+  "image": "/images/nft4.jpg",
   "attributes": [
-    { "trait_type": "District", "value": 3 },
-    { "trait_type": "Size", "value": 3 },
-    { "trait_type": "Elevation", "value": 8 },
-    { "trait_type": "Resource Type", "value": 4 },
-    { "trait_type": "Resource Level", "value": 8 }
+    { "trait_type": "District", "value": "South" },
+    { "trait_type": "Size", "value": "Medium" },
+    { "trait_type": "Elevation", "value": "Low" },
+    { "trait_type": "Resource Type", "value": "Water" },
+    { "trait_type": "Resource Level", "value": "Very High" }
   ]
 } 

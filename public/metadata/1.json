@@ -1,12 +1,12 @@
 {
-  "name": "Sonicity Land #1",
-  "description": "A coastal district with abundant water resources",
-  "image": "http://localhost:5173/images/1.png",
+  "name": "Sonicity Land Plot #1",
+  "description": "A premium land plot in the Sonicity metaverse",
+  "image": "/images/nft1.jpg",
   "attributes": [
-    { "trait_type": "District", "value": 0 },
-    { "trait_type": "Size", "value": 3 },
-    { "trait_type": "Elevation", "value": 2 },
-    { "trait_type": "Resource Type", "value": 1 },
-    { "trait_type": "Resource Level", "value": 9 }
+    { "trait_type": "District", "value": "Central" },
+    { "trait_type": "Size", "value": "Large" },
+    { "trait_type": "Elevation", "value": "High" },
+    { "trait_type": "Resource Type", "value": "Energy" },
+    { "trait_type": "Resource Level", "value": "Abundant" }
   ]
 } 

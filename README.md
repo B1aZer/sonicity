@@ -10,6 +10,12 @@ A 3D city building game where players can construct and manage a city with vario
 - Income generation from functional buildings
 - Bulldoze functionality to remove buildings
 
+## Start
+
+nvm use v20
+npx hardhat node
+npm run dev
+
 ## Setup and Installation
 
 1. Clone the repository:
@@ -31,7 +37,7 @@ A 3D city building game where players can construct and manage a city with vario
 4. Open your browser and navigate to:
    ```
    http://localhost:8080
-   ```
+   ```  
 
 ## Game Controls
 
