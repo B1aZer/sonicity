@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
 import { NFTCollection } from '../components/NFTCollection.js';
 import '../styles/nft-collection.css';
+import '../styles/mint-page.css';
 
 export class MintPage {
     constructor() {
@@ -17,6 +18,7 @@ export class MintPage {
         this.mintPrice = "0.01"; // ETH
         this.contractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
         this.nftCollection = new NFTCollection();
+        this.lastMintedTokenId = null;
         this.render();
     }
 
@@ -25,6 +27,13 @@ export class MintPage {
             <div class="mint-container">
                 <h1>Mint Your Sonicity NFT</h1>
                 <p>Own a piece of virtual land in the Sonicity metaverse!</p>
+                
+                <div class="nft-preview">
+                    <div class="preview-placeholder">
+                        <img src="/images/placeholder.jpg" alt="Mint your NFT" />
+                        <p>Mint your NFT to reveal your unique land plot</p>
+                    </div>
+                </div>
                 
                 <div class="mint-info">
                     <div class="mint-progress">
@@ -56,8 +65,6 @@ export class MintPage {
                 
                 <div id="mint-status" class="mint-status"></div>
                 
-                <div class="nft-collection-container"></div>
-                
                 <div class="mint-details">
                     <h2>About Sonicity NFTs</h2>
                     <p>Each Sonicity NFT represents virtual land ownership in our metaverse city. NFT holders gain exclusive benefits:</p>
@@ -70,10 +77,6 @@ export class MintPage {
                 </div>
             </div>
         `;
-
-        // Mount NFT collection
-        const collectionContainer = this.element.querySelector('.nft-collection-container');
-        this.nftCollection.mount(collectionContainer);
 
         // Connect wallet button
         const connectWalletBtn = this.element.querySelector('#connect-wallet');
@@ -210,7 +213,13 @@ export class MintPage {
             
             // Wait for transaction to be mined
             statusElement.textContent = "Transaction sent! Waiting for confirmation...";
-            await tx.wait();
+            const receipt = await tx.wait();
+            
+            // Get the minted token ID
+            this.lastMintedTokenId = this.tokensMinted + 1;
+            
+            // Update the preview with the minted NFT
+            this.updateNFTPreview(this.lastMintedTokenId);
             
             statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
             statusElement.style.color = "green";
@@ -221,6 +230,45 @@ export class MintPage {
             console.error("Minting error:", error);
             statusElement.textContent = "Failed to mint: " + (error.message || "Unknown error");
             statusElement.style.color = "red";
+        }
+    }
+
+    async updateNFTPreview(tokenId) {
+        const previewContainer = this.element.querySelector('.nft-preview');
+        const nft = this.nftCollection.nfts[tokenId - 1]; // Arrays are 0-based
+        
+        if (nft) {
+            previewContainer.innerHTML = `
+                <div class="minted-nft">
+                    <img src="${nft.image}" alt="${nft.name}" />
+                    <div class="nft-details">
+                        <h3>${nft.name}</h3>
+                        <p>${nft.description}</p>
+                        <div class="nft-attributes">
+                            <div class="attribute">
+                                <span class="label">District:</span>
+                                <span class="value">${nft.attributes.district}</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Size:</span>
+                                <span class="value">${nft.attributes.size}</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Elevation:</span>
+                                <span class="value">${nft.attributes.elevation}</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Resource:</span>
+                                <span class="value">${nft.attributes.resourceType}</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Resource Level:</span>
+                                <span class="value">${nft.attributes.resourceLevel}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
     }
 

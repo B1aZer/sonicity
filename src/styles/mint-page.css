@@ -1,0 +1,237 @@
+.mint-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: #fff;
+}
+
+.mint-container {
+    text-align: center;
+}
+
+.nft-preview {
+    margin: 2rem auto;
+    max-width: 600px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.preview-placeholder {
+    padding: 2rem;
+}
+
+.preview-placeholder img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.preview-placeholder p {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+}
+
+.minted-nft {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+}
+
+.minted-nft img {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.nft-details {
+    text-align: left;
+    width: 100%;
+}
+
+.nft-details h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.nft-details p {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0 0 1rem 0;
+}
+
+.nft-attributes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+.attribute {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.attribute .label {
+    display: block;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.attribute .value {
+    display: block;
+    font-size: 0.9rem;
+    color: #fff;
+    font-weight: 500;
+}
+
+.mint-info {
+    margin: 2rem 0;
+}
+
+.mint-progress {
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #4caf50;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.mint-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.mint-amount {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.amount-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.amount-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#mint-amount {
+    width: 60px;
+    height: 40px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.mint-price {
+    font-size: 1.2rem;
+    color: #4caf50;
+}
+
+.mint-actions {
+    margin: 2rem 0;
+}
+
+.connect-button, .mint-button {
+    padding: 0.8rem 2rem;
+    border-radius: 25px;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 0 0.5rem;
+}
+
+.connect-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.connect-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.mint-button {
+    background: #4caf50;
+    color: #fff;
+}
+
+.mint-button:hover {
+    background: #45a049;
+}
+
+.mint-button:disabled {
+    background: rgba(76, 175, 80, 0.5);
+    cursor: not-allowed;
+}
+
+.mint-status {
+    margin: 1rem 0;
+    font-size: 1.1rem;
+}
+
+.mint-details {
+    margin-top: 3rem;
+    text-align: left;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.mint-details h2 {
+    margin-bottom: 1rem;
+}
+
+.mint-details ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.mint-details li {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.mint-details li:before {
+    content: "•";
+    color: #4caf50;
+    position: absolute;
+    left: 0.5rem;
+} 
