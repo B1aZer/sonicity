@@ -31,7 +31,6 @@ export class MintPage {
                 <div class="nft-preview">
                     <div class="preview-placeholder">
                         <img src="/images/placeholder.jpg" alt="Mint your NFT" />
-                        <p>Mint your NFT to reveal your unique land plot</p>
                     </div>
                 </div>
                 
@@ -64,17 +63,6 @@ export class MintPage {
                 </div>
                 
                 <div id="mint-status" class="mint-status"></div>
-                
-                <div class="mint-details">
-                    <h2>About Sonicity NFTs</h2>
-                    <p>Each Sonicity NFT represents virtual land ownership in our metaverse city. NFT holders gain exclusive benefits:</p>
-                    <ul>
-                        <li>Ownership of a unique plot in Sonicity</li>
-                        <li>Revenue sharing from in-game activities</li>
-                        <li>Governance rights over city development</li>
-                        <li>Early access to new features and expansions</li>
-                    </ul>
-                </div>
             </div>
         `;
 
