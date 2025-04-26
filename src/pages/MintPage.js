@@ -26,7 +26,6 @@ export class MintPage {
         this.element.innerHTML = `
             <div class="mint-container">
                 <h1>Mint Your Sonicity NFT</h1>
-                <p>Own a piece of virtual land in the Sonicity metaverse!</p>
                 
                 <div class="nft-preview">
                     <div class="preview-placeholder">
