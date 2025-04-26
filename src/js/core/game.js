@@ -32,7 +32,7 @@ export class Game {
         this.resourceManager = new ResourceManager();
         this.assetLoader = new AssetLoader(); // Create the asset loader instance
         // Pass assetLoader to BuildingManager constructor
-        this.buildingManager = new BuildingManager(this.scene, this.resourceManager, this.gridCellSize, this.assetLoader);
+        this.buildingManager = new BuildingManager(null, this.resourceManager, 0, this.assetLoader);
         this.money = 5000; // Starting money
         // Pass the selection handler and restart handler methods to the UI constructor
         this.ui = new UI(
@@ -40,10 +40,11 @@ export class Game {
             this.restartGame.bind(this) // Pass the restart method
         );
         this.inputHandler = new InputHandler(this);
-        this.init();
     }
 
     async init() {
+        console.log("Game: Starting initialization");
+        
         // --- Loading Screen Setup ---
         const loadingScreen = document.createElement('div');
         loadingScreen.id = 'loading-screen';
@@ -60,20 +61,20 @@ export class Game {
         loadingScreen.style.fontSize = '24px';
         loadingScreen.style.fontFamily = 'Arial, sans-serif';
         loadingScreen.textContent = 'Loading Assets...';
-        this.renderDiv.appendChild(loadingScreen); // Add to renderDiv
+        this.renderDiv.appendChild(loadingScreen);
         
         try {
-            // Start loading assets and wait for it to finish before proceeding
-            // This ensures models are available when the game tries to use them.
-            await this.assetLoader.loadAssets(); // Await the completion of asset loading
+            console.log("Game: Loading assets");
+            await this.assetLoader.loadAssets();
             
-            // --- Loading Complete ---
             if (loadingScreen.parentNode === this.renderDiv) {
-                this.renderDiv.removeChild(loadingScreen); // Remove loading screen
+                this.renderDiv.removeChild(loadingScreen);
             }
             
-            // Destructure grid parameters from setupScene
+            console.log("Game: Setting up scene");
             const { scene, camera, renderer, controls, groundPlane, gridSize, gridCellSize } = setupScene(this.renderDiv);
+            
+            // Store scene components
             this.scene = scene;
             this.camera = camera;
             this.renderer = renderer;
@@ -83,30 +84,34 @@ export class Game {
             this.gridCellSize = gridCellSize;
             
             // Initialize the logical grid
-            this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null)); // null = unoccupied, store building type string when occupied
+            this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
             
-            // Now that scene exists, pass it AND gridCellSize AND assetLoader to buildingManager
-            this.buildingManager.setScene(this.scene, this.gridCellSize, this.assetLoader); // Update setScene call if needed or rely on constructor
+            // Update building manager with scene components
+            this.buildingManager.setScene(this.scene, this.gridCellSize, this.assetLoader);
             
-            // Show the UI now that everything is loaded
+            // Set up input handlers AFTER renderer is available
+            console.log("Game: Setting up input handlers");
+            this.inputHandler.setupEventListeners();
+            
+            // Show UI and update initial state
+            console.log("Game: Setting up UI");
             this.ui.show();
-            
-            // Initial UI update
             this.updateUI();
             
-            // Set up window resize handler with bound function
+            // Set up window resize handler
             this.boundOnWindowResize = this.onWindowResize.bind(this);
             window.addEventListener('resize', this.boundOnWindowResize);
             
-            // Now that all async setup is done, start the animation loop
+            // Start the game loop
+            console.log("Game: Starting game loop");
             this.start();
+            
+            console.log("Game: Initialization complete");
         } catch (error) {
-            console.error("Error during game initialization:", error);
-            // Make sure to remove the loading screen even if there's an error
+            console.error("Game: Initialization error:", error);
             if (loadingScreen.parentNode === this.renderDiv) {
                 this.renderDiv.removeChild(loadingScreen);
             }
-            // Show an error message to the user
             const errorMessage = document.createElement('div');
             errorMessage.style.position = 'absolute';
             errorMessage.style.top = '50%';

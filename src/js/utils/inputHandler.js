@@ -4,37 +4,49 @@ import { BUILDING_TYPES_KEYS } from './constants.js';
 export class InputHandler {
     constructor(game) {
         this.game = game;
-        this.setupEventListeners();
+        this.boundOnClick = this.onClick.bind(this);
     }
 
     setupEventListeners() {
-        window.addEventListener('click', (event) => this.onClick(event));
-        // window.addEventListener('keydown', (event) => this.onKeyDown(event)); // Remove keydown listener
+        // Remove any existing listeners first
+        this.removeEventListeners();
+        
+        // Add click listener to the renderer's DOM element
+        if (this.game.renderer && this.game.renderer.domElement) {
+            this.game.renderer.domElement.addEventListener('click', this.boundOnClick);
+            console.log("InputHandler: Click listener added to renderer");
+        } else {
+            console.error("InputHandler: Renderer or DOM element not available");
+        }
+    }
+
+    removeEventListeners() {
+        if (this.game.renderer && this.game.renderer.domElement) {
+            this.game.renderer.domElement.removeEventListener('click', this.boundOnClick);
+            console.log("InputHandler: Click listener removed");
+        }
     }
 
     onClick(event) {
-        // Prevent placement if clicking on UI elements (if any were added)
+        console.log("InputHandler: Click detected");
+        
+        // Prevent placement if clicking on UI elements
         if (event.target !== this.game.renderer.domElement) {
-            // A simplistic check; more robust UI handling might be needed
-            // if complex DOM UI is overlaid.
-             // Check if target or parent is UI element
-             let targetElement = event.target;
-            // Check if the click originated within either UI container
-             while (targetElement != null) {
-                 if (targetElement.id === 'ui-container' || targetElement.id === 'building-selector-container') {
-                     console.log("Clicked on UI bar, ignoring placement.");
-                     return;
-                 }
-                 targetElement = targetElement.parentElement;
-             }
+            let targetElement = event.target;
+            while (targetElement != null) {
+                if (targetElement.id === 'ui-container' || targetElement.id === 'building-selector-container') {
+                    console.log("InputHandler: Clicked on UI element, ignoring placement");
+                    return;
+                }
+                targetElement = targetElement.parentElement;
+            }
         }
 
+        // Call the game's placement handler
         this.game.handlePlacement(event);
     }
-    // onKeyDown(event) { ... } // Removed this method entirely
+
     dispose() {
-        // Remove event listeners if the game needs cleanup
-        window.removeEventListener('click', this.onClick);
-        // window.removeEventListener('keydown', this.onKeyDown); // Removed listener cleanup
+        this.removeEventListeners();
     }
 }

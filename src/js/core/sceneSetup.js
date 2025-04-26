@@ -48,6 +48,11 @@ export function setupScene(renderDiv) {
     const groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
     groundPlane.rotation.x = -Math.PI / 2; // Rotate flat
     groundPlane.receiveShadow = true;
+    groundPlane.name = "groundPlane"; // Add a name for easier identification
+    groundPlane.userData.isGround = true; // Add a flag to identify this as the ground
+    groundPlane.position.y = 0; // Ensure it's exactly at y=0
+    groundPlane.updateMatrix(); // Update the matrix to ensure transformations are applied
+    groundPlane.updateMatrixWorld(true); // Force update of the world matrix
     scene.add(groundPlane);
     // Grid Helper
     const gridSize = 8; // 8x8 grid
@@ -65,8 +70,16 @@ export function setupScene(renderDiv) {
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = false; // Pan parallel to ground
     controls.maxPolarAngle = Math.PI / 2 - 0.05; // Don't look below ground
-    controls.minDistance = 10;
+    controls.minDistance = 5; // Allow closer zoom
     controls.maxDistance = 100;
+    controls.enableZoom = true; // Explicitly enable zoom
+    controls.zoomSpeed = 1.0; // Adjust zoom speed
+    controls.enablePan = true; // Enable panning
+    controls.panSpeed = 1.0; // Adjust pan speed
+    controls.enableRotate = true; // Enable rotation
+    controls.rotateSpeed = 1.0; // Adjust rotation speed
+    controls.target.set(0, 0, 0); // Set the target point to look at
+    controls.update(); // Initial update
 
     // Handle window resize
     window.addEventListener('resize', () => {
