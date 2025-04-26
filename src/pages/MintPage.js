@@ -1,4 +1,5 @@
 import { ethers } from 'ethers';
+import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
 
 export class MintPage {
     constructor() {
@@ -8,9 +9,11 @@ export class MintPage {
         this.account = null;
         this.provider = null;
         this.signer = null;
+        this.contract = null;
         this.tokensMinted = 0;
         this.maxSupply = 10000;
         this.mintPrice = "0.01"; // ETH
+        this.contractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
         this.render();
     }
 
@@ -134,6 +137,13 @@ export class MintPage {
                 this.account = accounts[0];
                 this.signer = this.provider.getSigner();
                 
+                // Initialize contract
+                this.contract = new ethers.Contract(
+                    this.contractAddress,
+                    SonicityNFTABI.abi,
+                    this.signer
+                );
+                
                 // Format the account display
                 const shortenedAccount = this.account.slice(0, 6) + '...' + this.account.slice(-4);
                 connectButton.textContent = shortenedAccount;
@@ -145,8 +155,8 @@ export class MintPage {
                 statusElement.textContent = "Connected!";
                 statusElement.style.color = "green";
                 
-                // Simulate getting the current mint count
-                this.simulateGetMintCount();
+                // Get the current mint count
+                await this.getMintCount();
             } else {
                 statusElement.textContent = "MetaMask not detected! Please install MetaMask.";
                 statusElement.style.color = "red";
@@ -158,17 +168,21 @@ export class MintPage {
         }
     }
 
-    simulateGetMintCount() {
-        // In a real implementation, we would fetch this from the blockchain
-        // For this demo, we'll just simulate a random number
-        this.tokensMinted = Math.floor(Math.random() * 3000);
-        
-        // Update UI
-        const tokensMintedElement = this.element.querySelector('#tokens-minted');
-        const progressFill = this.element.querySelector('.progress-fill');
-        
-        tokensMintedElement.textContent = this.tokensMinted;
-        progressFill.style.width = `${(this.tokensMinted / this.maxSupply) * 100}%`;
+    async getMintCount() {
+        try {
+            // Get total supply from contract
+            const totalSupply = await this.contract.totalSupply();
+            this.tokensMinted = totalSupply.toNumber();
+            
+            // Update UI
+            const tokensMintedElement = this.element.querySelector('#tokens-minted');
+            const progressFill = this.element.querySelector('.progress-fill');
+            
+            tokensMintedElement.textContent = this.tokensMinted;
+            progressFill.style.width = `${(this.tokensMinted / this.maxSupply) * 100}%`;
+        } catch (error) {
+            console.error("Error getting mint count:", error);
+        }
     }
 
     async mintNFT() {
@@ -182,35 +196,27 @@ export class MintPage {
             statusElement.textContent = `Minting ${amount} NFT(s)...`;
             statusElement.style.color = "blue";
             
-            // In a real implementation, we would call the contract here
-            // For this demo, we'll just simulate minting
-            await this.simulateMint(amount);
+            // Calculate total price in wei
+            const pricePerToken = ethers.utils.parseEther(this.mintPrice);
+            const totalPrice = pricePerToken.mul(amount);
+            
+            // Call the mint function on the contract
+            const tx = await this.contract.mint(amount, { value: totalPrice });
+            
+            // Wait for transaction to be mined
+            statusElement.textContent = "Transaction sent! Waiting for confirmation...";
+            await tx.wait();
             
             statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
             statusElement.style.color = "green";
             
             // Update minted count
-            this.tokensMinted += amount;
-            const tokensMintedElement = this.element.querySelector('#tokens-minted');
-            const progressFill = this.element.querySelector('.progress-fill');
-            
-            tokensMintedElement.textContent = this.tokensMinted;
-            progressFill.style.width = `${(this.tokensMinted / this.maxSupply) * 100}%`;
+            await this.getMintCount();
         } catch (error) {
             console.error("Minting error:", error);
             statusElement.textContent = "Failed to mint: " + (error.message || "Unknown error");
             statusElement.style.color = "red";
         }
-    }
-
-    simulateMint(amount) {
-        // Simulate the time it takes to mint
-        return new Promise((resolve) => {
-            // Random timeout between 1-3 seconds to simulate blockchain transaction
-            setTimeout(() => {
-                resolve();
-            }, 1000 + Math.random() * 2000);
-        });
     }
 
     mount(container) {
