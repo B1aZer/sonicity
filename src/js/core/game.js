@@ -148,8 +148,13 @@ export class Game {
     // Called by InputHandler on click
     handlePlacement(event) {
         console.log(`Game: handlePlacement - Started. Current selectedBuildingType: ${this.selectedBuildingType}, Mode: ${this.currentMode}`); // Log at start
-        this.pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
-        this.pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        
+        // Get the renderer's DOM element dimensions and position
+        const rect = this.renderer.domElement.getBoundingClientRect();
+        
+        // Calculate mouse position relative to the renderer element
+        this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
         this.raycaster.setFromCamera(this.pointer, this.camera);
         const intersects = this.raycaster.intersectObject(this.groundPlane);
