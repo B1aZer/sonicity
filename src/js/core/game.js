@@ -94,6 +94,10 @@ export class Game {
             // Initial UI update
             this.updateUI();
             
+            // Set up window resize handler with bound function
+            this.boundOnWindowResize = this.onWindowResize.bind(this);
+            window.addEventListener('resize', this.boundOnWindowResize);
+            
             // Now that all async setup is done, start the animation loop
             this.start();
         } catch (error) {
@@ -120,7 +124,7 @@ export class Game {
     }
 
     animate() {
-        requestAnimationFrame(() => this.animate());
+        this.animationFrameId = requestAnimationFrame(() => this.animate());
 
         const deltaTime = this.clock.getDelta();
         // Safeguard: Only update controls if they exist (in case init failed somehow)
@@ -384,5 +388,73 @@ export class Game {
         // 7. Update UI to reflect reset state
         this.updateUI();
         console.log("Game: restartGame() method finished successfully."); // Log 6: Method end
+    }
+    
+    // Add dispose method to clean up resources when switching pages
+    dispose() {
+        console.log("Game: dispose() method called");
+        
+        // Stop animation loop
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+        }
+        
+        // Remove event listeners
+        if (this.inputHandler) {
+            this.inputHandler.dispose();
+        }
+        
+        // Remove window resize listener
+        if (this.boundOnWindowResize) {
+            window.removeEventListener('resize', this.boundOnWindowResize);
+        }
+        
+        // Clean up buildings
+        if (this.buildingManager) {
+            const buildingsToRemove = [...this.buildingManager.buildings];
+            buildingsToRemove.forEach(building => {
+                this.buildingManager.removeBuilding(building);
+            });
+        }
+        
+        // Dispose of Three.js resources
+        if (this.scene) {
+            this.scene.traverse((object) => {
+                if (object.geometry) {
+                    object.geometry.dispose();
+                }
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach(material => material.dispose());
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+            });
+        }
+        
+        // Remove renderer from DOM
+        if (this.renderer && this.renderer.domElement && this.renderer.domElement.parentNode) {
+            this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+        }
+        
+        // Dispose of renderer
+        if (this.renderer) {
+            this.renderer.dispose();
+        }
+        
+        // Clear references
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
+        this.groundPlane = null;
+        this.buildingManager = null;
+        this.resourceManager = null;
+        this.ui = null;
+        this.inputHandler = null;
+        this.boundOnWindowResize = null;
+        
+        console.log("Game: dispose() method completed");
     }
 }
