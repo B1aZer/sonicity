@@ -63,4 +63,4 @@ export class ResourceManager {
         this.totalDemand = { electricity: 0, water: 0 };
         console.log("ResourceManager reset.");
     }
-}
+} 

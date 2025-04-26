@@ -1,4 +1,4 @@
-import { BUILDING_TYPES_KEYS } from 'constants';
+import { BUILDING_TYPES_KEYS } from './constants.js';
 
 export class InputHandler {
     constructor(game) {

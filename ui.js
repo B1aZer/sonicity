@@ -1,4 +1,4 @@
-import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from 'constants'; // Moved import to top
+import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from './constants.js'; // Moved import to top
 export class UI { // Keep only one class definition
     constructor(onBuildingSelectCallback, onRestartRequestCallback) { // Add callbacks for selection & restart
         this.uiContainer = null;

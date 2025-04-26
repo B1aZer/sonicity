@@ -1,0 +1,17 @@
+{
+  "name": "sonicity",
+  "version": "1.0.0",
+  "description": "A 3D city building game",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "npx http-server -c-1",
+    "dev": "npx http-server -c-1"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+} 

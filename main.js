@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Game } from 'game';
+import { Game } from './game.js';
 
 // Get the render target
 const renderDiv = document.getElementById('renderDiv');
