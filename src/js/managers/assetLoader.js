@@ -6,10 +6,10 @@ import JSZip from 'https://esm.sh/jszip@3.10.1';
 // Asset mapping using the URLs provided in the environment
 const assetMap = {
     // Assuming the env variable names map directly to BUILDING_TYPES keys
-    HOUSE: { url: 'https://play.rosebud.ai/assets/Home.zip?UfNP' }, // Updated URL from env
-    SHOP: { url: 'https://play.rosebud.ai/assets/Shop.zip?S4VA' },
-    POWER_PLANT: { url: 'https://play.rosebud.ai/assets/PowerPlant.zip?Np2h' },
-    WATER_TOWER: { url: 'https://play.rosebud.ai/assets/WaterPump.zip?kUoK' } // Double-check this URL matches the WaterPump asset
+    HOUSE: { url: '/src/assets/Home.zip' }, // Updated URL from env
+    SHOP: { url: '/src/assets/Shop.zip' },
+    POWER_PLANT: { url: '/src/assets/PowerPlant.zip' },
+    WATER_TOWER: { url: '/src/assets/WaterPump.zip' } // Double-check this URL matches the WaterPump asset
 };
 
 export class AssetLoader {
