@@ -37,6 +37,8 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     // Constructor - initialize NFT contract
     constructor() ERC721("Sonicity Land NFT", "SONIC") Ownable(msg.sender) {
         baseURI = "https://api.sonicity.game/metadata/";
+        // TODO: ENABLE BY DEFAULT FOR TESTS
+        mintIsActive = true;  // Enable minting by default
     }
 
     // Mint function - allows users to mint NFTs
