@@ -3,66 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonicity - City Building Game</title>
+    <title>Sonicity - 3D City Building Game</title>
     <link rel="stylesheet" href="/src/styles/main.css">
-    <link rel="stylesheet" href="/src/styles/layout.css">
 </head>
 <body>
-    <div id="app">
-        <header id="main-header">
-            <div class="logo">
-                <h1>Sonicity</h1>
-            </div>
-            <nav>
-                <ul>
-                    <li><a href="#game" class="active">Game</a></li>
-                    <li><a href="#mint">Mint NFT</a></li>
-                </ul>
-            </nav>
-            <div class="wallet-info">
-                <span id="wallet-status">Checking wallet...</span>
-                <button id="connect-wallet" disabled>Checking...</button>
-            </div>
-        </header>
-        
-        <div id="content-area">
-            <!-- Game Page -->
-            <div id="game-page" class="page active">
-                <div id="renderDiv"></div>
-                <div id="loading-screen">
-                    <h2>Loading Sonicity...</h2>
-                    <p>Please wait while we prepare your city building experience.</p>
-                </div>
-                <div id="ui-container">
-                    <div id="building-selector-container">
-                        <button class="game-button" data-building="house">House</button>
-                        <button class="game-button" data-building="shop">Shop</button>
-                        <button class="game-button" data-building="powerPlant">Power Plant</button>
-                        <button class="game-button" data-building="waterTower">Water Tower</button>
-                        <button id="bulldoze-button" class="game-button">Bulldoze</button>
-                    </div>
-                    <button id="restart-button" class="game-button">Restart Game</button>
-                </div>
-            </div>
-            
-            <!-- Mint Page -->
-            <div id="mint-page" class="page">
-                <div class="mint-container">
-                    <h2>Mint Your City NFT</h2>
-                    <p>Connect your wallet to mint an NFT of your city.</p>
-                    <div class="mint-preview">
-                        <div class="preview-placeholder">
-                            <p>City preview will appear here</p>
-                        </div>
-                    </div>
-                    <button id="mint-button" class="mint-button" disabled>Mint NFT</button>
-                </div>
-            </div>
+    <div id="renderDiv"></div>
+    
+    <!-- UI Container -->
+    <div id="ui-container">
+        <div id="resource-display">
+            Electricity: <span id="electricity-balance" style="color: lightgreen; font-weight: bold;">0</span> (S: <span id="electricity-supply">0</span> / D: <span id="electricity-demand">0</span>)<br>
+            Water: <span id="water-balance" style="color: lightblue; font-weight: bold;">0</span> (S: <span id="water-supply">0</span> / D: <span id="water-demand">0</span>)
+        </div>
+        <div id="money-display">
+            Money: <span id="money-amount" style="color: #FFD700; font-weight: bold;">$5000</span>
         </div>
     </div>
     
-    <!-- Scripts -->
-    <script type="module" src="/src/js/app.js"></script>
+    <!-- Building Selector Container -->
+    <div id="building-selector-container">
+        <!-- Building buttons will be added dynamically by JavaScript -->
+    </div>
+    
     <script type="module" src="/src/js/core/main.js"></script>
 </body>
 </html> 

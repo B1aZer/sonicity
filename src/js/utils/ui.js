@@ -1,143 +1,201 @@
-import { BUILDING_TYPES } from './constants.js';
+import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from './constants.js';
 
 export class UI {
-    constructor(onBuildingSelect, onRestart) {
-        this.onBuildingSelect = onBuildingSelect;
-        this.onRestart = onRestart;
+    constructor(onBuildingSelectCallback, onRestartRequestCallback) {
+        // Store callbacks
+        this.onBuildingSelect = onBuildingSelectCallback;
+        this.onRestartRequest = onRestartRequestCallback;
+        this.currentlySelectedTypeKey = null;
         
-        // Get UI elements
+        // Get references to HTML elements
         this.uiContainer = document.getElementById('ui-container');
+        this.resourceDisplay = document.getElementById('resource-display');
+        this.moneyDisplay = document.getElementById('money-display');
         this.buildingSelectorContainer = document.getElementById('building-selector-container');
-        this.restartButton = document.getElementById('restart-button');
-        this.bulldozeButton = document.getElementById('bulldoze-button');
         
-        // Set up event listeners
-        this.setupEventListeners();
+        // Store buttons for state management
+        this.buildingButtons = {};
         
-        // Initialize resource display
-        this.initializeResourceDisplay();
+        // Initialize UI
+        this.initUI();
     }
-    
-    setupEventListeners() {
-        // Set up building buttons
-        const buildingButtons = document.querySelectorAll('.game-button[data-building]');
-        buildingButtons.forEach(button => {
+
+    initUI() {
+        // Hide UI initially
+        this.hide();
+        
+        // Create building buttons
+        BUILDING_TYPES_KEYS.forEach(typeKey => {
+            const buildingData = BUILDING_TYPES[typeKey];
+            const button = document.createElement('button');
+            button.textContent = `${buildingData.name} ($${buildingData.cost})`;
+            button.classList.add('game-button');
+            button.dataset.type = typeKey;
+            
             button.addEventListener('click', () => {
-                // Remove active class from all buttons
-                buildingButtons.forEach(btn => btn.classList.remove('active'));
-                
-                // Add active class to clicked button
-                button.classList.add('active');
-                
-                // Get the building type
-                const buildingType = button.getAttribute('data-building');
-                
-                // Call the callback
                 if (this.onBuildingSelect) {
-                    this.onBuildingSelect(buildingType);
+                    this.onBuildingSelect(typeKey);
                 }
             });
+            
+            this.buildingSelectorContainer.appendChild(button);
+            this.buildingButtons[typeKey] = button;
         });
         
-        // Set up bulldoze button
-        if (this.bulldozeButton) {
-            this.bulldozeButton.addEventListener('click', () => {
-                // Toggle active class
-                this.bulldozeButton.classList.toggle('active');
-                
-                // Remove active class from all building buttons
-                buildingButtons.forEach(btn => btn.classList.remove('active'));
-                
-                // Call the callback with null (bulldoze mode)
-                if (this.onBuildingSelect) {
-                    this.onBuildingSelect(this.bulldozeButton.classList.contains('active') ? null : 'house');
-                }
-            });
-        }
+        // Add Bulldoze button
+        const bulldozeButton = document.createElement('button');
+        bulldozeButton.textContent = 'Bulldoze';
+        bulldozeButton.id = 'bulldoze-button';
+        bulldozeButton.classList.add('game-button');
+        bulldozeButton.dataset.type = 'BULLDOZE';
         
-        // Set up restart button
-        if (this.restartButton) {
-            this.restartButton.addEventListener('click', () => {
-                if (this.onRestart) {
-                    this.onRestart();
-                }
-            });
-        }
-    }
-    
-    initializeResourceDisplay() {
-        // Create resource display elements if they don't exist
-        if (!document.getElementById('resource-display')) {
-            const resourceDisplay = document.createElement('div');
-            resourceDisplay.id = 'resource-display';
-            resourceDisplay.className = 'resource-display';
-            
-            // Create money display
-            const moneyDisplay = document.createElement('div');
-            moneyDisplay.id = 'money-display';
-            moneyDisplay.className = 'resource-item';
-            moneyDisplay.innerHTML = '<span class="resource-label">Money:</span> <span class="resource-value">$1000</span>';
-            
-            // Create electricity display
-            const electricityDisplay = document.createElement('div');
-            electricityDisplay.id = 'electricity-display';
-            electricityDisplay.className = 'resource-item';
-            electricityDisplay.innerHTML = '<span class="resource-label">Electricity:</span> <span class="resource-value">0</span>';
-            
-            // Create water display
-            const waterDisplay = document.createElement('div');
-            waterDisplay.id = 'water-display';
-            waterDisplay.className = 'resource-item';
-            waterDisplay.innerHTML = '<span class="resource-label">Water:</span> <span class="resource-value">0</span>';
-            
-            // Add displays to resource display
-            resourceDisplay.appendChild(moneyDisplay);
-            resourceDisplay.appendChild(electricityDisplay);
-            resourceDisplay.appendChild(waterDisplay);
-            
-            // Add resource display to UI container
-            this.uiContainer.appendChild(resourceDisplay);
-        }
-    }
-    
-    updateResources(resources) {
-        // Update money display
-        const moneyDisplay = document.getElementById('money-display');
-        if (moneyDisplay) {
-            const moneyValue = moneyDisplay.querySelector('.resource-value');
-            if (moneyValue) {
-                moneyValue.textContent = `$${resources.money}`;
+        bulldozeButton.addEventListener('click', () => {
+            if (this.onBuildingSelect) {
+                this.onBuildingSelect('BULLDOZE');
             }
+        });
+        
+        this.buildingSelectorContainer.appendChild(bulldozeButton);
+        this.buildingButtons['BULLDOZE'] = bulldozeButton;
+        
+        // Add Restart button
+        const restartButton = document.createElement('button');
+        restartButton.textContent = 'Restart';
+        restartButton.id = 'restart-button';
+        restartButton.classList.add('game-button');
+        restartButton.dataset.type = 'RESTART';
+        
+        restartButton.addEventListener('click', (event) => {
+            console.log("UI: Restart button clicked.");
+            event.stopPropagation();
+            if (this.onRestartRequest) {
+                console.log("UI: onRestartRequest callback exists. Calling immediately...");
+                this.onRestartRequest();
+            }
+        });
+        
+        this.buildingSelectorContainer.appendChild(restartButton);
+        this.buildingButtons['RESTART'] = restartButton;
+        
+        // Initial update
+        this.updateResourceDisplay(5000, { balance: 0, supply: 0, demand: 0 }, { balance: 0, supply: 0, demand: 0 });
+    }
+    
+    updateResourceDisplay(money, electricity, water) {
+        // Update money display
+        const moneyAmount = document.getElementById('money-amount');
+        if (moneyAmount) {
+            moneyAmount.textContent = `$${money}`;
         }
         
         // Update electricity display
-        const electricityDisplay = document.getElementById('electricity-display');
-        if (electricityDisplay) {
-            const electricityValue = electricityDisplay.querySelector('.resource-value');
-            if (electricityValue) {
-                electricityValue.textContent = resources.electricity;
-            }
+        const electricityBalance = document.getElementById('electricity-balance');
+        const electricitySupply = document.getElementById('electricity-supply');
+        const electricityDemand = document.getElementById('electricity-demand');
+        
+        if (electricityBalance && electricitySupply && electricityDemand) {
+            const powerBalance = electricity.balance;
+            const powerColor = powerBalance >= 0 ? 'lightgreen' : 'lightcoral';
+            
+            electricityBalance.textContent = powerBalance;
+            electricityBalance.style.color = powerColor;
+            electricitySupply.textContent = electricity.supply;
+            electricityDemand.textContent = electricity.demand;
         }
         
         // Update water display
-        const waterDisplay = document.getElementById('water-display');
-        if (waterDisplay) {
-            const waterValue = waterDisplay.querySelector('.resource-value');
-            if (waterValue) {
-                waterValue.textContent = resources.water;
+        const waterBalance = document.getElementById('water-balance');
+        const waterSupply = document.getElementById('water-supply');
+        const waterDemand = document.getElementById('water-demand');
+        
+        if (waterBalance && waterSupply && waterDemand) {
+            const waterBalanceValue = water.balance;
+            const waterColor = waterBalanceValue >= 0 ? 'lightblue' : 'lightcoral';
+            
+            waterBalance.textContent = waterBalanceValue;
+            waterBalance.style.color = waterColor;
+            waterSupply.textContent = water.supply;
+            waterDemand.textContent = water.demand;
+        }
+    }
+    
+    updateSelectionVisuals(selectedTypeKey, currentMoney) {
+        // If money is -1, it's just a style refresh request, don't overwrite selection
+        if (currentMoney !== -1) {
+            this.currentlySelectedTypeKey = selectedTypeKey;
+        }
+        
+        // Use the stored currentlySelectedTypeKey for styling
+        const activeSelection = this.currentlySelectedTypeKey;
+        
+        for (const typeKey in this.buildingButtons) {
+            const button = this.buildingButtons[typeKey];
+            if (!button) continue;
+            
+            // Handle Bulldoze button styling separately
+            if (typeKey === 'BULLDOZE') {
+                if (activeSelection === 'BULLDOZE') {
+                    button.classList.add('selected');
+                } else {
+                    button.classList.remove('selected');
+                }
+                button.disabled = false;
+                continue;
+            } else if (typeKey === 'RESTART') {
+                // Restart button styling is handled by CSS
+                button.disabled = false;
+                continue;
+            }
+            
+            // Handle building buttons
+            const buildingData = BUILDING_TYPES[typeKey];
+            if (!buildingData) {
+                console.warn(`Building data not found for key: ${typeKey}`);
+                continue;
+            }
+            
+            const cost = buildingData.cost || 0;
+            const canAfford = (currentMoney === -1) ? true : currentMoney >= cost;
+            
+            // Reset base styles
+            button.disabled = false;
+            
+            // Style based on affordability
+            if (currentMoney !== -1 && !canAfford) {
+                button.classList.add('unaffordable');
+                button.disabled = true;
+            } else {
+                button.classList.remove('unaffordable');
+                
+                if (typeKey === activeSelection) {
+                    button.classList.add('selected');
+                } else {
+                    button.classList.remove('selected');
+                }
             }
         }
     }
     
     show() {
-        if (this.uiContainer) {
-            this.uiContainer.style.display = 'block';
-        }
+        if (this.uiContainer) this.uiContainer.style.display = 'block';
+        if (this.buildingSelectorContainer) this.buildingSelectorContainer.style.display = 'flex';
     }
     
     hide() {
-        if (this.uiContainer) {
-            this.uiContainer.style.display = 'none';
+        if (this.uiContainer) this.uiContainer.style.display = 'none';
+        if (this.buildingSelectorContainer) this.buildingSelectorContainer.style.display = 'none';
+    }
+    
+    destroy() {
+        // No need to remove elements as they're now in the HTML
+        // Just clear event listeners if needed
+        for (const typeKey in this.buildingButtons) {
+            const button = this.buildingButtons[typeKey];
+            if (button) {
+                // Clone and replace to remove event listeners
+                const newButton = button.cloneNode(true);
+                button.parentNode.replaceChild(newButton, button);
+            }
         }
     }
-} 
+}
