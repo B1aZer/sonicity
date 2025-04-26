@@ -1,0 +1,12 @@
+{
+  "name": "Sonicity Land #1",
+  "description": "A coastal district with abundant water resources",
+  "image": "http://localhost:5173/images/1.png",
+  "attributes": [
+    { "trait_type": "District", "value": 0 },
+    { "trait_type": "Size", "value": 3 },
+    { "trait_type": "Elevation", "value": 2 },
+    { "trait_type": "Resource Type", "value": 1 },
+    { "trait_type": "Resource Level", "value": 9 }
+  ]
+} 

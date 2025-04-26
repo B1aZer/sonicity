@@ -68,6 +68,10 @@ A 3D city building game where players can construct and manage a city with vario
 - 3D models from various sources (see Concept.md for details)
 - Inspired by city-building games like SimCity
 
+## Art
+
+- https://app.leonardo.ai/image-generation
+
 ## conecpt #2
 
 - each nft collection receives whiteelist spot and minimal gold. TEAM 1
