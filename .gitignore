@@ -20,4 +20,12 @@ build/
 .vscode/
 *.swp
 *.swo
-.DS_Store 
+.DS_Store
+
+# Hardhat files
+contracts/cache/
+contracts/artifacts/
+contracts/typechain/
+contracts/typechain-types/
+contracts/coverage/
+contracts/coverage.json 

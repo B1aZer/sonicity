@@ -4,14 +4,13 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 
 /**
  * @title SonicityNFT
  * @dev NFT collection for the Sonicity game, representing virtual land plots
  */
 contract SonicityNFT is ERC721Enumerable, Ownable {
-    using SafeMath for uint256;
     using Strings for uint256;
 
     // Token config
@@ -36,7 +35,7 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     }
 
     // Constructor - initialize NFT contract
-    constructor() ERC721("Sonicity Land NFT", "SONIC") {
+    constructor() ERC721("Sonicity Land NFT", "SONIC") Ownable(msg.sender) {
         baseURI = "https://api.sonicity.game/metadata/";
     }
 
@@ -44,8 +43,8 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     function mint(uint256 _numTokens) external payable {
         require(mintIsActive, "Minting is not active");
         require(_numTokens > 0 && _numTokens <= MAX_MINT_PER_TX, "Invalid token count");
-        require(totalSupply().add(_numTokens) <= MAX_SUPPLY, "Exceeds max supply");
-        require(mintPrice.mul(_numTokens) <= msg.value, "Insufficient payment");
+        require(totalSupply() + _numTokens <= MAX_SUPPLY, "Exceeds max supply");
+        require(mintPrice * _numTokens <= msg.value, "Insufficient payment");
         
         for (uint256 i = 0; i < _numTokens; i++) {
             uint256 tokenId = totalSupply() + 1;
@@ -59,7 +58,7 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     // Generate pseudo-random attributes for land plots
     function generateLandAttributes(uint256 tokenId) internal {
         // Simple randomness from block values - not truly random but ok for this demo
-        uint256 rand = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty, msg.sender, tokenId)));
+        uint256 rand = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender, tokenId)));
         
         landPlots[tokenId] = LandPlot(
             uint8(rand % 10),                    // district (0-9)
@@ -72,7 +71,7 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     
     // Get land plot data for a token
     function getLandPlot(uint256 tokenId) external view returns (LandPlot memory) {
-        require(_exists(tokenId), "Token does not exist");
+        require(ownerOf(tokenId) != address(0), "Token does not exist");
         return landPlots[tokenId];
     }
 
