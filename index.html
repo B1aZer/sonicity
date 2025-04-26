@@ -3,55 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sonicity - City Building Game</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #000;
-        }
-        #renderDiv {
-            width: 100%;
-            height: 100vh;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        #loading-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            font-family: Arial, sans-serif;
-            z-index: 1000;
-        }
-    </style>
+    <title>Sonicity - 3D City Building Game</title>
+    <link rel="stylesheet" href="/src/styles/main.css">
 </head>
 <body>
     <div id="renderDiv"></div>
     <div id="loading-screen">Loading Game...</div>
-
-    <!-- Import Three.js from CDN -->
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-                "three/examples/jsm/loaders/FBXLoader.js": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/FBXLoader.js",
-                "three/src/loaders/TextureLoader.js": "https://unpkg.com/three@0.160.0/src/loaders/TextureLoader.js",
-                "three/examples/jsm/controls/OrbitControls.js": "https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js"
-            }
-        }
-    </script>
-
-    <!-- Import game modules -->
-    <script type="module" src="main.js"></script>
+    <script type="module" src="/src/js/core/main.js"></script>
 </body>
 </html> 

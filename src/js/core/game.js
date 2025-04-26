@@ -61,32 +61,59 @@ export class Game {
         loadingScreen.style.fontFamily = 'Arial, sans-serif';
         loadingScreen.textContent = 'Loading Assets...';
         this.renderDiv.appendChild(loadingScreen); // Add to renderDiv
-        // Start loading assets and wait for it to finish before proceeding
-        // This ensures models are available when the game tries to use them.
-        await this.assetLoader.loadAssets(); // Await the completion of asset loading
-        // --- Loading Complete ---
-        this.renderDiv.removeChild(loadingScreen); // Remove loading screen
-        // Destructure grid parameters from setupScene
-        const { scene, camera, renderer, controls, groundPlane, gridSize, gridCellSize } = setupScene(this.renderDiv);
-        this.scene = scene;
-        this.camera = camera;
-        this.renderer = renderer;
-        this.controls = controls;
-        this.groundPlane = groundPlane;
-        this.gridSize = gridSize;
-        this.gridCellSize = gridCellSize;
-        // Initialize the logical grid
-        this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null)); // null = unoccupied, store building type string when occupied
-        // Now that scene exists, pass it AND gridCellSize AND assetLoader to buildingManager
-        this.buildingManager.setScene(this.scene, this.gridCellSize, this.assetLoader); // Update setScene call if needed or rely on constructor
-        this.buildingManager.setScene(this.scene, this.gridCellSize, this.assetLoader); // Update setScene call if needed or rely on constructor
-        // Show the UI now that everything is loaded
-        this.ui.show();
-        // Initial UI update
-        this.updateUI();
-        // No need for separate waitForLoad call here as we awaited loadAssets above
-        // Now that all async setup is done, start the animation loop
-        this.start();
+        
+        try {
+            // Start loading assets and wait for it to finish before proceeding
+            // This ensures models are available when the game tries to use them.
+            await this.assetLoader.loadAssets(); // Await the completion of asset loading
+            
+            // --- Loading Complete ---
+            if (loadingScreen.parentNode === this.renderDiv) {
+                this.renderDiv.removeChild(loadingScreen); // Remove loading screen
+            }
+            
+            // Destructure grid parameters from setupScene
+            const { scene, camera, renderer, controls, groundPlane, gridSize, gridCellSize } = setupScene(this.renderDiv);
+            this.scene = scene;
+            this.camera = camera;
+            this.renderer = renderer;
+            this.controls = controls;
+            this.groundPlane = groundPlane;
+            this.gridSize = gridSize;
+            this.gridCellSize = gridCellSize;
+            
+            // Initialize the logical grid
+            this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null)); // null = unoccupied, store building type string when occupied
+            
+            // Now that scene exists, pass it AND gridCellSize AND assetLoader to buildingManager
+            this.buildingManager.setScene(this.scene, this.gridCellSize, this.assetLoader); // Update setScene call if needed or rely on constructor
+            
+            // Show the UI now that everything is loaded
+            this.ui.show();
+            
+            // Initial UI update
+            this.updateUI();
+            
+            // Now that all async setup is done, start the animation loop
+            this.start();
+        } catch (error) {
+            console.error("Error during game initialization:", error);
+            // Make sure to remove the loading screen even if there's an error
+            if (loadingScreen.parentNode === this.renderDiv) {
+                this.renderDiv.removeChild(loadingScreen);
+            }
+            // Show an error message to the user
+            const errorMessage = document.createElement('div');
+            errorMessage.style.position = 'absolute';
+            errorMessage.style.top = '50%';
+            errorMessage.style.left = '50%';
+            errorMessage.style.transform = 'translate(-50%, -50%)';
+            errorMessage.style.color = 'red';
+            errorMessage.style.fontSize = '18px';
+            errorMessage.style.fontFamily = 'Arial, sans-serif';
+            errorMessage.textContent = 'Failed to load game assets. Please refresh the page.';
+            this.renderDiv.appendChild(errorMessage);
+        }
     }
     start() {
         this.animate();

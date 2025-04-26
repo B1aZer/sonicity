@@ -10,5 +10,4 @@ if (!renderDiv) {
     // Initialize the game with the render target
     const game = new Game(renderDiv);
     // Game's async init() method will call start() internally when setup is complete.
-    // game.start(); // DO NOT call start() here.
 }
