@@ -23,7 +23,7 @@ export class AssetLoader {
     }
 
     // Method to start loading all assets defined in assetMap
-    async loadAssets() {
+    async loadAll() {
         console.log("AssetLoader: Starting asset loading...");
         this.isLoadingComplete = false;
         this.loadedModels = {}; // Clear previously loaded models on new load attempt
@@ -66,6 +66,11 @@ export class AssetLoader {
             this.isLoadingComplete = true; // Mark loading as complete regardless of individual failures
             console.log("AssetLoader: isLoadingComplete set to true.");
         }
+    }
+
+    // Alias for loadAll to maintain compatibility
+    async loadAssets() {
+        return this.loadAll();
     }
 
     // Method to load a single model and texture from a zip file
