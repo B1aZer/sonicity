@@ -1,0 +1,39 @@
+{
+  "name": "Sonicity Land Plot #1",
+  "description": "A virtual land plot in the Sonicity metaverse. This plot is located in District 3 with valuable energy resources.",
+  "image": "https://api.sonicity.game/images/1.png",
+  "external_url": "https://sonicity.game/land/1",
+  "attributes": [
+    {
+      "trait_type": "District",
+      "value": "3"
+    },
+    {
+      "trait_type": "Size",
+      "value": "4",
+      "max_value": "5"
+    },
+    {
+      "trait_type": "Elevation",
+      "value": "7",
+      "max_value": "10"
+    },
+    {
+      "trait_type": "Resource Type",
+      "value": "Energy"
+    },
+    {
+      "trait_type": "Resource Level",
+      "value": "8",
+      "max_value": "10"
+    }
+  ],
+  "properties": {
+    "coordinates": {
+      "x": "156",
+      "y": "248"
+    },
+    "buildable_area": "85%",
+    "last_updated": "2023-05-28T12:34:56Z"
+  }
+} 

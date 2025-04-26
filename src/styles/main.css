@@ -179,28 +179,169 @@ body {
     min-height: 100vh;
     padding: 2rem;
     background-color: #1a1a1a;
+    background-image: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
     color: #fff;
 }
 
 .mint-container {
     text-align: center;
-    max-width: 600px;
-    padding: 2rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    padding: 3rem;
+    background-color: rgba(15, 15, 15, 0.9);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .mint-container h1 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     margin-bottom: 1rem;
     color: #fff;
+    text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+}
+
+.mint-container h2 {
+    font-size: 1.8rem;
+    margin: 2rem 0 1rem;
+    color: #4CAF50;
 }
 
 .mint-container p {
     font-size: 1.2rem;
     margin-bottom: 2rem;
+    color: #aaa;
+}
+
+.nft-preview {
+    margin: 2rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid rgba(76, 175, 80, 0.5);
+}
+
+.nft-preview img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.mint-info {
+    margin: 2rem 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mint-progress {
+    margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+    height: 12px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #4CAF50;
+    background-image: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.9rem;
     color: #ccc;
+    text-align: right;
+}
+
+.mint-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.mint-amount {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.amount-button {
+    background-color: rgba(76, 175, 80, 0.8);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.amount-button:hover {
+    background-color: rgba(76, 175, 80, 1);
+}
+
+#mint-amount {
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    width: 60px;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.mint-price {
+    font-size: 1.2rem;
+    color: #FFD700;
+}
+
+.mint-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin: 2rem 0;
+}
+
+.connect-button {
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 180px;
+}
+
+.connect-button:hover {
+    background-color: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
 }
 
 .mint-button {
@@ -209,11 +350,48 @@ body {
     border: none;
     padding: 1rem 2rem;
     font-size: 1.2rem;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s;
+    min-width: 180px;
 }
 
 .mint-button:hover {
     background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+}
+
+.mint-button:disabled {
+    background-color: #cccccc;
+    color: #666666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.mint-status {
+    min-height: 24px;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    font-weight: bold;
+}
+
+.mint-details {
+    text-align: left;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-top: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mint-details ul {
+    padding-left: 1.5rem;
+    margin-top: 1rem;
+}
+
+.mint-details li {
+    margin-bottom: 0.5rem;
+    color: #ccc;
 } 
