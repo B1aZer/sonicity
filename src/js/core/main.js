@@ -3,6 +3,8 @@ import { Game } from './game.js';
 import { Navbar } from '../../components/Navbar.js';
 import { GamePage } from '../../pages/GamePage.js';
 import { MintPage } from '../../pages/MintPage.js';
+import { AccessPage } from '../../pages/AccessPage.js';
+import '../../styles/access-page.css';
 
 class App {
     constructor() {
@@ -10,6 +12,7 @@ class App {
         this.currentPage = null;
         this.game = null;
         this.container = document.getElementById('app');
+        this.hasVerifiedNFT = false;
         this.init();
     }
 
@@ -17,22 +20,31 @@ class App {
         // Mount navbar
         this.navbar.mount(this.container);
 
-        // Handle navigation
-        window.addEventListener('pageChange', (e) => this.handlePageChange(e.detail.page));
-        window.addEventListener('popstate', () => this.handlePageChange(window.location.pathname.slice(1) || 'game'));
+        // Handle page changes
+        window.addEventListener('popstate', () => this.handleRoute());
+        window.addEventListener('pageChange', (e) => this.handleRoute(e.detail.page));
+        
+        // Handle NFT verification
+        window.addEventListener('nftVerified', () => {
+            this.hasVerifiedNFT = true;
+            this.handleRoute('game');
+        });
 
-        // Initial page load
-        this.handlePageChange(window.location.pathname.slice(1) || 'game');
+        // Initial route
+        this.handleRoute();
     }
 
-    handlePageChange(page) {
-        // Clean up current page and game
+    async handleRoute(page = window.location.pathname.slice(1) || 'game') {
+        // Clean up current page
         if (this.currentPage) {
             this.currentPage.unmount();
         }
-        if (this.game) {
-            this.game.dispose();
-            this.game = null;
+
+        // Handle game page specially
+        if (page === 'game') {
+            if (!this.hasVerifiedNFT) {
+                page = 'access';
+            }
         }
 
         // Create and mount new page
@@ -40,30 +52,26 @@ class App {
             case 'game':
                 this.currentPage = new GamePage();
                 this.currentPage.mount(this.container);
-                // Initialize game after the page is mounted
-                const renderDiv = document.getElementById('renderDiv');
-                if (renderDiv) {
+                if (!this.game) {
+                    const renderDiv = document.getElementById('renderDiv');
                     this.game = new Game(renderDiv);
-                } else {
-                    console.error("Error: renderDiv not found after mounting GamePage");
+                    await this.game.init();
                 }
                 break;
             case 'mint':
                 this.currentPage = new MintPage();
                 this.currentPage.mount(this.container);
                 break;
-            default:
-                this.currentPage = new GamePage();
+            case 'access':
+                this.currentPage = new AccessPage();
                 this.currentPage.mount(this.container);
-                const defaultRenderDiv = document.getElementById('renderDiv');
-                if (defaultRenderDiv) {
-                    this.game = new Game(defaultRenderDiv);
-                } else {
-                    console.error("Error: renderDiv not found after mounting GamePage");
-                }
+                break;
+            default:
+                window.history.pushState({}, '', '/access');
+                this.handleRoute('access');
         }
     }
 }
 
-// Initialize the app
+// Initialize app
 new App();
