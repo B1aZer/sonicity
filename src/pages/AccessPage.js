@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
+import { CONTRACT_ADDRESSES } from '../js/utils/constants.js';
 
 export class AccessPage {
     constructor() {
@@ -10,7 +11,7 @@ export class AccessPage {
         this.provider = null;
         this.signer = null;
         this.contract = null;
-        this.contractAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+        this.contractAddress = CONTRACT_ADDRESSES.SONICITY_NFT;
         this.hasNFT = false;
         this.render();
     }

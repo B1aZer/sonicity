@@ -1,5 +1,16 @@
 import * as THREE from 'three';
 
+// Contract addresses
+export const CONTRACT_ADDRESSES = {
+    SONICITY_NFT: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
+};
+
+// Contract configuration
+export const CONTRACT_CONFIG = {
+    MINT_PRICE: "0.01", // ETH
+    MAX_SUPPLY: 10000
+};
+
 export const BUILDING_TYPES = {
     HOUSE: {
         name: 'House',

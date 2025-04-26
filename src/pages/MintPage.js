@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
 import { NFTCollection } from '../components/NFTCollection.js';
+import { CONTRACT_ADDRESSES, CONTRACT_CONFIG } from '../js/utils/constants.js';
 import '../styles/nft-collection.css';
 import '../styles/mint-page.css';
 
@@ -14,9 +15,9 @@ export class MintPage {
         this.signer = null;
         this.contract = null;
         this.tokensMinted = 0;
-        this.maxSupply = 10000;
-        this.mintPrice = "0.01"; // ETH
-        this.contractAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+        this.maxSupply = CONTRACT_CONFIG.MAX_SUPPLY;
+        this.mintPrice = CONTRACT_CONFIG.MINT_PRICE;
+        this.contractAddress = CONTRACT_ADDRESSES.SONICITY_NFT;
         this.nftCollection = new NFTCollection();
         this.lastMintedTokenId = null;
         this.render();
