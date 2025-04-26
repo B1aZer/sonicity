@@ -16,7 +16,7 @@ export class MintPage {
         this.tokensMinted = 0;
         this.maxSupply = 10000;
         this.mintPrice = "0.01"; // ETH
-        this.contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+        this.contractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
         this.nftCollection = new NFTCollection();
         this.lastMintedTokenId = null;
         this.render();
