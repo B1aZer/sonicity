@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BUILDING_TYPES } from './constants.js';
+import { BUILDING_TYPES } from '../utils/constants.js';
 import { AssetLoader } from './assetLoader.js'; // Not strictly needed here unless type hinting
 export class BuildingManager {
     constructor(scene, resourceManager, gridCellSize, assetLoader) { // Add assetLoader

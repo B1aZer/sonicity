@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { BUILDING_TYPES_KEYS } from './constants.js';
 
 export class InputHandler {

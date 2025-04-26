@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { setupScene } from './sceneSetup.js';
-import { InputHandler } from './inputHandler.js';
-import { BuildingManager } from './buildingManager.js';
-import { ResourceManager } from './resourceManager.js';
-import { UI } from './ui.js';
-import { AssetLoader } from './assetLoader.js'; // Import the new loader
-import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from './constants.js'; // Import KEYS too
+import { InputHandler } from '../utils/inputHandler.js';
+import { BuildingManager } from '../managers/buildingManager.js';
+import { ResourceManager } from '../managers/resourceManager.js';
+import { UI } from '../utils/ui.js';
+import { AssetLoader } from '../managers/assetLoader.js';
+import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from '../utils/constants.js';
 export class Game {
     constructor(renderDiv) {
         this.renderDiv = renderDiv;

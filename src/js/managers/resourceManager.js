@@ -1,3 +1,5 @@
+import { BUILDING_TYPES } from '../utils/constants.js';
+
 export class ResourceManager {
     constructor() {
         this.totalSupply = {
