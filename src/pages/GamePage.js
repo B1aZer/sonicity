@@ -9,7 +9,7 @@ export class GamePage {
     }
 
     setupEventListeners() {
-        // Add click handler for the bottom left city
+        // Add click event listener for the bottom left city
         const bottomLeftCity = this.element.querySelector('.city-bottom-left');
         if (bottomLeftCity) {
             bottomLeftCity.addEventListener('click', () => {
@@ -21,6 +21,7 @@ export class GamePage {
 
     render() {
         this.element.innerHTML = `
+            <div id="renderDiv"></div>
             <div class="map-container">
                 <img src="/images/map1.png" alt="City Map" class="city-map" />
                 <div class="city city-bottom-left" title="Click to view dashboard"></div>

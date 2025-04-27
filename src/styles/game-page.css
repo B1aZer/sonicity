@@ -6,11 +6,21 @@
     position: relative;
 }
 
+#renderDiv {
+    position: absolute;
+    top: 80px; /* Account for navbar height */
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 80px);
+    z-index: 1;
+}
+
 .map-container {
     position: relative;
     width: 100%;
     height: calc(100vh - 80px);
     overflow: hidden;
+    z-index: 2;
 }
 
 .city-map {
@@ -28,6 +38,7 @@
     border: 2px solid rgba(255, 255, 255, 0.4);
     cursor: pointer;
     transition: all 0.3s ease;
+    z-index: 3;
 }
 
 .city:hover {
