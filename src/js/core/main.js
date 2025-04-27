@@ -45,6 +45,12 @@ class App {
             this.currentPage.unmount();
         }
 
+        // Clean up game if it exists and we're not going to the overview page
+        if (this.game && page !== 'overview') {
+            this.game.dispose();
+            this.game = null;
+        }
+
         const state = appState.getState();
 
         // Handle protected routes
@@ -63,10 +69,16 @@ class App {
             case 'overview':
                 this.currentPage = new GamePage();
                 this.currentPage.mount(this.container);
+                
+                // Initialize game if it doesn't exist
                 if (!this.game) {
                     const renderDiv = document.getElementById('renderDiv');
-                    this.game = new Game(renderDiv);
-                    await this.game.init();
+                    if (renderDiv) {
+                        this.game = new Game(renderDiv);
+                        await this.game.init();
+                    } else {
+                        console.error('Render div not found');
+                    }
                 }
                 break;
             case 'mint':

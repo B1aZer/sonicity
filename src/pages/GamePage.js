@@ -5,30 +5,11 @@ export class GamePage {
         this.element = document.createElement('div');
         this.element.className = 'game-page';
         this.render();
-        this.setupEventListeners();
-    }
-
-    setupEventListeners() {
-        // Add click event listener for the bottom left city
-        const bottomLeftCity = this.element.querySelector('.city-bottom-left');
-        if (bottomLeftCity) {
-            bottomLeftCity.addEventListener('click', () => {
-                window.history.pushState({}, '', '/dashboard');
-                window.dispatchEvent(new PopStateEvent('popstate'));
-            });
-        }
     }
 
     render() {
         this.element.innerHTML = `
             <div id="renderDiv"></div>
-            <div class="map-container">
-                <img src="/images/map1.png" alt="City Map" class="city-map" />
-                <div class="city city-bottom-left" title="Click to view dashboard"></div>
-                <div class="city city-bottom-right"></div>
-                <div class="city city-top-left"></div>
-                <div class="city city-top-right"></div>
-            </div>
             
             <!-- UI Container -->
             <div id="ui-container">

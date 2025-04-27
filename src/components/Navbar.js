@@ -23,7 +23,7 @@ export class Navbar {
                 e.preventDefault();
                 const page = e.target.dataset.page;
                 window.history.pushState({}, '', `/${page}`);
-                window.dispatchEvent(new CustomEvent('pageChange', { detail: { page } }));
+                window.dispatchEvent(new PopStateEvent('popstate'));
             });
         });
     }
