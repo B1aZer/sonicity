@@ -75,6 +75,12 @@ npx hardhat run scripts/deploy.js --network localhost
 - 3D models from various sources (see Concept.md for details)
 - Inspired by city-building games like SimCity
 
+## Models
+
+- https://www.fab.com/listings/c4c8a84a-6c63-4cf0-9e44-fb99a4c5b367
+- https://www.fab.com/listings/8cde1ff2-a4e0-47ce-8bce-399226c71dd9
+- https://www.fab.com/listings/3e7ec8b1-b604-437c-94a2-9eb94d25441f
+
 ## Art
 
 - https://app.leonardo.ai/image-generation
