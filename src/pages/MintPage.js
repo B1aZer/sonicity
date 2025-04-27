@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
 import { NFTCollection } from '../components/NFTCollection.js';
 import { CONTRACT_ADDRESSES, CONTRACT_CONFIG } from '../js/utils/constants.js';
+import { appState } from '../js/core/state.js';
 import '../styles/nft-collection.css';
 import '../styles/mint-page.css';
 
@@ -9,8 +10,6 @@ export class MintPage {
     constructor() {
         this.element = document.createElement('div');
         this.element.className = 'mint-page';
-        this.connected = false;
-        this.account = null;
         this.provider = null;
         this.signer = null;
         this.contract = null;
@@ -21,6 +20,8 @@ export class MintPage {
         this.nftCollection = new NFTCollection();
         this.lastMintedTokenId = null;
         this.render();
+        this.setupEventListeners();
+        this.checkExistingConnection();
     }
 
     render() {
@@ -65,12 +66,12 @@ export class MintPage {
                 <div id="mint-status" class="mint-status"></div>
             </div>
         `;
+    }
 
-        // Connect wallet button
+    setupEventListeners() {
         const connectWalletBtn = this.element.querySelector('#connect-wallet');
         connectWalletBtn.addEventListener('click', () => this.connectWallet());
 
-        // Mint button
         const mintButton = this.element.querySelector('#mint-button');
         mintButton.addEventListener('click', () => this.mintNFT());
 
@@ -106,6 +107,13 @@ export class MintPage {
         this.updateTotalPrice();
     }
 
+    async checkExistingConnection() {
+        const state = appState.getState();
+        if (state.walletConnected && state.currentWallet) {
+            await this.initializeWallet(state.currentWallet);
+        }
+    }
+
     updateTotalPrice() {
         const amountInput = this.element.querySelector('#mint-amount');
         const totalPriceElement = this.element.querySelector('#total-price');
@@ -130,23 +138,13 @@ export class MintPage {
                 
                 // Request account access
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                this.account = accounts[0];
-                this.signer = this.provider.getSigner();
+                const walletAddress = accounts[0];
                 
-                // Initialize contract
-                this.contract = new ethers.Contract(
-                    this.contractAddress,
-                    SonicityNFTABI.abi,
-                    this.signer
-                );
+                // Update global state
+                appState.setWalletConnected(true, walletAddress);
                 
-                // Format the account display
-                const shortenedAccount = this.account.slice(0, 6) + '...' + this.account.slice(-4);
-                connectButton.textContent = shortenedAccount;
-                
-                // Enable mint button
-                mintButton.disabled = false;
-                this.connected = true;
+                // Initialize wallet
+                await this.initializeWallet(walletAddress);
                 
                 statusElement.textContent = "Connected!";
                 statusElement.style.color = "green";
@@ -162,6 +160,27 @@ export class MintPage {
             statusElement.textContent = "Failed to connect: " + (error.message || "Unknown error");
             statusElement.style.color = "red";
         }
+    }
+
+    async initializeWallet(walletAddress) {
+        const connectButton = this.element.querySelector('#connect-wallet');
+        const mintButton = this.element.querySelector('#mint-button');
+        
+        this.signer = this.provider.getSigner();
+        
+        // Initialize contract
+        this.contract = new ethers.Contract(
+            this.contractAddress,
+            SonicityNFTABI.abi,
+            this.signer
+        );
+        
+        // Format the account display
+        const shortenedAccount = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
+        connectButton.textContent = shortenedAccount;
+        
+        // Enable mint button
+        mintButton.disabled = false;
     }
 
     async getMintCount() {
@@ -182,7 +201,7 @@ export class MintPage {
     }
 
     async mintNFT() {
-        if (!this.connected) return;
+        if (!appState.getState().walletConnected) return;
         
         const statusElement = this.element.querySelector('#mint-status');
         const amountInput = this.element.querySelector('#mint-amount');
@@ -214,6 +233,9 @@ export class MintPage {
             
             // Update minted count
             await this.getMintCount();
+
+            // Set NFT as verified in global state
+            appState.setNFTVerified(true);
         } catch (error) {
             console.error("Minting error:", error);
             statusElement.textContent = "Failed to mint: " + (error.message || "Unknown error");

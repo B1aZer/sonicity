@@ -5,6 +5,7 @@ import { GamePage } from '../../pages/GamePage.js';
 import { DashboardPage } from '../../pages/DashboardPage.js';
 import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
+import { appState } from './state.js';
 import '../../styles/access-page.css';
 import '../../styles/dashboard-page.css';
 
@@ -14,7 +15,6 @@ class App {
         this.currentPage = null;
         this.game = null;
         this.container = document.getElementById('app');
-        this.hasVerifiedNFT = false;
         this.init();
     }
 
@@ -26,14 +26,18 @@ class App {
         window.addEventListener('popstate', () => this.handleRoute());
         window.addEventListener('pageChange', (e) => this.handleRoute(e.detail.page));
         
-        // Handle NFT verification
-        window.addEventListener('nftVerified', () => {
-            this.hasVerifiedNFT = true;
-            this.handleRoute('dashboard');
-        });
+        // Subscribe to state changes
+        appState.subscribe(() => this.handleStateChange());
 
         // Initial route
         this.handleRoute();
+    }
+
+    handleStateChange() {
+        const state = appState.getState();
+        if (state.hasVerifiedNFT && window.location.pathname === '/access') {
+            this.handleRoute('dashboard');
+        }
     }
 
     async handleRoute(page = window.location.pathname.slice(1) || 'dashboard') {
@@ -42,9 +46,11 @@ class App {
             this.currentPage.unmount();
         }
 
-        // Handle game page specially
-        if (page === 'dashboard') {
-            if (!this.hasVerifiedNFT) {
+        const state = appState.getState();
+
+        // Handle protected routes
+        if (page === 'dashboard' || page === 'overview') {
+            if (!state.hasVerifiedNFT) {
                 page = 'access';
             }
         }
