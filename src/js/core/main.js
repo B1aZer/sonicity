@@ -2,9 +2,11 @@ import * as THREE from 'three';
 import { Game } from './game.js';
 import { Navbar } from '../../components/Navbar.js';
 import { GamePage } from '../../pages/GamePage.js';
+import { DashboardPage } from '../../pages/DashboardPage.js';
 import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
 import '../../styles/access-page.css';
+import '../../styles/dashboard-page.css';
 
 class App {
     constructor() {
@@ -27,21 +29,21 @@ class App {
         // Handle NFT verification
         window.addEventListener('nftVerified', () => {
             this.hasVerifiedNFT = true;
-            this.handleRoute('game');
+            this.handleRoute('dashboard');
         });
 
         // Initial route
         this.handleRoute();
     }
 
-    async handleRoute(page = window.location.pathname.slice(1) || 'game') {
+    async handleRoute(page = window.location.pathname.slice(1) || 'dashboard') {
         // Clean up current page
         if (this.currentPage) {
             this.currentPage.unmount();
         }
 
         // Handle game page specially
-        if (page === 'game') {
+        if (page === 'dashboard') {
             if (!this.hasVerifiedNFT) {
                 page = 'access';
             }
@@ -49,7 +51,11 @@ class App {
 
         // Create and mount new page
         switch (page) {
-            case 'game':
+            case 'dashboard':
+                this.currentPage = new DashboardPage();
+                this.currentPage.mount(this.container);
+                break;
+            case 'overview':
                 this.currentPage = new GamePage();
                 this.currentPage.mount(this.container);
                 if (!this.game) {
@@ -73,5 +79,5 @@ class App {
     }
 }
 
-// Initialize app
+// Initialize the app
 new App();
