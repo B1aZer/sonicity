@@ -1,3 +1,5 @@
+import '../styles/dashboard-page.css';
+
 export class DashboardPage {
     constructor() {
         this.element = document.createElement('div');
@@ -8,9 +10,8 @@ export class DashboardPage {
     render() {
         this.element.innerHTML = `
             <div class="dashboard-container">
-                <div class="map-container">
-                    <img src="/images/map2.png" alt="City Map" class="city-map" />
-                </div>
+                <h1>Dashboard</h1>
+                <p>Welcome to your city dashboard!</p>
             </div>
         `;
     }

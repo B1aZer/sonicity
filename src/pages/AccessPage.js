@@ -23,8 +23,8 @@ export class AccessPage {
             setTimeout(() => {
                 appState.setNFTVerified(true);
                 this.updateNFTStatus('Verified');
-                // Redirect to dashboard after verification
-                window.history.pushState({}, '', '/dashboard');
+                // Redirect to overview (map) after verification
+                window.history.pushState({}, '', '/overview');
                 window.dispatchEvent(new PopStateEvent('popstate'));
             }, 1000);
         }
@@ -38,8 +38,8 @@ export class AccessPage {
             setTimeout(() => {
                 appState.setNFTVerified(true);
                 this.updateNFTStatus('Verified');
-                // Redirect to dashboard after verification
-                window.history.pushState({}, '', '/dashboard');
+                // Redirect to overview (map) after verification
+                window.history.pushState({}, '', '/overview');
                 window.dispatchEvent(new PopStateEvent('popstate'));
             }, 1000);
         } else {

@@ -22,15 +22,14 @@ class App {
         // Mount navbar
         this.navbar.mount(this.container);
 
-        // Handle page changes
-        window.addEventListener('popstate', () => this.handleRoute());
-        window.addEventListener('pageChange', (e) => this.handleRoute(e.detail.page));
-        
-        // Subscribe to state changes
-        appState.subscribe(() => this.handleStateChange());
-
-        // Initial route
+        // Handle initial route
         this.handleRoute();
+
+        // Handle browser back/forward
+        window.addEventListener('popstate', () => this.handleRoute());
+
+        // Handle state changes
+        appState.subscribe(() => this.handleStateChange());
     }
 
     handleStateChange() {
@@ -85,5 +84,5 @@ class App {
     }
 }
 
-// Initialize the app
-new App();
+// Initialize app
+const app = new App();
