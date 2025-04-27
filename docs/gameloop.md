@@ -68,7 +68,7 @@
 
     Goal:
 
-        Build Banks and exchange to erc 20
+        Build Banks and exchange to erc 20, then upgrade banks + limit - burn
 
 🏛 5. Unlock Citywide Systems
 
@@ -77,6 +77,8 @@
     Gold Tier reached → Build City Bank (enable Gold-to-ERC20 swaps)
 
     Treasury Hall and Bank are permanent, but require reactivation/upgrades each season
+
+Possible rewards from 
 
 ⚔️ 6. Midweek Events (Optional Fun Layer)
 

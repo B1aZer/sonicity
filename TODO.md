@@ -1,0 +1,38 @@
+So ho de we do with nft creators bribes? Maybe just temporal buffs?
+And what to do with seasons? Maybe just simple Bank goal?
+
+Temp buildings buffs? This probably should be bribed nobody would pay to get tempral buffs
+
+Permanent buldings, bribery and bank
+
+bribery 100k, bank 500k
+
+Also at what point should buildings d? We want to give gold only to active players? It should not be possible to sit on gold
+
+Possbile Town Hall upgrades:
+ 
+1) Allow home upgrades
+2) Increase max supply of homes
+
+THere should be clear distinction between city wide buidings
+
+City wide:
+
+1) treasury, allows to get gold from outside with limits and possible burns. Better go to treasury and burn
+2) Town hall allows expansion
+3) Barraks allows wars (you can buy units and send them to arena)
+4) Diplomacy allow negotiontions with other cities with rep points (governance)
+5) Bank allow trading
+and local buildings:
+1) home +1 gold
+2) water supply allow more home to be built
+3) windmail allow more golmes to be built
+4) factory allow more holdmes to be built
+
+
+Possible buff temp buidlings:
+
+1) increase of gold production for all homes
+2) Lp Rep points increase
+3) NFT drops? possible need to think this through, might be town hall upgrade
+4) + defence from unexpected events
