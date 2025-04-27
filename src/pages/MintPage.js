@@ -3,6 +3,7 @@ import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/
 import { NFTCollection } from '../components/NFTCollection.js';
 import { CONTRACT_ADDRESSES, CONTRACT_CONFIG } from '../js/utils/constants.js';
 import { appState } from '../js/core/state.js';
+import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
 import '../styles/nft-collection.css';
 import '../styles/mint-page.css';
 
@@ -21,56 +22,12 @@ export class MintPage {
         this.lastMintedTokenId = null;
         this.render();
         this.setupEventListeners();
-        this.checkExistingConnection();
-    }
-
-    render() {
-        this.element.innerHTML = `
-            <div class="mint-container">
-                <h1>Mint Your Sonicity NFT</h1>
-                
-                <div class="nft-preview">
-                    <div class="preview-placeholder">
-                        <img src="/images/placeholder.jpg" alt="Mint your NFT" />
-                    </div>
-                </div>
-                
-                <div class="mint-info">
-                    <div class="mint-progress">
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
-                        </div>
-                        <div class="progress-text">
-                            <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span> minted
-                        </div>
-                    </div>
-                    
-                    <div class="mint-controls">
-                        <div class="mint-amount">
-                            <button id="decrease-amount" class="amount-button">-</button>
-                            <input type="number" id="mint-amount" value="1" min="1" max="10">
-                            <button id="increase-amount" class="amount-button">+</button>
-                        </div>
-                        
-                        <div class="mint-price">
-                            <span>Price: <span id="total-price">${this.mintPrice}</span> ETH</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mint-actions">
-                    <button id="connect-wallet" class="connect-button">Connect Wallet</button>
-                    <button id="mint-button" class="mint-button" disabled>Mint NFT</button>
-                </div>
-                
-                <div id="mint-status" class="mint-status"></div>
-            </div>
-        `;
+        this.initializeConnection();
     }
 
     setupEventListeners() {
         const connectWalletBtn = this.element.querySelector('#connect-wallet');
-        connectWalletBtn.addEventListener('click', () => this.connectWallet());
+        connectWalletBtn.addEventListener('click', () => this.handleConnectWallet());
 
         const mintButton = this.element.querySelector('#mint-button');
         mintButton.addEventListener('click', () => this.mintNFT());
@@ -107,10 +64,10 @@ export class MintPage {
         this.updateTotalPrice();
     }
 
-    async checkExistingConnection() {
-        const state = appState.getState();
-        if (state.walletConnected && state.currentWallet) {
-            await this.initializeWallet(state.currentWallet);
+    async initializeConnection() {
+        const { connected, address } = await checkExistingConnection();
+        if (connected) {
+            await this.initializeWallet(address);
         }
     }
 
@@ -124,7 +81,7 @@ export class MintPage {
         totalPriceElement.textContent = totalPrice;
     }
 
-    async connectWallet() {
+    async handleConnectWallet() {
         const statusElement = this.element.querySelector('#mint-status');
         const connectButton = this.element.querySelector('#connect-wallet');
         const mintButton = this.element.querySelector('#mint-button');
@@ -132,27 +89,14 @@ export class MintPage {
         try {
             statusElement.textContent = "Connecting...";
             
-            // Check if MetaMask is installed
-            if (window.ethereum) {
-                this.provider = new ethers.providers.Web3Provider(window.ethereum);
-                
-                // Request account access
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                const walletAddress = accounts[0];
-                
-                // Update global state
-                appState.setWalletConnected(true, walletAddress);
-                
-                // Initialize wallet
-                await this.initializeWallet(walletAddress);
-                
+            const result = await connectWallet();
+            if (result.success) {
+                await this.initializeWallet(result.address);
                 statusElement.textContent = "Connected!";
                 statusElement.style.color = "green";
-                
-                // Get the current mint count
                 await this.getMintCount();
             } else {
-                statusElement.textContent = "MetaMask not detected! Please install MetaMask.";
+                statusElement.textContent = result.error || "MetaMask not detected! Please install MetaMask.";
                 statusElement.style.color = "red";
             }
         } catch (error) {
@@ -166,6 +110,7 @@ export class MintPage {
         const connectButton = this.element.querySelector('#connect-wallet');
         const mintButton = this.element.querySelector('#mint-button');
         
+        this.provider = new ethers.providers.Web3Provider(window.ethereum);
         this.signer = this.provider.getSigner();
         
         // Initialize contract
@@ -176,8 +121,7 @@ export class MintPage {
         );
         
         // Format the account display
-        const shortenedAccount = walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4);
-        connectButton.textContent = shortenedAccount;
+        connectButton.textContent = formatAddress(walletAddress);
         
         // Enable mint button
         mintButton.disabled = false;
@@ -280,6 +224,50 @@ export class MintPage {
                 </div>
             `;
         }
+    }
+
+    render() {
+        this.element.innerHTML = `
+            <div class="mint-container">
+                <h1>Mint Your Sonicity NFT</h1>
+                
+                <div class="nft-preview">
+                    <div class="preview-placeholder">
+                        <img src="/images/placeholder.jpg" alt="Mint your NFT" />
+                    </div>
+                </div>
+                
+                <div class="mint-info">
+                    <div class="mint-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span> minted
+                        </div>
+                    </div>
+                    
+                    <div class="mint-controls">
+                        <div class="mint-amount">
+                            <button id="decrease-amount" class="amount-button">-</button>
+                            <input type="number" id="mint-amount" value="1" min="1" max="10">
+                            <button id="increase-amount" class="amount-button">+</button>
+                        </div>
+                        
+                        <div class="mint-price">
+                            <span>Price: <span id="total-price">${this.mintPrice}</span> ETH</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mint-actions">
+                    <button id="connect-wallet" class="connect-button">Connect Wallet</button>
+                    <button id="mint-button" class="mint-button" disabled>Mint NFT</button>
+                </div>
+                
+                <div id="mint-status" class="mint-status"></div>
+            </div>
+        `;
     }
 
     mount(container) {

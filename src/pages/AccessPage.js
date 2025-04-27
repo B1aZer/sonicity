@@ -1,4 +1,5 @@
 import { appState } from '../js/core/state.js';
+import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
 
 export class AccessPage {
     constructor() {
@@ -6,46 +7,44 @@ export class AccessPage {
         this.element.className = 'access-page';
         this.render();
         this.setupEventListeners();
+        this.initializeConnection();
     }
 
     setupEventListeners() {
         const connectWalletBtn = this.element.querySelector('#connect-wallet');
-        connectWalletBtn.addEventListener('click', () => this.connectWallet());
+        connectWalletBtn.addEventListener('click', () => this.handleConnectWallet());
     }
 
-    async connectWallet() {
-        try {
-            // Check if MetaMask is installed
-            if (typeof window.ethereum === 'undefined') {
-                alert('Please install MetaMask to use this application');
-                return;
-            }
-
-            // Request account access
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            const walletAddress = accounts[0];
-
-            // Update wallet status
-            appState.setWalletConnected(true, walletAddress);
-            this.updateWalletStatus(walletAddress);
-
+    async initializeConnection() {
+        const { connected, address } = await checkExistingConnection();
+        if (connected) {
+            this.updateWalletStatus(address);
             // For demo purposes, automatically verify NFT
-            // In production, this would check the actual NFT ownership
             setTimeout(() => {
                 appState.setNFTVerified(true);
                 this.updateNFTStatus('Verified');
             }, 1000);
+        }
+    }
 
-        } catch (error) {
-            console.error('Error connecting wallet:', error);
-            alert('Failed to connect wallet. Please try again.');
+    async handleConnectWallet() {
+        const result = await connectWallet();
+        if (result.success) {
+            this.updateWalletStatus(result.address);
+            // For demo purposes, automatically verify NFT
+            setTimeout(() => {
+                appState.setNFTVerified(true);
+                this.updateNFTStatus('Verified');
+            }, 1000);
+        } else {
+            alert(result.error || 'Failed to connect wallet. Please try again.');
         }
     }
 
     updateWalletStatus(address) {
         const walletStatus = this.element.querySelector('#wallet-status');
         if (walletStatus) {
-            walletStatus.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
+            walletStatus.textContent = formatAddress(address);
         }
     }
 
