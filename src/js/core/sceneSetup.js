@@ -39,20 +39,27 @@ export function setupScene(renderDiv) {
     // const helper = new THREE.CameraHelper( directionalLight.shadow.camera );
     // scene.add( helper ); // Optional: Visualize shadow camera
 
-    // Ground Plane
+    // Create ground plane
     const groundGeometry = new THREE.PlaneGeometry(200, 200);
-    const groundMaterial = new THREE.MeshStandardMaterial({
-        color: 0x90EE90, // Light green
-        side: THREE.DoubleSide
+    const textureLoader = new THREE.TextureLoader();
+    const grassTexture = textureLoader.load('src/assets/textures/grasslight-big.jpg');
+    grassTexture.wrapS = THREE.RepeatWrapping;
+    grassTexture.wrapT = THREE.RepeatWrapping;
+    grassTexture.repeat.set(25, 25);
+    const groundMaterial = new THREE.MeshStandardMaterial({ 
+        map: grassTexture,
+        side: THREE.DoubleSide,
+        roughness: 0.8,
+        metalness: 0.2
     });
     const groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
-    groundPlane.rotation.x = -Math.PI / 2; // Rotate flat
+    groundPlane.rotation.x = -Math.PI / 2;
     groundPlane.receiveShadow = true;
-    groundPlane.name = "groundPlane"; // Add a name for easier identification
-    groundPlane.userData.isGround = true; // Add a flag to identify this as the ground
-    groundPlane.position.y = 0; // Ensure it's exactly at y=0
-    groundPlane.updateMatrix(); // Update the matrix to ensure transformations are applied
-    groundPlane.updateMatrixWorld(true); // Force update of the world matrix
+    groundPlane.name = "groundPlane";
+    groundPlane.userData.isGround = true;
+    groundPlane.position.y = 0;
+    groundPlane.updateMatrix();
+    groundPlane.updateMatrixWorld();
     scene.add(groundPlane);
     // Grid Helper
     const gridSize = 8; // 8x8 grid
