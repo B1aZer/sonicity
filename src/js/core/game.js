@@ -132,24 +132,29 @@ export class Game {
         this.animationFrameId = requestAnimationFrame(() => this.animate());
 
         const deltaTime = this.clock.getDelta();
-        // Safeguard: Only update controls if they exist (in case init failed somehow)
+        
+        // Update controls
         if (this.controls) {
-             this.controls.update();
+            this.controls.update();
         }
+
         // Check building functionality periodically
         this.functionalityCheckTimer += deltaTime;
         if (this.functionalityCheckTimer >= this.functionalityCheckInterval) {
             this.functionalityCheckTimer = 0;
             this.checkAllBuildingFunctionality();
         }
+
         // Generate income periodically
         this.incomeTimer += deltaTime;
         if (this.incomeTimer >= this.incomeInterval) {
-             this.incomeTimer = 0;
-             this.generateIncome();
+            this.incomeTimer = 0;
+            this.generateIncome();
         }
-        // Update building visuals (minimal logic now, mostly for future use)
+
+        // Update building visuals
         this.buildingManager.update(deltaTime);
+
         // Render the scene
         this.renderer.render(this.scene, this.camera);
     }
