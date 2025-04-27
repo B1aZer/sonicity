@@ -23,6 +23,9 @@ export class AccessPage {
             setTimeout(() => {
                 appState.setNFTVerified(true);
                 this.updateNFTStatus('Verified');
+                // Redirect to dashboard after verification
+                window.history.pushState({}, '', '/dashboard');
+                window.dispatchEvent(new PopStateEvent('popstate'));
             }, 1000);
         }
     }
@@ -35,6 +38,9 @@ export class AccessPage {
             setTimeout(() => {
                 appState.setNFTVerified(true);
                 this.updateNFTStatus('Verified');
+                // Redirect to dashboard after verification
+                window.history.pushState({}, '', '/dashboard');
+                window.dispatchEvent(new PopStateEvent('popstate'));
             }, 1000);
         } else {
             alert(result.error || 'Failed to connect wallet. Please try again.');
