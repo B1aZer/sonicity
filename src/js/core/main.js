@@ -3,11 +3,13 @@ import { Game } from './game.js';
 import { Navbar } from '../../components/Navbar.js';
 import { GamePage } from '../../pages/GamePage.js';
 import { DashboardPage } from '../../pages/DashboardPage.js';
+import { MapPage } from '../../pages/MapPage.js';
 import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
 import { appState } from './state.js';
 import '../../styles/access-page.css';
 import '../../styles/dashboard-page.css';
+import '../../styles/map-page.css';
 
 class App {
     constructor() {
@@ -39,7 +41,7 @@ class App {
         }
     }
 
-    async handleRoute(page = window.location.pathname.slice(1) || 'dashboard') {
+    async handleRoute(page = window.location.pathname.slice(1) || '') {
         // Clean up current page
         if (this.currentPage) {
             this.currentPage.unmount();
@@ -62,6 +64,10 @@ class App {
 
         // Create and mount new page
         switch (page) {
+            case '':
+                this.currentPage = new MapPage();
+                this.currentPage.mount(this.container);
+                break;
             case 'dashboard':
                 this.currentPage = new DashboardPage();
                 this.currentPage.mount(this.container);

@@ -9,19 +9,14 @@ export class DashboardPage {
     }
 
     setupEventListeners() {
-        // Add event listeners for building buttons
-        const buildingButtons = this.element.querySelectorAll('.building-button');
-        buildingButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                const buildingType = e.target.dataset.building;
-                this.handleBuildingClick(buildingType);
+        // Add click event listener for the bottom left city
+        const bottomLeftCity = this.element.querySelector('.city-bottom-left');
+        if (bottomLeftCity) {
+            bottomLeftCity.addEventListener('click', () => {
+                window.history.pushState({}, '', '/dashboard');
+                window.dispatchEvent(new PopStateEvent('popstate'));
             });
-        });
-    }
-
-    handleBuildingClick(buildingType) {
-        // For now, just show an alert
-        alert(`You clicked on ${buildingType}. This feature will be implemented soon!`);
+        }
     }
 
     render() {

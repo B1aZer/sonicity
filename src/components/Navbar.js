@@ -8,7 +8,7 @@ export class Navbar {
     render() {
         this.element.innerHTML = `
             <div class="nav-content">
-                <div class="nav-brand">Sonicity</div>
+                <div class="nav-brand" id="logo">Sonicity</div>
                 <div class="nav-links">
                     <a href="/" class="nav-link" data-page="dashboard">Dashboard</a>
                     <a href="/overview" class="nav-link" data-page="overview">Overview</a>
@@ -26,6 +26,18 @@ export class Navbar {
                 window.dispatchEvent(new PopStateEvent('popstate'));
             });
         });
+
+        // Add click handler for logo to redirect to home page
+        const logo = this.element.querySelector('.nav-brand');
+        if (logo) {
+            logo.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.history.pushState({}, '', '/');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+            });
+            // Add cursor pointer to indicate it's clickable
+            logo.style.cursor = 'pointer';
+        }
     }
 
     mount(container) {

@@ -23,8 +23,8 @@ export class AccessPage {
             setTimeout(() => {
                 appState.setNFTVerified(true);
                 this.updateNFTStatus('Verified');
-                // Redirect to overview (map) after verification
-                window.history.pushState({}, '', '/overview');
+                // Redirect to root (map) after verification
+                window.history.pushState({}, '', '/');
                 window.dispatchEvent(new PopStateEvent('popstate'));
             }, 1000);
         }
@@ -38,8 +38,8 @@ export class AccessPage {
             setTimeout(() => {
                 appState.setNFTVerified(true);
                 this.updateNFTStatus('Verified');
-                // Redirect to overview (map) after verification
-                window.history.pushState({}, '', '/overview');
+                // Redirect to root (map) after verification
+                window.history.pushState({}, '', '/');
                 window.dispatchEvent(new PopStateEvent('popstate'));
             }, 1000);
         } else {
@@ -89,6 +89,7 @@ export class AccessPage {
     mount(container) {
         container.appendChild(this.element);
     }
+    
 
     unmount() {
         this.element.remove();
