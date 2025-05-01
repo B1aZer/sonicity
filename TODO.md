@@ -1,3 +1,17 @@
+1. What to do with city treasureis? Maybe destribute a little, or use it for funding? Or decide with governance. Something in late game, I think great buidlings, should distribute income from it. Another great building allows spends of the gold with 51% govern
+2. why do external players buy gold? And more impotatnly how they receiev it through marketplace? I think most common way to get it directly to play and she can choose to spend on homes, homes upgrades, contrbute ,lottery and so on
+
+
+0. everyhting goes through citadel, all upgrades new treew is avlialbe in citadel
+1. Why buy gold, be it seaprately or staked?
+2. All money goes to treasury eather directly through citadel or player choose what to subsudice, but money either way goes to treasury.
+
+
+1. Why buy gold ext
+2. How to progress city buildings? And what to do with treasury?
+
+
+
 So ho de we do with nft creators bribes? Maybe just temporal buffs?
 And what to do with seasons? Maybe just simple Bank goal?
 
