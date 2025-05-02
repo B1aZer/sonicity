@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { BUILDING_TYPES_KEYS } from './constants.js';
 
 export class InputHandler {
     constructor(game) {
@@ -30,20 +29,19 @@ export class InputHandler {
     onClick(event) {
         console.log("InputHandler: Click detected");
         
-        // Prevent placement if clicking on UI elements
+        // Prevent clicking on UI elements
         if (event.target !== this.game.renderer.domElement) {
             let targetElement = event.target;
             while (targetElement != null) {
                 if (targetElement.id === 'ui-container' || targetElement.id === 'building-selector-container') {
-                    console.log("InputHandler: Clicked on UI element, ignoring placement");
+                    console.log("InputHandler: Clicked on UI element, ignoring");
                     return;
                 }
                 targetElement = targetElement.parentElement;
             }
         }
 
-        // Call the game's placement handler
-        this.game.handlePlacement(event);
+        // TODO: Implement building click interaction here
     }
 
     dispose() {

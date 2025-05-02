@@ -21,11 +21,6 @@ export class GamePage {
                     Money: <span id="money-amount" style="color: #FFD700; font-weight: bold;">$5000</span>
                 </div>
             </div>
-            
-            <!-- Building Selector Container -->
-            <div id="building-selector-container">
-                <!-- Building buttons will be added dynamically by JavaScript -->
-            </div>
         `;
     }
 

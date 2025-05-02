@@ -6,6 +6,7 @@ import { ResourceManager } from '../managers/resourceManager.js';
 import { UI } from '../utils/ui.js';
 import { AssetLoader } from '../managers/assetLoader.js';
 import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from '../utils/constants.js';
+
 export class Game {
     constructor(renderDiv) {
         this.renderDiv = renderDiv;
@@ -31,14 +32,9 @@ export class Game {
         // Managers
         this.resourceManager = new ResourceManager();
         this.assetLoader = new AssetLoader(); // Create the asset loader instance
-        // Pass assetLoader to BuildingManager constructor
         this.buildingManager = new BuildingManager(null, this.resourceManager, 0, this.assetLoader);
         this.money = 5000; // Starting money
-        // Pass the selection handler and restart handler methods to the UI constructor
-        this.ui = new UI(
-            this.handleBuildingSelection.bind(this),
-            this.restartGame.bind(this) // Pass the restart method
-        );
+        this.ui = new UI();
         this.inputHandler = new InputHandler(this);
     }
 
@@ -288,12 +284,8 @@ export class Game {
 
     // Update UI elements
     updateUI() {
-        const { electricity, water } = this.resourceManager.getResources();
-        // Pass money to UI update methods
-        this.ui.updateResourceDisplay(this.money, electricity, water);
-        // Pass the current mode or selected building type key
-        const activeSelectionKey = this.currentMode === 'BULLDOZE' ? 'BULLDOZE' : this.selectedBuildingType;
-        this.ui.updateSelectionVisuals(activeSelectionKey, this.money);
+        const resources = this.resourceManager.getResources();
+        this.ui.updateUI(this.money, resources);
     }
     // Handle window resize
     onWindowResize() {
