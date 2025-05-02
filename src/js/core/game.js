@@ -6,6 +6,7 @@ import { ResourceManager } from '../managers/resourceManager.js';
 import { UI } from '../utils/ui.js';
 import { AssetLoader } from '../managers/assetLoader.js';
 import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from '../utils/constants.js';
+import { LoadingScreen } from '../utils/loadingScreen.js';
 
 export class Game {
     constructor(renderDiv) {
@@ -41,31 +42,9 @@ export class Game {
     async init() {
         console.log("Game: Starting initialization");
         
-        // --- Loading Screen Setup ---
-        const loadingScreen = document.createElement('div');
-        loadingScreen.id = 'loading-screen';
-        loadingScreen.style.position = 'absolute';
-        loadingScreen.style.top = '0';
-        loadingScreen.style.left = '0';
-        loadingScreen.style.width = '100%';
-        loadingScreen.style.height = '100%';
-        loadingScreen.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        loadingScreen.style.color = 'white';
-        loadingScreen.style.display = 'flex';
-        loadingScreen.style.justifyContent = 'center';
-        loadingScreen.style.alignItems = 'center';
-        loadingScreen.style.fontSize = '24px';
-        loadingScreen.style.fontFamily = 'Arial, sans-serif';
-        loadingScreen.textContent = 'Loading Assets...';
-        this.renderDiv.appendChild(loadingScreen);
-        
         try {
             console.log("Game: Loading assets");
             await this.assetLoader.loadAssets();
-            
-            if (loadingScreen.parentNode === this.renderDiv) {
-                this.renderDiv.removeChild(loadingScreen);
-            }
             
             console.log("Game: Setting up scene");
             const { scene, camera, renderer, controls, groundPlane, gridSize, gridCellSize } = setupScene(this.renderDiv);
@@ -105,9 +84,6 @@ export class Game {
             console.log("Game: Initialization complete");
         } catch (error) {
             console.error("Game: Initialization error:", error);
-            if (loadingScreen.parentNode === this.renderDiv) {
-                this.renderDiv.removeChild(loadingScreen);
-            }
             const errorMessage = document.createElement('div');
             errorMessage.style.position = 'absolute';
             errorMessage.style.top = '50%';
