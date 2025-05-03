@@ -124,17 +124,12 @@ export class Game {
             this.generateIncome();
         }
 
-        // Update building visuals
-        this.buildingManager.update(deltaTime);
-
         // Render the scene
         this.renderer.render(this.scene, this.camera);
     }
 
     // Called by InputHandler on click
-    handlePlacement(event) {
-        console.log(`Game: handlePlacement - Started. Current selectedBuildingType: ${this.selectedBuildingType}, Mode: ${this.currentMode}`); // Log at start
-        
+    async handlePlacement(event) {
         // Get the renderer's DOM element dimensions and position
         const rect = this.renderer.domElement.getBoundingClientRect();
         
@@ -148,91 +143,90 @@ export class Game {
         if (intersects.length > 0) {
             const intersectPoint = intersects[0].point;
             // Convert world coordinates to grid coordinates
-            // The grid helper is centered at (0,0), so we adjust the calculation
             const gridX = Math.floor(intersectPoint.x / this.gridCellSize + this.gridSize / 2);
             const gridZ = Math.floor(intersectPoint.z / this.gridCellSize + this.gridSize / 2);
+
             // Check if the grid coordinates are within bounds
             if (gridX >= 0 && gridX < this.gridSize && gridZ >= 0 && gridZ < this.gridSize) {
-                 if (this.currentMode === 'BUILD') {
-                     // --- BUILD MODE ---
-                     // Check if the cell is already occupied
-                     if (!this.grid[gridX][gridZ]) {
-                         // Check if a building type is selected
-                         if (!this.selectedBuildingType) {
-                             console.warn("Build mode active, but no building type selected.");
-                             return;
-                         }
-                         // Check affordability BEFORE placement
-                         const buildingData = BUILDING_TYPES[this.selectedBuildingType];
-                         // This check prevents the original error if selectedBuildingType somehow became invalid
-                         if (!buildingData) {
-                             console.error(`Invalid building type selected: ${this.selectedBuildingType}`);
-                             return;
-                         }
-                         const cost = buildingData.cost || 0;
-                         if (this.money >= cost) {
-                             // Deduct cost
-                             this.money -= cost;
-                             // Calculate the world position for the center of the grid cell
-                        const worldX = (gridX - this.gridSize / 2 + 0.5) * this.gridCellSize;
-                        const worldZ = (gridZ - this.gridSize / 2 + 0.5) * this.gridCellSize;
-                        const position = new THREE.Vector3(
-                            worldX,
-                            buildingData.size.y / 2, // Place base on ground, pivot is center
-                            worldZ
-                        );
-                        // Place the building
-                        const placedBuilding = this.buildingManager.placeBuilding(this.selectedBuildingType, position);
-                         // Mark the cell as occupied with the building type
-                         this.grid[gridX][gridZ] = this.selectedBuildingType;
-                         // Store grid coordinates on the building object itself
-                         if(placedBuilding) { // Check if placement was successful
-                             placedBuilding.gridX = gridX;
-                             placedBuilding.gridZ = gridZ;
-                              // Immediately check functionality of the newly placed building and update visuals
-                             this.checkBuildingFunctionality(placedBuilding);
-                                 this.buildingManager.updateBuildingVisuals(placedBuilding);
-                             }
-                             this.updateUI(); // Update resources AND money display
-                             console.log(`Placed ${this.selectedBuildingType} at grid cell [${gridX}, ${gridZ}]. Cost: $${cost}. Remaining money: $${this.money}`);
-                         } else {
-                              console.log(`Not enough money to place ${this.selectedBuildingType}. Need $${cost}, have $${this.money}.`);
-                              // Optionally provide UI feedback here (e.g., flash money display red)
-                         }
-                     } else {
-                         console.log(`Build Mode: Grid cell [${gridX}, ${gridZ}] is already occupied.`);
-                     }
-                 } else if (this.currentMode === 'BULLDOZE') {
-                     // --- BULLDOZE MODE ---
-                     // Check if the cell IS occupied
-                     if (this.grid[gridX][gridZ]) {
-                         // Find the building object to remove
-                         const buildingToRemove = this.buildingManager.buildings.find(b => b.gridX === gridX && b.gridZ === gridZ);
-                         if (buildingToRemove) {
-                             // Get refund (e.g., 50% of original cost)
-                             const refundAmount = Math.floor((buildingToRemove.data.cost || 0) * 0.5);
-                             this.money += refundAmount;
-                             // Remove the building using BuildingManager
-                             this.buildingManager.removeBuilding(buildingToRemove);
-                             // Clear the logical grid cell
-                             this.grid[gridX][gridZ] = null;
-                             // Update UI (money, resources might change)
-                             this.updateUI();
-                             // Re-check functionality of potentially affected neighbors (important!)
-                             this.checkAllBuildingFunctionality();
-                             console.log(`Bulldozed building at [${gridX}, ${gridZ}]. Refund: $${refundAmount}. Total money: $${this.money}`);
-                         } else {
-                              console.warn(`Bulldoze Mode: Grid cell [${gridX}, ${gridZ}] occupied in grid, but no building object found.`);
-                              // Clear the grid cell anyway to fix potential inconsistency
-                              this.grid[gridX][gridZ] = null;
-                         }
-                     } else {
-                         console.log(`Bulldoze Mode: Grid cell [${gridX}, ${gridZ}] is empty.`);
-                     }
-                 }
-            } else {
-                 console.log("Clicked outside the defined grid area.");
+                if (this.currentMode === 'BUILD') {
+                    // Check if the cell is empty in the contract
+                    const isCellEmpty = await this.checkCellEmptyInContract(gridX, gridZ);
+                    if (isCellEmpty) {
+                        // Get building data
+                        const buildingData = BUILDING_TYPES[this.selectedBuildingType];
+                        if (!buildingData) {
+                            console.error(`Invalid building type selected: ${this.selectedBuildingType}`);
+                            return;
+                        }
+
+                        // Check if player can afford the building
+                        const canAfford = await this.checkPlayerCanAfford(buildingData.cost);
+                        if (canAfford) {
+                            try {
+                                // Call contract to place building
+                                await this.placeBuilding(gridX, gridZ, this.selectedBuildingType);
+                                
+                                // Update local state from contract
+                                await this.syncWithContract();
+                            } catch (error) {
+                                console.error('Error placing building:', error);
+                            }
+                        } else {
+                            console.log(`Not enough resources to place ${this.selectedBuildingType}`);
+                        }
+                    } else {
+                        console.log(`Cell [${gridX}, ${gridZ}] is already occupied`);
+                    }
+                } else if (this.currentMode === 'BULLDOZE') {
+                    try {
+                        // Call contract to remove building
+                        await this.removeBuildingFromContract(gridX, gridZ);
+                        
+                        // Update local state from contract
+                        await this.syncWithContract();
+                    } catch (error) {
+                        console.error('Error removing building:', error);
+                    }
+                }
             }
+        }
+    }
+
+    // Contract interaction methods
+    async checkCellEmptyInContract(x, z) {
+        // TODO: Implement contract call to check if cell is empty
+        return true; // Placeholder
+    }
+
+    async checkPlayerCanAfford(cost) {
+        // TODO: Implement contract call to check player resources
+        return true; // Placeholder
+    }
+
+    async placeBuilding(x, z, type) {
+        // TODO: Implement contract call to place building
+        console.log(`Placing ${type} at [${x}, ${z}]`);
+    }
+
+    async removeBuildingFromContract(x, z) {
+        // TODO: Implement contract call to remove building
+        console.log(`Removing building at [${x}, ${z}]`);
+    }
+
+    async syncWithContract() {
+        try {
+            // TODO: Get state from contract
+            const contractState = {
+                buildings: [] // Placeholder
+            };
+
+            // Update visual representation
+            await this.buildingManager.syncWithContractState(contractState);
+            
+            // Update UI
+            this.updateUI();
+        } catch (error) {
+            console.error('Error syncing with contract:', error);
         }
     }
 
@@ -260,8 +254,10 @@ export class Game {
 
     // Update UI elements
     updateUI() {
-        const resources = this.resourceManager.getResources();
-        this.ui.updateUI(this.money, resources);
+        // Get money from ResourceManager
+        const money = this.resourceManager.getMoney();
+        // Update UI (now only shows money/gold)
+        this.ui.updateUI(money);
     }
     // Handle window resize
     onWindowResize() {
@@ -270,59 +266,24 @@ export class Game {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
     // --- Income and Functionality Logic ---
+    // All buildings are now functional by default (simplified)
     checkAllBuildingFunctionality() {
-        this.buildingManager.buildings.forEach(building => {
-            this.checkBuildingFunctionality(building);
-        });
+        // No-op (all buildings are functional by default now)
     }
+    
+    // All buildings are now functional by default (simplified)
     checkBuildingFunctionality(building) {
-        const oldFunctionalState = building.isFunctional;
-        let isNowFunctional = false; // Assume not functional by default
-        if (building.type === 'HOUSE') {
-            // House needs adjacent power plant AND water tower
-            // House needs utilities within range
-            isNowFunctional = this.hasUtilitiesInRange(building.gridX, building.gridZ);
-        } else if (building.data.generates) {
-            // Generators are always considered functional for now
-            isNowFunctional = true;
-        } else if (building.type === 'SHOP') {
-             // Shops need global resources (example of different logic)
-             const { hasEnoughPower, hasEnoughWater } = this.resourceManager.checkGlobalSufficiency();
-             const needsPower = building.data.consumes?.electricity > 0;
-             const needsWater = building.data.consumes?.water > 0;
-             isNowFunctional = true;
-             if (needsPower && !hasEnoughPower) isNowFunctional = false;
-             if (needsWater && !hasEnoughWater) isNowFunctional = false;
-        }
-        // Add more rules for other building types here if needed
-        building.isFunctional = isNowFunctional;
-        // Update visuals only if the state changed
-        if (isNowFunctional !== oldFunctionalState) {
-            this.buildingManager.updateBuildingVisuals(building);
-        }
+        // Set all buildings to functional
+        building.isFunctional = true;
+        
+        // Update visuals if needed
+        this.buildingManager.updateBuildingVisuals(building);
     }
-     // Renamed to reflect that it now checks within range, not just adjacent
-     hasUtilitiesInRange(gridX, gridZ) {
-        let foundPower = false;
-        let foundWater = false;
-        // Iterate through all buildings instead of just checking grid neighbors
-        for (const utilityBuilding of this.buildingManager.buildings) {
-            if (!utilityBuilding.data.generates || !utilityBuilding.data.range) continue; // Skip non-generators or those without range
-            const range = utilityBuilding.data.range;
-            const dx = Math.abs(gridX - utilityBuilding.gridX);
-            const dz = Math.abs(gridZ - utilityBuilding.gridZ);
-            const distance = dx + dz; // Manhattan distance
-            if (distance <= range) {
-                 if (utilityBuilding.type === 'POWER_PLANT') {
-                     foundPower = true;
-                 } else if (utilityBuilding.type === 'WATER_TOWER') {
-                     foundWater = true;
-                 }
-            }
-            // Optimization: if both found, no need to check further
-            if (foundPower && foundWater) break;
-        }
-        return foundPower && foundWater;
+    
+    // Utilities in range check no longer needed (simplified)
+    hasUtilitiesInRange(gridX, gridZ) {
+        // Always return true (simplified)
+        return true;
     }
     generateIncome() {
         let cycleIncome = 0;
@@ -434,5 +395,18 @@ export class Game {
         this.boundOnWindowResize = null;
         
         console.log("Game: dispose() method completed");
+    }
+
+    updateUtilityEffects() {
+        // Update utility coverage for each utility building
+        const utilityBuildings = this.buildingManager.getUtilityBuildings();
+        
+        utilityBuildings.forEach(utilityBuilding => {
+            if (utilityBuilding.type === 'MINE') {
+                this.resourceManager.addResource('electricity', utilityBuilding.data.generates.electricity);
+            } else if (utilityBuilding.type === 'CITY_HALL') {
+                this.resourceManager.addResource('water', utilityBuilding.data.generates.water);
+            }
+        });
     }
 }
