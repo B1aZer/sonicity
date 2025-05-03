@@ -87,6 +87,7 @@ npx hardhat run scripts/deploy.js --network localhost
 ## Art
 
 - https://app.leonardo.ai/image-generation
+- https://www.meshy.ai/workspace
 
 ## conecpt #2
 
