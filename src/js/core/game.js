@@ -43,9 +43,7 @@ export class Game {
         console.log("Game: Starting initialization");
         
         try {
-            console.log("Game: Loading assets");
-            await this.assetLoader.loadAssets();
-            
+            // Set up scene first
             console.log("Game: Setting up scene");
             const { scene, camera, renderer, controls, groundPlane, gridSize, gridCellSize } = setupScene(this.renderDiv);
             
@@ -92,7 +90,7 @@ export class Game {
             errorMessage.style.color = 'red';
             errorMessage.style.fontSize = '18px';
             errorMessage.style.fontFamily = 'Arial, sans-serif';
-            errorMessage.textContent = 'Failed to load game assets. Please refresh the page.';
+            errorMessage.textContent = 'Failed to initialize game. Please refresh the page.';
             this.renderDiv.appendChild(errorMessage);
         }
     }

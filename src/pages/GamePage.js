@@ -20,74 +20,71 @@ export class GamePage {
         
         // Initialize the game and wait for it to complete
         this.game.init().then(() => {
-            // Wait for assets to load
-            this.game.assetLoader.loadAssets().then(() => {
-                // Add debug sphere at center
-                const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
-                const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-                const debugSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-                debugSphere.position.set(0, 1.5, 0);
-                this.game.scene.add(debugSphere);
+            // Wait for assets to load and ensure they're ready
+            return this.game.assetLoader.waitForLoad();
+        }).then(() => {
+            // Add debug sphere at center
+            const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const debugSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            debugSphere.position.set(0, 1.5, 0);
+            this.game.scene.add(debugSphere);
 
-                // Place the buildings
-                const gridSize = this.game.gridSize;
-                const cellSize = this.game.gridCellSize;
-                const gridRadius = (gridSize * cellSize) / 2;
-                
-                // Calculate positions in a semi-circle around the grid
-                const radius = gridRadius + (cellSize * 2); // Place buildings 2 cells away from grid edge
-                const angleStep = Math.PI / 3; // 60 degrees between buildings
-                
-                // Place PowerPlant as Mine (right side)
-                const mineAngle = - Math.PI / 2; // 0 degrees (right side)
-                const minePosition = new THREE.Vector3(
-                    Math.cos(mineAngle) * radius,  // X position
-                    0,
-                    Math.sin(mineAngle) * radius   // Z position
-                );
-                const mine = this.game.buildingManager.placeBuilding('MINE', minePosition);
-                if (mine && mine.mesh) {
-                    mine.mesh.userData.isMine = true;
-                    mine.mesh.rotation.y = Math.PI / 2; // Rotate 90 degrees to face center
-                }
-                
-                // Place WaterPump as City Hall (left side)
-                const cityHallAngle = Math.PI; // 180 degrees
-                const cityHallPosition = new THREE.Vector3(
-                    Math.cos(cityHallAngle) * radius,  // X position
-                    0,
-                    Math.sin(cityHallAngle) * radius   // Z position
-                );
-                const cityHall = this.game.buildingManager.placeBuilding('CITY_HALL', cityHallPosition);
-                if (cityHall && cityHall.mesh) {
-                    cityHall.mesh.userData.isCityHall = true;
-                    cityHall.mesh.rotation.y = -cityHallAngle; // Rotate to face center
-                }
-                
-                // Place Shop as Altar (top)
-                const altarAngle = Math.PI / 2; // 90 degrees
-                const altarPosition = new THREE.Vector3(
-                    Math.cos(altarAngle) * radius,  // X position
-                    0,
-                    Math.sin(altarAngle) * radius   // Z position
-                );
-                const altar = this.game.buildingManager.placeBuilding('ALTAR', altarPosition);
-                if (altar && altar.mesh) {
-                    altar.mesh.userData.isAltar = true;
-                    altar.mesh.rotation.y = altarAngle; // Rotate to face center
-                }
+            // Place the buildings
+            const gridSize = this.game.gridSize;
+            const cellSize = this.game.gridCellSize;
+            const gridRadius = (gridSize * cellSize) / 2;
+            
+            // Calculate positions in a semi-circle around the grid
+            const radius = gridRadius + (cellSize * 2); // Place buildings 2 cells away from grid edge
+            const angleStep = Math.PI / 3; // 60 degrees between buildings
+            
+            // Place PowerPlant as Mine (right side)
+            const mineAngle = - Math.PI / 2; // 0 degrees (right side)
+            const minePosition = new THREE.Vector3(
+                Math.cos(mineAngle) * radius,  // X position
+                0,
+                Math.sin(mineAngle) * radius   // Z position
+            );
+            const mine = this.game.buildingManager.placeBuilding('MINE', minePosition);
+            if (mine && mine.mesh) {
+                mine.mesh.userData.isMine = true;
+                mine.mesh.rotation.y = Math.PI / 2; // Rotate 90 degrees to face center
+            }
+            
+            // Place WaterPump as City Hall (left side)
+            const cityHallAngle = Math.PI; // 180 degrees
+            const cityHallPosition = new THREE.Vector3(
+                Math.cos(cityHallAngle) * radius,  // X position
+                0,
+                Math.sin(cityHallAngle) * radius   // Z position
+            );
+            const cityHall = this.game.buildingManager.placeBuilding('CITY_HALL', cityHallPosition);
+            if (cityHall && cityHall.mesh) {
+                cityHall.mesh.userData.isCityHall = true;
+                cityHall.mesh.rotation.y = -cityHallAngle; // Rotate to face center
+            }
+            
+            // Place Shop as Altar (top)
+            const altarAngle = Math.PI / 2; // 90 degrees
+            const altarPosition = new THREE.Vector3(
+                Math.cos(altarAngle) * radius,  // X position
+                0,
+                Math.sin(altarAngle) * radius   // Z position
+            );
+            const altar = this.game.buildingManager.placeBuilding('ALTAR', altarPosition);
+            if (altar && altar.mesh) {
+                altar.mesh.userData.isAltar = true;
+                altar.mesh.rotation.y = altarAngle; // Rotate to face center
+            }
 
-                // Set up click handlers for the buildings
-                this.setupBuildingClickHandlers();
+            // Set up click handlers for the buildings
+            this.setupBuildingClickHandlers();
 
-                // Hide loading screen after all buildings are placed and click handlers are set up
-                LoadingScreen.hide(renderDiv);
-            }).catch(error => {
-                console.error('Error loading assets:', error);
-                LoadingScreen.hide(renderDiv);
-            });
+            // Hide loading screen after all buildings are placed and click handlers are set up
+            LoadingScreen.hide(renderDiv);
         }).catch(error => {
-            console.error('Error initializing game:', error);
+            console.error('Error during game setup:', error);
             LoadingScreen.hide(renderDiv);
         });
     }
