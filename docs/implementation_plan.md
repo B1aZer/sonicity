@@ -19,7 +19,7 @@
 
 ### 1.1 World Map & City Entry
 - [ ] Enhance world map view (basic implementation exists)
-- [ ] Create city selection system
+- [x] Create city selection system
 - [ ] Add NFT verification for city access
 - [ ] Basic city view implementation
 
