@@ -26,21 +26,21 @@ export const BUILDING_TYPES = {
     },
     ALTAR: {
         name: 'Altar',
-        size: new THREE.Vector3(2, 2.5, 2), // Size for visual representation
+        size: new THREE.Vector3(4, 4, 4), // Size for visual representation
         color: 0xFFB6C1, // Light Pink
         cost: 300
         // No longer tracks resource consumption (simplified)
     },
     MINE: {
         name: 'Mine',
-        size: new THREE.Vector3(2, 5, 2), // Size for visual representation
+        size: new THREE.Vector3(4, 4, 4), // Size for visual representation
         color: 0xFFFFE0, // Light Yellow
         cost: 1000
         // No longer generates resources or has range (simplified)
     },
     CITY_HALL: {
         name: 'City Hall',
-        size: new THREE.Vector3(2, 6, 2), // Size for visual representation
+        size: new THREE.Vector3(4, 4, 4), // Size for visual representation
         color: 0xB0C4DE, // Light Steel Blue
         cost: 800
         // No longer generates resources or has range (simplified)

@@ -28,16 +28,27 @@ export class MapPage {
                     await this.gameStateContract.initialize();
 
                     const cityId = this.getCityIdFromElement(city);
-                    
+                    console.log('Attempting to join city with ID:', cityId);
+                    const currentCity = await this.gameStateContract.getPlayerCity();
+                    console.log('Current player city:', currentCity);
+
+                    if (currentCity !== 0) {
+                        Toast.info('Entering city...');
+                        appState.setCurrentCityId(currentCity);
+                        window.history.pushState({}, '', '/dashboard');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                        return;
+                    }
+
                     // Show loading message
                     Toast.info('Joining city...');
-                    
+
                     // Join the city
                     await this.gameStateContract.joinCity(cityId);
-                    
+
                     // Update app state with the city ID
                     appState.setCurrentCityId(cityId);
-                    
+
                     // Navigate to dashboard
                     window.history.pushState({}, '', '/dashboard');
                     window.dispatchEvent(new PopStateEvent('popstate'));
