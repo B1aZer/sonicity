@@ -116,14 +116,11 @@ export class BuildingManager {
             position: mesh.position.clone(), // Use the final mesh position
             data: buildingData,
             isUsingModel: isUsingModel, // Flag if model was successfully used
-            hasPower: false,
-            hasWater: false,
-            isFunctional: false,
+            isFunctional: true, // All buildings are now functional by default (no resource checks)
             gridX: -1,
             gridZ: -1,
             originalColor: isUsingModel ? null : new THREE.Color(buildingData.color), // Color applies to fallback
-            noResourceColor: new THREE.Color(0x555555),
-            visualizationMesh: null
+            noResourceColor: new THREE.Color(0x555555)
         };
         // Store grid coordinates on the building object
         // Need to calculate them here based on position (reverse of placement logic)
@@ -143,31 +140,9 @@ export class BuildingManager {
         console.log(`Placed ${typeKey} at ${position.x.toFixed(1)}, ${position.z.toFixed(1)}`);
         console.log("Current Buildings:", this.buildings.length);
         console.log("Resources:", this.resourceManager.getResources());
-        // --- Add Coverage Visualization ---
-        if ((typeKey === 'POWER_PLANT' || typeKey === 'WATER_TOWER') && buildingData.range) {
-            const range = buildingData.range;
-            // Calculate size based on range and grid cell size
-            // A range of 1 means it covers the 3x3 area centered on the building
-            // A range of N covers (2N+1)x(2N+1) area
-            const visualizerSize = (2 * range + 1) * this.gridCellSize;
-            const visualizerGeometry = new THREE.PlaneGeometry(visualizerSize, visualizerSize);
-            const visualizerColor = typeKey === 'POWER_PLANT' ? 0xFFFF00 : 0x0000FF; // Yellow for power, Blue for water
-            const visualizerMaterial = new THREE.MeshBasicMaterial({
-                color: visualizerColor,
-                transparent: true,
-                opacity: 0.2, // Make it quite transparent
-                side: THREE.DoubleSide // Visible from below too
-            });
-            const visualizerMesh = new THREE.Mesh(visualizerGeometry, visualizerMaterial);
-            // Position it at the building's base, slightly above ground
-            // Use slightly different Y offsets to prevent z-fighting between power/water planes
-            const visualizerY = (typeKey === 'POWER_PLANT') ? 0.02 : 0.03;
-            visualizerMesh.position.set(position.x, visualizerY, position.z);
-            visualizerMesh.rotation.x = -Math.PI / 2; // Rotate flat
-            visualizerMesh.renderOrder = (typeKey === 'POWER_PLANT') ? -2 : -1; // Ensure power renders below water if same offset was used (extra safety)
-            this.scene.add(visualizerMesh);
-            building.visualizationMesh = visualizerMesh; // Store reference
-        }
+        
+        // No longer adding range visualizers (removed for simplification)
+        
         return building; // Return the created building object
     }
 
@@ -233,29 +208,26 @@ export class BuildingManager {
         // Dispose of model resources recursively if it's a model
         if (buildingToRemove.isUsingModel) {
             buildingToRemove.mesh.traverse((child) => {
-                 if (child.isMesh) {
-                     if (child.geometry) child.geometry.dispose();
-                     // Dispose materials carefully, especially if shared or cloned
-                     if (child.material) {
-                         if (Array.isArray(child.material)) {
-                             child.material.forEach(mat => mat.dispose());
-                         } else {
-                             child.material.dispose();
-                         }
-                     }
-                 }
+                if (child.isMesh) {
+                    if (child.geometry) child.geometry.dispose();
+                    // Dispose materials carefully, especially if shared or cloned
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach(mat => mat.dispose());
+                        } else {
+                            child.material.dispose();
+                        }
+                    }
+                }
             });
         } else if (buildingToRemove.mesh.geometry && buildingToRemove.mesh.material) {
             // Dispose simple mesh resources
             buildingToRemove.mesh.geometry.dispose();
             buildingToRemove.mesh.material.dispose();
         }
-        // Remove visualization mesh if it exists
-         if (buildingToRemove.visualizationMesh) {
-             this.scene.remove(buildingToRemove.visualizationMesh);
-             buildingToRemove.visualizationMesh.geometry.dispose();
-             buildingToRemove.visualizationMesh.material.dispose();
-         }
+        
+        // Visualization mesh removal (now a no-op - removed for simplification)
+        
         // Remove from resource counts
         if (buildingToRemove.data.generates) {
             this.resourceManager.removeSupply(buildingToRemove.data.generates);
@@ -263,9 +235,9 @@ export class BuildingManager {
         if (buildingToRemove.data.consumes) {
             this.resourceManager.removeDemand(buildingToRemove.data.consumes);
         }
-         // Remove from buildings array
-         this.buildings = this.buildings.filter(b => b.id !== buildingToRemove.id);
-         console.log(`Removed ${buildingToRemove.type}`);
-         // Need to inform Game.js to update grid and potentially re-check functionality
-     }
+        // Remove from buildings array
+        this.buildings = this.buildings.filter(b => b.id !== buildingToRemove.id);
+        console.log(`Removed ${buildingToRemove.type}`);
+        // Need to inform Game.js to update grid and potentially re-check functionality
+    }
 }
