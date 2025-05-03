@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "ethers": "^5.7.2",
-    "three": "^0.160.0"
+    "three": "^0.160.0",
+    "toastr": "^2.1.4"
   },
   "devDependencies": {
     "vite": "^5.0.12"

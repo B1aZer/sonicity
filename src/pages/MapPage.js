@@ -1,6 +1,6 @@
 import '../styles/map-page.css';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
-import { showMessage } from '../js/utils/uiUtils.js';
+import { Toast } from '../js/utils/toast.js';
 
 export class MapPage {
     constructor() {
@@ -19,7 +19,7 @@ export class MapPage {
                 try {
                     // Check if wallet is connected
                     if (!window.ethereum) {
-                        showMessage('Please install MetaMask to interact with cities', this.element);
+                        Toast.warning('Please install MetaMask to interact with cities');
                         return;
                     }
 
@@ -29,7 +29,7 @@ export class MapPage {
                     const cityId = this.getCityIdFromElement(city);
                     
                     // Show loading message
-                    showMessage('Joining city...', this.element);
+                    Toast.info('Joining city...');
                     
                     // Join the city
                     await this.gameStateContract.joinCity(cityId);
@@ -39,7 +39,7 @@ export class MapPage {
                     window.dispatchEvent(new PopStateEvent('popstate'));
                 } catch (error) {
                     console.error('Error joining city:', error);
-                    showMessage(error.message || 'Failed to join city', this.element);
+                    Toast.error(error.message || 'Failed to join city');
                 }
             });
         });

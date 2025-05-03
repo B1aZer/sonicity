@@ -209,48 +209,6 @@
     transform: translateX(-50%);
 }
 
-/* Message Popup */
-.message-popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-}
-
-.message-content {
-    background-color: #1a1a1a;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    max-width: 300px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.message-content p {
-    margin-bottom: 20px;
-    color: white;
-}
-
-.close-button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.close-button:hover {
-    background-color: #45a049;
-}
-
 /* Stake NFT Modal */
 .stake-modal {
     position: fixed;

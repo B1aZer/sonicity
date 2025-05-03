@@ -2,11 +2,14 @@ import '../styles/game-page.css';
 import * as THREE from 'three';
 import { Game } from '../js/core/game.js';
 import { LoadingScreen } from '../js/utils/loadingScreen.js';
+import { GameStateContract } from '../js/contracts/GameStateContract.js';
+import { Toast } from '../js/utils/toast.js';
 
 export class GamePage {
     constructor() {
         this.element = document.createElement('div');
         this.element.className = 'game-page';
+        this.gameStateContract = new GameStateContract();
         this.render();
         this.setupGame();
     }
@@ -25,7 +28,21 @@ export class GamePage {
         }).then(() => {
             // Wait for assets to load and ensure they're ready
             return this.game.assetLoader.waitForLoad();
-        }).then(() => {
+        }).then(async () => {
+            // Check if user has joined a city
+            try {
+                const cityId = await this.gameStateContract.getPlayerCity();
+                if (cityId === 0) {
+                    // User hasn't joined a city yet
+                    Toast.error('Please join a city first before accessing the game overview.');
+                    return;
+                }
+            } catch (error) {
+                console.error('Error checking city status:', error);
+                Toast.error('Error checking city status. Please try again.');
+                return;
+            }
+
             // Add debug sphere at center
             const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
             const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
@@ -89,6 +106,7 @@ export class GamePage {
         }).catch(error => {
             console.error('Error during game setup:', error);
             LoadingScreen.hide(renderDiv);
+            Toast.error('Error during game setup. Please try again.');
         });
     }
 
@@ -113,7 +131,7 @@ export class GamePage {
                 
                 if (buildingMesh) {
                     if (buildingMesh.userData.isMine) {
-                        this.showMessage('Mine is not operational yet. Coming soon!');
+                        Toast.info('Mine is not operational yet. Coming soon!');
                     } else if (buildingMesh.userData.isCityHall) {
                         window.history.pushState({}, '', '/dashboard');
                         window.dispatchEvent(new PopStateEvent('popstate'));
@@ -134,23 +152,6 @@ export class GamePage {
             current = current.parent;
         }
         return null;
-    }
-
-    showMessage(message) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message-popup';
-        messageDiv.innerHTML = `
-            <div class="message-content">
-                <p>${message}</p>
-                <button class="close-button">OK</button>
-            </div>
-        `;
-        
-        messageDiv.querySelector('.close-button').addEventListener('click', () => {
-            messageDiv.remove();
-        });
-        
-        this.element.appendChild(messageDiv);
     }
 
     showStakeNFTModal() {
