@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "ethers": "^5.7.2",
+    "ethers": "^6.11.1",
     "three": "^0.160.0",
     "toastr": "^2.1.4"
   },

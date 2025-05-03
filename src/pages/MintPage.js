@@ -1,9 +1,9 @@
 import { ethers } from 'ethers';
-import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
 import { NFTCollection } from '../components/NFTCollection.js';
 import { CONTRACT_ADDRESSES, CONTRACT_CONFIG } from '../js/utils/constants.js';
 import { appState } from '../js/core/state.js';
 import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
+import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
 import '../styles/nft-collection.css';
 import '../styles/mint-page.css';
 
@@ -110,8 +110,8 @@ export class MintPage {
         const connectButton = this.element.querySelector('#connect-wallet');
         const mintButton = this.element.querySelector('#mint-button');
         
-        this.provider = new ethers.providers.Web3Provider(window.ethereum);
-        this.signer = this.provider.getSigner();
+        this.provider = new ethers.BrowserProvider(window.ethereum);
+        this.signer = await this.provider.getSigner();
         
         // Initialize contract
         this.contract = new ethers.Contract(
@@ -156,8 +156,8 @@ export class MintPage {
             statusElement.style.color = "blue";
             
             // Calculate total price in wei
-            const pricePerToken = ethers.utils.parseEther(this.mintPrice);
-            const totalPrice = pricePerToken.mul(amount);
+            const pricePerToken = ethers.parseEther(this.mintPrice);
+            const totalPrice = pricePerToken * BigInt(amount);
             
             // Call the mint function on the contract
             const tx = await this.contract.mint(amount, { value: totalPrice });
