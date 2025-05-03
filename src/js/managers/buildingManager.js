@@ -110,19 +110,6 @@ export class BuildingManager {
                             child.material.color = new THREE.Color(buildingData.color);
                         }
                         
-                        // Apply any building-specific material adjustments
-                        if (typeKey === 'ALTAR') {
-                            // Altar-specific adjustments
-                            child.material.emissive = new THREE.Color(0xff6e40);
-                            child.material.emissiveIntensity = 0.3;
-                        } else if (typeKey === 'MINE') {
-                            // Mine-specific adjustments
-                            child.material.metalness = 0.8;
-                        } else if (typeKey === 'CITY_HALL') {
-                            // City Hall-specific adjustments
-                            child.material.roughness = 0.3;
-                        }
-                        
                         // Ensure material updates are applied
                         child.material.needsUpdate = true;
                     }
