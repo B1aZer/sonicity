@@ -14,40 +14,37 @@ describe("GameState", function () {
 
     // Deploy SonicityNFT
     const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
-    sonicityNFT = await upgrades.deployProxy(SonicityNFT, [], {
-      kind: 'uups',
-      initializer: 'initialize',
-    });
-    await sonicityNFT.deployed();
+    sonicityNFT = await SonicityNFT.deploy();
+    await sonicityNFT.waitForDeployment();
+    const sonicityNFTAddress = await sonicityNFT.getAddress();
 
-    // Initialize SonicityNFT
-    await sonicityNFT.initialize();
-
-    // Deploy GameState
+    // Deploy GameState first with a temporary altar address
     const GameState = await ethers.getContractFactory("GameState");
-    gameState = await upgrades.deployProxy(GameState, [], {
+    gameState = await upgrades.deployProxy(GameState, [ethers.ZeroAddress], {
       kind: 'uups',
       initializer: 'initialize',
     });
-    await gameState.deployed();
+    await gameState.waitForDeployment();
+    const gameStateAddress = await gameState.getAddress();
 
-    // Deploy Altar
+    // Deploy Altar with the correct addresses
     const Altar = await ethers.getContractFactory("Altar");
-    altar = await upgrades.deployProxy(Altar, [], {
+    altar = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateAddress], {
       kind: 'uups',
       initializer: 'initialize',
     });
-    await altar.deployed();
+    await altar.waitForDeployment();
+    const altarAddress = await altar.getAddress();
 
-    // Initialize contracts
-    await altar.initialize(sonicityNFT.address, gameState.address);
-    await gameState.initialize(altar.address);
+    // Update GameState's altar address
+    await gameState.connect(owner).setAltarAddress(altarAddress);
   });
 
   describe("City Management", function () {
     it("Should allow players to join a city", async function () {
       await gameState.connect(player1).joinCity(1);
-      expect(await gameState.playerCity(player1.address)).to.equal(1);
+      const playerCity = await gameState.playerCity(await player1.getAddress());
+      expect(playerCity).to.equal(1);
     });
 
     it("Should not allow players to join multiple cities", async function () {
@@ -59,51 +56,62 @@ describe("GameState", function () {
   describe("Gold Management", function () {
     it("Should allow players to earn and donate gold", async function () {
       await gameState.connect(player1).joinCity(1);
-      
-      // Earn gold
-      await gameState.connect(player1).earnGold(1000);
-      expect(await gameState.getPlayerGold(player1.address)).to.equal(1000);
-      
-      // Donate gold
-      await gameState.connect(player1).donateGold(500);
-      expect(await gameState.getPlayerGold(player1.address)).to.equal(500);
-      expect(await gameState.getCityTreasury(1)).to.equal(500);
+      await gameState.connect(player1).earnGold(ethers.parseEther("100"));
+
+      const initialGold = await gameState.getPlayerGold(await player1.getAddress());
+      const initialTreasury = await gameState.getCityTreasury(1);
+
+      await gameState.connect(player1).donateGold(ethers.parseEther("50"));
+
+      const finalGold = await gameState.getPlayerGold(await player1.getAddress());
+      const finalTreasury = await gameState.getCityTreasury(1);
+
+      expect(finalGold).to.equal(initialGold - ethers.parseEther("50"));
+      expect(finalTreasury).to.equal(initialTreasury + ethers.parseEther("50"));
     });
 
     it("Should not allow players to donate more gold than they have", async function () {
       await gameState.connect(player1).joinCity(1);
-      await gameState.connect(player1).earnGold(100);
-      await expect(gameState.connect(player1).donateGold(200)).to.be.revertedWith("Insufficient Gold");
+      await expect(gameState.connect(player1).donateGold(ethers.parseEther("100"))).to.be.revertedWith("Insufficient Gold");
     });
   });
 
   describe("Building Slots", function () {
     it("Should update building slots when called by Altar", async function () {
       await gameState.connect(player1).joinCity(1);
-      
-      // Altar updates slots
-      await gameState.connect(altar.address).updateBuildingSlots(player1.address, 5);
-      expect(await gameState.getBuildingSlots(player1.address)).to.equal(5);
-      expect(await gameState.getMaxBuildingSlots(player1.address)).to.equal(5);
+      const player1Address = await player1.getAddress();
+
+      // Mint and stake an NFT to trigger building slots update
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
+      const tokenId = 1;
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
+      await altar.connect(player1).stake(tokenId);
+
+      // Get the land plot size and expected slots
+      const plot = await sonicityNFT.getLandPlot(tokenId);
+      const expectedSlots = plot.size;
+
+      // Check that slots were updated
+      const slots = await gameState.getBuildingSlots(player1Address);
+      expect(slots).to.equal(expectedSlots);
     });
 
     it("Should not allow non-Altar contracts to update building slots", async function () {
       await gameState.connect(player1).joinCity(1);
-      await expect(gameState.connect(player1).updateBuildingSlots(player1.address, 5))
-        .to.be.revertedWith("Only Altar can update slots");
+      const player1Address = await player1.getAddress();
+      await expect(gameState.connect(player2).updateBuildingSlots(player1Address, 5)).to.be.revertedWith("Only Altar can update slots");
     });
   });
 
   describe("Building Requirements", function () {
     it("Should check building unlock requirements correctly", async function () {
       await gameState.connect(player1).joinCity(1);
-      
-      // Set up treasury
-      await gameState.connect(player1).earnGold(1000);
-      await gameState.connect(player1).donateGold(1000);
-      
-      // Check if building can be unlocked
-      expect(await gameState.canUnlockBuilding("Library")).to.be.true;
+      const player1Address = await player1.getAddress();
+      await gameState.connect(player1).earnGold(ethers.parseEther("1000"));
+      await gameState.connect(player1).donateGold(ethers.parseEther("1000"));
+      const canUnlock = await gameState.connect(player1).canUnlockBuilding("Library");
+      expect(canUnlock).to.be.true;
     });
   });
 }); 

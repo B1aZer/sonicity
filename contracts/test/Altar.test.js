@@ -14,34 +14,30 @@ describe("Altar", function () {
 
     // Deploy SonicityNFT
     const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
-    sonicityNFT = await upgrades.deployProxy(SonicityNFT, [], {
-      kind: 'uups',
-      initializer: 'initialize',
-    });
-    await sonicityNFT.deployed();
+    sonicityNFT = await SonicityNFT.deploy();
+    await sonicityNFT.waitForDeployment();
+    const sonicityNFTAddress = await sonicityNFT.getAddress();
 
-    // Initialize SonicityNFT
-    await sonicityNFT.initialize();
-
-    // Deploy GameState
+    // Deploy GameState first with a temporary altar address
     const GameState = await ethers.getContractFactory("GameState");
-    gameState = await upgrades.deployProxy(GameState, [], {
+    gameState = await upgrades.deployProxy(GameState, [ethers.ZeroAddress], {
       kind: 'uups',
       initializer: 'initialize',
     });
-    await gameState.deployed();
+    await gameState.waitForDeployment();
+    const gameStateAddress = await gameState.getAddress();
 
-    // Deploy Altar
+    // Deploy Altar with the correct addresses
     const Altar = await ethers.getContractFactory("Altar");
-    altar = await upgrades.deployProxy(Altar, [], {
+    altar = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateAddress], {
       kind: 'uups',
       initializer: 'initialize',
     });
-    await altar.deployed();
+    await altar.waitForDeployment();
+    const altarAddress = await altar.getAddress();
 
-    // Initialize contracts
-    await altar.initialize(sonicityNFT.address, gameState.address);
-    await gameState.initialize(altar.address);
+    // Update GameState's altar address
+    await gameState.connect(owner).setAltarAddress(altarAddress);
 
     // Join city for testing
     await gameState.connect(player1).joinCity(1);
@@ -50,35 +46,38 @@ describe("Altar", function () {
   describe("NFT Staking", function () {
     it("Should allow players to stake NFTs", async function () {
       // Mint an NFT to player1
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.utils.parseEther("0.01") });
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
 
       // Stake the NFT
-      await sonicityNFT.connect(player1).approve(altar.address, tokenId);
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
 
       // Check stake data
       const stake = await altar.getStakeData(tokenId);
       expect(stake.isActive).to.be.true;
-      expect(stake.owner).to.equal(player1.address);
+      expect(stake.owner).to.equal(await player1.getAddress());
     });
 
     it("Should not allow staking already staked NFTs", async function () {
       // Mint and stake an NFT
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.utils.parseEther("0.01") });
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
-      await sonicityNFT.connect(player1).approve(altar.address, tokenId);
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
 
-      // Try to stake again
-      await expect(altar.connect(player1).stake(tokenId)).to.be.revertedWith("NFT already staked");
+      // Try to stake again (should fail because we no longer own the NFT)
+      await expect(altar.connect(player1).stake(tokenId)).to.be.revertedWith("Not the NFT owner");
     });
 
     it("Should not allow unstaking before minimum duration", async function () {
       // Mint and stake an NFT
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.utils.parseEther("0.01") });
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
-      await sonicityNFT.connect(player1).approve(altar.address, tokenId);
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
 
       // Try to unstake immediately
@@ -87,9 +86,10 @@ describe("Altar", function () {
 
     it("Should allow unstaking after minimum duration", async function () {
       // Mint and stake an NFT
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.utils.parseEther("0.01") });
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
-      await sonicityNFT.connect(player1).approve(altar.address, tokenId);
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
 
       // Fast forward time
@@ -108,7 +108,7 @@ describe("Altar", function () {
   describe("Building Slots", function () {
     it("Should update building slots based on land size", async function () {
       // Mint an NFT to player1
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.utils.parseEther("0.01") });
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
 
       // Get land plot data
@@ -116,11 +116,12 @@ describe("Altar", function () {
       const expectedSlots = plot.size; // Slots equal to land size
 
       // Stake the NFT
-      await sonicityNFT.connect(player1).approve(altar.address, tokenId);
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
 
       // Check building slots
-      const slots = await gameState.getBuildingSlots(player1.address);
+      const slots = await gameState.getBuildingSlots(await player1.getAddress());
       expect(slots).to.equal(expectedSlots);
     });
   });

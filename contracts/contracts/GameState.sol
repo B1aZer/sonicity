@@ -189,6 +189,27 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Get player's gold balance
+     * @param player The address of the player
+     * @return uint256 Player's gold balance
+     */
+    function getPlayerGold(address player) external view returns (uint256) {
+        uint256 cityId = playerCity[player];
+        require(cityId > 0, "Player not in a city");
+        return cities[cityId].playerGold[player];
+    }
+
+    /**
+     * @dev Get city's treasury balance
+     * @param cityId The ID of the city
+     * @return uint256 City's treasury balance
+     */
+    function getCityTreasury(uint256 cityId) external view returns (uint256) {
+        require(cityId > 0, "Invalid city ID");
+        return cities[cityId].treasury;
+    }
+
+    /**
      * @dev Update tier requirements (only owner)
      * @param tier The tier number
      * @param requirement The new requirement in Gold
@@ -205,5 +226,13 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function setBuildingRequirement(uint8 tier, string memory buildingName, uint256 requirement) external onlyOwner {
         buildingRequirements[tier][buildingName] = requirement;
+    }
+
+    /**
+     * @dev Update altar address (only owner)
+     * @param _altar The new altar address
+     */
+    function setAltarAddress(address _altar) external onlyOwner {
+        altar = Altar(_altar);
     }
 } 
