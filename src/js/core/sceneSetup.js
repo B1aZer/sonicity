@@ -90,7 +90,7 @@ export function setupScene(renderDiv) {
     // Create ground plane
     const groundGeometry = new THREE.PlaneGeometry(200, 200);
     const textureLoader = new THREE.TextureLoader();
-    const grassTexture = textureLoader.load('src/assets/textures/grasslight-big.jpg');
+    const grassTexture = textureLoader.load('assets/textures/grasslight-big.jpg');
     grassTexture.wrapS = THREE.RepeatWrapping;
     grassTexture.wrapT = THREE.RepeatWrapping;
     grassTexture.repeat.set(25, 25);

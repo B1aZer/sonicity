@@ -4,18 +4,18 @@ import { TextureLoader } from 'three/src/loaders/TextureLoader.js';
 
 // Asset mapping using the URLs provided in the environment
 const assetMap = {
-    HOUSE: { url: '/src/assets/house.glb' },
-    ALTAR: { url: '/src/assets/altar.glb' },
-    MINE: { url: '/src/assets/mine.glb' },
-    CITY_HALL: { url: '/src/assets/cityhall.glb' }
+    HOUSE: { url: 'assets/house.glb' },
+    ALTAR: { url: 'assets/altar.glb' },
+    MINE: { url: 'assets/mine.glb' },
+    CITY_HALL: { url: 'assets/cityhall.glb' }
 };
 
 // Texture paths - using PNG format instead of TGA
 const textureMap = {
-    color: '/src/assets/rts_texture/proto_human_RTS_color.png',
-    emission: '/src/assets/rts_texture/proto_human_RTS_emission.png',
-    metal: '/src/assets/rts_texture/proto_human_RTS_metal.png',
-    rough: '/src/assets/rts_texture/proto_human_RTS_rough.png'
+    color: 'assets/rts_texture/proto_human_RTS_color.png',
+    emission: 'assets/rts_texture/proto_human_RTS_emission.png',
+    metal: 'assets/rts_texture/proto_human_RTS_metal.png',
+    rough: 'assets/rts_texture/proto_human_RTS_rough.png'
 };
 
 export class AssetLoader {
@@ -108,7 +108,22 @@ export class AssetLoader {
     async loadGLTFModel(typeKey, modelUrl) {
         console.log(`AssetLoader [${typeKey}]: Loading GLTF from ${modelUrl}...`);
         try {
-            const gltf = await this.gltfLoader.loadAsync(modelUrl);
+            const gltf = await this.gltfLoader.loadAsync(modelUrl, 
+                // Progress callback
+                (xhr) => {
+                    console.log(`AssetLoader [${typeKey}]: Loading progress: ${(xhr.loaded / xhr.total * 100)}%`);
+                },
+                // Error callback
+                (error) => {
+                    console.error(`AssetLoader [${typeKey}]: GLTFLoader error:`, error);
+                }
+            );
+
+            if (!gltf || !gltf.scene) {
+                console.error(`AssetLoader [${typeKey}]: Invalid GLTF data received`);
+                return null;
+            }
+
             const model = gltf.scene;
             
             // Apply textures and material properties

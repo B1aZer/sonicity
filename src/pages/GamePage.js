@@ -20,6 +20,9 @@ export class GamePage {
         
         // Initialize the game and wait for it to complete
         this.game.init().then(() => {
+            // Load assets first
+            return this.game.assetLoader.loadAssets();
+        }).then(() => {
             // Wait for assets to load and ensure they're ready
             return this.game.assetLoader.waitForLoad();
         }).then(() => {
