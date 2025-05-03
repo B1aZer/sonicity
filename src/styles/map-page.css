@@ -22,18 +22,17 @@
 
 .city {
     position: absolute;
-    width: 100px;
-    height: 100px;
+    width: 50px;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: 2px solid white;
     border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.4);
     cursor: pointer;
     transition: all 0.3s ease;
-    z-index: 3;
 }
 
 .city:hover {
-    background-color: rgba(255, 255, 255, 0.3);
+    background-color: rgba(255, 255, 255, 0.5);
     transform: scale(1.1);
 }
 
@@ -55,4 +54,58 @@
 .city-top-right {
     top: 20%;
     right: 20%;
+}
+
+.message-popup {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.message-content {
+    text-align: center;
+}
+
+.message-content p {
+    margin: 0;
+    font-size: 16px;
+}
+
+.wallet-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.connect-wallet {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.connect-wallet:hover {
+    background-color: #45a049;
+}
+
+.connect-wallet:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
 } 

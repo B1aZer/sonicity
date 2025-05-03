@@ -21,17 +21,6 @@ async function main() {
   const gameStateImplAddress = await gameStateImpl.getAddress();
   console.log("GameState implementation deployed to:", gameStateImplAddress);
 
-  // Deploy GameState proxy with zero address first
-  console.log("Deploying GameState proxy...");
-  const gameStateProxy = await upgrades.deployProxy(GameState, [ethers.ZeroAddress], {
-    kind: 'uups',
-    initializer: 'initialize',
-  });
-  console.log("Waiting for GameState proxy deployment...");
-  await gameStateProxy.waitForDeployment();
-  const gameStateProxyAddress = await gameStateProxy.getAddress();
-  console.log("GameState proxy deployed to:", gameStateProxyAddress);
-
   // Deploy Altar implementation
   console.log("Deploying Altar implementation...");
   const Altar = await ethers.getContractFactory("Altar");
@@ -43,7 +32,7 @@ async function main() {
 
   // Deploy Altar proxy with initialization parameters
   console.log("Deploying Altar proxy...");
-  const altarProxy = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateProxyAddress], {
+  const altarProxy = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateImplAddress], {
     kind: 'uups',
     initializer: 'initialize',
   });
@@ -52,12 +41,16 @@ async function main() {
   const altarProxyAddress = await altarProxy.getAddress();
   console.log("Altar proxy deployed to:", altarProxyAddress);
 
-  // Update GameState with Altar address using setAltarAddress
-  console.log("Updating GameState with Altar address...");
-  const updateTx = await gameStateProxy.setAltarAddress(altarProxyAddress);
-  console.log("Waiting for GameState update...");
-  await updateTx.wait();
-  console.log("GameState updated with Altar address");
+  // Deploy GameState proxy with Altar address
+  console.log("Deploying GameState proxy...");
+  const gameStateProxy = await upgrades.deployProxy(GameState, [altarProxyAddress], {
+    kind: 'uups',
+    initializer: 'initialize',
+  });
+  console.log("Waiting for GameState proxy deployment...");
+  await gameStateProxy.waitForDeployment();
+  const gameStateProxyAddress = await gameStateProxy.getAddress();
+  console.log("GameState proxy deployed to:", gameStateProxyAddress);
 
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");

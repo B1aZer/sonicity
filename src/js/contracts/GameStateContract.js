@@ -1,3 +1,4 @@
+import { ethers } from 'ethers';
 import { BaseContract } from './BaseContract.js';
 import GameStateABI from '../../../contracts/artifacts/contracts/GameState.sol/GameState.json';
 import { CONTRACT_ADDRESSES } from '../utils/constants.js';
@@ -8,12 +9,52 @@ export class GameStateContract extends BaseContract {
     }
 
     async joinCity(cityId) {
-        return await this.transact('joinCity', cityId);
+        try {
+            if (!this.contract) {
+                throw new Error('Contract not initialized');
+            }
+
+            // Join the city
+            const tx = await this.contract.joinCity(cityId);
+            await tx.wait();
+
+            return true;
+        } catch (error) {
+            console.error('Error joining city:', error);
+            throw error;
+        }
+    }
+
+    async getCityInfo(cityId) {
+        try {
+            if (!this.contract) {
+                throw new Error('Contract not initialized');
+            }
+
+            const city = await this.contract.cities(cityId);
+            return {
+                treasury: ethers.utils.formatEther(city.treasury),
+                tier: city.tier,
+                peaceShield: city.peaceShield
+            };
+        } catch (error) {
+            console.error('Error getting city info:', error);
+            throw error;
+        }
     }
 
     async getPlayerCity() {
-        const address = await this.getAddress();
-        return await this.call('playerCity', address);
+        try {
+            if (!this.contract) {
+                throw new Error('Contract not initialized');
+            }
+
+            const cityId = await this.contract.playerCity(await this.getSignerAddress());
+            return cityId.toNumber();
+        } catch (error) {
+            console.error('Error getting player city:', error);
+            throw error;
+        }
     }
 
     async getBuildingSlots() {
