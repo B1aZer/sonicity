@@ -50,7 +50,7 @@ export function setupScene(renderDiv) {
     scene.add(sun);
 
     // Sun light (Directional)
-    const sunLight = new THREE.DirectionalLight(0xffffff, 1.2); // Increased intensity
+    const sunLight = new THREE.DirectionalLight(0xffffff, 1.5); // Increased intensity
     sunLight.position.copy(sun.position);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
@@ -64,11 +64,11 @@ export function setupScene(renderDiv) {
     scene.add(sunLight);
 
     // Ambient light for better overall illumination
-    const ambientLight = new THREE.AmbientLight(0x808080, 0.7); // Brighter color and higher intensity
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // Increased intensity and changed to white
     scene.add(ambientLight);
     
     // Add hemisphere light for more natural lighting from all directions
-    const hemisphereLight = new THREE.HemisphereLight(0xddeeff, 0x505050, 0.6);
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x808080, 0.8); // Increased intensity and changed to white
     scene.add(hemisphereLight);
 
     // Camera
@@ -81,7 +81,7 @@ export function setupScene(renderDiv) {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.outputEncoding = THREE.sRGBEncoding; // Improved color rendering
+    renderer.outputColorSpace = THREE.SRGBColorSpace; // Replaced outputEncoding
     renderer.physicallyCorrectLights = true; // More realistic lighting
     renderer.toneMapping = THREE.ACESFilmicToneMapping; // Better dynamic range
     renderer.toneMappingExposure = 1.2; // Slightly brighter overall

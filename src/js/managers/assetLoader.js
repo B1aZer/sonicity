@@ -86,6 +86,9 @@ export class AssetLoader {
                 this.textureLoader.load(
                     path,
                     texture => {
+                        // Configure texture settings
+                        texture.colorSpace = THREE.SRGBColorSpace;
+                        texture.needsUpdate = true;
                         this.textures[key] = texture;
                         console.log(`AssetLoader: Successfully loaded texture ${key}`);
                         resolve(texture);
@@ -93,7 +96,6 @@ export class AssetLoader {
                     undefined,
                     error => {
                         console.warn(`AssetLoader: Could not load texture ${key} from ${path}. Using fallback material.`);
-                        // Instead of rejecting, resolve with null to allow the game to continue
                         this.textures[key] = null;
                         resolve(null);
                     }
@@ -136,45 +138,48 @@ export class AssetLoader {
                     // Clone the material to prevent sharing across instances
                     child.material = child.material.clone();
                     
-                    // Apply textures if available
-                    if (this.textures.color) {
+                    // Log original material properties
+                    console.log(`AssetLoader [${typeKey}]: Original material properties:`, {
+                        type: child.material.type,
+                        color: child.material.color.getHexString(),
+                        map: !!child.material.map,
+                        metalness: child.material.metalness,
+                        roughness: child.material.roughness
+                    });
+                    
+                    // Only apply textures if they're not already present
+                    if (!child.material.map && this.textures.color) {
                         child.material.map = this.textures.color.clone();
+                        child.material.map.colorSpace = THREE.SRGBColorSpace;
                         child.material.map.needsUpdate = true;
                     }
                     
-                    if (this.textures.emission) {
-                        child.material.emissiveMap = this.textures.emission.clone();
-                        child.material.emissive = new THREE.Color(0xffffff);
-                        child.material.emissiveIntensity = 0.5;
-                        child.material.emissiveMap.needsUpdate = true;
-                    }
-                    
-                    if (this.textures.metal) {
+                    if (!child.material.metalnessMap && this.textures.metal) {
                         child.material.metalnessMap = this.textures.metal.clone();
-                        child.material.metalness = 0.7;
+                        child.material.metalnessMap.colorSpace = THREE.SRGBColorSpace;
                         child.material.metalnessMap.needsUpdate = true;
                     }
                     
-                    if (this.textures.rough) {
+                    if (!child.material.roughnessMap && this.textures.rough) {
                         child.material.roughnessMap = this.textures.rough.clone();
-                        child.material.roughness = 0.4;
+                        child.material.roughnessMap.colorSpace = THREE.SRGBColorSpace;
                         child.material.roughnessMap.needsUpdate = true;
                     }
                     
-                    // Set fallback material properties if textures failed to load
-                    if (!this.textures.color) {
-                        child.material.color = new THREE.Color(0x808080);
-                    }
-                    if (!this.textures.metal) {
-                        child.material.metalness = 0.5;
-                    }
-                    if (!this.textures.rough) {
-                        child.material.roughness = 0.6;
-                    }
-                    
-                    // Ensure material parameters are suitable for PBR
-                    child.material.envMapIntensity = 1.0;
+                    // Ensure material needs update
                     child.material.needsUpdate = true;
+
+                    // Log final material properties
+                    console.log(`AssetLoader [${typeKey}]: Final material properties:`, {
+                        type: child.material.type,
+                        color: child.material.color.getHexString(),
+                        map: !!child.material.map,
+                        metalness: child.material.metalness,
+                        roughness: child.material.roughness,
+                        mapColorSpace: child.material.map?.colorSpace,
+                        metalnessMapColorSpace: child.material.metalnessMap?.colorSpace,
+                        roughnessMapColorSpace: child.material.roughnessMap?.colorSpace
+                    });
                 }
             });
 
