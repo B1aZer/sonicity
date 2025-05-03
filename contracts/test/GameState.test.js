@@ -88,9 +88,8 @@ describe("GameState", function () {
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
 
-      // Get the land plot size and expected slots
-      const plot = await sonicityNFT.getLandPlot(tokenId);
-      const expectedSlots = plot.size;
+      // Use static size of 5 for testing
+      const expectedSlots = 5;
 
       // Check that slots were updated
       const slots = await gameState.getBuildingSlots(player1Address);

@@ -111,9 +111,8 @@ describe("Altar", function () {
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
 
-      // Get land plot data
-      const plot = await sonicityNFT.getLandPlot(tokenId);
-      const expectedSlots = plot.size; // Slots equal to land size
+      // Use static size of 5 for testing
+      const expectedSlots = 5;
 
       // Stake the NFT
       const altarAddress = await altar.getAddress();

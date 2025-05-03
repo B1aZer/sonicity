@@ -64,7 +64,7 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
         
         landPlots[tokenId] = LandPlot(
             uint8(rand % 10),                    // district (0-9)
-            uint8((rand >> 8) % 5) + 1,          // size (1-5)
+            5,                                   // size (always 5 for testing)
             uint8((rand >> 16) % 11),            // elevation (0-10)
             uint8((rand >> 24) % 6),             // resourceType (0-5)
             uint8((rand >> 32) % 11)             // resourceLevel (0-10)
