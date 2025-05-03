@@ -2,13 +2,18 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
+    SONICITY_NFT: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+    ALTAR: "0x...", // TODO: Add Altar address after deployment
+    GAME_STATE: "0x..." // TODO: Add GameState address after deployment
 };
 
 // Contract configuration
 export const CONTRACT_CONFIG = {
     MINT_PRICE: "0.01", // ETH
-    MAX_SUPPLY: 10000
+    MAX_SUPPLY: 10000,
+    MIN_STAKING_DURATION: 7 * 24 * 60 * 60, // 7 days in seconds
+    BUILDING_SLOTS_PER_SIZE: 5, // Static size for testing
+    DEFAULT_CITY_ID: 1 // Default city ID for testing
 };
 
 export const BUILDING_TYPES = {
