@@ -1,6 +1,6 @@
 import { BaseContract } from './BaseContract.js';
-import AltarABI from '../../../contracts/artifacts/contracts/Altar.sol/Altar.json';
 import { CONTRACT_ADDRESSES } from '../utils/constants.js';
+import AltarABI from '../../../contracts/artifacts/contracts/Altar.sol/Altar.json';
 
 export class AltarContract extends BaseContract {
     constructor() {

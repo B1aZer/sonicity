@@ -1,4 +1,4 @@
-import { ethers } from 'ethers';
+import { ethers, JsonRpcProvider, Contract } from 'ethers';
 import { appState } from '../core/state.js';
 
 export class BaseContract {
@@ -8,6 +8,7 @@ export class BaseContract {
         this.contract = null;
         this.provider = null;
         this.signer = null;
+        this.initialized = false;
     }
 
     async initialize() {
@@ -15,29 +16,32 @@ export class BaseContract {
             throw new Error('MetaMask not detected');
         }
 
-        this.provider = new ethers.providers.Web3Provider(window.ethereum);
-        this.signer = this.provider.getSigner();
+        this.provider = new ethers.BrowserProvider(window.ethereum);
+        this.signer = await this.provider.getSigner();
         
-        this.contract = new ethers.Contract(
+        this.contract = new Contract(
             this.contractAddress,
             this.abi,
             this.signer
         );
 
+        this.initialized = true;
         return this;
     }
 
-    async getContract() {
-        if (!this.contract) {
+    async ensureInitialized() {
+        if (!this.initialized) {
             await this.initialize();
         }
+    }
+
+    async getContract() {
+        await this.ensureInitialized();
         return this.contract;
     }
 
     async getSigner() {
-        if (!this.signer) {
-            await this.initialize();
-        }
+        await this.ensureInitialized();
         return this.signer;
     }
 
