@@ -1,39 +1,18 @@
 import { ethers } from 'ethers';
 import { BaseContract } from './BaseContract.js';
-import GameStateABI from '../../../contracts/artifacts/contracts/GameState.sol/GameState.json';
 import { CONTRACT_ADDRESSES } from '../utils/constants.js';
+import GameStateABI from '../../../contracts/artifacts/contracts/GameState.sol/GameState.json';
 
 export class GameStateContract extends BaseContract {
     constructor() {
         super(CONTRACT_ADDRESSES.GAME_STATE, GameStateABI.abi);
     }
 
-    async joinCity(cityId) {
-        try {
-            if (!this.contract) {
-                throw new Error('Contract not initialized');
-            }
-
-            // Join the city
-            const tx = await this.contract.joinCity(cityId);
-            await tx.wait();
-
-            return true;
-        } catch (error) {
-            console.error('Error joining city:', error);
-            throw error;
-        }
-    }
-
     async getCityInfo(cityId) {
         try {
-            if (!this.contract) {
-                throw new Error('Contract not initialized');
-            }
-
             const city = await this.contract.cities(cityId);
             return {
-                treasury: ethers.utils.formatEther(city.treasury),
+                treasury: ethers.formatEther(city.treasury), // Convert from wei to ETH
                 tier: city.tier,
                 peaceShield: city.peaceShield
             };
@@ -43,18 +22,14 @@ export class GameStateContract extends BaseContract {
         }
     }
 
-    async getPlayerCity() {
-        try {
-            if (!this.contract) {
-                throw new Error('Contract not initialized');
-            }
+    async joinCity(cityId) {
+        return await this.transact('joinCity', cityId);
+    }
 
-            const cityId = await this.contract.playerCity(await this.getSignerAddress());
-            return cityId.toNumber();
-        } catch (error) {
-            console.error('Error getting player city:', error);
-            throw error;
-        }
+    async getPlayerCity() {
+        const address = await this.getAddress();
+        const cityId = await this.call('playerCity', address);
+        return Number(cityId);
     }
 
     async getBuildingSlots() {
