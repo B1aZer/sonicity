@@ -1,7 +1,7 @@
 {
   "name": "sonicity",
   "version": "1.0.0",
-  "description": "A 3D city building game",
+  "description": "A blockchain-based city building game",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "ethers": "^5.7.2",
-    "jszip": "^3.10.1",
     "three": "^0.160.0"
   },
   "devDependencies": {
