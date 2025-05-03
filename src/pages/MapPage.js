@@ -1,6 +1,7 @@
 import '../styles/map-page.css';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { Toast } from '../js/utils/toast.js';
+import { appState } from '../js/core/state.js';
 
 export class MapPage {
     constructor() {
@@ -33,6 +34,9 @@ export class MapPage {
                     
                     // Join the city
                     await this.gameStateContract.joinCity(cityId);
+                    
+                    // Update app state with the city ID
+                    appState.setCurrentCityId(cityId);
                     
                     // Navigate to dashboard
                     window.history.pushState({}, '', '/dashboard');

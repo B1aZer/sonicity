@@ -3,6 +3,7 @@ class AppState {
         this.walletConnected = false;
         this.hasVerifiedNFT = false;
         this.currentWallet = null;
+        this.currentCityId = 0; // 0 means not in any city
         this.listeners = new Set();
     }
 
@@ -30,12 +31,19 @@ class AppState {
         this.notify();
     }
 
+    // Update city ID
+    setCurrentCityId(cityId) {
+        this.currentCityId = cityId;
+        this.notify();
+    }
+
     // Get current state
     getState() {
         return {
             walletConnected: this.walletConnected,
             hasVerifiedNFT: this.hasVerifiedNFT,
-            currentWallet: this.currentWallet
+            currentWallet: this.currentWallet,
+            currentCityId: this.currentCityId
         };
     }
 }

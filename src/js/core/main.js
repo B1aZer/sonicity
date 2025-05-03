@@ -7,6 +7,9 @@ import { MapPage } from '../../pages/MapPage.js';
 import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
 import { appState } from './state.js';
+import { AccessControl } from '../utils/accessControl.js';
+import { Toast } from '../utils/toast.js';
+import { GameStateContract } from '../contracts/GameStateContract.js';
 import '../../styles/access-page.css';
 import '../../styles/dashboard-page.css';
 import '../../styles/map-page.css';
@@ -20,9 +23,12 @@ class App {
         this.init();
     }
 
-    init() {
+    async init() {
         // Mount navbar
         this.navbar.mount(this.container);
+
+        // Try to fetch user's city ID from contract if wallet is connected
+        await this.initializePlayerCityId();
 
         // Handle initial route
         this.handleRoute();
@@ -32,6 +38,23 @@ class App {
 
         // Handle state changes
         appState.subscribe(() => this.handleStateChange());
+    }
+
+    async initializePlayerCityId() {
+        try {
+            const state = appState.getState();
+            // Only try to get the city ID if wallet is connected
+            if (state.walletConnected && state.currentWallet) {
+                const gameStateContract = new GameStateContract();
+                await gameStateContract.initialize();
+                const cityId = await gameStateContract.getPlayerCity();
+                // Update appState with the cityId (will be 0 if not in a city)
+                appState.setCurrentCityId(cityId);
+            }
+        } catch (error) {
+            console.error('Error initializing player city ID:', error);
+            // Don't show error to user, just log it
+        }
     }
 
     handleStateChange() {
@@ -57,8 +80,15 @@ class App {
 
         // Handle protected routes
         if (page === 'dashboard' || page === 'overview') {
-            if (!state.hasVerifiedNFT) {
-                page = 'access';
+            if (!AccessControl.canAccessDashboard()) {
+                if (AccessControl.hasVerifiedNFT() && !AccessControl.isInCity()) {
+                    // User is verified but not in a city: send to map to join a city
+                    page = '';
+                    Toast.warning('Please join a city first to access the dashboard.');
+                } else {
+                    // Not verified: send to access page
+                    page = 'access';
+                }
             }
         }
 
