@@ -22,6 +22,13 @@ export class GamePage {
         this.game.init().then(() => {
             // Wait for assets to load
             this.game.assetLoader.loadAssets().then(() => {
+                // Add debug sphere at center
+                const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+                const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                const debugSphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                debugSphere.position.set(0, 1.5, 0);
+                this.game.scene.add(debugSphere);
+
                 // Place the buildings
                 const gridSize = this.game.gridSize;
                 const cellSize = this.game.gridCellSize;
