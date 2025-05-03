@@ -32,7 +32,7 @@ export class GamePage {
                 const angleStep = Math.PI / 3; // 60 degrees between buildings
                 
                 // Place PowerPlant as Mine (right side)
-                const mineAngle = 0; // 0 degrees
+                const mineAngle = - Math.PI / 2; // 0 degrees (right side)
                 const minePosition = new THREE.Vector3(
                     Math.cos(mineAngle) * radius,  // X position
                     0,
@@ -41,7 +41,7 @@ export class GamePage {
                 const mine = this.game.buildingManager.placeBuilding('POWER_PLANT', minePosition);
                 if (mine && mine.mesh) {
                     mine.mesh.userData.isMine = true;
-                    mine.mesh.rotation.y = -mineAngle; // Rotate to face center
+                    mine.mesh.rotation.y = Math.PI / 2; // Rotate 90 degrees to face center
                 }
                 
                 // Place WaterPump as City Hall (left side)
@@ -67,7 +67,7 @@ export class GamePage {
                 const altar = this.game.buildingManager.placeBuilding('SHOP', altarPosition);
                 if (altar && altar.mesh) {
                     altar.mesh.userData.isAltar = true;
-                    altar.mesh.rotation.y = -altarAngle; // Rotate to face center
+                    altar.mesh.rotation.y = altarAngle; // Rotate to face center
                 }
 
                 // Set up click handlers for the buildings
