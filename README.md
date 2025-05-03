@@ -13,8 +13,11 @@ A 3D city building game where players can construct and manage a city with vario
 ## Start
 
 nvm use v20
-npx hardhat node
 npm run dev
+
+cd contracts
+npx hardhat node
+
 npx hardhat run scripts/deploy.js --network localhost
 
 ## Setup and Installation
