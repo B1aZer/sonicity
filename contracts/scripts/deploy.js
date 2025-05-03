@@ -7,72 +7,74 @@ async function main() {
   console.log("Deploying SonicityNFT...");
   const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
   const sonicityNFT = await SonicityNFT.deploy();
-  await sonicityNFT.deployed();
-  console.log("SonicityNFT deployed to:", sonicityNFT.address);
+  console.log("Waiting for SonicityNFT deployment...");
+  await sonicityNFT.waitForDeployment();
+  const sonicityNFTAddress = await sonicityNFT.getAddress();
+  console.log("SonicityNFT deployed to:", sonicityNFTAddress);
 
   // Deploy GameState implementation
   console.log("Deploying GameState implementation...");
   const GameState = await ethers.getContractFactory("GameState");
   const gameStateImpl = await GameState.deploy();
-  await gameStateImpl.deployed();
-  console.log("GameState implementation deployed to:", gameStateImpl.address);
+  console.log("Waiting for GameState implementation deployment...");
+  await gameStateImpl.waitForDeployment();
+  const gameStateImplAddress = await gameStateImpl.getAddress();
+  console.log("GameState implementation deployed to:", gameStateImplAddress);
 
-  // Deploy GameState proxy
+  // Deploy GameState proxy with zero address first
   console.log("Deploying GameState proxy...");
-  const gameStateProxy = await upgrades.deployProxy(GameState, [], {
+  const gameStateProxy = await upgrades.deployProxy(GameState, [ethers.ZeroAddress], {
     kind: 'uups',
     initializer: 'initialize',
   });
-  await gameStateProxy.deployed();
-  console.log("GameState proxy deployed to:", gameStateProxy.address);
-
-  // Initialize GameState
-  console.log("Initializing GameState...");
-  await gameStateProxy.initialize(ethers.constants.AddressZero); // We'll update this after Altar deployment
-  console.log("GameState initialized");
+  console.log("Waiting for GameState proxy deployment...");
+  await gameStateProxy.waitForDeployment();
+  const gameStateProxyAddress = await gameStateProxy.getAddress();
+  console.log("GameState proxy deployed to:", gameStateProxyAddress);
 
   // Deploy Altar implementation
   console.log("Deploying Altar implementation...");
   const Altar = await ethers.getContractFactory("Altar");
   const altarImpl = await Altar.deploy();
-  await altarImpl.deployed();
-  console.log("Altar implementation deployed to:", altarImpl.address);
+  console.log("Waiting for Altar implementation deployment...");
+  await altarImpl.waitForDeployment();
+  const altarImplAddress = await altarImpl.getAddress();
+  console.log("Altar implementation deployed to:", altarImplAddress);
 
-  // Deploy Altar proxy
+  // Deploy Altar proxy with initialization parameters
   console.log("Deploying Altar proxy...");
-  const altarProxy = await upgrades.deployProxy(Altar, [], {
+  const altarProxy = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateProxyAddress], {
     kind: 'uups',
     initializer: 'initialize',
   });
-  await altarProxy.deployed();
-  console.log("Altar proxy deployed to:", altarProxy.address);
+  console.log("Waiting for Altar proxy deployment...");
+  await altarProxy.waitForDeployment();
+  const altarProxyAddress = await altarProxy.getAddress();
+  console.log("Altar proxy deployed to:", altarProxyAddress);
 
-  // Initialize Altar
-  console.log("Initializing Altar...");
-  await altarProxy.initialize(sonicityNFT.address, gameStateProxy.address);
-  console.log("Altar initialized");
-
-  // Update GameState with Altar address
+  // Update GameState with Altar address using setAltarAddress
   console.log("Updating GameState with Altar address...");
-  await gameStateProxy.initialize(altarProxy.address);
+  const updateTx = await gameStateProxy.setAltarAddress(altarProxyAddress);
+  console.log("Waiting for GameState update...");
+  await updateTx.wait();
   console.log("GameState updated with Altar address");
 
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
   console.log("Contract addresses:");
-  console.log("SonicityNFT:", sonicityNFT.address);
-  console.log("GameState implementation:", gameStateImpl.address);
-  console.log("GameState proxy:", gameStateProxy.address);
-  console.log("Altar implementation:", altarImpl.address);
-  console.log("Altar proxy:", altarProxy.address);
+  console.log("SonicityNFT:", sonicityNFTAddress);
+  console.log("GameState implementation:", gameStateImplAddress);
+  console.log("GameState proxy:", gameStateProxyAddress);
+  console.log("Altar implementation:", altarImplAddress);
+  console.log("Altar proxy:", altarProxyAddress);
 
   // Save addresses to a file for frontend use
   const addresses = {
-    sonicityNFT: sonicityNFT.address,
-    gameStateImpl: gameStateImpl.address,
-    gameStateProxy: gameStateProxy.address,
-    altarImpl: altarImpl.address,
-    altarProxy: altarProxy.address,
+    sonicityNFT: sonicityNFTAddress,
+    gameStateImpl: gameStateImplAddress,
+    gameStateProxy: gameStateProxyAddress,
+    altarImpl: altarImplAddress,
+    altarProxy: altarProxyAddress,
   };
 
   const fs = require('fs');
