@@ -2,67 +2,67 @@ import { BUILDING_TYPES } from '../utils/constants.js';
 
 export class ResourceManager {
     constructor() {
-        this.totalSupply = {
-            electricity: 0,
-            water: 0
-        };
-        this.totalDemand = {
-            electricity: 0,
-            water: 0
-        };
+        // Only tracking money/gold now (removed utilities for simplification)
+        this.money = 5000;
     }
 
-    addSupply(supply) {
-        if (supply.electricity) this.totalSupply.electricity += supply.electricity;
-        if (supply.water) this.totalSupply.water += supply.water;
+    // Get current money value
+    getMoney() {
+        return this.money;
     }
 
-    removeSupply(supply) {
-        // Important if buildings are removed later
-        if (supply.electricity) this.totalSupply.electricity -= supply.electricity;
-        if (supply.water) this.totalSupply.water -= supply.water;
+    // Add money (e.g., from income)
+    addMoney(amount) {
+        this.money += amount;
+    }
+
+    // Remove money (e.g., for purchases)
+    removeMoney(amount) {
+        this.money -= amount;
         // Ensure non-negative values
-        this.totalSupply.electricity = Math.max(0, this.totalSupply.electricity);
-        this.totalSupply.water = Math.max(0, this.totalSupply.water);
+        this.money = Math.max(0, this.money);
     }
 
-    addDemand(demand) {
-        if (demand.electricity) this.totalDemand.electricity += demand.electricity;
-        if (demand.water) this.totalDemand.water += demand.water;
+    // Check if player can afford a cost
+    canAfford(cost) {
+        return this.money >= cost;
     }
 
-    removeDemand(demand) {
-        // Important if buildings are removed later
-        if (demand.electricity) this.totalDemand.electricity -= demand.electricity;
-        if (demand.water) this.totalDemand.water -= demand.water;
-        // Ensure non-negative values
-        this.totalDemand.electricity = Math.max(0, this.totalDemand.electricity);
-        this.totalDemand.water = Math.max(0, this.totalDemand.water);
-    }
-
-    checkGlobalSufficiency() {
-        const hasEnoughPower = this.totalSupply.electricity >= this.totalDemand.electricity;
-        const hasEnoughWater = this.totalSupply.water >= this.totalDemand.water;
-        return { hasEnoughPower, hasEnoughWater };
-    }
-
+    // For backwards compatibility - now just returns money in a format similar to before
     getResources() {
         return {
-            electricity: {
-                supply: this.totalSupply.electricity,
-                demand: this.totalDemand.electricity,
-                balance: this.totalSupply.electricity - this.totalDemand.electricity
-            },
-            water: {
-                supply: this.totalSupply.water,
-                demand: this.totalDemand.water,
-                balance: this.totalSupply.water - this.totalDemand.water
-            }
+            money: this.money
         };
     }
+
+    // For backwards compatibility - now no-ops
+    addSupply(supply) {
+        // No-op (removed for simplification)
+    }
+
+    // For backwards compatibility - now no-ops
+    removeSupply(supply) {
+        // No-op (removed for simplification)
+    }
+
+    // For backwards compatibility - now no-ops
+    addDemand(demand) {
+        // No-op (removed for simplification)
+    }
+
+    // For backwards compatibility - now no-ops
+    removeDemand(demand) {
+        // No-op (removed for simplification)
+    }
+
+    // For backwards compatibility - now always returns true
+    checkGlobalSufficiency() {
+        return { hasEnoughPower: true, hasEnoughWater: true };
+    }
+
+    // Reset resources
     reset() {
-        this.totalSupply = { electricity: 0, water: 0 };
-        this.totalDemand = { electricity: 0, water: 0 };
+        this.money = 5000;
         console.log("ResourceManager reset.");
     }
 } 
