@@ -87,22 +87,64 @@ export class BuildingManager {
              offsetToBottomCenter.y -= scaledModelSize.y / 2; // Adjust vector to point to bottom-center
              // Set the mesh's final position
              mesh.position.copy(targetPosition).sub(offsetToBottomCenter);
-            // Enable shadows for all child meshes within the model
+            // Enable shadows and enhance materials for all child meshes within the model
             mesh.traverse((child) => {
                 if (child.isMesh) {
+                    // Shadow settings
                     child.castShadow = true;
                     child.receiveShadow = true;
-                    // Optional: Adjust material properties if needed
-                    // child.material.metalness = 0.5;
-                    // child.material.roughness = 0.6;
-                 }
+                    
+                    // Ensure materials are properly set
+                    if (child.material) {
+                        // If material doesn't already have these properties set from the asset loader
+                        if (!child.material.metalnessMap) {
+                            child.material.metalness = 0.5;
+                        }
+                        if (!child.material.roughnessMap) {
+                            child.material.roughness = 0.6;
+                        }
+                        
+                        // Make sure basic properties are set
+                        if (!child.material.map) {
+                            // If no texture is available, set a fallback color
+                            child.material.color = new THREE.Color(buildingData.color);
+                        }
+                        
+                        // Apply any building-specific material adjustments
+                        if (typeKey === 'ALTAR') {
+                            // Altar-specific adjustments
+                            child.material.emissive = new THREE.Color(0xff6e40);
+                            child.material.emissiveIntensity = 0.3;
+                        } else if (typeKey === 'MINE') {
+                            // Mine-specific adjustments
+                            child.material.metalness = 0.8;
+                        } else if (typeKey === 'CITY_HALL') {
+                            // City Hall-specific adjustments
+                            child.material.roughness = 0.3;
+                        }
+                        
+                        // Ensure material updates are applied
+                        child.material.needsUpdate = true;
+                    }
+                }
             });
+            
+            // Add a point light to illuminate the model from within (for important buildings)
+            if (['ALTAR', 'CITY_HALL', 'MINE'].includes(typeKey)) {
+                const pointLight = new THREE.PointLight(0xffffff, 0.7, 4);
+                pointLight.position.set(0, 1, 0); // Position slightly above the center
+                mesh.add(pointLight);
+            }
         } else {
             console.warn(`Model for ${typeKey} not loaded yet or failed. Using fallback cube.`);
             // Fallback to cube geometry if model not ready
             const geometry = new THREE.BoxGeometry(buildingData.size.x, buildingData.size.y, buildingData.size.z);
             // Use a default material or the building's color
-            const material = new THREE.MeshStandardMaterial({ color: buildingData.color });
+            const material = new THREE.MeshStandardMaterial({ 
+                color: buildingData.color,
+                metalness: 0.5,
+                roughness: 0.6
+            });
             mesh = new THREE.Mesh(geometry, material);
             mesh.position.copy(position); // Use original position logic for cube
             mesh.castShadow = true;

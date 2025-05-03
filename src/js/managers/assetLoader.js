@@ -10,6 +10,14 @@ const assetMap = {
     CITY_HALL: { url: '/src/assets/cityhall.glb' }
 };
 
+// Texture paths - using PNG format instead of TGA
+const textureMap = {
+    color: '/src/assets/rts_texture/proto_human_RTS_color.png',
+    emission: '/src/assets/rts_texture/proto_human_RTS_emission.png',
+    metal: '/src/assets/rts_texture/proto_human_RTS_metal.png',
+    rough: '/src/assets/rts_texture/proto_human_RTS_rough.png'
+};
+
 export class AssetLoader {
     constructor() {
         this.gltfLoader = new GLTFLoader();
@@ -17,6 +25,7 @@ export class AssetLoader {
         this.loadedModels = {};
         this.isLoadingComplete = false;
         this.loadingPromises = {};
+        this.textures = {};
     }
 
     async loadAssets() {
@@ -24,6 +33,15 @@ export class AssetLoader {
         this.isLoadingComplete = false;
         this.loadedModels = {};
         this.loadingPromises = {};
+
+        // Load textures first
+        try {
+            await this.loadTextures();
+            console.log("AssetLoader: Textures loaded successfully.");
+        } catch (error) {
+            console.error("AssetLoader: Error loading textures:", error);
+            // Continue loading models even if textures fail
+        }
 
         const buildingTypes = Object.keys(assetMap);
         const allLoadPromises = [];
@@ -60,17 +78,88 @@ export class AssetLoader {
         }
     }
 
+    async loadTextures() {
+        const texturePromises = [];
+        
+        for (const [key, path] of Object.entries(textureMap)) {
+            const promise = new Promise((resolve, reject) => {
+                this.textureLoader.load(
+                    path,
+                    texture => {
+                        this.textures[key] = texture;
+                        console.log(`AssetLoader: Successfully loaded texture ${key}`);
+                        resolve(texture);
+                    },
+                    undefined,
+                    error => {
+                        console.warn(`AssetLoader: Could not load texture ${key} from ${path}. Using fallback material.`);
+                        // Instead of rejecting, resolve with null to allow the game to continue
+                        this.textures[key] = null;
+                        resolve(null);
+                    }
+                );
+            });
+            texturePromises.push(promise);
+        }
+        
+        return Promise.all(texturePromises);
+    }
+
     async loadGLTFModel(typeKey, modelUrl) {
         console.log(`AssetLoader [${typeKey}]: Loading GLTF from ${modelUrl}...`);
         try {
             const gltf = await this.gltfLoader.loadAsync(modelUrl);
             const model = gltf.scene;
             
-            // Apply any necessary transformations or material updates here
+            // Apply textures and material properties
             model.traverse((child) => {
                 if (child.isMesh) {
+                    // Enable shadows
                     child.castShadow = true;
                     child.receiveShadow = true;
+                    
+                    // Clone the material to prevent sharing across instances
+                    child.material = child.material.clone();
+                    
+                    // Apply textures if available
+                    if (this.textures.color) {
+                        child.material.map = this.textures.color.clone();
+                        child.material.map.needsUpdate = true;
+                    }
+                    
+                    if (this.textures.emission) {
+                        child.material.emissiveMap = this.textures.emission.clone();
+                        child.material.emissive = new THREE.Color(0xffffff);
+                        child.material.emissiveIntensity = 0.5;
+                        child.material.emissiveMap.needsUpdate = true;
+                    }
+                    
+                    if (this.textures.metal) {
+                        child.material.metalnessMap = this.textures.metal.clone();
+                        child.material.metalness = 0.7;
+                        child.material.metalnessMap.needsUpdate = true;
+                    }
+                    
+                    if (this.textures.rough) {
+                        child.material.roughnessMap = this.textures.rough.clone();
+                        child.material.roughness = 0.4;
+                        child.material.roughnessMap.needsUpdate = true;
+                    }
+                    
+                    // Set fallback material properties if textures failed to load
+                    if (!this.textures.color) {
+                        child.material.color = new THREE.Color(0x808080);
+                    }
+                    if (!this.textures.metal) {
+                        child.material.metalness = 0.5;
+                    }
+                    if (!this.textures.rough) {
+                        child.material.roughness = 0.6;
+                    }
+                    
+                    // Ensure material parameters are suitable for PBR
+                    child.material.envMapIntensity = 1.0;
+                    child.material.needsUpdate = true;
                 }
             });
 
