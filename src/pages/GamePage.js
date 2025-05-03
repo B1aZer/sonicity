@@ -38,7 +38,7 @@ export class GamePage {
                     0,
                     Math.sin(mineAngle) * radius   // Z position
                 );
-                const mine = this.game.buildingManager.placeBuilding('POWER_PLANT', minePosition);
+                const mine = this.game.buildingManager.placeBuilding('MINE', minePosition);
                 if (mine && mine.mesh) {
                     mine.mesh.userData.isMine = true;
                     mine.mesh.rotation.y = Math.PI / 2; // Rotate 90 degrees to face center
@@ -51,7 +51,7 @@ export class GamePage {
                     0,
                     Math.sin(cityHallAngle) * radius   // Z position
                 );
-                const cityHall = this.game.buildingManager.placeBuilding('WATER_TOWER', cityHallPosition);
+                const cityHall = this.game.buildingManager.placeBuilding('CITY_HALL', cityHallPosition);
                 if (cityHall && cityHall.mesh) {
                     cityHall.mesh.userData.isCityHall = true;
                     cityHall.mesh.rotation.y = -cityHallAngle; // Rotate to face center
@@ -64,7 +64,7 @@ export class GamePage {
                     0,
                     Math.sin(altarAngle) * radius   // Z position
                 );
-                const altar = this.game.buildingManager.placeBuilding('SHOP', altarPosition);
+                const altar = this.game.buildingManager.placeBuilding('ALTAR', altarPosition);
                 if (altar && altar.mesh) {
                     altar.mesh.userData.isAltar = true;
                     altar.mesh.rotation.y = altarAngle; // Rotate to face center
