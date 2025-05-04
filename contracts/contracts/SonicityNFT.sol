@@ -60,6 +60,17 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
         return baseURI;
     }
     
+    // Return token URI with image URL
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
+        
+        return string(abi.encodePacked(
+            baseURI,
+            tokenId.toString(),
+            ".json"
+        ));
+    }
+    
     // Withdraw funds from contract
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;

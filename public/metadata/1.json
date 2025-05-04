@@ -1,12 +1,5 @@
 {
-  "name": "Sonicity Land Plot #1",
+  "name": "Sonicity Test Collection #1",
   "description": "A premium land plot in the Sonicity metaverse",
-  "image": "/images/nft1.jpg",
-  "attributes": [
-    { "trait_type": "District", "value": "Central" },
-    { "trait_type": "Size", "value": "Large" },
-    { "trait_type": "Elevation", "value": "High" },
-    { "trait_type": "Resource Type", "value": "Energy" },
-    { "trait_type": "Resource Level", "value": "Abundant" }
-  ]
+  "image": "/images/nft1.jpg"
 } 

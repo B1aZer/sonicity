@@ -169,6 +169,9 @@ export class MintPage {
                     tokenId
                 );
 
+                // Get token URI for image
+                const tokenURI = await this.nftContract.tokenURI(tokenId);
+
                 // Map numeric values to display text
                 const districts = ['Central', 'North', 'East', 'South'];
 
@@ -176,7 +179,7 @@ export class MintPage {
                 nftCard.className = 'nft-card';
                 nftCard.innerHTML = `
                     <div class="nft-image">
-                        <img src="/images/default-nft.jpg" alt="Land Plot #${tokenId}" />
+                        <img src="${tokenURI}" onerror="this.src='/images/default-nft.jpg'" alt="Land Plot #${tokenId}" />
                     </div>
                     <div class="nft-info">
                         <h3>Land Plot #${tokenId}</h3>
@@ -247,7 +250,7 @@ export class MintPage {
             // Update the preview with the minted NFT
             this.updateNFTPreview(this.lastMintedTokenId);
             
-            statusElement.textContent = `Successfully minted ${amount} NFT(s)! Metadata will be set by the admin shortly.`;
+            statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
             statusElement.style.color = "green";
             
             // Update minted count
@@ -268,16 +271,19 @@ export class MintPage {
         try {
             // Get metadata from GameState
             const metadata = await this.gameStateContract.getNFTMetadata(
-                this.nftContractAddress, // collection address
-                tokenId                  // tokenId
+                this.nftContractAddress,
+                tokenId
             );
+            
+            // Get token URI for image
+            const tokenURI = await this.nftContract.tokenURI(tokenId);
             
             // Map numeric values to display text
             const districts = ['Central', 'North', 'East', 'South'];
             
             previewContainer.innerHTML = `
                 <div class="minted-nft">
-                    <img src="/images/default-nft.jpg" alt="Land Plot" />
+                    <img src="${tokenURI}" onerror="this.src='/images/default-nft.jpg'" alt="Land Plot" />
                     <div class="nft-details">
                         <h3>Land Plot #${tokenId}</h3>
                         <div class="nft-attributes">
