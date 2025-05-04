@@ -55,10 +55,7 @@ describe("Altar", function () {
       // Set metadata for the NFT
       const metadata = {
         district: 1,
-        size: 5,
-        elevation: 3,
-        resourceType: 2,
-        resourceLevel: 4
+        buildingSlots: 5
       };
       await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
@@ -77,6 +74,14 @@ describe("Altar", function () {
       // Mint and stake an NFT
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
+
+      // Set metadata for the NFT
+      const metadata = {
+        district: 1,
+        buildingSlots: 5
+      };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
+
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
@@ -89,6 +94,14 @@ describe("Altar", function () {
       // Mint and stake an NFT
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
+
+      // Set metadata for the NFT
+      const metadata = {
+        district: 1,
+        buildingSlots: 5
+      };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
+
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
@@ -101,6 +114,14 @@ describe("Altar", function () {
       // Mint and stake an NFT
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
+
+      // Set metadata for the NFT
+      const metadata = {
+        district: 1,
+        buildingSlots: 5
+      };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
+
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
@@ -116,6 +137,23 @@ describe("Altar", function () {
       const stake = await altar.getStakeData(tokenId);
       expect(stake.isActive).to.be.false;
     });
+
+    it("Should not allow staking an NFT with 0 building slots", async function () {
+      const tokenId = 1;
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
+      
+      const metadata = {
+        district: 1,
+        buildingSlots: 0
+      };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
+
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
+      
+      await expect(altar.connect(player1).stake(tokenId))
+        .to.be.revertedWith("NFT must have at least 1 building slot");
+    });
   });
 
   describe("Building Slots", function () {
@@ -127,10 +165,7 @@ describe("Altar", function () {
       // Set metadata with size 5
       const metadata = {
         district: 1,
-        size: 5,
-        elevation: 3,
-        resourceType: 2,
-        resourceLevel: 4
+        buildingSlots: 5
       };
       await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
@@ -141,7 +176,7 @@ describe("Altar", function () {
 
       // Check building slots
       const slots = await gameState.getBuildingSlots(await player1.getAddress());
-      expect(slots).to.equal(metadata.size);
+      expect(slots).to.equal(metadata.buildingSlots);
     });
   });
 }); 

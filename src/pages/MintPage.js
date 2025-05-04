@@ -171,10 +171,6 @@ export class MintPage {
 
                 // Map numeric values to display text
                 const districts = ['', 'Central', 'North', 'East', 'South'];
-                const sizes = ['', 'Small', 'Medium', 'Large'];
-                const elevations = ['', 'Low', 'Medium', 'High'];
-                const resources = ['', 'Energy', 'Water', 'Minerals'];
-                const resourceLevels = ['', 'Low', 'Moderate', 'High', 'Abundant'];
 
                 const nftCard = document.createElement('div');
                 nftCard.className = 'nft-card';
@@ -190,20 +186,8 @@ export class MintPage {
                                 <span class="value">${districts[metadata.district]}</span>
                             </div>
                             <div class="attribute">
-                                <span class="label">Size:</span>
-                                <span class="value">${sizes[metadata.size]}</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Elevation:</span>
-                                <span class="value">${elevations[metadata.elevation]}</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Resource:</span>
-                                <span class="value">${resources[metadata.resourceType]}</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Resource Level:</span>
-                                <span class="value">${resourceLevels[metadata.resourceLevel]}</span>
+                                <span class="label">Building Slots:</span>
+                                <span class="value">${metadata.buildingSlots}</span>
                             </div>
                         </div>
                     </div>
@@ -290,10 +274,6 @@ export class MintPage {
             
             // Map numeric values to display text
             const districts = ['', 'Central', 'North', 'East', 'South'];
-            const sizes = ['', 'Small', 'Medium', 'Large'];
-            const elevations = ['', 'Low', 'Medium', 'High'];
-            const resources = ['', 'Energy', 'Water', 'Minerals'];
-            const resourceLevels = ['', 'Low', 'Moderate', 'High', 'Abundant'];
             
             previewContainer.innerHTML = `
                 <div class="minted-nft">
@@ -306,20 +286,8 @@ export class MintPage {
                                 <span class="value">${districts[metadata.district]}</span>
                             </div>
                             <div class="attribute">
-                                <span class="label">Size:</span>
-                                <span class="value">${sizes[metadata.size]}</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Elevation:</span>
-                                <span class="value">${elevations[metadata.elevation]}</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Resource:</span>
-                                <span class="value">${resources[metadata.resourceType]}</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Resource Level:</span>
-                                <span class="value">${resourceLevels[metadata.resourceLevel]}</span>
+                                <span class="label">Building Slots:</span>
+                                <span class="value">${metadata.buildingSlots}</span>
                             </div>
                         </div>
                     </div>

@@ -91,10 +91,7 @@ describe("GameState", function () {
       // Set metadata for the NFT
       const metadata = {
         district: 1,
-        size: 5,
-        elevation: 3,
-        resourceType: 2,
-        resourceLevel: 4
+        buildingSlots: 5
       };
       await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
@@ -104,7 +101,7 @@ describe("GameState", function () {
 
       // Check that slots were updated
       const slots = await gameState.getBuildingSlots(player1Address);
-      expect(slots).to.equal(metadata.size);
+      expect(slots).to.equal(metadata.buildingSlots);
     });
 
     it("Should not allow non-Altar contracts to update building slots", async function () {
@@ -152,20 +149,14 @@ describe("GameState", function () {
       
       const metadata = {
         district: 1,
-        size: 5,
-        elevation: 3,
-        resourceType: 2,
-        resourceLevel: 4
+        buildingSlots: 5
       };
 
       await gameState.connect(owner).setNFTMetadata(collectionAddress, 1, metadata);
       const retrievedMetadata = await gameState.getNFTMetadata(collectionAddress, 1);
       
       expect(retrievedMetadata.district).to.equal(metadata.district);
-      expect(retrievedMetadata.size).to.equal(metadata.size);
-      expect(retrievedMetadata.elevation).to.equal(metadata.elevation);
-      expect(retrievedMetadata.resourceType).to.equal(metadata.resourceType);
-      expect(retrievedMetadata.resourceLevel).to.equal(metadata.resourceLevel);
+      expect(retrievedMetadata.buildingSlots).to.equal(metadata.buildingSlots);
     });
 
     it("Should verify NFT ownership correctly", async function () {

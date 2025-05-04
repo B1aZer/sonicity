@@ -20,10 +20,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Structure to store NFT metadata
     struct NFTMetadata {
         uint8 district;      // District number (0-9)
-        uint8 size;          // Size of the plot (1-5)
-        uint8 elevation;     // Elevation level (0-10)
-        uint8 resourceType;  // Resource type (0-5) - 0: None, 1: Water, 2: Energy, etc.
-        uint8 resourceLevel; // Resource abundance (0-10)
+        uint8 buildingSlots; // Number of building slots (1-5)
     }
 
     // Mapping from NFT contract address to token ID to metadata

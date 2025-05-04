@@ -38,8 +38,8 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     // Minimum staking duration in seconds (e.g., 7 days)
     uint256 public minStakingDuration;
     
-    // Slots per NFT based on land size
-    mapping(uint8 => uint256) public slotsPerSize;
+    // Slots per NFT based on building slots
+    mapping(uint8 => uint256) public slotsPerBuildingSlot;
 
     // Events
     event NFTStaked(address indexed user, uint256 indexed tokenId, uint256 timestamp);
@@ -59,12 +59,12 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         gameState = GameState(_gameState);
         minStakingDuration = 7 days;
         
-        // Initialize slots per land size
-        slotsPerSize[1] = 1;  // Size 1: 1 slot
-        slotsPerSize[2] = 2;  // Size 2: 2 slots
-        slotsPerSize[3] = 3;  // Size 3: 3 slots
-        slotsPerSize[4] = 4;  // Size 4: 4 slots
-        slotsPerSize[5] = 5;  // Size 5: 5 slots
+        // Initialize slots per building slot
+        slotsPerBuildingSlot[1] = 1;  // 1 building slot
+        slotsPerBuildingSlot[2] = 2;  // 2 building slots
+        slotsPerBuildingSlot[3] = 3;  // 3 building slots
+        slotsPerBuildingSlot[4] = 4;  // 4 building slots
+        slotsPerBuildingSlot[5] = 5;  // 5 building slots
     }
 
     // Required by UUPS pattern
@@ -81,6 +81,9 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         // Get NFT metadata from GameState
         GameState.NFTMetadata memory metadata = gameState.getNFTMetadata(address(sonicityNFT), tokenId);
         
+        // Check building slots
+        require(metadata.buildingSlots > 0, "NFT must have at least 1 building slot");
+        
         // Transfer NFT to this contract
         sonicityNFT.transferFrom(msg.sender, address(this), tokenId);
         
@@ -96,7 +99,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         userStakes[msg.sender].push(tokenId);
         
         // Calculate and update building slots in GameState
-        uint256 newSlots = slotsPerSize[metadata.size];
+        uint256 newSlots = slotsPerBuildingSlot[metadata.buildingSlots];
         gameState.updateBuildingSlots(msg.sender, newSlots);
         
         emit NFTStaked(msg.sender, tokenId, block.timestamp);
@@ -132,7 +135,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         }
         
         // Calculate and update building slots in GameState
-        uint256 slotsToRemove = slotsPerSize[metadata.size];
+        uint256 slotsToRemove = slotsPerBuildingSlot[metadata.buildingSlots];
         uint256 currentSlots = gameState.getBuildingSlots(msg.sender);
         gameState.updateBuildingSlots(msg.sender, currentSlots - slotsToRemove);
         
@@ -169,12 +172,12 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     }
 
     /**
-     * @dev Update slots per land size (only owner)
-     * @param size The land size (1-5)
+     * @dev Update slots per building slot (only owner)
+     * @param size The building slot size (1-5)
      * @param slots Number of slots for that size
      */
-    function setSlotsPerSize(uint8 size, uint256 slots) external onlyOwner {
-        require(size >= 1 && size <= 5, "Invalid land size");
-        slotsPerSize[size] = slots;
+    function setSlotsPerBuildingSlot(uint8 size, uint256 slots) external onlyOwner {
+        require(size >= 1 && size <= 5, "Invalid building slot size");
+        slotsPerBuildingSlot[size] = slots;
     }
 } 
