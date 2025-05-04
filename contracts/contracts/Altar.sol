@@ -78,8 +78,8 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         require(sonicityNFT.ownerOf(tokenId) == msg.sender, "Not the NFT owner");
         require(!stakes[tokenId].isActive, "NFT already staked");
         
-        // Get land plot data
-        SonicityNFT.LandPlot memory plot = sonicityNFT.getLandPlot(tokenId);
+        // Get NFT metadata from GameState
+        GameState.NFTMetadata memory metadata = gameState.getNFTMetadata(address(sonicityNFT), tokenId);
         
         // Transfer NFT to this contract
         sonicityNFT.transferFrom(msg.sender, address(this), tokenId);
@@ -96,7 +96,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         userStakes[msg.sender].push(tokenId);
         
         // Calculate and update building slots in GameState
-        uint256 newSlots = slotsPerSize[plot.size];
+        uint256 newSlots = slotsPerSize[metadata.size];
         gameState.updateBuildingSlots(msg.sender, newSlots);
         
         emit NFTStaked(msg.sender, tokenId, block.timestamp);
@@ -115,8 +115,8 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
             "Staking period not completed"
         );
         
-        // Get land plot data
-        SonicityNFT.LandPlot memory plot = sonicityNFT.getLandPlot(tokenId);
+        // Get NFT metadata from GameState
+        GameState.NFTMetadata memory metadata = gameState.getNFTMetadata(address(sonicityNFT), tokenId);
         
         // Update stake status
         stakes[tokenId].isActive = false;
@@ -132,7 +132,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         }
         
         // Calculate and update building slots in GameState
-        uint256 slotsToRemove = slotsPerSize[plot.size];
+        uint256 slotsToRemove = slotsPerSize[metadata.size];
         uint256 currentSlots = gameState.getBuildingSlots(msg.sender);
         gameState.updateBuildingSlots(msg.sender, currentSlots - slotsToRemove);
         

@@ -5,6 +5,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./Altar.sol";
 
 /**
@@ -16,6 +17,21 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Reference to the Altar contract
     Altar public altar;
 
+    // Structure to store NFT metadata
+    struct NFTMetadata {
+        uint8 district;      // District number (0-9)
+        uint8 size;          // Size of the plot (1-5)
+        uint8 elevation;     // Elevation level (0-10)
+        uint8 resourceType;  // Resource type (0-5) - 0: None, 1: Water, 2: Energy, etc.
+        uint8 resourceLevel; // Resource abundance (0-10)
+    }
+
+    // Mapping from NFT contract address to token ID to metadata
+    mapping(address => mapping(uint256 => NFTMetadata)) public nftMetadata;
+    
+    // List of approved NFT collections
+    mapping(address => bool) public approvedCollections;
+    
     // City state
     struct City {
         uint256 treasury;
@@ -47,6 +63,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event GoldDonated(address indexed player, uint256 amount);
     event GoldEarned(address indexed player, uint256 amount);
     event RepEarned(address indexed player, uint256 amount);
+    event CollectionApproved(address indexed collection);
+    event CollectionRemoved(address indexed collection);
+    event NFTMetadataUpdated(address indexed collection, uint256 indexed tokenId);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -81,6 +100,70 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
 
     // Required by UUPS pattern
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    /**
+     * @dev Approve a new NFT collection
+     * @param collection The address of the NFT collection
+     */
+    function approveCollection(address collection) external onlyOwner {
+        approvedCollections[collection] = true;
+        emit CollectionApproved(collection);
+    }
+
+    /**
+     * @dev Remove an NFT collection
+     * @param collection The address of the NFT collection
+     */
+    function removeCollection(address collection) external onlyOwner {
+        approvedCollections[collection] = false;
+        emit CollectionRemoved(collection);
+    }
+
+    /**
+     * @dev Set metadata for an NFT
+     * @param collection The address of the NFT collection
+     * @param tokenId The token ID
+     * @param metadata The metadata to set
+     */
+    function setNFTMetadata(
+        address collection,
+        uint256 tokenId,
+        NFTMetadata memory metadata
+    ) external onlyOwner {
+        require(approvedCollections[collection], "Collection not approved");
+        nftMetadata[collection][tokenId] = metadata;
+        emit NFTMetadataUpdated(collection, tokenId);
+    }
+
+    /**
+     * @dev Get metadata for an NFT
+     * @param collection The address of the NFT collection
+     * @param tokenId The token ID
+     * @return NFTMetadata The metadata for the NFT
+     */
+    function getNFTMetadata(
+        address collection,
+        uint256 tokenId
+    ) external view returns (NFTMetadata memory) {
+        require(approvedCollections[collection], "Collection not approved");
+        return nftMetadata[collection][tokenId];
+    }
+
+    /**
+     * @dev Verify NFT ownership
+     * @param collection The address of the NFT collection
+     * @param tokenId The token ID
+     * @param owner The address to verify ownership for
+     * @return bool Whether the address owns the NFT
+     */
+    function verifyNFTOwnership(
+        address collection,
+        uint256 tokenId,
+        address owner
+    ) external view returns (bool) {
+        require(approvedCollections[collection], "Collection not approved");
+        return IERC721(collection).ownerOf(tokenId) == owner;
+    }
 
     /**
      * @dev Join a city

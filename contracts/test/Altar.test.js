@@ -39,6 +39,9 @@ describe("Altar", function () {
     // Update GameState's altar address
     await gameState.connect(owner).setAltarAddress(altarAddress);
 
+    // Approve the NFT collection in GameState
+    await gameState.connect(owner).approveCollection(sonicityNFTAddress);
+
     // Join city for testing
     await gameState.connect(player1).joinCity(1);
   });
@@ -48,6 +51,16 @@ describe("Altar", function () {
       // Mint an NFT to player1
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
+
+      // Set metadata for the NFT
+      const metadata = {
+        district: 1,
+        size: 5,
+        elevation: 3,
+        resourceType: 2,
+        resourceLevel: 4
+      };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
       // Stake the NFT
       const altarAddress = await altar.getAddress();
@@ -106,13 +119,20 @@ describe("Altar", function () {
   });
 
   describe("Building Slots", function () {
-    it("Should update building slots based on land size", async function () {
+    it("Should update building slots based on land size from metadata", async function () {
       // Mint an NFT to player1
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
 
-      // Use static size of 5 for testing
-      const expectedSlots = 5;
+      // Set metadata with size 5
+      const metadata = {
+        district: 1,
+        size: 5,
+        elevation: 3,
+        resourceType: 2,
+        resourceLevel: 4
+      };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
       // Stake the NFT
       const altarAddress = await altar.getAddress();
@@ -121,7 +141,7 @@ describe("Altar", function () {
 
       // Check building slots
       const slots = await gameState.getBuildingSlots(await player1.getAddress());
-      expect(slots).to.equal(expectedSlots);
+      expect(slots).to.equal(metadata.size);
     });
   });
 }); 
