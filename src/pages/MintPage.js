@@ -4,6 +4,7 @@ import { CONTRACT_ADDRESSES, CONTRACT_CONFIG } from '../js/utils/constants.js';
 import { appState } from '../js/core/state.js';
 import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
 import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
+import GameStateABI from '../../contracts/artifacts/contracts/GameState.sol/GameState.json';
 import '../styles/nft-collection.css';
 import '../styles/mint-page.css';
 
@@ -13,11 +14,13 @@ export class MintPage {
         this.element.className = 'mint-page';
         this.provider = null;
         this.signer = null;
-        this.contract = null;
+        this.nftContract = null;
+        this.gameStateContract = null;
         this.tokensMinted = 0;
         this.maxSupply = CONTRACT_CONFIG.MAX_SUPPLY;
         this.mintPrice = CONTRACT_CONFIG.MINT_PRICE;
-        this.contractAddress = CONTRACT_ADDRESSES.SONICITY_NFT;
+        this.nftContractAddress = CONTRACT_ADDRESSES.SONICITY_NFT;
+        this.gameStateAddress = CONTRACT_ADDRESSES.GAME_STATE;
         this.nftCollection = new NFTCollection();
         this.lastMintedTokenId = null;
         this.render();
@@ -113,10 +116,16 @@ export class MintPage {
         this.provider = new ethers.BrowserProvider(window.ethereum);
         this.signer = await this.provider.getSigner();
         
-        // Initialize contract
-        this.contract = new ethers.Contract(
-            this.contractAddress,
+        // Initialize contracts
+        this.nftContract = new ethers.Contract(
+            this.nftContractAddress,
             SonicityNFTABI.abi,
+            this.signer
+        );
+
+        this.gameStateContract = new ethers.Contract(
+            this.gameStateAddress,
+            GameStateABI.abi,
             this.signer
         );
         
@@ -130,8 +139,8 @@ export class MintPage {
     async getMintCount() {
         try {
             // Get total supply from contract
-            const totalSupply = await this.contract.totalSupply();
-            this.tokensMinted = totalSupply.toNumber();
+            const totalSupply = await this.nftContract.totalSupply();
+            this.tokensMinted = Number(totalSupply);
             
             // Update UI
             const tokensMintedElement = this.element.querySelector('#tokens-minted');
@@ -160,7 +169,7 @@ export class MintPage {
             const totalPrice = pricePerToken * BigInt(amount);
             
             // Call the mint function on the contract
-            const tx = await this.contract.mint(amount, { value: totalPrice });
+            const tx = await this.nftContract.mint(amount, { value: totalPrice });
             
             // Wait for transaction to be mined
             statusElement.textContent = "Transaction sent! Waiting for confirmation...";
@@ -168,6 +177,37 @@ export class MintPage {
             
             // Get the minted token ID
             this.lastMintedTokenId = this.tokensMinted + 1;
+            
+            // Check if collection is approved
+            const isApproved = await this.gameStateContract.approvedCollections(this.nftContractAddress);
+            
+            if (!isApproved) {
+                statusElement.textContent = "Collection not approved. Please contact the game administrator.";
+                statusElement.style.color = "red";
+                return;
+            }
+            
+            // Set metadata in GameState
+            const metadata = {
+                district: 1,      // Central district
+                size: 2,          // Medium size
+                elevation: 2,     // Medium elevation
+                resourceType: 1,  // Energy
+                resourceLevel: 2  // Moderate
+            };
+            
+            // Try to set metadata, but don't fail if it doesn't work
+            try {
+                await this.gameStateContract.setNFTMetadata(
+                    this.nftContractAddress, // collection address
+                    this.lastMintedTokenId,  // tokenId
+                    metadata                 // metadata struct
+                );
+            } catch (error) {
+                console.warn("Could not set metadata:", error);
+                statusElement.textContent = "NFT minted, but metadata could not be set. Please contact the game administrator.";
+                statusElement.style.color = "orange";
+            }
             
             // Update the preview with the minted NFT
             this.updateNFTPreview(this.lastMintedTokenId);
@@ -189,40 +229,54 @@ export class MintPage {
 
     async updateNFTPreview(tokenId) {
         const previewContainer = this.element.querySelector('.nft-preview');
-        const nft = this.nftCollection.nfts[tokenId - 1]; // Arrays are 0-based
         
-        if (nft) {
+        try {
+            // Get metadata from GameState
+            const metadata = await this.gameStateContract.getNFTMetadata(
+                this.nftContractAddress, // collection address
+                tokenId                  // tokenId
+            );
+            
+            // Map numeric values to display text
+            const districts = ['', 'Central', 'North', 'East', 'South'];
+            const sizes = ['', 'Small', 'Medium', 'Large'];
+            const elevations = ['', 'Low', 'Medium', 'High'];
+            const resources = ['', 'Energy', 'Water', 'Minerals'];
+            const resourceLevels = ['', 'Low', 'Moderate', 'High', 'Abundant'];
+            
             previewContainer.innerHTML = `
                 <div class="minted-nft">
-                    <img src="${nft.image}" alt="${nft.name}" />
+                    <img src="/images/default-nft.jpg" alt="Land Plot" />
                     <div class="nft-details">
-                        <h3>${nft.name}</h3>
-                        <p>${nft.description}</p>
+                        <h3>Land Plot #${tokenId}</h3>
                         <div class="nft-attributes">
                             <div class="attribute">
                                 <span class="label">District:</span>
-                                <span class="value">${nft.attributes.district}</span>
+                                <span class="value">${districts[metadata.district]}</span>
                             </div>
                             <div class="attribute">
                                 <span class="label">Size:</span>
-                                <span class="value">${nft.attributes.size}</span>
+                                <span class="value">${sizes[metadata.size]}</span>
                             </div>
                             <div class="attribute">
                                 <span class="label">Elevation:</span>
-                                <span class="value">${nft.attributes.elevation}</span>
+                                <span class="value">${elevations[metadata.elevation]}</span>
                             </div>
                             <div class="attribute">
                                 <span class="label">Resource:</span>
-                                <span class="value">${nft.attributes.resourceType}</span>
+                                <span class="value">${resources[metadata.resourceType]}</span>
                             </div>
                             <div class="attribute">
                                 <span class="label">Resource Level:</span>
-                                <span class="value">${nft.attributes.resourceLevel}</span>
+                                <span class="value">${resourceLevels[metadata.resourceLevel]}</span>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
+        } catch (error) {
+            console.error("Error updating NFT preview:", error);
+            previewContainer.innerHTML = '<div class="error">Error loading NFT details</div>';
         }
     }
 
