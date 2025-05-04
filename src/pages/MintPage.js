@@ -170,7 +170,7 @@ export class MintPage {
                 );
 
                 // Map numeric values to display text
-                const districts = ['', 'Central', 'North', 'East', 'South'];
+                const districts = ['Central', 'North', 'East', 'South'];
 
                 const nftCard = document.createElement('div');
                 nftCard.className = 'nft-card';
@@ -273,7 +273,7 @@ export class MintPage {
             );
             
             // Map numeric values to display text
-            const districts = ['', 'Central', 'North', 'East', 'South'];
+            const districts = ['Central', 'North', 'East', 'South'];
             
             previewContainer.innerHTML = `
                 <div class="minted-nft">
