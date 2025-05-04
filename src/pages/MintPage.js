@@ -178,41 +178,10 @@ export class MintPage {
             // Get the minted token ID
             this.lastMintedTokenId = this.tokensMinted + 1;
             
-            // Check if collection is approved
-            const isApproved = await this.gameStateContract.approvedCollections(this.nftContractAddress);
-            
-            if (!isApproved) {
-                statusElement.textContent = "Collection not approved. Please contact the game administrator.";
-                statusElement.style.color = "red";
-                return;
-            }
-            
-            // Set metadata in GameState
-            const metadata = {
-                district: 1,      // Central district
-                size: 2,          // Medium size
-                elevation: 2,     // Medium elevation
-                resourceType: 1,  // Energy
-                resourceLevel: 2  // Moderate
-            };
-            
-            // Try to set metadata, but don't fail if it doesn't work
-            try {
-                await this.gameStateContract.setNFTMetadata(
-                    this.nftContractAddress, // collection address
-                    this.lastMintedTokenId,  // tokenId
-                    metadata                 // metadata struct
-                );
-            } catch (error) {
-                console.warn("Could not set metadata:", error);
-                statusElement.textContent = "NFT minted, but metadata could not be set. Please contact the game administrator.";
-                statusElement.style.color = "orange";
-            }
-            
             // Update the preview with the minted NFT
             this.updateNFTPreview(this.lastMintedTokenId);
             
-            statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
+            statusElement.textContent = `Successfully minted ${amount} NFT(s)! Metadata will be set by the admin shortly.`;
             statusElement.style.color = "green";
             
             // Update minted count

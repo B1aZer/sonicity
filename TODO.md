@@ -1,3 +1,6 @@
+export GAME_STATE_ADDRESS="0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82"
+export SONICITY_NFT_ADDRESS="0xa513E6E4b8f2a923D98304ec87F64353C4D5C853"
+
 1. What to do with city treasureis? Maybe destribute a little, or use it for funding? Or decide with governance. Something in late game, I think great buidlings, should distribute income from it. Another great building allows spends of the gold with 51% govern
 2. why do external players buy gold? And more impotatnly how they receiev it through marketplace? I think most common way to get it directly to play and she can choose to spend on homes, homes upgrades, contrbute ,lottery and so on
 
