@@ -33,13 +33,16 @@ export class MapPage {
                     console.log('Current player city:', currentCity);
 
                     if (currentCity) {
-                        Toast.info('Entering city...');
+                        //Toast.info('Entering city...');
                         appState.setCurrentCityId(currentCity);
                         window.history.pushState({}, '', '/dashboard');
                         window.dispatchEvent(new PopStateEvent('popstate'));
                         return;
                     }
-                    
+
+                    // Show loading message
+                    Toast.info('Joining city...');
+
                     // Join the city
                     await this.gameStateContract.joinCity(cityId);
 
