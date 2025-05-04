@@ -62,25 +62,6 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     
     // Return token URI with metadata JSON URL
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
-        
-        // Returns URL to JSON metadata file
-        // The JSON should follow ERC721 metadata standard:
-        // {
-        //     "name": "Land Plot #1",
-        //     "description": "A plot of land in Sonicity",
-        //     "image": "https://api.sonicity.game/images/1.jpg",
-        //     "attributes": [
-        //         {
-        //             "trait_type": "District",
-        //             "value": "Central"
-        //         },
-        //         {
-        //             "trait_type": "Building Slots",
-        //             "value": 5
-        //         }
-        //     ]
-        // }
         return string(abi.encodePacked(
             baseURI,
             tokenId.toString(),
