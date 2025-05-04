@@ -129,7 +129,8 @@ export class GamePage {
                         window.history.pushState({}, '', '/dashboard');
                         window.dispatchEvent(new PopStateEvent('popstate'));
                     } else if (buildingMesh.userData.isAltar) {
-                        this.showStakeNFTModal();
+                        window.history.pushState({}, '', '/stake');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
                     }
                 }
             }

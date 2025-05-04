@@ -32,7 +32,6 @@ export class StakePage {
         this.nftContractAddress = CONTRACT_ADDRESSES.SONICITY_NFT;
         this.gameStateAddress = CONTRACT_ADDRESSES.GAME_STATE;
         this.altarAddress = CONTRACT_ADDRESSES.ALTAR;
-        this.render();
         this.setupEventListeners();
         this.initializeConnection();
     }
@@ -188,22 +187,6 @@ export class StakePage {
             console.error("Error staking NFT:", error);
             statusElement.innerHTML = '<div class="error">Error staking NFT. Please try again.</div>';
         }
-    }
-
-    render() {
-        this.container.innerHTML = `
-            <div class="stake-container">
-                <h1>Stake Your NFTs</h1>
-                <div class="wallet-section">
-                    <button class="connect-button">Connect Wallet</button>
-                </div>
-                <div class="stake-status"></div>
-                <div class="owned-nfts-container">
-                    <h2>Your NFTs</h2>
-                    <div class="nft-list"></div>
-                </div>
-            </div>
-        `;
     }
 
     mount(container) {

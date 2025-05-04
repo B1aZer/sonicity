@@ -6,6 +6,7 @@ import { DashboardPage } from '../../pages/DashboardPage.js';
 import { MapPage } from '../../pages/MapPage.js';
 import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
+import { StakePage } from '../../pages/StakePage.js';
 import { appState } from './state.js';
 import { AccessControl } from '../utils/accessControl.js';
 import { Toast } from '../utils/toast.js';
@@ -13,6 +14,7 @@ import { GameStateContract } from '../contracts/GameStateContract.js';
 import '../../styles/access-page.css';
 import '../../styles/dashboard-page.css';
 import '../../styles/map-page.css';
+import '../../styles/stake-page.css';
 
 class App {
     constructor() {
@@ -123,6 +125,10 @@ class App {
                 break;
             case 'access':
                 this.currentPage = new AccessPage();
+                this.currentPage.mount(this.container);
+                break;
+            case 'stake':
+                this.currentPage = new StakePage();
                 this.currentPage.mount(this.container);
                 break;
             default:
