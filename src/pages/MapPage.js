@@ -39,10 +39,7 @@ export class MapPage {
                         window.dispatchEvent(new PopStateEvent('popstate'));
                         return;
                     }
-
-                    // Show loading message
-                    Toast.info('Joining city...');
-
+                    
                     // Join the city
                     await this.gameStateContract.joinCity(cityId);
 
