@@ -124,7 +124,7 @@ export class StakePage {
                 const metadata = await response.json();
                 
                 // Get game state metadata
-                const gameStateMetadata = await this.gameStateContract.getNFTMetadata(tokenId);
+                const gameStateMetadata = await this.gameStateContract.getNFTMetadata(this.nftContractAddress, tokenId);
                 
                 nftListHTML += `
                     <div class="nft-card">
@@ -144,13 +144,22 @@ export class StakePage {
                                     <span class="value">${gameStateMetadata.buildingSlots}</span>
                                 </div>
                             </div>
-                            <button class="stake-button" onclick="window.stakeNFT(${tokenId})">Stake NFT</button>
+                            <button class="stake-button" data-token-id="${tokenId}">Stake NFT</button>
                         </div>
                     </div>
                 `;
             }
 
             ownedNFTsContainer.innerHTML = nftListHTML;
+
+            // Add event listeners to all stake buttons
+            const stakeButtons = ownedNFTsContainer.querySelectorAll('.stake-button');
+            stakeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tokenId = button.dataset.tokenId;
+                    this.stakeNFT(tokenId);
+                });
+            });
         } catch (error) {
             console.error("Error loading user's NFTs:", error);
             const ownedNFTsContainer = this.container.querySelector('.nft-list');
