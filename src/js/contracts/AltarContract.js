@@ -33,7 +33,7 @@ export class AltarContract extends BaseContract {
         return await this.call('minStakingDuration');
     }
 
-    async getSlotsPerSize(size) {
-        return await this.call('slotsPerSize', size);
+    async getGameStateAddress() {
+        return await this.call('gameState');
     }
 } 

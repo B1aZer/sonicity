@@ -76,4 +76,29 @@ export class GameStateContract extends BaseContract {
     async getBuildingRequirements(tier, buildingName) {
         return await this.call('buildingRequirements', tier, buildingName);
     }
+
+    // New methods for NFT collection management
+    async approveCollection(collectionAddress) {
+        return await this.transact('approveCollection', collectionAddress);
+    }
+
+    async removeCollection(collectionAddress) {
+        return await this.transact('removeCollection', collectionAddress);
+    }
+
+    async isCollectionApproved(collectionAddress) {
+        return await this.call('approvedCollections', collectionAddress);
+    }
+
+    async setNFTMetadata(tokenId, metadata) {
+        return await this.transact('setNFTMetadata', tokenId, metadata);
+    }
+
+    async getNFTMetadata(tokenId) {
+        return await this.call('nftMetadata', tokenId);
+    }
+
+    async verifyNFTOwnership(collectionAddress, tokenId) {
+        return await this.call('verifyNFTOwnership', collectionAddress, tokenId);
+    }
 } 
