@@ -142,8 +142,15 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         address collection,
         uint256 tokenId
     ) external view returns (NFTMetadata memory) {
-        require(approvedCollections[collection], "Collection not approved");
-        return nftMetadata[collection][tokenId];
+        NFTMetadata memory metadata = nftMetadata[collection][tokenId];
+        // If metadata is not set (district and buildingSlots are 0), return default values
+        if (metadata.district == 0 && metadata.buildingSlots == 0) {
+            return NFTMetadata({
+                district: 0,
+                buildingSlots: 5
+            });
+        }
+        return metadata;
     }
 
     /**
