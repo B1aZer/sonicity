@@ -40,7 +40,7 @@ export class NFTCollection {
                         id: nft.tokenId,
                         collection: collectionAddress,
                         name: metadata.name || `NFT #${nft.tokenId}`,
-                        image: metadata.image || '/images/default-nft.jpg',
+                        image: metadata.image || '/images/placeholder.png',
                         description: metadata.description || 'A land plot in the Sonicity metaverse',
                         attributes: metadata.attributes || {},
                         isStaked

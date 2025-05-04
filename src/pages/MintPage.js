@@ -179,7 +179,7 @@ export class MintPage {
                 nftCard.className = 'nft-card';
                 nftCard.innerHTML = `
                     <div class="nft-image">
-                        <img src="${tokenURI}" onerror="this.src='/images/default-nft.jpg'" alt="Land Plot #${tokenId}" />
+                        <img src="${tokenURI}" onerror="this.src='/images/placeholder.jpg'" alt="Land Plot #${tokenId}" />
                     </div>
                     <div class="nft-info">
                         <h3>Land Plot #${tokenId}</h3>
@@ -283,7 +283,7 @@ export class MintPage {
             
             previewContainer.innerHTML = `
                 <div class="minted-nft">
-                    <img src="${tokenURI}" onerror="this.src='/images/default-nft.jpg'" alt="Land Plot" />
+                    <img src="${tokenURI}" onerror="this.src='/images/placeholder.jpg'" alt="Land Plot" />
                     <div class="nft-details">
                         <h3>Land Plot #${tokenId}</h3>
                         <div class="nft-attributes">
