@@ -32,7 +32,7 @@ export class MapPage {
                     const currentCity = await this.gameStateContract.getPlayerCity();
                     console.log('Current player city:', currentCity);
 
-                    if (currentCity !== 0) {
+                    if (currentCity) {
                         Toast.info('Entering city...');
                         appState.setCurrentCityId(currentCity);
                         window.history.pushState({}, '', '/dashboard');

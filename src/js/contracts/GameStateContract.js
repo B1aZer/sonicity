@@ -27,9 +27,15 @@ export class GameStateContract extends BaseContract {
     }
 
     async getPlayerCity() {
-        const address = await this.getAddress();
-        const cityId = await this.call('playerCity', address);
-        return Number(cityId);
+        try {
+            const address = await this.getAddress();
+            const cityId = await this.call('playerCity', address);
+            // If cityId is 0 or empty, return null to indicate no city
+            return cityId && cityId !== '0x' ? Number(cityId) : null;
+        } catch (error) {
+            console.error('Error getting player city:', error);
+            return null;
+        }
     }
 
     async getBuildingSlots() {

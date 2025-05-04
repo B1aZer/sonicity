@@ -2,9 +2,9 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0x9A676e781A523b5d0C0e43731313A708CB607508",
-    ALTAR: "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
-    GAME_STATE: "0x68B1D87F95878fE05B998F19b66F4baba5De1aed"
+    SONICITY_NFT: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    ALTAR: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
+    GAME_STATE: "0x0165878A594ca255338adfa4d48449f69242Eb8F"
 };
 
 // Contract configuration
@@ -40,7 +40,7 @@ export const BUILDING_TYPES = {
     },
     CITY_HALL: {
         name: 'City Hall',
-        size: new THREE.Vector3(4, 4, 4), // Size for visual representation
+        size: new THREE.Vector3(8, 8, 8), // Size for visual representation
         color: 0xB0C4DE, // Light Steel Blue
         cost: 800
         // No longer generates resources or has range (simplified)
