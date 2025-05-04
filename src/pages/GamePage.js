@@ -82,7 +82,7 @@ export class GamePage {
             const cityHall = this.game.buildingManager.placeBuilding('CITY_HALL', cityHallPosition);
             if (cityHall && cityHall.mesh) {
                 cityHall.mesh.userData.isCityHall = true;
-                cityHall.mesh.rotation.y = -cityHallAngle; // Rotate to face center
+                cityHall.mesh.rotation.y = 0; // Rotate 180 degrees
             }
             
             // Place Shop as Altar (top)
