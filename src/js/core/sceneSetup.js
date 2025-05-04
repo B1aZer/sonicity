@@ -110,13 +110,6 @@ export function setupScene(renderDiv) {
     groundPlane.updateMatrixWorld();
     scene.add(groundPlane);
 
-    // Debug cube at center
-    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const debugCube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-    debugCube.position.set(0, 0.5, 0); // Positioned slightly above ground
-    scene.add(debugCube);
-
     // Grid Helper
     const gridSize = 8;
     const gridDivisions = 8;
