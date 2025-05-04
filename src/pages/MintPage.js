@@ -134,6 +134,88 @@ export class MintPage {
         
         // Enable mint button
         mintButton.disabled = false;
+
+        // Load and display user's NFTs
+        await this.loadUserNFTs();
+    }
+
+    async loadUserNFTs() {
+        try {
+            const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
+            ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
+
+            // Get user's NFTs from the contract
+            const balance = await this.nftContract.balanceOf(this.signer.address);
+            const nfts = [];
+
+            // Get token IDs for each NFT owned by the user
+            for (let i = 0; i < balance; i++) {
+                const tokenId = await this.nftContract.tokenOfOwnerByIndex(this.signer.address, i);
+                nfts.push(tokenId);
+            }
+
+            if (nfts.length === 0) {
+                ownedNFTsContainer.innerHTML = '<p class="no-nfts">You don\'t own any NFTs yet.</p>';
+                return;
+            }
+
+            // Clear loading message
+            ownedNFTsContainer.innerHTML = '';
+
+            // Create NFT cards for each owned NFT
+            for (const tokenId of nfts) {
+                const metadata = await this.gameStateContract.getNFTMetadata(
+                    this.nftContractAddress,
+                    tokenId
+                );
+
+                // Map numeric values to display text
+                const districts = ['', 'Central', 'North', 'East', 'South'];
+                const sizes = ['', 'Small', 'Medium', 'Large'];
+                const elevations = ['', 'Low', 'Medium', 'High'];
+                const resources = ['', 'Energy', 'Water', 'Minerals'];
+                const resourceLevels = ['', 'Low', 'Moderate', 'High', 'Abundant'];
+
+                const nftCard = document.createElement('div');
+                nftCard.className = 'nft-card';
+                nftCard.innerHTML = `
+                    <div class="nft-image">
+                        <img src="/images/default-nft.jpg" alt="Land Plot #${tokenId}" />
+                    </div>
+                    <div class="nft-info">
+                        <h3>Land Plot #${tokenId}</h3>
+                        <div class="nft-attributes">
+                            <div class="attribute">
+                                <span class="label">District:</span>
+                                <span class="value">${districts[metadata.district]}</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Size:</span>
+                                <span class="value">${sizes[metadata.size]}</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Elevation:</span>
+                                <span class="value">${elevations[metadata.elevation]}</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Resource:</span>
+                                <span class="value">${resources[metadata.resourceType]}</span>
+                            </div>
+                            <div class="attribute">
+                                <span class="label">Resource Level:</span>
+                                <span class="value">${resourceLevels[metadata.resourceLevel]}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                ownedNFTsContainer.appendChild(nftCard);
+            }
+        } catch (error) {
+            console.error("Error loading user's NFTs:", error);
+            const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
+            ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
+        }
     }
 
     async getMintCount() {
@@ -289,6 +371,11 @@ export class MintPage {
                 </div>
                 
                 <div id="mint-status" class="mint-status"></div>
+            </div>
+
+            <div class="owned-nfts-container">
+                <h2>Your NFTs</h2>
+                <div id="owned-nfts" class="owned-nfts"></div>
             </div>
         `;
     }
