@@ -62,12 +62,9 @@ export class DashboardPage {
             }
 
             // Check available building slots
-            const [slots, maxSlots] = await Promise.all([
-                this.gameState.getBuildingSlots(),
-                this.gameState.getMaxBuildingSlots()
-            ]);
-            Logger.info(`Building slots: ${slots}/${maxSlots}`);
-            if (slots >= maxSlots) {
+            const slots = await this.gameState.getBuildingSlots();
+            Logger.info(`Building slots: ${slots}`);
+            if (slots <= 0) {
                 Logger.info('No building slots available, showing modal');
                 this.modal.error('No building slots available! You need to stake an NFT to get more slots.');
                 return;
@@ -75,15 +72,14 @@ export class DashboardPage {
 
             // Check gold balance
             const gold = await this.gameState.getPlayerGold();
-            const goldInEth = ethers.formatEther(gold);
-            const requiredGold = 100; // 100 ETH for a house
-            Logger.info(`Player gold: ${goldInEth} ETH, Required: ${requiredGold} ETH`);
-            if (Number(goldInEth) < requiredGold) {
+            const requiredGold = 100; // 100 Gold for a house
+            Logger.info(`Player gold: ${gold}, Required: ${requiredGold}`);
+            if (Number(gold) < requiredGold) {
                 Logger.info('Insufficient gold, showing modal');
                 this.modal.error(
                     `Insufficient gold!<br>
-                    Required: ${requiredGold} ETH<br>
-                    Current balance: ${goldInEth} ETH`
+                    Required: ${requiredGold} Gold<br>
+                    Current balance: ${gold} Gold`
                 );
                 return;
             }
