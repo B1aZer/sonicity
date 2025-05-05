@@ -185,7 +185,7 @@ export class StakePage {
             await approveTx.wait();
             
             // Stake the NFT
-            const stakeTx = await altarContract.stakeNFT(tokenId);
+            const stakeTx = await altarContract.stake(tokenId);
             await stakeTx.wait();
             
             statusElement.innerHTML = '<div class="success">NFT staked successfully!</div>';
