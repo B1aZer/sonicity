@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./SonicityNFT.sol";
 import "./GameState.sol";
 
 /**
@@ -16,7 +15,7 @@ import "./GameState.sol";
  */
 contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // Reference to the Sonicity NFT contract
-    SonicityNFT public sonicityNFT;
+    IERC721 public sonicityNFT;
     
     // Reference to the GameState contract
     GameState public gameState;
@@ -55,7 +54,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         
-        sonicityNFT = SonicityNFT(_sonicityNFT);
+        sonicityNFT = IERC721(_sonicityNFT);
         gameState = GameState(_gameState);
         minStakingDuration = 7 days;
         
