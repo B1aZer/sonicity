@@ -1,6 +1,9 @@
 import { appState } from '../core/state.js';
+import { Modal } from './modal.js';
 
 export class AccessControl {
+    static modal = new Modal();
+
     /**
      * Check if the user can access the dashboard
      * Requires wallet connection, NFT verification, and being in a city
@@ -39,5 +42,16 @@ export class AccessControl {
      */
     static hasVerifiedNFT() {
         return appState.getState().hasVerifiedNFT;
+    }
+
+    static async checkCityAccess() {
+        if (!this.canAccessDashboard()) {
+            if (this.hasVerifiedNFT() && !this.isInCity()) {
+                this.modal.error('Please join a city first to access the dashboard.');
+                return false;
+            }
+            return false;
+        }
+        return true;
     }
 } 

@@ -9,7 +9,7 @@ import { AccessPage } from '../../pages/AccessPage.js';
 import { StakePage } from '../../pages/StakePage.js';
 import { appState } from './state.js';
 import { AccessControl } from '../utils/accessControl.js';
-import { Toast } from '../utils/toast.js';
+import { Modal } from '../utils/modal.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
 import '../../styles/access-page.css';
 import '../../styles/dashboard-page.css';
@@ -23,6 +23,7 @@ class App {
         this.currentPage = null;
         this.game = null;
         this.container = document.getElementById('app');
+        this.modal = new Modal();
         this.init();
     }
 
@@ -79,19 +80,10 @@ class App {
             this.game = null;
         }
 
-        const state = appState.getState();
-
         // Handle protected routes
         if (page === 'dashboard' || page === 'overview') {
-            if (!AccessControl.canAccessDashboard()) {
-                if (AccessControl.hasVerifiedNFT() && !AccessControl.isInCity()) {
-                    // User is verified but not in a city: send to map to join a city
-                    page = '';
-                    Toast.warning('Please join a city first to access the dashboard.');
-                } else {
-                    // Not verified: send to access page
-                    page = 'access';
-                }
+            if (!await AccessControl.checkCityAccess()) {
+                page = AccessControl.hasVerifiedNFT() ? '' : 'access';
             }
         }
 

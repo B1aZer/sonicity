@@ -3,18 +3,21 @@ import * as THREE from 'three';
 import { Game } from '../js/core/game.js';
 import { LoadingScreen } from '../js/utils/loadingScreen.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
-import { Toast } from '../js/utils/toast.js';
+import { Modal } from '../js/utils/modal.js';
+import Logger from '../js/utils/logger.js';
+import { AccessControl } from '../js/utils/accessControl.js';
 
 export class GamePage {
     constructor() {
         this.element = document.createElement('div');
         this.element.className = 'game-page';
         this.gameStateContract = new GameStateContract();
+        this.modal = new Modal();
         this.render();
         this.setupGame();
     }
 
-    setupGame() {
+    async setupGame() {
         const renderDiv = this.element.querySelector('#renderDiv');
         this.game = new Game(renderDiv);
         
@@ -29,23 +32,18 @@ export class GamePage {
             // Wait for assets to load and ensure they're ready
             return this.game.assetLoader.waitForLoad();
         }).then(async () => {
-            // Check if user has joined a city
-            try {
-                const cityId = await this.gameStateContract.getPlayerCity();
-                if (cityId === 0) {
-                    // User hasn't joined a city yet
-                    Toast.error('Please join a city first before accessing the game overview.');
-                    return;
-                }
-                
-                // Update building slots display
-                await this.updateBuildingSlots();
-            } catch (error) {
-                console.error('Error checking city status:', error);
-                Toast.error('Error checking city status. Please try again.');
+            // Check if player is in a city
+            if (!await AccessControl.checkCityAccess()) {
                 return;
             }
 
+            // Initialize game state contract
+            this.gameStateContract = new GameStateContract();
+            await this.gameStateContract.initialize();
+
+            // Update building slots display
+            await this.updateBuildingSlots();
+        }).then(() => {
             // Place the buildings
             const gridSize = this.game.gridSize;
             const cellSize = this.game.gridCellSize;
@@ -102,7 +100,7 @@ export class GamePage {
         }).catch(error => {
             console.error('Error during game setup:', error);
             LoadingScreen.hide(renderDiv);
-            Toast.error('Error during game setup. Please try again.');
+            this.modal.error('Error during game setup. Please try again.');
         });
     }
 
@@ -127,7 +125,7 @@ export class GamePage {
                 
                 if (buildingMesh) {
                     if (buildingMesh.userData.isMine) {
-                        Toast.info('Mine is not operational yet. Coming soon!');
+                        this.modal.info('Mine is not operational yet. Coming soon!');
                     } else if (buildingMesh.userData.isCityHall) {
                         window.history.pushState({}, '', '/dashboard');
                         window.dispatchEvent(new PopStateEvent('popstate'));
