@@ -265,7 +265,7 @@ input[type=number] {
     cursor: pointer;
     transition: all 0.3s;
     min-width: 180px;
-    border-radius: 0;
+    border-radius: 8px;
 }
 
 .connect-button:hover {
