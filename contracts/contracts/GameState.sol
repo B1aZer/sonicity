@@ -52,6 +52,28 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Building unlock requirements
     mapping(uint8 => mapping(string => uint256)) public buildingRequirements;
     
+    // Building state
+    struct Building {
+        string buildingType;
+        uint256 level;
+        uint256 lastUpgradeTime;
+        bool active;
+    }
+
+    // Mapping from player => buildingId => Building
+    mapping(address => mapping(uint256 => Building)) public buildings;
+    // Mapping from player => next available buildingId
+    mapping(address => uint256) public nextBuildingId;
+    // Building count tracking
+    struct BuildingCount {
+        uint256 total;
+        mapping(string => uint256) byType;
+    }
+    mapping(address => BuildingCount) public playerBuildingCounts;
+
+    // Building costs
+    mapping(string => uint256) public buildingCosts;
+
     // Events
     event CityJoined(address indexed player, uint256 indexed cityId);
     event CityTierUpgraded(uint256 indexed cityId, uint8 newTier);
@@ -62,6 +84,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event CollectionApproved(address indexed collection);
     event CollectionRemoved(address indexed collection);
     event NFTMetadataUpdated(address indexed collection, uint256 indexed tokenId);
+    event BuildingCreated(address indexed player, string buildingType, uint256 buildingId);
+    event BuildingRemoved(address indexed player, string buildingType, uint256 buildingId);
+    event BuildingUpgraded(address indexed player, string buildingType, uint256 buildingId, uint256 newLevel);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -78,6 +103,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         tierRequirements[2] = 5000 ether;  // 5000 Gold for Tier 2
         tierRequirements[3] = 10000 ether; // 10000 Gold for Tier 3
         tierRequirements[4] = 50000 ether; // 50000 Gold for Tier 4
+        
+        // Initialize building costs
+        buildingCosts["house"] = 100 ether;  // 100 Gold for a house
+        buildingCosts["water-supply"] = 200 ether;
+        buildingCosts["workshop"] = 300 ether;
         
         // Initialize building requirements
         // Format: buildingRequirements[tier]["buildingName"] = goldCost
@@ -318,5 +348,180 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function setAltarAddress(address _altarAddress) external onlyOwner {
         altarAddress = _altarAddress;
+    }
+
+    /**
+     * @dev Create a new building
+     * @param buildingType The type of building to create
+     */
+    function createBuilding(string memory buildingType) external nonReentrant {
+        uint256 cityId = playerCity[msg.sender];
+        require(cityId > 0, "Not in a city");
+        
+        // Check building cost
+        uint256 cost = buildingCosts[buildingType];
+        require(cost > 0, "Invalid building type");
+        require(cities[cityId].playerGold[msg.sender] >= cost, "Insufficient Gold");
+        
+        // Check available slots
+        require(
+            playerBuildingCounts[msg.sender].total < cities[cityId].playerMaxBuildingSlots[msg.sender],
+            "No building slots available"
+        );
+        
+        // Deduct gold
+        cities[cityId].playerGold[msg.sender] -= cost;
+        
+        // Create building
+        uint256 buildingId = nextBuildingId[msg.sender]++;
+        buildings[msg.sender][buildingId] = Building({
+            buildingType: buildingType,
+            level: 1,
+            lastUpgradeTime: block.timestamp,
+            active: true
+        });
+        
+        // Update counts
+        playerBuildingCounts[msg.sender].total++;
+        playerBuildingCounts[msg.sender].byType[buildingType]++;
+        
+        emit BuildingCreated(msg.sender, buildingType, buildingId);
+    }
+
+    /**
+     * @dev Get total buildings for a player
+     * @param player The address of the player
+     * @return uint256 Total number of buildings
+     */
+    function getTotalBuildings(address player) external view returns (uint256) {
+        return playerBuildingCounts[player].total;
+    }
+
+    /**
+     * @dev Get buildings of a specific type for a player
+     * @param player The address of the player
+     * @param buildingType The type of building
+     * @return uint256 Number of buildings of that type
+     */
+    function getBuildingsByType(address player, string memory buildingType) external view returns (uint256) {
+        return playerBuildingCounts[player].byType[buildingType];
+    }
+
+    /**
+     * @dev Remove a building
+     * @param buildingId The ID of the building to remove
+     */
+    function removeBuilding(uint256 buildingId) external nonReentrant {
+        require(buildings[msg.sender][buildingId].active, "Building already removed or doesn't exist");
+        
+        string memory buildingType = buildings[msg.sender][buildingId].buildingType;
+        
+        // Mark building as inactive
+        buildings[msg.sender][buildingId].active = false;
+        
+        // Update counts
+        playerBuildingCounts[msg.sender].total--;
+        playerBuildingCounts[msg.sender].byType[buildingType]--;
+        
+        emit BuildingRemoved(msg.sender, buildingType, buildingId);
+    }
+
+    /**
+     * @dev Get all buildings for a player
+     * @param player The address of the player
+     * @return Building[] Array of all buildings
+     */
+    function getAllBuildings(address player) external view returns (Building[] memory) {
+        uint256 totalBuildings = playerBuildingCounts[player].total;
+        Building[] memory result = new Building[](totalBuildings);
+        uint256 resultIndex = 0;
+        
+        // Iterate through all possible building IDs
+        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+            if (buildings[player][i].active) {
+                result[resultIndex] = buildings[player][i];
+                resultIndex++;
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * @dev Get all buildings of a specific type for a player
+     * @param player The address of the player
+     * @param buildingType The type of building
+     * @return Building[] Array of buildings of the specified type
+     */
+    function getBuildingsOfType(address player, string memory buildingType) external view returns (Building[] memory) {
+        uint256 count = playerBuildingCounts[player].byType[buildingType];
+        Building[] memory result = new Building[](count);
+        uint256 resultIndex = 0;
+        
+        // Iterate through all possible building IDs
+        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+            if (buildings[player][i].active && 
+                keccak256(bytes(buildings[player][i].buildingType)) == keccak256(bytes(buildingType))) {
+                result[resultIndex] = buildings[player][i];
+                resultIndex++;
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * @dev Get all building IDs for a player
+     * @param player The address of the player
+     * @return uint256[] Array of active building IDs
+     */
+    function getBuildingIds(address player) external view returns (uint256[] memory) {
+        uint256 totalBuildings = playerBuildingCounts[player].total;
+        uint256[] memory result = new uint256[](totalBuildings);
+        uint256 resultIndex = 0;
+        
+        // Iterate through all possible building IDs
+        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+            if (buildings[player][i].active) {
+                result[resultIndex] = i;
+                resultIndex++;
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * @dev Get building IDs of a specific type for a player
+     * @param player The address of the player
+     * @param buildingType The type of building
+     * @return uint256[] Array of building IDs of the specified type
+     */
+    function getBuildingIdsOfType(address player, string memory buildingType) external view returns (uint256[] memory) {
+        uint256 count = playerBuildingCounts[player].byType[buildingType];
+        uint256[] memory result = new uint256[](count);
+        uint256 resultIndex = 0;
+        
+        // Iterate through all possible building IDs
+        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+            if (buildings[player][i].active && 
+                keccak256(bytes(buildings[player][i].buildingType)) == keccak256(bytes(buildingType))) {
+                result[resultIndex] = i;
+                resultIndex++;
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * @dev Get building details by ID
+     * @param player The address of the player
+     * @param buildingId The ID of the building
+     * @return Building The building details
+     */
+    function getBuilding(address player, uint256 buildingId) external view returns (Building memory) {
+        require(buildings[player][buildingId].active, "Building doesn't exist or is inactive");
+        return buildings[player][buildingId];
     }
 } 

@@ -184,4 +184,121 @@ describe("GameState", function () {
       expect(isNotOwner).to.be.false;
     });
   });
+
+  describe("Building Management", function () {
+    beforeEach(async function () {
+      // Setup: Player joins city and gets building slots through Altar
+      await gameState.connect(player1).joinCity(1);
+      await gameState.connect(player1).earnGold(ethers.parseEther("1000"));
+      
+      // Mint and stake an NFT to get building slots
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
+      const tokenId = 1;
+      
+      // Set metadata for the NFT
+      const metadata = {
+        district: 1,
+        buildingSlots: 5
+      };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
+      
+      // Stake the NFT through Altar
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
+      await altar.connect(player1).stake(tokenId);
+    });
+
+    it("Should allow players to create buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Check building counts
+      const totalBuildings = await gameState.getTotalBuildings(player1Address);
+      const houseCount = await gameState.getBuildingsByType(player1Address, "house");
+      
+      expect(totalBuildings).to.equal(1);
+      expect(houseCount).to.equal(1);
+    });
+
+    it("Should not allow creating buildings without sufficient gold", async function () {
+      // Donate all gold to city treasury to ensure player has no gold
+      await gameState.connect(player1).donateGold(ethers.parseEther("1000"));
+      
+      // Try to create a house with no gold
+      await expect(gameState.connect(player1).createBuilding("house")).to.be.revertedWith("Insufficient Gold");
+    });
+
+    it("Should not allow creating buildings without available slots", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Fill all slots
+      for (let i = 0; i < 5; i++) {
+        await gameState.connect(player1).createBuilding("house");
+      }
+      
+      // Try to create one more
+      await expect(gameState.connect(player1).createBuilding("house")).to.be.revertedWith("No building slots available");
+    });
+
+    it("Should allow removing buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create and then remove a house
+      await gameState.connect(player1).createBuilding("house");
+      await gameState.connect(player1).removeBuilding(0);
+      
+      // Check building counts
+      const totalBuildings = await gameState.getTotalBuildings(player1Address);
+      const houseCount = await gameState.getBuildingsByType(player1Address, "house");
+      
+      expect(totalBuildings).to.equal(0);
+      expect(houseCount).to.equal(0);
+    });
+
+    it("Should not allow removing non-existent buildings", async function () {
+      await expect(gameState.connect(player1).removeBuilding(0)).to.be.revertedWith("Building already removed or doesn't exist");
+    });
+
+    it("Should return correct building IDs", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create multiple buildings
+      await gameState.connect(player1).createBuilding("house");
+      await gameState.connect(player1).createBuilding("water-supply");
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Get all building IDs
+      const allIds = await gameState.getBuildingIds(player1Address);
+      expect(allIds.length).to.equal(3);
+      
+      // Get house IDs
+      const houseIds = await gameState.getBuildingIdsOfType(player1Address, "house");
+      expect(houseIds.length).to.equal(2);
+      
+      // Get water supply IDs
+      const waterSupplyIds = await gameState.getBuildingIdsOfType(player1Address, "water-supply");
+      expect(waterSupplyIds.length).to.equal(1);
+    });
+
+    it("Should return correct building details", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Get building details
+      const building = await gameState.getBuilding(player1Address, 0);
+      
+      expect(building.buildingType).to.equal("house");
+      expect(building.level).to.equal(1);
+      expect(building.active).to.be.true;
+    });
+
+    it("Should not return details for non-existent buildings", async function () {
+      const player1Address = await player1.getAddress();
+      await expect(gameState.getBuilding(player1Address, 0)).to.be.revertedWith("Building doesn't exist or is inactive");
+    });
+  });
 }); 
