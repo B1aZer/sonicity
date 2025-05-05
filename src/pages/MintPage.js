@@ -7,9 +7,12 @@ import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/
 import GameStateABI from '../../contracts/artifacts/contracts/GameState.sol/GameState.json';
 import '../styles/nft-collection.css';
 import '../styles/mint-page.css';
+import Logger from '../js/utils/logger.js';
+import { Modal } from '../js/utils/modal.js';
 
 export class MintPage {
     constructor() {
+        Logger.info('MintPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'mint-page';
         this.provider = null;
@@ -23,6 +26,7 @@ export class MintPage {
         this.gameStateAddress = CONTRACT_ADDRESSES.GAME_STATE;
         this.nftCollection = new NFTCollection();
         this.lastMintedTokenId = null;
+        this.modal = new Modal();
         this.render();
         this.setupEventListeners();
         this.initializeConnection();
@@ -33,7 +37,7 @@ export class MintPage {
         connectWalletBtn.addEventListener('click', () => this.handleConnectWallet());
 
         const mintButton = this.element.querySelector('#mint-button');
-        mintButton.addEventListener('click', () => this.mintNFT());
+        mintButton.addEventListener('click', () => this.handleMint());
 
         // Mint amount controls
         const decreaseBtn = this.element.querySelector('#decrease-amount');
@@ -141,6 +145,7 @@ export class MintPage {
 
     async loadUserNFTs() {
         try {
+            Logger.info('Loading user NFTs');
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
             ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
 
@@ -204,7 +209,7 @@ export class MintPage {
                 ownedNFTsContainer.appendChild(nftCard);
             }
         } catch (error) {
-            console.error("Error loading user's NFTs:", error);
+            Logger.error("Error loading user's NFTs:", error);
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
             ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
         }
@@ -212,6 +217,7 @@ export class MintPage {
 
     async getMintCount() {
         try {
+            Logger.info('Getting mint count');
             // Get total supply from contract
             const totalSupply = await this.nftContract.totalSupply();
             this.tokensMinted = Number(totalSupply);
@@ -223,11 +229,12 @@ export class MintPage {
             tokensMintedElement.textContent = this.tokensMinted;
             progressFill.style.width = `${(this.tokensMinted / this.maxSupply) * 100}%`;
         } catch (error) {
-            console.error("Error getting mint count:", error);
+            Logger.error('Error getting mint count:', error);
+            this.modal.error('Failed to get mint count. Please try again.');
         }
     }
 
-    async mintNFT() {
+    async handleMint() {
         if (!appState.getState().walletConnected) return;
         
         const statusElement = this.element.querySelector('#mint-status');
@@ -235,6 +242,7 @@ export class MintPage {
         const amount = parseInt(amountInput.value);
         
         try {
+            Logger.info('Attempting to mint NFT');
             statusElement.textContent = `Minting ${amount} NFT(s)...`;
             statusElement.style.color = "blue";
             
@@ -264,9 +272,10 @@ export class MintPage {
             // Set NFT as verified in global state
             appState.setNFTVerified(true);
         } catch (error) {
-            console.error("Minting error:", error);
+            Logger.error('Minting error:', error);
             statusElement.textContent = "Failed to mint: " + (error.message || "Unknown error");
             statusElement.style.color = "red";
+            this.modal.error('Failed to mint NFT. Please try again.');
         }
     }
 

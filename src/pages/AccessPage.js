@@ -1,18 +1,25 @@
 import { appState } from '../js/core/state.js';
 import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
+import '../styles/access-page.css';
+import Logger from '../js/utils/logger.js';
+import { Modal } from '../js/utils/modal.js';
 
 export class AccessPage {
     constructor() {
+        Logger.info('AccessPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'access-page';
+        this.modal = new Modal();
         this.render();
         this.setupEventListeners();
         this.initializeConnection();
     }
 
     setupEventListeners() {
-        const connectWalletBtn = this.element.querySelector('#connect-wallet');
-        connectWalletBtn.addEventListener('click', () => this.handleConnectWallet());
+        const connectButton = this.element.querySelector('.connect-button');
+        if (connectButton) {
+            connectButton.addEventListener('click', () => this.handleConnectWallet());
+        }
     }
 
     async initializeConnection() {
@@ -31,19 +38,20 @@ export class AccessPage {
     }
 
     async handleConnectWallet() {
-        const result = await connectWallet();
-        if (result.success) {
-            this.updateWalletStatus(result.address);
-            // For demo purposes, automatically verify NFT
-            setTimeout(() => {
-                appState.setNFTVerified(true);
-                this.updateNFTStatus('Verified');
-                // Redirect to root (map) after verification
-                window.history.pushState({}, '', '/');
-                window.dispatchEvent(new PopStateEvent('popstate'));
-            }, 1000);
-        } else {
-            alert(result.error || 'Failed to connect wallet. Please try again.');
+        try {
+            Logger.info('Attempting to connect wallet');
+            const result = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            if (result.error) {
+                Logger.error('Wallet connection error:', result.error);
+                this.modal.error(result.error || 'Failed to connect wallet. Please try again.');
+                return;
+            }
+            Logger.info('Wallet connected successfully');
+            // Redirect to dashboard or next page
+            window.location.href = '/dashboard';
+        } catch (error) {
+            Logger.error('Error connecting wallet:', error);
+            this.modal.error('Failed to connect wallet. Please try again.');
         }
     }
 
@@ -79,7 +87,7 @@ export class AccessPage {
                 </div>
                 
                 <div class="access-actions">
-                    <button id="connect-wallet" class="connect-button">Connect Wallet</button>
+                    <button class="connect-button">Connect Wallet</button>
                     <a href="/mint" class="mint-link">Go to Mint Page</a>
                 </div>
             </div>
