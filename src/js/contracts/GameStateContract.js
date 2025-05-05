@@ -101,4 +101,23 @@ export class GameStateContract extends BaseContract {
     async verifyNFTOwnership(collectionAddress, tokenId) {
         return await this.call('verifyNFTOwnership', collectionAddress, tokenId);
     }
+
+    async createBuilding(buildingType) {
+        return await this.transact('createBuilding', buildingType);
+    }
+
+    async getBuildingIds() {
+        const address = await this.getAddress();
+        return await this.call('getBuildingIds', address);
+    }
+
+    async getBuildingIdsOfType(buildingType) {
+        const address = await this.getAddress();
+        return await this.call('getBuildingIdsOfType', address, buildingType);
+    }
+
+    async getBuilding(buildingId) {
+        const address = await this.getAddress();
+        return await this.call('getBuilding', address, buildingId);
+    }
 } 

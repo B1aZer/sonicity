@@ -1,17 +1,76 @@
 import '../styles/dashboard-page.css';
 import Logger from '../js/utils/logger.js';
+import { GameStateContract } from '../js/contracts/GameStateContract.js';
+import { ethers } from 'ethers';
 
 export class DashboardPage {
     constructor() {
         Logger.info('DashboardPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'dashboard-page';
+        this.gameState = new GameStateContract();
         this.render();
         this.setupEventListeners();
+        this.loadPlayerData();
+    }
+
+    async loadPlayerData() {
+        try {
+            const [gold, buildingSlots] = await Promise.all([
+                this.gameState.getPlayerGold(),
+                this.gameState.getBuildingSlots()
+            ]);
+
+            // Update gold display
+            const goldValue = this.element.querySelector('.status-value');
+            if (goldValue) {
+                goldValue.textContent = ethers.formatEther(gold);
+            }
+
+            // Update building slots display
+            const slotsItem = this.element.querySelector('.status-item:last-child .status-value');
+            if (slotsItem) {
+                slotsItem.textContent = buildingSlots.toString();
+            }
+        } catch (error) {
+            Logger.error('Error loading player data:', error);
+        }
+    }
+
+    async handleBuildingAction(buildingType) {
+        try {
+            Logger.info(`Attempting to build: ${buildingType}`);
+            
+            // Create the building
+            const tx = await this.gameState.createBuilding(buildingType);
+            
+            // Wait for transaction to be mined
+            await tx.wait();
+            
+            // Reload player data to update UI
+            await this.loadPlayerData();
+            
+            Logger.info(`Successfully built: ${buildingType}`);
+        } catch (error) {
+            Logger.error(`Error building ${buildingType}:`, error);
+            // You might want to show an error message to the user here
+        }
     }
 
     setupEventListeners() {
         Logger.info('Setting up event listeners');
+        
+        // Add click event listeners for building buttons
+        const buildingButtons = this.element.querySelectorAll('.building-button');
+        buildingButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const buildingType = button.getAttribute('data-building');
+                if (buildingType) {
+                    this.handleBuildingAction(buildingType);
+                }
+            });
+        });
+
         // Add click event listener for the bottom left city
         const bottomLeftCity = this.element.querySelector('.city-bottom-left');
         if (bottomLeftCity) {
@@ -34,15 +93,15 @@ export class DashboardPage {
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Gold:</span>
-                            <span class="status-value">0</span>
+                            <span class="status-value">Loading...</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Rep Points:</span>
                             <span class="status-value">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Town Hall Tier:</span>
-                            <span class="status-value">Bronze</span>
+                            <span class="status-label">Building Slots:</span>
+                            <span class="status-value">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -54,17 +113,17 @@ export class DashboardPage {
                         <div class="building-card">
                             <h3>House</h3>
                             <p>Basic residential building for citizens</p>
-                            <button class="building-button" data-building="house">Build/Upgrade</button>
+                            <button class="building-button" data-building="house">Build House</button>
                         </div>
                         <div class="building-card">
                             <h3>Water Supply</h3>
                             <p>Provides water infrastructure for the district</p>
-                            <button class="building-button" data-building="water-supply">Build/Upgrade</button>
+                            <button class="building-button" data-building="water-supply">Build Water Supply</button>
                         </div>
                         <div class="building-card">
                             <h3>Workshop</h3>
                             <p>Produces goods and provides employment</p>
-                            <button class="building-button" data-building="workshop">Build/Upgrade</button>
+                            <button class="building-button" data-building="workshop">Build Workshop</button>
                         </div>
                     </div>
                 </div>
