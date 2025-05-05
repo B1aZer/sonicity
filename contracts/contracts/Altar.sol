@@ -100,7 +100,8 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         
         // Calculate and update building slots in GameState
         uint256 newSlots = slotsPerBuildingSlot[metadata.buildingSlots];
-        gameState.updateBuildingSlots(msg.sender, newSlots);
+        uint256 currentSlots = gameState.getBuildingSlots(msg.sender);
+        gameState.updateBuildingSlots(msg.sender, currentSlots + newSlots);
         
         emit NFTStaked(msg.sender, tokenId, block.timestamp);
     }
@@ -137,6 +138,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         // Calculate and update building slots in GameState
         uint256 slotsToRemove = slotsPerBuildingSlot[metadata.buildingSlots];
         uint256 currentSlots = gameState.getBuildingSlots(msg.sender);
+        require(currentSlots >= slotsToRemove, "Insufficient building slots");
         gameState.updateBuildingSlots(msg.sender, currentSlots - slotsToRemove);
         
         // Transfer NFT back to owner

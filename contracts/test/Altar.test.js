@@ -178,5 +178,95 @@ describe("Altar", function () {
       const slots = await gameState.getBuildingSlots(await player1.getAddress());
       expect(slots).to.equal(metadata.buildingSlots);
     });
+
+    it("Should accumulate building slots when staking multiple NFTs", async function () {
+      // Mint two NFTs to player1
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.02") });
+      await sonicityNFT.connect(player1).mint(2, { value: ethers.parseEther("0.02") });
+      
+      // Set metadata for both NFTs
+      const metadata1 = { district: 1, buildingSlots: 5 }; // Will map to 5 slots
+      const metadata2 = { district: 1, buildingSlots: 3 }; // Will map to 3 slots
+      
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 1, metadata1);
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 2, metadata2);
+
+      // Stake both NFTs
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, 1);
+      await sonicityNFT.connect(player1).approve(altarAddress, 2);
+      
+      await altar.connect(player1).stake(1);
+      await altar.connect(player1).stake(2);
+
+      // Check total building slots (5 + 3 = 8)
+      const totalSlots = await gameState.getBuildingSlots(await player1.getAddress());
+      expect(totalSlots).to.equal(8);
+    });
+
+    it("Should reduce building slots when unstaking NFTs", async function () {
+      // Mint and stake an NFT
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
+      const tokenId = 1;
+
+      const metadata = { district: 1, buildingSlots: 5 };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
+
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
+      await altar.connect(player1).stake(tokenId);
+
+      // Fast forward time
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
+      await ethers.provider.send("evm_mine");
+
+      // Unstake the NFT
+      await altar.connect(player1).unstake(tokenId);
+
+      // Check building slots are reduced to 0
+      const slots = await gameState.getBuildingSlots(await player1.getAddress());
+      expect(slots).to.equal(0);
+    });
+
+    it("Should handle building slots correctly when staking and unstaking multiple NFTs", async function () {
+      // Mint three NFTs to player1
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.03") });
+      await sonicityNFT.connect(player1).mint(2, { value: ethers.parseEther("0.03") });
+      await sonicityNFT.connect(player1).mint(3, { value: ethers.parseEther("0.03") });
+      
+      // Set metadata for all NFTs
+      const metadata1 = { district: 1, buildingSlots: 5 }; // Will map to 5 slots
+      const metadata2 = { district: 1, buildingSlots: 3 }; // Will map to 3 slots
+      const metadata3 = { district: 1, buildingSlots: 4 }; // Will map to 4 slots
+      
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 1, metadata1);
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 2, metadata2);
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 3, metadata3);
+
+      // Stake all NFTs
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, 1);
+      await sonicityNFT.connect(player1).approve(altarAddress, 2);
+      await sonicityNFT.connect(player1).approve(altarAddress, 3);
+      
+      await altar.connect(player1).stake(1);
+      await altar.connect(player1).stake(2);
+      await altar.connect(player1).stake(3);
+
+      // Check total building slots (5 + 3 + 4 = 12)
+      let totalSlots = await gameState.getBuildingSlots(await player1.getAddress());
+      expect(totalSlots).to.equal(12);
+
+      // Fast forward time
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
+      await ethers.provider.send("evm_mine");
+
+      // Unstake one NFT (remove 3 slots)
+      await altar.connect(player1).unstake(2);
+
+      // Check building slots are reduced correctly (5 + 4 = 9)
+      totalSlots = await gameState.getBuildingSlots(await player1.getAddress());
+      expect(totalSlots).to.equal(9);
+    });
   });
 }); 
