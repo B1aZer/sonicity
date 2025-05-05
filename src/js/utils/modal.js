@@ -1,60 +1,87 @@
+import Swal from 'sweetalert2';
+
 export class Modal {
     constructor() {
-        this.modal = document.createElement('div');
-        this.modal.className = 'modal';
-        this.modal.innerHTML = `
-            <div class="modal-content">
-                <span class="close-button">&times;</span>
-                <div class="modal-body"></div>
-            </div>
-        `;
-        
-        this.setupEventListeners();
+        // No need to create DOM elements since SweetAlert2 handles that
     }
 
-    setupEventListeners() {
-        // Close modal when clicking the close button
-        const closeButton = this.modal.querySelector('.close-button');
-        closeButton.addEventListener('click', () => this.close());
-
-        // Close modal when clicking outside the content
-        this.modal.addEventListener('click', (e) => {
-            if (e.target === this.modal) {
-                this.close();
+    show(content, options = {}) {
+        const defaultOptions = {
+            title: options.title || 'Info',
+            html: content,
+            icon: options.icon || 'info',
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: '#fff',
+            confirmButtonColor: options.confirmButtonColor || '#4CAF50',
+            backdrop: 'rgba(0, 0, 0, 0.5)',
+            customClass: {
+                popup: 'swal2-popup-custom',
+                title: 'swal2-title-custom',
+                content: 'swal2-content-custom',
+                confirmButton: 'swal2-confirm-custom'
             }
-        });
+        };
 
-        // Close modal when pressing Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.close();
+        return Swal.fire({ ...defaultOptions, ...options });
+    }
+
+    confirm(content, options = {}) {
+        const defaultOptions = {
+            title: options.title || 'Confirm',
+            html: content,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Confirm',
+            cancelButtonText: 'Cancel',
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: '#fff',
+            confirmButtonColor: '#4CAF50',
+            cancelButtonColor: '#f44336',
+            backdrop: 'rgba(0, 0, 0, 0.5)',
+            customClass: {
+                popup: 'swal2-popup-custom',
+                title: 'swal2-title-custom',
+                content: 'swal2-content-custom',
+                confirmButton: 'swal2-confirm-custom',
+                cancelButton: 'swal2-cancel-custom'
             }
+        };
+
+        return Swal.fire({ ...defaultOptions, ...options });
+    }
+
+    error(content, options = {}) {
+        return this.show(content, { 
+            title: 'Error',
+            icon: 'error',
+            confirmButtonColor: '#f44336',
+            ...options 
         });
     }
 
-    setContent(content) {
-        const modalBody = this.modal.querySelector('.modal-body');
-        modalBody.innerHTML = '';
-        if (typeof content === 'string') {
-            modalBody.innerHTML = content;
-        } else if (content instanceof HTMLElement) {
-            modalBody.appendChild(content);
-        }
+    success(content, options = {}) {
+        return this.show(content, { 
+            title: 'Success',
+            icon: 'success',
+            confirmButtonColor: '#4CAF50',
+            ...options 
+        });
     }
 
-    open() {
-        document.body.appendChild(this.modal);
-        document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
-        this.modal.classList.add('active');
+    loading(content = 'Loading...', options = {}) {
+        return Swal.fire({
+            title: content,
+            icon: 'info',
+            background: 'rgba(0, 0, 0, 0.9)',
+            color: '#fff',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            backdrop: 'rgba(0, 0, 0, 0.5)',
+            ...options
+        });
     }
 
     close() {
-        this.modal.classList.remove('active');
-        setTimeout(() => {
-            if (this.modal.parentNode) {
-                this.modal.parentNode.removeChild(this.modal);
-            }
-            document.body.style.overflow = ''; // Restore scrolling
-        }, 300); // Match the transition duration
+        Swal.close();
     }
 } 

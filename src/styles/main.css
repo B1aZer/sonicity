@@ -1,3 +1,5 @@
+@import 'sweetalert2/dist/sweetalert2.min.css';
+
 /* Reset and base styles */
 body {
     margin: 0;
@@ -322,4 +324,75 @@ input[type=number] {
 .mint-details li {
     margin-bottom: 0.5rem;
     color: #ccc;
+}
+
+/* SweetAlert2 Custom Styles */
+.swal2-popup {
+    background: rgba(0, 0, 0, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5) !important;
+}
+
+.swal2-title {
+    color: #fff !important;
+    font-size: 1.5rem !important;
+    font-weight: bold !important;
+}
+
+.swal2-html-container {
+    color: #fff !important;
+    font-size: 1.1rem !important;
+}
+
+.swal2-confirm {
+    background-color: #4CAF50 !important;
+    border: none !important;
+    box-shadow: none !important;
+    transition: all 0.3s ease !important;
+}
+
+.swal2-confirm:hover {
+    background-color: #45a049 !important;
+    transform: translateY(-2px) !important;
+}
+
+.swal2-cancel {
+    background-color: #f44336 !important;
+    border: none !important;
+    box-shadow: none !important;
+    transition: all 0.3s ease !important;
+}
+
+.swal2-cancel:hover {
+    background-color: #da190b !important;
+    transform: translateY(-2px) !important;
+}
+
+.swal2-icon {
+    border-color: #fff !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: #4CAF50 !important;
+    color: #4CAF50 !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: #f44336 !important;
+    color: #f44336 !important;
+}
+
+.swal2-icon.swal2-warning {
+    border-color: #ff9800 !important;
+    color: #ff9800 !important;
+}
+
+.swal2-icon.swal2-info {
+    border-color: #2196F3 !important;
+    color: #2196F3 !important;
+}
+
+.swal2-icon.swal2-question {
+    border-color: #9c27b0 !important;
+    color: #9c27b0 !important;
 } 

@@ -1,7 +1,9 @@
 import '../styles/dashboard-page.css';
+import '../styles/modal.css';
 import Logger from '../js/utils/logger.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { ethers } from 'ethers';
+import { Modal } from '../js/utils/modal.js';
 
 export class DashboardPage {
     constructor() {
@@ -9,9 +11,18 @@ export class DashboardPage {
         this.element = document.createElement('div');
         this.element.className = 'dashboard-page';
         this.gameState = new GameStateContract();
+        this.modal = new Modal();
         this.render();
         this.setupEventListeners();
         this.loadPlayerData();
+    }
+
+    showModal(content, isError = false) {
+        if (isError) {
+            this.modal.error(content);
+        } else {
+            this.modal.show(content);
+        }
     }
 
     async loadPlayerData() {
@@ -39,21 +50,84 @@ export class DashboardPage {
 
     async handleBuildingAction(buildingType) {
         try {
-            Logger.info(`Attempting to build: ${buildingType}`);
+            Logger.info(`Starting handleBuildingAction for: ${buildingType}`);
             
-            // Create the building
-            const tx = await this.gameState.createBuilding(buildingType);
-            
-            // Wait for transaction to be mined
-            await tx.wait();
-            
-            // Reload player data to update UI
-            await this.loadPlayerData();
-            
-            Logger.info(`Successfully built: ${buildingType}`);
+            // Check if player is in a city
+            const cityId = await this.gameState.getPlayerCity();
+            Logger.info(`Player city ID: ${cityId}`);
+            if (!cityId) {
+                Logger.info('Player not in a city, showing modal');
+                this.modal.error('You need to join a city before building!');
+                return;
+            }
+
+            // Check available building slots
+            const [slots, maxSlots] = await Promise.all([
+                this.gameState.getBuildingSlots(),
+                this.gameState.getMaxBuildingSlots()
+            ]);
+            Logger.info(`Building slots: ${slots}/${maxSlots}`);
+            if (slots >= maxSlots) {
+                Logger.info('No building slots available, showing modal');
+                this.modal.error('No building slots available! You need to stake an NFT to get more slots.');
+                return;
+            }
+
+            // Check gold balance
+            const gold = await this.gameState.getPlayerGold();
+            const goldInEth = ethers.formatEther(gold);
+            const requiredGold = 100; // 100 ETH for a house
+            Logger.info(`Player gold: ${goldInEth} ETH, Required: ${requiredGold} ETH`);
+            if (Number(goldInEth) < requiredGold) {
+                Logger.info('Insufficient gold, showing modal');
+                this.modal.error(
+                    `Insufficient gold!<br>
+                    Required: ${requiredGold} ETH<br>
+                    Current balance: ${goldInEth} ETH`
+                );
+                return;
+            }
+
+            // Show confirmation dialog
+            Logger.info('Showing confirmation dialog');
+            const result = await this.modal.confirm(
+                `Build a ${buildingType} for ${requiredGold} ETH?`,
+                { title: 'Confirm Building' }
+            );
+
+            if (result.isConfirmed) {
+                Logger.info('User confirmed building action');
+                try {
+                    // Show transaction pending message
+                    const loadingModal = this.modal.loading('Transaction submitted! Waiting for confirmation...');
+                    
+                    // Create the building
+                    Logger.info('Calling createBuilding on contract');
+                    const tx = await this.gameState.createBuilding(buildingType);
+                    Logger.info('Transaction sent, waiting for confirmation');
+                    
+                    // Wait for transaction to be mined
+                    await tx.wait();
+                    Logger.info('Transaction confirmed');
+                    
+                    // Close loading modal
+                    loadingModal.close();
+                    
+                    // Reload player data to update UI
+                    await this.loadPlayerData();
+                    
+                    this.modal.success(`Successfully built ${buildingType}!`);
+                    Logger.info(`Successfully built: ${buildingType}`);
+                } catch (error) {
+                    Logger.error(`Error building ${buildingType}:`, error);
+                    this.modal.error(`Error building ${buildingType}: ${error.message}`);
+                }
+            } else {
+                Logger.info('User cancelled building action');
+            }
         } catch (error) {
-            Logger.error(`Error building ${buildingType}:`, error);
-            // You might want to show an error message to the user here
+            Logger.error(`Error in handleBuildingAction for ${buildingType}:`, error);
+            this.modal.error(`Error building ${buildingType}: ${error.message}`);
         }
     }
 
@@ -63,10 +137,15 @@ export class DashboardPage {
         // Add click event listeners for building buttons
         const buildingButtons = this.element.querySelectorAll('.building-button');
         buildingButtons.forEach(button => {
-            button.addEventListener('click', () => {
+            Logger.info(`Setting up listener for button: ${button.getAttribute('data-building')}`);
+            button.addEventListener('click', (event) => {
+                Logger.info('Building button clicked');
                 const buildingType = button.getAttribute('data-building');
                 if (buildingType) {
-                    this.handleBuildingAction(buildingType);
+                    Logger.info(`Attempting to build: ${buildingType}`);
+                    this.handleBuildingAction(buildingType).catch(error => {
+                        Logger.error('Error in handleBuildingAction:', error);
+                    });
                 }
             });
         });
@@ -113,17 +192,17 @@ export class DashboardPage {
                         <div class="building-card">
                             <h3>House</h3>
                             <p>Basic residential building for citizens</p>
-                            <button class="building-button" data-building="house">Build House</button>
+                            <button class="building-button" data-building="house" type="button">Build House</button>
                         </div>
                         <div class="building-card">
                             <h3>Water Supply</h3>
                             <p>Provides water infrastructure for the district</p>
-                            <button class="building-button" data-building="water-supply">Build Water Supply</button>
+                            <button class="building-button" data-building="water-supply" type="button">Build Water Supply</button>
                         </div>
                         <div class="building-card">
                             <h3>Workshop</h3>
                             <p>Produces goods and provides employment</p>
-                            <button class="building-button" data-building="workshop">Build Workshop</button>
+                            <button class="building-button" data-building="workshop" type="button">Build Workshop</button>
                         </div>
                     </div>
                 </div>
@@ -136,28 +215,28 @@ export class DashboardPage {
                             <h3>Town Hall</h3>
                             <p>Increase of gold production for all homes</p>
                             <p>Rep Point increase</p>
-                            <button class="building-button" data-building="town-hall">Build/Upgrade</button>
+                            <button class="building-button" data-building="town-hall" type="button">Build/Upgrade</button>
                         </div>
                         <div class="building-card">
                             <h3>Treasury</h3>
                             <p>Allows gold imports with heavy taxes</p>
                             <p>Limited amounts weekly</p>
-                            <button class="building-button" data-building="treasury">Build/Upgrade</button>
+                            <button class="building-button" data-building="treasury" type="button">Build/Upgrade</button>
                         </div>
                         <div class="building-card">
                             <h3>Barracks</h3>
                             <p>Buy units for future arena battles (cool PvP later)</p>
-                            <button class="building-button" data-building="barracks">Build/Upgrade</button>
+                            <button class="building-button" data-building="barracks" type="button">Build/Upgrade</button>
                         </div>
                         <div class="building-card">
                             <h3>Diplomacy Center</h3>
                             <p>Start negotiations: alliances, trades, non-aggression</p>
-                            <button class="building-button" data-building="diplomacy">Build/Upgrade</button>
+                            <button class="building-button" data-building="diplomacy" type="button">Build/Upgrade</button>
                         </div>
                         <div class="building-card">
                             <h3>Bank</h3>
                             <p>Allows gold trade</p>
-                            <button class="building-button" data-building="bank">Build/Upgrade</button>
+                            <button class="building-button" data-building="bank" type="button">Build/Upgrade</button>
                         </div>
                     </div>
                 </div>
