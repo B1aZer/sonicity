@@ -39,9 +39,47 @@
 }
 
 .stake-status {
-    text-align: center;
-    margin-bottom: 2rem;
-    font-size: 1.1rem;
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.stake-status .loading,
+.stake-status .success,
+.stake-status .error {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stake-status .loading {
+    color: #666;
+    background-color: #f5f5f5;
+}
+
+.stake-status .success {
+    color: #2e7d32;
+    background-color: #e8f5e9;
+}
+
+.stake-status .error {
+    color: #c62828;
+    background-color: #ffebee;
+}
+
+.stake-status .step {
+    font-weight: 600;
+}
+
+.stake-status .description {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.stake-status .title {
+    font-weight: 600;
+    margin-bottom: 4px;
 }
 
 .owned-nfts-container {

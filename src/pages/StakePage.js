@@ -171,30 +171,93 @@ export class StakePage {
         const statusElement = this.container.querySelector('.stake-status');
         
         try {
-            statusElement.innerHTML = '<div class="loading">Processing staking transaction...</div>';
+            // Check if user has joined a city
+            const playerCity = await this.gameStateContract.playerCity(await this.signer.getAddress());
+            if (playerCity === 0n) {
+                throw new Error("You must join a city before staking NFTs");
+            }
             
-            // Get the altar contract
-            const altarContract = new ethers.Contract(
-                this.altarAddress,
-                AltarABI.abi,
-                this.signer
-            );
+            // Check if NFT collection is approved
+            const isApproved = await this.gameStateContract.approvedCollections(this.nftContractAddress);
+            if (!isApproved) {
+                throw new Error("This NFT collection is not approved for staking");
+            }
             
-            // Approve the altar to transfer the NFT
-            const approveTx = await this.nftContract.approve(this.altarAddress, tokenId);
-            await approveTx.wait();
+            // Check if NFT is already staked
+            try {
+                const stakeData = await this.altarContract.getStakeData(tokenId);
+                if (stakeData.isActive) {
+                    throw new Error("This NFT is already staked");
+                }
+            } catch (error) {
+                // Continue if the error is just that the NFT isn't staked yet
+            }
             
-            // Stake the NFT
-            const stakeTx = await altarContract.stake(tokenId);
-            await stakeTx.wait();
+            // Check if NFT is already approved
+            try {
+                const currentApproval = await this.nftContract.getApproved(tokenId);
+                const needsApproval = currentApproval !== this.altarAddress;
+                
+                if (needsApproval) {
+                    // Step 1: Approve NFT transfer
+                    statusElement.innerHTML = `
+                        <div class="loading">
+                            <div class="step">Step 1/2: Approving NFT transfer...</div>
+                            <div class="description">This allows the Altar contract to receive your NFT</div>
+                        </div>
+                    `;
+                    const approveTx = await this.nftContract.approve(this.altarAddress, tokenId);
+                    await approveTx.wait();
+                } else {
+                    statusElement.innerHTML = `
+                        <div class="loading">
+                            <div class="step">Step 1/2: Already Approved</div>
+                            <div class="description">Your NFT is already approved for staking</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                throw new Error(`Error checking NFT approval: ${error.message}`);
+            }
             
-            statusElement.innerHTML = '<div class="success">NFT staked successfully!</div>';
-            
-            // Reload the user's NFTs to update the list
-            await this.loadUserNFTs();
+            // Step 2: Stake NFT
+            try {
+                statusElement.innerHTML = `
+                    <div class="loading">
+                        <div class="step">Step 2/2: Staking NFT...</div>
+                        <div class="description">Your NFT is being staked in the Altar contract</div>
+                    </div>
+                `;
+                
+                // Get NFT metadata to check building slots
+                const metadata = await this.gameStateContract.getNFTMetadata(this.nftContractAddress, tokenId);
+                if (metadata.buildingSlots === 0) {
+                    throw new Error("NFT must have at least 1 building slot");
+                }
+                
+                const stakeTx = await this.altarContract.stake(tokenId);
+                await stakeTx.wait();
+                
+                // Success message
+                statusElement.innerHTML = `
+                    <div class="success">
+                        <div class="title">NFT Staked Successfully!</div>
+                        <div class="description">Your NFT is now staked and you've received building slots</div>
+                    </div>
+                `;
+                
+                // Reload the user's NFTs to update the list
+                await this.loadUserNFTs();
+            } catch (error) {
+                throw new Error(`Error staking NFT: ${error.message}`);
+            }
         } catch (error) {
-            console.error("Error staking NFT:", error);
-            statusElement.innerHTML = '<div class="error">Error staking NFT. Please try again.</div>';
+            statusElement.innerHTML = `
+                <div class="error">
+                    <div class="title">Error Staking NFT</div>
+                    <div class="description">${error.message || "Unknown error"}</div>
+                </div>
+            `;
         }
     }
 
