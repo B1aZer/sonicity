@@ -37,6 +37,9 @@ export class GamePage {
                     Toast.error('Please join a city first before accessing the game overview.');
                     return;
                 }
+                
+                // Update building slots display
+                await this.updateBuildingSlots();
             } catch (error) {
                 console.error('Error checking city status:', error);
                 Toast.error('Error checking city status. Please try again.');
@@ -180,10 +183,28 @@ export class GamePage {
             <div id="ui-container">
                 <div id="resource-display">
                     Gold: <span id="gold-amount" style="color: #FFD700; font-weight: bold;">0</span><br>
-                    Rep Points: <span id="rep-points" style="color: #4CAF50; font-weight: bold;">0</span>
+                    Rep Points: <span id="rep-points" style="color: #4CAF50; font-weight: bold;">0</span><br>
+                    Building Slots: <span id="building-slots" style="color: #87CEEB; font-weight: bold;">0</span>/<span id="max-building-slots" style="color: #87CEEB; font-weight: bold;">0</span>
                 </div>
             </div>
         `;
+    }
+
+    async updateBuildingSlots() {
+        try {
+            const buildingSlots = await this.gameStateContract.getBuildingSlots();
+            const maxBuildingSlots = await this.gameStateContract.getMaxBuildingSlots();
+            
+            const buildingSlotsElement = this.element.querySelector('#building-slots');
+            const maxBuildingSlotsElement = this.element.querySelector('#max-building-slots');
+            
+            if (buildingSlotsElement && maxBuildingSlotsElement) {
+                buildingSlotsElement.textContent = buildingSlots;
+                maxBuildingSlotsElement.textContent = maxBuildingSlots;
+            }
+        } catch (error) {
+            console.error('Error updating building slots:', error);
+        }
     }
 
     mount(container) {
