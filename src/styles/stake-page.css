@@ -32,22 +32,6 @@
     margin-bottom: 2rem;
 }
 
-.connect-button {
-    background: linear-gradient(45deg, #2196F3, #1976D2);
-    color: white;
-    border: none;
-    padding: 0.8rem 1.5rem;
-    border-radius: 25px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.connect-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
-}
-
 .stake-status {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;

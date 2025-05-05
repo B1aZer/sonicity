@@ -189,37 +189,28 @@
 }
 
 .mint-actions {
-    margin: 0rem 0;
     display: flex;
+    gap: 1rem;
     justify-content: center;
-    gap: 0.75rem;
-}
-
-.connect-button, .mint-button {
-    padding: 0.5rem 1.5rem;
-    border-radius: 20px;
-    border: none;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.connect-button {
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-}
-
-.connect-button:hover {
-    background: rgba(255, 255, 255, 0.2);
+    margin: 2rem 0;
 }
 
 .mint-button {
-    background: #4caf50;
-    color: #fff;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    min-width: 180px;
 }
 
 .mint-button:hover {
-    background: #45a049;
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
 }
 
 .mint-button:disabled {

@@ -262,16 +262,26 @@ input[type=number] {
     border: none;
     padding: 1rem 2rem;
     font-size: 1.2rem;
-    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s;
     min-width: 180px;
+    border-radius: 0;
 }
 
 .connect-button:hover {
     background-color: #1976D2;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+}
+
+/* Mint page specific button styles */
+.mint-page .connect-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    padding: 0.5rem 1.5rem;
+    font-size: 0.9rem;
+}
+
+.mint-page .connect-button:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .mint-button {

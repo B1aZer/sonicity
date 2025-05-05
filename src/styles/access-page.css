@@ -67,23 +67,6 @@
     margin: 2rem 0;
 }
 
-.connect-button {
-    background-color: #2196F3;
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.connect-button:hover {
-    background-color: #1976D2;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
-}
-
 .mint-link {
     background-color: #4CAF50;
     color: white;
