@@ -19,9 +19,10 @@ cd contracts
 npx hardhat node
 
 npx hardhat run scripts/deploy.js --network localhost
-export GAME_STATE_ADDRESS="0x9E545E3C0baAB3E08CdfD552C960A1050f373042"
-export SONICITY_NFT_ADDRESS="0x67d269191c92Caf3cD7723F116c85e6E9bf55933"
+
 npx hardhat run scripts/approveCollection.js --network localhost 
+
+./scripts/update-addresses.sh
 
 
 ## Setup and Installation

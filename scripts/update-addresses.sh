@@ -26,10 +26,6 @@ sed -i '' "s/SONICITY_NFT: \".*\"/SONICITY_NFT: \"$SONICITY_NFT\"/" "$PROJECT_RO
 sed -i '' "s/ALTAR: \".*\"/ALTAR: \"$ALTAR\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/GAME_STATE: \".*\"/GAME_STATE: \"$GAME_STATE\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 
-# Update approveCollection.js
-sed -i '' "s/const SONICITY_NFT_ADDRESS = \".*\"/const SONICITY_NFT_ADDRESS = \"$SONICITY_NFT\"/" "$PROJECT_ROOT/scripts/approveCollection.js"
-sed -i '' "s/const GAME_STATE_ADDRESS = \".*\"/const GAME_STATE_ADDRESS = \"$GAME_STATE\"/" "$PROJECT_ROOT/scripts/approveCollection.js"
-
 echo "Contract addresses updated successfully!"
 echo "SonicityNFT: $SONICITY_NFT"
 echo "Altar: $ALTAR"

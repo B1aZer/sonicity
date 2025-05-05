@@ -1,10 +1,13 @@
 {
-  "name": "contracts",
+  "name": "sonicity-contracts",
   "version": "1.0.0",
-  "description": "This guide provides instructions for deploying the Sonicity NFT smart contract to the Ethereum blockchain.",
+  "description": "Smart contracts for Sonicity game",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "hardhat test",
+    "deploy": "npx hardhat run scripts/deploy.js --network localhost && npx hardhat run scripts/approveCollection.js --network localhost && ../scripts/update-addresses.sh",
+    "deploy:testnet": "npx hardhat run scripts/deploy.js --network testnet && npx hardhat run scripts/approveCollection.js --network testnet && ../scripts/update-addresses.sh",
+    "deploy:mainnet": "npx hardhat run scripts/deploy.js --network mainnet && npx hardhat run scripts/approveCollection.js --network mainnet && ../scripts/update-addresses.sh"
   },
   "keywords": [],
   "author": "",
