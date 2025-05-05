@@ -87,7 +87,7 @@ export class DashboardPage {
             // Show confirmation dialog
             Logger.info('Showing confirmation dialog');
             const result = await this.modal.confirm(
-                `Build a ${buildingType} for ${requiredGold} ETH?`,
+                `Build a ${buildingType} for ${requiredGold} Gold?`,
                 { title: 'Confirm Building' }
             );
 
