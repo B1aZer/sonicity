@@ -6,6 +6,7 @@ import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/
 import GameStateABI from '../../contracts/artifacts/contracts/GameState.sol/GameState.json';
 import AltarABI from '../../contracts/artifacts/contracts/Altar.sol/Altar.json';
 import './../styles/stake-page.css';
+import './../styles/nft-collection.css';
 
 export class StakePage {
     constructor() {
@@ -14,13 +15,22 @@ export class StakePage {
         this.container.innerHTML = `
             <div class="stake-container">
                 <h1>Stake Your NFTs</h1>
+                <p class="stake-description">
+                    Stake your NFTs to earn rewards and participate in the Sonicity ecosystem.
+                </p>
                 <div class="wallet-section">
                     <button class="connect-button">Connect Wallet</button>
                 </div>
                 <div class="stake-status"></div>
-                <div class="owned-nfts-container">
-                    <h2>Your NFTs</h2>
-                    <div class="nft-list"></div>
+                <div class="nft-grid">
+                    <div class="nft-section">
+                        <h2>Your NFTs</h2>
+                        <div class="nft-list"></div>
+                    </div>
+                    <div class="nft-section">
+                        <h2>Staked NFTs</h2>
+                        <div class="staked-nft-list"></div>
+                    </div>
                 </div>
             </div>
         `;
@@ -106,27 +116,27 @@ export class StakePage {
     async loadUserNFTs() {
         try {
             const ownedNFTsContainer = this.container.querySelector('.nft-list');
+            const stakedNFTsContainer = this.container.querySelector('.staked-nft-list');
+            
             ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
+            stakedNFTsContainer.innerHTML = '<div class="loading">Loading staked NFTs...</div>';
 
-            const balance = await this.nftContract.balanceOf(this.signer.address);
-            if (balance === 0n) {
-                ownedNFTsContainer.innerHTML = '<div class="no-nfts">You don\'t own any NFTs yet.</div>';
-                return;
-            }
+            // Get all staked NFTs first
+            const userAddress = await this.signer.getAddress();
+            const stakedTokenIds = await this.altarContract.getUserStakes(userAddress);
+            const stakedSet = new Set(stakedTokenIds.map(id => id.toString()));
 
             let nftListHTML = '';
-            for (let i = 0; i < balance; i++) {
-                const tokenId = await this.nftContract.tokenOfOwnerByIndex(this.signer.address, i);
+            let stakedNftListHTML = '';
+
+            // Load staked NFTs
+            for (const tokenId of stakedTokenIds) {
                 const tokenURI = await this.nftContract.tokenURI(tokenId);
-                
-                // Fetch metadata
                 const response = await fetch(tokenURI);
                 const metadata = await response.json();
-                
-                // Get game state metadata
                 const gameStateMetadata = await this.gameStateContract.getNFTMetadata(this.nftContractAddress, tokenId);
                 
-                nftListHTML += `
+                const nftCard = `
                     <div class="nft-card">
                         <div class="nft-image">
                             <img src="${metadata.image}" alt="${metadata.name}" onerror="this.src='/images/placeholder.jpg'">
@@ -143,14 +153,67 @@ export class StakePage {
                                     <span class="label">Building Slots</span>
                                     <span class="value">${gameStateMetadata.buildingSlots}</span>
                                 </div>
+                                <div class="attribute">
+                                    <span class="label">Status</span>
+                                    <span class="value">Staked</span>
+                                </div>
                             </div>
-                            <button class="stake-button" data-token-id="${tokenId}">Stake NFT</button>
+                            <button class="unstake-button" data-token-id="${tokenId}">Unstake NFT</button>
                         </div>
                     </div>
                 `;
+                
+                stakedNftListHTML += nftCard;
             }
 
-            ownedNFTsContainer.innerHTML = nftListHTML;
+            // Get all owned NFTs that are not staked
+            const balance = await this.nftContract.balanceOf(this.signer.address);
+
+            if (balance > 0n) {
+                for (let i = 0; i < balance; i++) {
+                    const tokenId = await this.nftContract.tokenOfOwnerByIndex(this.signer.address, i);
+                    if (stakedSet.has(tokenId.toString())) {
+                        continue;
+                    }
+                    
+                    const tokenURI = await this.nftContract.tokenURI(tokenId);
+                    const response = await fetch(tokenURI);
+                    const metadata = await response.json();
+                    const gameStateMetadata = await this.gameStateContract.getNFTMetadata(this.nftContractAddress, tokenId);
+                    
+                    const nftCard = `
+                        <div class="nft-card">
+                            <div class="nft-image">
+                                <img src="${metadata.image}" alt="${metadata.name}" onerror="this.src='/images/placeholder.jpg'">
+                            </div>
+                            <div class="nft-info">
+                                <h3>${metadata.name}</h3>
+                                <p class="description">${metadata.description}</p>
+                                <div class="nft-attributes">
+                                    <div class="attribute">
+                                        <span class="label">District</span>
+                                        <span class="value">${gameStateMetadata.district}</span>
+                                    </div>
+                                    <div class="attribute">
+                                        <span class="label">Building Slots</span>
+                                        <span class="value">${gameStateMetadata.buildingSlots}</span>
+                                    </div>
+                                    <div class="attribute">
+                                        <span class="label">Status</span>
+                                        <span class="value">Unstaked</span>
+                                    </div>
+                                </div>
+                                <button class="stake-button" data-token-id="${tokenId}">Stake NFT</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    nftListHTML += nftCard;
+                }
+            }
+
+            ownedNFTsContainer.innerHTML = nftListHTML || '<div class="no-nfts">You don\'t have any unstaked NFTs.</div>';
+            stakedNFTsContainer.innerHTML = stakedNftListHTML || '<div class="no-nfts">You don\'t have any staked NFTs.</div>';
 
             // Add event listeners to all stake buttons
             const stakeButtons = ownedNFTsContainer.querySelectorAll('.stake-button');
@@ -160,10 +223,21 @@ export class StakePage {
                     this.stakeNFT(tokenId);
                 });
             });
+
+            // Add event listeners to all unstake buttons
+            const unstakeButtons = stakedNFTsContainer.querySelectorAll('.unstake-button');
+            unstakeButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tokenId = button.dataset.tokenId;
+                    this.unstakeNFT(tokenId);
+                });
+            });
         } catch (error) {
             console.error("Error loading user's NFTs:", error);
             const ownedNFTsContainer = this.container.querySelector('.nft-list');
+            const stakedNFTsContainer = this.container.querySelector('.staked-nft-list');
             ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
+            stakedNFTsContainer.innerHTML = '<p class="error">Error loading staked NFTs. Please try again.</p>';
         }
     }
 
@@ -255,6 +329,59 @@ export class StakePage {
             statusElement.innerHTML = `
                 <div class="error">
                     <div class="title">Error Staking NFT</div>
+                    <div class="description">${error.message || "Unknown error"}</div>
+                </div>
+            `;
+        }
+    }
+
+    async unstakeNFT(tokenId) {
+        const statusElement = this.container.querySelector('.stake-status');
+        
+        try {
+            // Check if user has joined a city
+            const playerCity = await this.gameStateContract.playerCity(await this.signer.getAddress());
+            if (playerCity === 0n) {
+                throw new Error("You must join a city before unstaking NFTs");
+            }
+            
+            // Check if NFT is actually staked
+            const stakeData = await this.altarContract.getStakeData(tokenId);
+            if (!stakeData.isActive) {
+                throw new Error("This NFT is not staked");
+            }
+            
+            // Check if minimum staking period has passed
+            const currentTime = Math.floor(Date.now() / 1000);
+            if (currentTime < stakeData.stakeTime + 7 * 24 * 60 * 60) { // 7 days
+                throw new Error("Minimum staking period not completed");
+            }
+            
+            // Unstake NFT
+            statusElement.innerHTML = `
+                <div class="loading">
+                    <div class="step">Unstaking NFT...</div>
+                    <div class="description">Your NFT is being returned to your wallet</div>
+                </div>
+            `;
+            
+            const unstakeTx = await this.altarContract.unstake(tokenId);
+            await unstakeTx.wait();
+            
+            // Success message
+            statusElement.innerHTML = `
+                <div class="success">
+                    <div class="title">NFT Unstaked Successfully!</div>
+                    <div class="description">Your NFT has been returned to your wallet</div>
+                </div>
+            `;
+            
+            // Reload the user's NFTs to update the list
+            await this.loadUserNFTs();
+        } catch (error) {
+            statusElement.innerHTML = `
+                <div class="error">
+                    <div class="title">Error Unstaking NFT</div>
                     <div class="description">${error.message || "Unknown error"}</div>
                 </div>
             `;
