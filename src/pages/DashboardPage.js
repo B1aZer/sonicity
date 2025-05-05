@@ -35,7 +35,7 @@ export class DashboardPage {
             // Update gold display
             const goldValue = this.element.querySelector('.status-value');
             if (goldValue) {
-                goldValue.textContent = ethers.formatEther(gold);
+                goldValue.textContent = gold.toString();
             }
 
             // Update building slots display
