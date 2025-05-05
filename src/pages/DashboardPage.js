@@ -1,7 +1,9 @@
 import '../styles/dashboard-page.css';
+import Logger from '../js/utils/logger.js';
 
 export class DashboardPage {
     constructor() {
+        Logger.info('DashboardPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'dashboard-page';
         this.render();
@@ -9,6 +11,7 @@ export class DashboardPage {
     }
 
     setupEventListeners() {
+        Logger.info('Setting up event listeners');
         // Add click event listener for the bottom left city
         const bottomLeftCity = this.element.querySelector('.city-bottom-left');
         if (bottomLeftCity) {
@@ -20,6 +23,7 @@ export class DashboardPage {
     }
 
     render() {
+        Logger.info('Rendering dashboard page');
         this.element.innerHTML = `
             <div class="dashboard-container">
                 <h1>City Dashboard</h1>
@@ -39,6 +43,28 @@ export class DashboardPage {
                         <div class="status-item">
                             <span class="status-label">Town Hall Tier:</span>
                             <span class="status-value">Bronze</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- District Buildings Section -->
+                <div class="dashboard-section district-buildings-section">
+                    <h2>District Buildings</h2>
+                    <div class="buildings-grid">
+                        <div class="building-card">
+                            <h3>House</h3>
+                            <p>Basic residential building for citizens</p>
+                            <button class="building-button" data-building="house">Build/Upgrade</button>
+                        </div>
+                        <div class="building-card">
+                            <h3>Water Supply</h3>
+                            <p>Provides water infrastructure for the district</p>
+                            <button class="building-button" data-building="water-supply">Build/Upgrade</button>
+                        </div>
+                        <div class="building-card">
+                            <h3>Workshop</h3>
+                            <p>Produces goods and provides employment</p>
+                            <button class="building-button" data-building="workshop">Build/Upgrade</button>
                         </div>
                     </div>
                 </div>
@@ -73,33 +99,6 @@ export class DashboardPage {
                             <h3>Bank</h3>
                             <p>Allows gold trade</p>
                             <button class="building-button" data-building="bank">Build/Upgrade</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Player Buildings Section -->
-                <div class="dashboard-section player-buildings-section">
-                    <h2>Player Buildings</h2>
-                    <div class="buildings-grid">
-                        <div class="building-card">
-                            <h3>Homes</h3>
-                            <p>Increase base Gold generation</p>
-                            <button class="building-button" data-building="homes">Build/Upgrade</button>
-                        </div>
-                        <div class="building-card">
-                            <h3>Water Supply</h3>
-                            <p>Boost Home cap</p>
-                            <button class="building-button" data-building="water-supply">Build/Upgrade</button>
-                        </div>
-                        <div class="building-card">
-                            <h3>Windmill</h3>
-                            <p>Boost Home cap</p>
-                            <button class="building-button" data-building="windmill">Build/Upgrade</button>
-                        </div>
-                        <div class="building-card">
-                            <h3>Factory</h3>
-                            <p>Boost Home cap</p>
-                            <button class="building-button" data-building="factory">Build/Upgrade</button>
                         </div>
                     </div>
                 </div>
