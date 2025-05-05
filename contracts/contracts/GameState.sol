@@ -6,7 +6,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "./Altar.sol";
 
 /**
  * @title GameState
@@ -14,8 +13,8 @@ import "./Altar.sol";
  * Uses UUPS upgradeable pattern for future upgrades
  */
 contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    // Reference to the Altar contract
-    Altar public altar;
+    // Reference to the Altar contract that's authorized to update building slots
+    address public altarAddress;
 
     // Structure to store NFT metadata
     struct NFTMetadata {
@@ -69,12 +68,10 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         _disableInitializers();
     }
 
-    function initialize(address _altar) public initializer {
+    function initialize() public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
-        
-        altar = Altar(_altar);
         
         // Initialize tier requirements
         tierRequirements[1] = 1000 ether;  // 1000 Gold for Tier 1
@@ -230,7 +227,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @param newSlots The new number of slots
      */
     function updateBuildingSlots(address player, uint256 newSlots) external {
-        require(msg.sender == address(altar), "Only Altar can update slots");
+        require(msg.sender == altarAddress, "Only Altar can update slots");
         uint256 cityId = playerCity[player];
         require(cityId > 0, "Player not in a city");
         
@@ -317,9 +314,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
 
     /**
      * @dev Update altar address (only owner)
-     * @param _altar The new altar address
+     * @param _altarAddress The new altar address
      */
-    function setAltarAddress(address _altar) external onlyOwner {
-        altar = Altar(_altar);
+    function setAltarAddress(address _altarAddress) external onlyOwner {
+        altarAddress = _altarAddress;
     }
 } 

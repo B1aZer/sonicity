@@ -20,7 +20,7 @@ describe("Altar", function () {
 
     // Deploy GameState first with a temporary altar address
     const GameState = await ethers.getContractFactory("GameState");
-    gameState = await upgrades.deployProxy(GameState, [ethers.ZeroAddress], {
+    gameState = await upgrades.deployProxy(GameState, [], {
       kind: 'uups',
       initializer: 'initialize',
     });

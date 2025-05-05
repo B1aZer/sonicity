@@ -17,13 +17,15 @@ npm run dev
 
 cd contracts
 npx hardhat node
+npm run deploy
+
+## old
 
 npx hardhat run scripts/deploy.js --network localhost
 
 npx hardhat run scripts/approveCollection.js --network localhost 
 
 ./scripts/update-addresses.sh
-
 
 ## Setup and Installation
 
