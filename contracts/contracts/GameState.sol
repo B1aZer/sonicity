@@ -207,6 +207,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         playerCity[msg.sender] = cityId;
         cities[cityId].peaceShield = true; // New cities start with peace shield
         
+        // Grant initial gold to new players
+        cities[cityId].playerGold[msg.sender] = 500; // Starting gold amount
+        
         emit CityJoined(msg.sender, cityId);
     }
 
