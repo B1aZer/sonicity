@@ -368,7 +368,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         
         // Check available slots
         require(
-            playerBuildingCounts[msg.sender].total < cities[cityId].playerMaxBuildingSlots[msg.sender],
+            playerBuildingCounts[msg.sender].total < cities[cityId].playerBuildingSlots[msg.sender],
             "No building slots available"
         );
         
