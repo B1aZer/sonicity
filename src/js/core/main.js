@@ -15,6 +15,7 @@ import '../../styles/access-page.css';
 import '../../styles/dashboard-page.css';
 import '../../styles/map-page.css';
 import '../../styles/stake-page.css';
+import '../../styles/toastr.css';
 
 class App {
     constructor() {
