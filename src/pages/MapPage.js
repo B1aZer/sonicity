@@ -33,7 +33,7 @@ export class MapPage {
                     console.log('Current player city:', currentCity);
 
                     if (currentCity) {
-                        //Toast.info('Entering city...');
+                        // Player is already in a city, just navigate to dashboard
                         appState.setCurrentCityId(currentCity);
                         window.history.pushState({}, '', '/dashboard');
                         window.dispatchEvent(new PopStateEvent('popstate'));
