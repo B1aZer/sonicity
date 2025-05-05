@@ -3,6 +3,7 @@ import { CONTRACT_ADDRESSES, CONTRACT_CONFIG } from '../js/utils/constants.js';
 import { appState } from '../js/core/state.js';
 import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
 import { Toast } from '../js/utils/toast.js';
+import Logger from '../js/utils/logger.js';
 import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
 import GameStateABI from '../../contracts/artifacts/contracts/GameState.sol/GameState.json';
 import AltarABI from '../../contracts/artifacts/contracts/Altar.sol/Altar.json';
@@ -349,6 +350,7 @@ export class StakePage {
             let stakeData;
             try {
                 stakeData = await this.altarContract.getStakeData(tokenId);
+                Logger.debug("Stake data:", stakeData);
                 
                 if (!stakeData.isActive) {
                     Toast.error("This NFT is not staked");
@@ -362,6 +364,7 @@ export class StakePage {
                     return;
                 }
             } catch (error) {
+                Logger.error("Error getting stake data:", error);
                 Toast.error("Failed to get stake data. The NFT may not be staked.");
                 return;
             }
@@ -369,6 +372,8 @@ export class StakePage {
             // Check if minimum staking period has passed
             const currentTime = BigInt(Math.floor(Date.now() / 1000));
             const minimumStakeTime = stakeData.stakedAt + BigInt(7 * 24 * 60 * 60); // 7 days
+            Logger.debug("Current time:", currentTime);
+            Logger.debug("Minimum stake time:", minimumStakeTime);
             
             if (currentTime < minimumStakeTime) {
                 const remainingTime = minimumStakeTime - currentTime;
@@ -379,6 +384,7 @@ export class StakePage {
             
             // Check if NFT has building slots
             const metadata = await this.gameStateContract.getNFTMetadata(this.nftContractAddress, tokenId);
+            Logger.debug("NFT metadata:", metadata);
             
             if (metadata.buildingSlots === 0) {
                 Toast.error("NFT must have at least 1 building slot");
@@ -389,14 +395,19 @@ export class StakePage {
             Toast.warning("Unstaking NFT... Your NFT is being returned to your wallet");
             
             try {
+                Logger.debug("Attempting to unstake NFT:", tokenId);
                 const unstakeTx = await this.altarContract.unstake(tokenId);
+                Logger.debug("Unstake transaction sent:", unstakeTx.hash);
+                
                 await unstakeTx.wait();
+                Logger.debug("Unstake transaction confirmed");
                 
                 Toast.success("NFT Unstaked Successfully! Your NFT has been returned to your wallet");
                 
                 // Reload the user's NFTs to update the list
                 await this.loadUserNFTs();
             } catch (txError) {
+                Logger.error("Transaction error:", txError);
                 if (txError.code === 'CALL_EXCEPTION') {
                     Toast.error("Contract call failed. Please check if the NFT is properly staked.");
                 } else if (txError.code === 'INSUFFICIENT_FUNDS') {
@@ -406,6 +417,7 @@ export class StakePage {
                 }
             }
         } catch (error) {
+            Logger.error("Error unstaking NFT:", error);
             Toast.error(error.message || "Unknown error occurred while unstaking NFT");
         }
     }
