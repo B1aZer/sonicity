@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Check if deployed-addresses.json exists
+if [ ! -f "$PROJECT_ROOT/contracts/deployed-addresses.json" ]; then
+    echo "Error: deployed-addresses.json not found at $PROJECT_ROOT/contracts/deployed-addresses.json"
+    exit 1
+fi
+
+# Read addresses from deployed-addresses.json
+SONICITY_NFT=$(jq -r '.sonicityNFT' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+ALTAR=$(jq -r '.altarProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+GAME_STATE=$(jq -r '.gameStateProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+
+# Check if jq was successful
+if [ -z "$SONICITY_NFT" ] || [ -z "$ALTAR" ] || [ -z "$GAME_STATE" ]; then
+    echo "Error: Failed to read addresses from deployed-addresses.json"
+    exit 1
+fi
+
+# Update constants.js
+sed -i '' "s/SONICITY_NFT: \".*\"/SONICITY_NFT: \"$SONICITY_NFT\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+sed -i '' "s/ALTAR: \".*\"/ALTAR: \"$ALTAR\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+sed -i '' "s/GAME_STATE: \".*\"/GAME_STATE: \"$GAME_STATE\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+
+# Update approveCollection.js
+sed -i '' "s/const SONICITY_NFT_ADDRESS = \".*\"/const SONICITY_NFT_ADDRESS = \"$SONICITY_NFT\"/" "$PROJECT_ROOT/scripts/approveCollection.js"
+sed -i '' "s/const GAME_STATE_ADDRESS = \".*\"/const GAME_STATE_ADDRESS = \"$GAME_STATE\"/" "$PROJECT_ROOT/scripts/approveCollection.js"
+
+echo "Contract addresses updated successfully!"
+echo "SonicityNFT: $SONICITY_NFT"
+echo "Altar: $ALTAR"
+echo "GameState: $GAME_STATE" 
