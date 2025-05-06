@@ -1,35 +1,27 @@
-import { ethers } from 'ethers';
+import { BasePage } from '../js/core/BasePage.js';
 import { NFTCollection } from '../components/NFTCollection.js';
-import { CONTRACT_ADDRESSES, CONTRACT_CONFIG } from '../js/utils/constants.js';
-import { appState } from '../js/core/state.js';
-import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
-import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
-import GameStateABI from '../../contracts/artifacts/contracts/GameState.sol/GameState.json';
+import { CONTRACT_CONFIG } from '../js/utils/constants.js';
+import { WalletManager } from '../js/utils/wallet.js';
 import '../styles/nft-collection.css';
 import '../styles/mint-page.css';
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
 
-export class MintPage {
+export class MintPage extends BasePage {
     constructor() {
+        super();
         Logger.info('MintPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'mint-page';
-        this.provider = null;
-        this.signer = null;
-        this.nftContract = null;
-        this.gameStateContract = null;
         this.tokensMinted = 0;
         this.maxSupply = CONTRACT_CONFIG.MAX_SUPPLY;
         this.mintPrice = CONTRACT_CONFIG.MINT_PRICE;
-        this.nftContractAddress = CONTRACT_ADDRESSES.SONICITY_NFT;
-        this.gameStateAddress = CONTRACT_ADDRESSES.GAME_STATE;
         this.nftCollection = new NFTCollection();
         this.lastMintedTokenId = null;
         this.modal = new Modal();
         this.render();
         this.setupEventListeners();
-        this.initializeConnection();
+        this.initialize();
     }
 
     setupEventListeners() {
@@ -71,11 +63,22 @@ export class MintPage {
         this.updateTotalPrice();
     }
 
-    async initializeConnection() {
-        const { connected, address } = await checkExistingConnection();
-        if (connected) {
-            await this.initializeWallet(address);
-        }
+    updateWalletStatus(address) {
+        const connectButton = this.element.querySelector('#connect-wallet');
+        const mintButton = this.element.querySelector('#mint-button');
+        
+        connectButton.textContent = WalletManager.formatAddress(address);
+        mintButton.disabled = false;
+    }
+
+    async onInitialized(walletResult) {
+        await this.getMintCount();
+        await this.loadUserNFTs();
+    }
+
+    async onWalletConnected(walletResult) {
+        await this.getMintCount();
+        await this.loadUserNFTs();
     }
 
     updateTotalPrice() {
@@ -96,12 +99,11 @@ export class MintPage {
         try {
             statusElement.textContent = "Connecting...";
             
-            const result = await connectWallet();
+            const result = await WalletManager.connectWallet();
             if (result.success) {
-                await this.initializeWallet(result.address);
+                await this.onWalletConnected(result);
                 statusElement.textContent = "Connected!";
                 statusElement.style.color = "green";
-                await this.getMintCount();
             } else {
                 statusElement.textContent = result.error || "MetaMask not detected! Please install MetaMask.";
                 statusElement.style.color = "red";
@@ -111,36 +113,6 @@ export class MintPage {
             statusElement.textContent = "Failed to connect: " + (error.message || "Unknown error");
             statusElement.style.color = "red";
         }
-    }
-
-    async initializeWallet(walletAddress) {
-        const connectButton = this.element.querySelector('#connect-wallet');
-        const mintButton = this.element.querySelector('#mint-button');
-        
-        this.provider = new ethers.BrowserProvider(window.ethereum);
-        this.signer = await this.provider.getSigner();
-        
-        // Initialize contracts
-        this.nftContract = new ethers.Contract(
-            this.nftContractAddress,
-            SonicityNFTABI.abi,
-            this.signer
-        );
-
-        this.gameStateContract = new ethers.Contract(
-            this.gameStateAddress,
-            GameStateABI.abi,
-            this.signer
-        );
-        
-        // Format the account display
-        connectButton.textContent = formatAddress(walletAddress);
-        
-        // Enable mint button
-        mintButton.disabled = false;
-
-        // Load and display user's NFTs
-        await this.loadUserNFTs();
     }
 
     async loadUserNFTs() {
@@ -235,7 +207,7 @@ export class MintPage {
     }
 
     async handleMint() {
-        if (!appState.getState().walletConnected) return;
+        if (!this.walletConnected) return;
         
         const statusElement = this.element.querySelector('#mint-status');
         const amountInput = this.element.querySelector('#mint-amount');
