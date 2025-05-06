@@ -99,27 +99,27 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         __ReentrancyGuard_init();
         
         // Initialize tier requirements
-        tierRequirements[1] = 1000 ether;  // 1000 Gold for Tier 1
-        tierRequirements[2] = 5000 ether;  // 5000 Gold for Tier 2
-        tierRequirements[3] = 10000 ether; // 10000 Gold for Tier 3
-        tierRequirements[4] = 50000 ether; // 50000 Gold for Tier 4
+        tierRequirements[1] = 1000;  // 1000 Gold for Tier 1
+        tierRequirements[2] = 5000;  // 5000 Gold for Tier 2
+        tierRequirements[3] = 10000; // 10000 Gold for Tier 3
+        tierRequirements[4] = 50000; // 50000 Gold for Tier 4
         
         // Initialize building costs
-        buildingCosts["house"] = 100 ether;  // 100 Gold for a house
-        buildingCosts["water-supply"] = 200 ether;
-        buildingCosts["workshop"] = 300 ether;
+        buildingCosts["house"] = 100;  // 100 Gold for a house
+        buildingCosts["water-supply"] = 200;
+        buildingCosts["workshop"] = 300;
         
         // Initialize building requirements
         // Format: buildingRequirements[tier]["buildingName"] = goldCost
-        buildingRequirements[1]["Library"] = 500 ether;
-        buildingRequirements[1]["Marketplace"] = 500 ether;
-        buildingRequirements[1]["DefenseTower"] = 500 ether;
-        buildingRequirements[2]["Barracks"] = 1000 ether;
-        buildingRequirements[2]["Church"] = 1000 ether;
-        buildingRequirements[2]["MageTower"] = 1000 ether;
-        buildingRequirements[2]["LotteryHall"] = 1000 ether;
-        buildingRequirements[3]["DiplomacyCenter"] = 2000 ether;
-        buildingRequirements[3]["Bank"] = 2000 ether;
+        buildingRequirements[1]["Library"] = 500;
+        buildingRequirements[1]["Marketplace"] = 500;
+        buildingRequirements[1]["DefenseTower"] = 500;
+        buildingRequirements[2]["Barracks"] = 1000;
+        buildingRequirements[2]["Church"] = 1000;
+        buildingRequirements[2]["MageTower"] = 1000;
+        buildingRequirements[2]["LotteryHall"] = 1000;
+        buildingRequirements[3]["DiplomacyCenter"] = 2000;
+        buildingRequirements[3]["Bank"] = 2000;
     }
 
     // Required by UUPS pattern
