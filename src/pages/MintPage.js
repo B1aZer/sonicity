@@ -233,11 +233,7 @@ export class MintPage extends BasePage {
             const totalPrice = pricePerToken * BigInt(amount);
             
             // Call the mint function on the contract
-            const tx = await this.contracts.nft.mint(amount, { value: totalPrice });
-            
-            // Wait for transaction to be mined
-            statusElement.textContent = "Transaction sent! Waiting for confirmation...";
-            const receipt = await tx.wait();
+            const receipt = await this.contracts.nft.transact('mint', amount, { value: totalPrice });
             
             // Get the minted token ID
             this.lastMintedTokenId = this.tokensMinted + 1;
