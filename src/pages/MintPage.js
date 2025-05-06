@@ -175,7 +175,7 @@ export class MintPage extends BasePage {
         `;
     }
 
-    async loadUserNFTs() {
+    async loadUserNFTs(updatePreview = true) {
         try {
             Logger.info('Loading user NFTs');
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
@@ -224,17 +224,21 @@ export class MintPage extends BasePage {
                 }
             }
 
-            // Always keep the mint preview as placeholder
-            const previewContainer = this.element.querySelector('.nft-preview');
-            previewContainer.innerHTML = this.getPlaceholderHTML();
+            // Only update preview if requested
+            if (updatePreview) {
+                const previewContainer = this.element.querySelector('.nft-preview');
+                previewContainer.innerHTML = this.getPlaceholderHTML();
+            }
         } catch (error) {
             Logger.error("Error loading user's NFTs:", error);
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
             ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
             
-            // Keep mint preview as placeholder on error
-            const previewContainer = this.element.querySelector('.nft-preview');
-            previewContainer.innerHTML = this.getPlaceholderHTML();
+            // Only update preview if requested
+            if (updatePreview) {
+                const previewContainer = this.element.querySelector('.nft-preview');
+                previewContainer.innerHTML = this.getPlaceholderHTML();
+            }
         }
     }
 
@@ -277,7 +281,7 @@ export class MintPage extends BasePage {
             const totalPrice = pricePerToken * BigInt(amount);
             
             // Call the mint function on the contract
-            const receipt = await this.contracts.nft.transact('mint', amount, { value: totalPrice });
+            await this.contracts.nft.transact('mint', amount, { value: totalPrice });
             
             // Update minted count
             await this.getMintCount();
@@ -285,8 +289,35 @@ export class MintPage extends BasePage {
             // Set NFT as verified in global state
             appState.setNFTVerified(true);
             
-            // Reload user's NFTs to update the list and preview
-            await this.loadUserNFTs();
+            // Get the latest minted NFT
+            const balance = await this.contracts.nft.balanceOf(this.signer.address);
+            const latestTokenId = await this.contracts.nft.tokenOfOwnerByIndex(this.signer.address, balance - 1n);
+            const contractAddress = await this.contracts.nft.getContractAddress();
+            const tokenURI = await this.contracts.nft.tokenURI(latestTokenId);
+            
+            // Fetch and parse metadata
+            const response = await fetch(tokenURI);
+            const metadata = await response.json();
+            
+            // Get game state metadata
+            const gameStateMetadata = await this.contracts.gameState.call('getNFTMetadata',
+                contractAddress,
+                latestTokenId
+            );
+
+            // Update preview with the newly minted NFT
+            const previewContainer = this.element.querySelector('.nft-preview');
+            const nft = {
+                tokenId: latestTokenId,
+                contractAddress,
+                tokenURI,
+                metadata,
+                gameStateMetadata
+            };
+            previewContainer.innerHTML = this.nftCard.render(nft);
+            
+            // Reload user's NFTs to update the list, but don't update the preview
+            await this.loadUserNFTs(false);
             
             statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
             statusElement.style.color = "green";
