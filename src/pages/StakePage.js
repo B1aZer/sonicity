@@ -4,6 +4,7 @@ import { appState } from '../js/core/state.js';
 import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
 import { Toast } from '../js/utils/toast.js';
 import Logger from '../js/utils/logger.js';
+import { NFTCard } from '../components/NFTCard.js';
 import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
 import GameStateABI from '../../contracts/artifacts/contracts/GameState.sol/GameState.json';
 import AltarABI from '../../contracts/artifacts/contracts/Altar.sol/Altar.json';
@@ -44,6 +45,18 @@ export class StakePage {
         this.nftContractAddress = CONTRACT_ADDRESSES.SONICITY_NFT;
         this.gameStateAddress = CONTRACT_ADDRESSES.GAME_STATE;
         this.altarAddress = CONTRACT_ADDRESSES.ALTAR;
+        
+        // Initialize NFT card components
+        this.unstakedCard = new NFTCard({
+            showStakeButton: true,
+            onStake: (tokenId) => this.stakeNFT(tokenId)
+        });
+        
+        this.stakedCard = new NFTCard({
+            showUnstakeButton: true,
+            onUnstake: (tokenId) => this.unstakeNFT(tokenId)
+        });
+        
         this.setupEventListeners();
         this.initializeConnection();
     }
@@ -138,34 +151,18 @@ export class StakePage {
                 const metadata = await response.json();
                 const gameStateMetadata = await this.gameStateContract.getNFTMetadata(this.nftContractAddress, tokenId);
                 
-                const nftCard = `
-                    <div class="nft-card">
-                        <div class="nft-image">
-                            <img src="${metadata.image}" alt="${metadata.name}" onerror="this.src='/images/placeholder.jpg'">
-                        </div>
-                        <div class="nft-info">
-                            <h3>${metadata.name}</h3>
-                            <p class="description">${metadata.description}</p>
-                            <div class="nft-attributes">
-                                <div class="attribute">
-                                    <span class="label">District</span>
-                                    <span class="value">${gameStateMetadata.district}</span>
-                                </div>
-                                <div class="attribute">
-                                    <span class="label">Building Slots</span>
-                                    <span class="value">${gameStateMetadata.buildingSlots}</span>
-                                </div>
-                                <div class="attribute">
-                                    <span class="label">Status</span>
-                                    <span class="value">Staked</span>
-                                </div>
-                            </div>
-                            <button class="unstake-button" data-token-id="${tokenId}">Unstake NFT</button>
-                        </div>
-                    </div>
-                `;
-                
-                stakedNftListHTML += nftCard;
+                const nft = {
+                    tokenId,
+                    contractAddress: this.nftContractAddress,
+                    tokenURI,
+                    metadata,
+                    gameStateMetadata
+                };
+
+                const cardElement = document.createElement('div');
+                cardElement.innerHTML = this.stakedCard.render(nft);
+                stakedNFTsContainer.appendChild(cardElement.firstElementChild);
+                this.stakedCard.attachEventListeners(cardElement.firstElementChild);
             }
 
             // Get all owned NFTs that are not staked
@@ -183,59 +180,29 @@ export class StakePage {
                     const metadata = await response.json();
                     const gameStateMetadata = await this.gameStateContract.getNFTMetadata(this.nftContractAddress, tokenId);
                     
-                    const nftCard = `
-                        <div class="nft-card">
-                            <div class="nft-image">
-                                <img src="${metadata.image}" alt="${metadata.name}" onerror="this.src='/images/placeholder.jpg'">
-                            </div>
-                            <div class="nft-info">
-                                <h3>${metadata.name}</h3>
-                                <p class="description">${metadata.description}</p>
-                                <div class="nft-attributes">
-                                    <div class="attribute">
-                                        <span class="label">District</span>
-                                        <span class="value">${gameStateMetadata.district}</span>
-                                    </div>
-                                    <div class="attribute">
-                                        <span class="label">Building Slots</span>
-                                        <span class="value">${gameStateMetadata.buildingSlots}</span>
-                                    </div>
-                                    <div class="attribute">
-                                        <span class="label">Status</span>
-                                        <span class="value">Unstaked</span>
-                                    </div>
-                                </div>
-                                <button class="stake-button" data-token-id="${tokenId}">Stake NFT</button>
-                            </div>
-                        </div>
-                    `;
-                    
-                    nftListHTML += nftCard;
+                    const nft = {
+                        tokenId,
+                        contractAddress: this.nftContractAddress,
+                        tokenURI,
+                        metadata,
+                        gameStateMetadata
+                    };
+
+                    const cardElement = document.createElement('div');
+                    cardElement.innerHTML = this.unstakedCard.render(nft);
+                    ownedNFTsContainer.appendChild(cardElement.firstElementChild);
+                    this.unstakedCard.attachEventListeners(cardElement.firstElementChild);
                 }
             }
 
-            ownedNFTsContainer.innerHTML = nftListHTML || '<div class="no-nfts">You don\'t have any unstaked NFTs.</div>';
-            stakedNFTsContainer.innerHTML = stakedNftListHTML || '<div class="no-nfts">You don\'t have any staked NFTs.</div>';
-
-            // Add event listeners to all stake buttons
-            const stakeButtons = ownedNFTsContainer.querySelectorAll('.stake-button');
-            stakeButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const tokenId = button.dataset.tokenId;
-                    this.stakeNFT(tokenId);
-                });
-            });
-
-            // Add event listeners to all unstake buttons
-            const unstakeButtons = stakedNFTsContainer.querySelectorAll('.unstake-button');
-            unstakeButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const tokenId = button.dataset.tokenId;
-                    this.unstakeNFT(tokenId);
-                });
-            });
+            if (ownedNFTsContainer.children.length === 0) {
+                ownedNFTsContainer.innerHTML = '<div class="no-nfts">You don\'t have any unstaked NFTs.</div>';
+            }
+            if (stakedNFTsContainer.children.length === 0) {
+                stakedNFTsContainer.innerHTML = '<div class="no-nfts">You don\'t have any staked NFTs.</div>';
+            }
         } catch (error) {
-            console.error("Error loading user's NFTs:", error);
+            Logger.error("Error loading user's NFTs:", error);
             const ownedNFTsContainer = this.container.querySelector('.nft-list');
             const stakedNFTsContainer = this.container.querySelector('.staked-nft-list');
             ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';

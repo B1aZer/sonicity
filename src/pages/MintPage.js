@@ -1,5 +1,6 @@
 import { BasePage } from '../js/core/BasePage.js';
 import { NFTCollection } from '../components/NFTCollection.js';
+import { NFTCard } from '../components/NFTCard.js';
 import { CONTRACT_CONFIG } from '../js/utils/constants.js';
 import { WalletManager } from '../js/utils/wallet.js';
 import { ethers } from 'ethers';
@@ -21,6 +22,8 @@ export class MintPage extends BasePage {
         this.nftCollection = new NFTCollection();
         this.lastMintedTokenId = null;
         this.modal = new Modal();
+        this.userNFTs = [];
+        this.nftCard = new NFTCard();
         this.render();
         this.setupEventListeners();
         this.initialize();
@@ -123,16 +126,35 @@ export class MintPage extends BasePage {
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
             ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
 
-            // Get user's NFTs from the contract
             const balance = await this.contracts.nft.balanceOf(this.signer.address);
             const nfts = [];
 
-            // Get token IDs for each NFT owned by the user
             for (let i = 0; i < balance; i++) {
                 const tokenId = await this.contracts.nft.tokenOfOwnerByIndex(this.signer.address, i);
-                nfts.push(tokenId);
+                const contractAddress = await this.contracts.nft.getContractAddress();
+                const tokenURI = await this.contracts.nft.tokenURI(tokenId);
+                
+                // Fetch and parse metadata JSON
+                const response = await fetch(tokenURI);
+                const metadata = await response.json();
+                
+                // Get game state metadata
+                const gameStateMetadata = await this.contracts.gameState.call('getNFTMetadata',
+                    contractAddress,
+                    tokenId
+                );
+
+                nfts.push({
+                    tokenId,
+                    contractAddress,
+                    tokenURI,
+                    metadata,
+                    gameStateMetadata
+                });
             }
 
+            this.userNFTs = nfts;
+            
             if (nfts.length === 0) {
                 ownedNFTsContainer.innerHTML = '<p class="no-nfts">You don\'t own any NFTs yet.</p>';
                 return;
@@ -142,51 +164,33 @@ export class MintPage extends BasePage {
             ownedNFTsContainer.innerHTML = '';
 
             // Create NFT cards for each owned NFT
-            for (const tokenId of nfts) {
-                const nftAddress = this.contracts.nft.target;
-                const metadata = await this.contracts.gameState.getNFTMetadata(
-                    nftAddress,
-                    tokenId
-                );
-
-                // Get token URI for metadata
-                const tokenURI = await this.contracts.nft.tokenURI(tokenId);
-                
-                // Fetch and parse metadata JSON
-                const response = await fetch(tokenURI);
-                const nftData = await response.json();
-
-                // Map numeric values to display text
-                const districts = ['Central', 'North', 'East', 'South'];
-
-                const nftCard = document.createElement('div');
-                nftCard.className = 'nft-card';
-                nftCard.innerHTML = `
-                    <div class="nft-image">
-                        <img src="${nftData.image}" onerror="this.src='/images/placeholder.jpg'" alt="Land Plot #${tokenId}" />
-                    </div>
-                    <div class="nft-info">
-                        <h3>${nftData.name}</h3>
-                        <p class="description">${nftData.description}</p>
-                        <div class="nft-attributes">
-                            <div class="attribute">
-                                <span class="label">District:</span>
-                                <span class="value">${districts[metadata.district]}</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Building Slots:</span>
-                                <span class="value">${metadata.buildingSlots}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-
-                ownedNFTsContainer.appendChild(nftCard);
+            for (const nft of nfts) {
+                const cardElement = document.createElement('div');
+                cardElement.innerHTML = this.nftCard.render(nft);
+                ownedNFTsContainer.appendChild(cardElement.firstElementChild);
             }
+
+            // Update the preview with the latest NFT
+            await this.updateNFTPreview();
         } catch (error) {
             Logger.error("Error loading user's NFTs:", error);
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
             ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
+        }
+    }
+
+    async updateNFTPreview() {
+        const previewContainer = this.element.querySelector('.nft-preview');
+        
+        if (this.userNFTs.length > 0) {
+            const latestNFT = this.userNFTs[this.userNFTs.length - 1];
+            previewContainer.innerHTML = this.nftCard.render(latestNFT);
+        } else {
+            previewContainer.innerHTML = `
+                <div class="preview-placeholder">
+                    <img src="/images/placeholder.jpg" alt="Mint your NFT" />
+                </div>
+            `;
         }
     }
 
@@ -239,7 +243,7 @@ export class MintPage extends BasePage {
             this.lastMintedTokenId = this.tokensMinted + 1;
             
             // Update the preview with the minted NFT
-            await this.updateNFTPreview(this.lastMintedTokenId);
+            await this.updateNFTPreview();
             
             statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
             statusElement.style.color = "green";
@@ -254,52 +258,6 @@ export class MintPage extends BasePage {
             statusElement.textContent = "Failed to mint: " + (error.message || "Unknown error");
             statusElement.style.color = "red";
             this.modal.error('Failed to mint NFT. Please try again.');
-        }
-    }
-
-    async updateNFTPreview(tokenId) {
-        const previewContainer = this.element.querySelector('.nft-preview');
-        
-        try {
-            const nftAddress = this.contracts.nft.target;
-            // Get metadata from GameState
-            const metadata = await this.contracts.gameState.getNFTMetadata(
-                nftAddress,
-                tokenId
-            );
-            
-            // Get token URI for metadata
-            const tokenURI = await this.contracts.nft.tokenURI(tokenId);
-            
-            // Fetch and parse metadata JSON
-            const response = await fetch(tokenURI);
-            const nftData = await response.json();
-            
-            // Map numeric values to display text
-            const districts = ['Central', 'North', 'East', 'South'];
-            
-            previewContainer.innerHTML = `
-                <div class="minted-nft">
-                    <img src="${nftData.image}" onerror="this.src='/images/placeholder.jpg'" alt="Land Plot" />
-                    <div class="nft-details">
-                        <h3>${nftData.name}</h3>
-                        <p class="description">${nftData.description}</p>
-                        <div class="nft-attributes">
-                            <div class="attribute">
-                                <span class="label">District:</span>
-                                <span class="value">${districts[metadata.district]}</span>
-                            </div>
-                            <div class="attribute">
-                                <span class="label">Building Slots:</span>
-                                <span class="value">${metadata.buildingSlots}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        } catch (error) {
-            console.error("Error updating NFT preview:", error);
-            previewContainer.innerHTML = '<div class="error">Error loading NFT details</div>';
         }
     }
 
