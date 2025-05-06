@@ -1,16 +1,20 @@
 # 🧙‍♂️ Sonicity Gameplay Loo 
 
+Think about it as RTS not tied to crypto
+
 ## 🎈 1. Entry Phase: Start the Journey
 
 - Player connects wallet.
 
 - Player sees World Map (initially 3–5 cities).
 
+- Player can  enter only to ine city. He can do so with whileisted NFT
+
 - Player can only enter cities tied to their NFTs.
 
 - Player chooses a city → enters city view.
 
-## 🏩 2. Starter Buildings: Core Infrastructure
+## 🏩 2. Starter/District Buildings: Core Infrastructure
 
 Every city starts with:
 
@@ -22,7 +26,9 @@ Building - Purpose
 
 🏩 City Hall - Central hub: build and manage local upgrades + donate Gold to City Upgrades
 
-## 🏡 3. Local Gameplay: Building Your Domain
+## 🏡 3. Local Gameplay: Building Your District
+
+- Player stakes NFT to get building slots for the District
 
 - Each player manages their private economy:
 
@@ -43,6 +49,8 @@ Local Building - Purpose
 - City is a community owned space
 
 - Players donate Gold at City Hall, which is locked to the City Treasury.
+
+- When player donates gold re freceives Rep Points in return
 
 - Tier 0 → Tier 1 is an introduction to city wide economics, where players learn to contribute together for the common good. After Tier 1 players can choose to what building contribute
 
