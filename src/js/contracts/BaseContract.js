@@ -50,6 +50,11 @@ export class BaseContract {
         return await signer.getAddress();
     }
 
+    async getContractAddress() {
+        await this.ensureInitialized();
+        return this.contractAddress;
+    }
+
     // Helper method to handle contract calls
     async call(method, ...args) {
         const contract = await this.getContract();

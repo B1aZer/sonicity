@@ -143,8 +143,9 @@ export class MintPage extends BasePage {
 
             // Create NFT cards for each owned NFT
             for (const tokenId of nfts) {
+                const nftAddress = await this.contracts.nft.getContractAddress();
                 const metadata = await this.contracts.gameState.getNFTMetadata(
-                    this.contracts.nft.address,
+                    nftAddress,
                     tokenId
                 );
 
@@ -260,9 +261,10 @@ export class MintPage extends BasePage {
         const previewContainer = this.element.querySelector('.nft-preview');
         
         try {
+            const nftAddress = await this.contracts.nft.getContractAddress();
             // Get metadata from GameState
             const metadata = await this.contracts.gameState.getNFTMetadata(
-                this.contracts.nft.address,
+                nftAddress,
                 tokenId
             );
             
