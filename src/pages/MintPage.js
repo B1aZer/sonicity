@@ -120,6 +120,61 @@ export class MintPage extends BasePage {
         }
     }
 
+    getPlaceholderHTML() {
+        return `
+            <div class="preview-placeholder">
+                <img src="/images/placeholder.jpg" alt="Mint your NFT" />
+            </div>
+        `;
+    }
+
+    render() {
+        this.element.innerHTML = `
+            <div class="mint-container">
+                <h1>Mint Your Sonicity NFT</h1>
+                
+                <div class="nft-preview">
+                    ${this.getPlaceholderHTML()}
+                </div>
+                
+                <div class="mint-info">
+                    <div class="mint-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span> minted
+                        </div>
+                    </div>
+                    
+                    <div class="mint-controls">
+                        <div class="mint-amount">
+                            <button id="decrease-amount" class="amount-button">-</button>
+                            <input type="number" id="mint-amount" value="1" min="1" max="10">
+                            <button id="increase-amount" class="amount-button">+</button>
+                        </div>
+                        
+                        <div class="mint-price">
+                            <span>Price: <span id="total-price">${this.mintPrice}</span> ETH</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mint-actions">
+                    <button id="connect-wallet" class="connect-button">Connect Wallet</button>
+                    <button id="mint-button" class="mint-button" disabled>Mint NFT</button>
+                </div>
+                
+                <div id="mint-status" class="mint-status"></div>
+            </div>
+
+            <div class="owned-nfts-container">
+                <h2>Your NFTs</h2>
+                <div id="owned-nfts" class="owned-nfts"></div>
+            </div>
+        `;
+    }
+
     async loadUserNFTs() {
         try {
             Logger.info('Loading user NFTs');
@@ -157,40 +212,29 @@ export class MintPage extends BasePage {
             
             if (nfts.length === 0) {
                 ownedNFTsContainer.innerHTML = '<p class="no-nfts">You don\'t own any NFTs yet.</p>';
-                return;
+            } else {
+                // Clear loading message
+                ownedNFTsContainer.innerHTML = '';
+
+                // Create NFT cards for each owned NFT
+                for (const nft of nfts) {
+                    const cardElement = document.createElement('div');
+                    cardElement.innerHTML = this.nftCard.render(nft);
+                    ownedNFTsContainer.appendChild(cardElement.firstElementChild);
+                }
             }
 
-            // Clear loading message
-            ownedNFTsContainer.innerHTML = '';
-
-            // Create NFT cards for each owned NFT
-            for (const nft of nfts) {
-                const cardElement = document.createElement('div');
-                cardElement.innerHTML = this.nftCard.render(nft);
-                ownedNFTsContainer.appendChild(cardElement.firstElementChild);
-            }
-
-            // Update the preview with the latest NFT
-            await this.updateNFTPreview();
+            // Always keep the mint preview as placeholder
+            const previewContainer = this.element.querySelector('.nft-preview');
+            previewContainer.innerHTML = this.getPlaceholderHTML();
         } catch (error) {
             Logger.error("Error loading user's NFTs:", error);
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
             ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
-        }
-    }
-
-    async updateNFTPreview() {
-        const previewContainer = this.element.querySelector('.nft-preview');
-        
-        if (this.userNFTs.length > 0) {
-            const latestNFT = this.userNFTs[this.userNFTs.length - 1];
-            previewContainer.innerHTML = this.nftCard.render(latestNFT);
-        } else {
-            previewContainer.innerHTML = `
-                <div class="preview-placeholder">
-                    <img src="/images/placeholder.jpg" alt="Mint your NFT" />
-                </div>
-            `;
+            
+            // Keep mint preview as placeholder on error
+            const previewContainer = this.element.querySelector('.nft-preview');
+            previewContainer.innerHTML = this.getPlaceholderHTML();
         }
     }
 
@@ -235,75 +279,23 @@ export class MintPage extends BasePage {
             // Call the mint function on the contract
             const receipt = await this.contracts.nft.transact('mint', amount, { value: totalPrice });
             
-            // Get the minted token ID
-            this.lastMintedTokenId = this.tokensMinted + 1;
-            
-            // Update the preview with the minted NFT
-            await this.updateNFTPreview();
-            
-            statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
-            statusElement.style.color = "green";
-            
             // Update minted count
             await this.getMintCount();
 
             // Set NFT as verified in global state
             appState.setNFTVerified(true);
+            
+            // Reload user's NFTs to update the list and preview
+            await this.loadUserNFTs();
+            
+            statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
+            statusElement.style.color = "green";
         } catch (error) {
             Logger.error('Minting error:', error);
             statusElement.textContent = "Failed to mint: " + (error.message || "Unknown error");
             statusElement.style.color = "red";
             this.modal.error('Failed to mint NFT. Please try again.');
         }
-    }
-
-    render() {
-        this.element.innerHTML = `
-            <div class="mint-container">
-                <h1>Mint Your Sonicity NFT</h1>
-                
-                <div class="nft-preview">
-                    <div class="preview-placeholder">
-                        <img src="/images/placeholder.jpg" alt="Mint your NFT" />
-                    </div>
-                </div>
-                
-                <div class="mint-info">
-                    <div class="mint-progress">
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
-                        </div>
-                        <div class="progress-text">
-                            <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span> minted
-                        </div>
-                    </div>
-                    
-                    <div class="mint-controls">
-                        <div class="mint-amount">
-                            <button id="decrease-amount" class="amount-button">-</button>
-                            <input type="number" id="mint-amount" value="1" min="1" max="10">
-                            <button id="increase-amount" class="amount-button">+</button>
-                        </div>
-                        
-                        <div class="mint-price">
-                            <span>Price: <span id="total-price">${this.mintPrice}</span> ETH</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mint-actions">
-                    <button id="connect-wallet" class="connect-button">Connect Wallet</button>
-                    <button id="mint-button" class="mint-button" disabled>Mint NFT</button>
-                </div>
-                
-                <div id="mint-status" class="mint-status"></div>
-            </div>
-
-            <div class="owned-nfts-container">
-                <h2>Your NFTs</h2>
-                <div id="owned-nfts" class="owned-nfts"></div>
-            </div>
-        `;
     }
 
     mount(container) {
