@@ -133,16 +133,29 @@ export class StakePage {
             const ownedNFTsContainer = this.container.querySelector('.nft-list');
             const stakedNFTsContainer = this.container.querySelector('.staked-nft-list');
             
-            ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
-            stakedNFTsContainer.innerHTML = '<div class="loading">Loading staked NFTs...</div>';
+            // Clear containers first
+            ownedNFTsContainer.innerHTML = '';
+            stakedNFTsContainer.innerHTML = '';
+            
+            // Show loading messages
+            const ownedLoading = document.createElement('div');
+            ownedLoading.className = 'loading';
+            ownedLoading.textContent = 'Loading your NFTs...';
+            ownedNFTsContainer.appendChild(ownedLoading);
+
+            const stakedLoading = document.createElement('div');
+            stakedLoading.className = 'loading';
+            stakedLoading.textContent = 'Loading staked NFTs...';
+            stakedNFTsContainer.appendChild(stakedLoading);
 
             // Get all staked NFTs first
             const userAddress = await this.signer.getAddress();
             const stakedTokenIds = await this.altarContract.getUserStakes(userAddress);
             const stakedSet = new Set(stakedTokenIds.map(id => id.toString()));
 
-            let nftListHTML = '';
-            let stakedNftListHTML = '';
+            // Clear loading messages
+            ownedNFTsContainer.innerHTML = '';
+            stakedNFTsContainer.innerHTML = '';
 
             // Load staked NFTs
             for (const tokenId of stakedTokenIds) {
@@ -159,10 +172,11 @@ export class StakePage {
                     gameStateMetadata
                 };
 
-                const cardElement = document.createElement('div');
-                cardElement.innerHTML = this.stakedCard.render(nft);
-                stakedNFTsContainer.appendChild(cardElement.firstElementChild);
-                this.stakedCard.attachEventListeners(cardElement.firstElementChild);
+                const cardWrapper = document.createElement('div');
+                cardWrapper.innerHTML = this.stakedCard.render(nft);
+                const cardElement = cardWrapper.firstElementChild;
+                stakedNFTsContainer.appendChild(cardElement);
+                this.stakedCard.attachEventListeners(cardElement);
             }
 
             // Get all owned NFTs that are not staked
@@ -188,10 +202,11 @@ export class StakePage {
                         gameStateMetadata
                     };
 
-                    const cardElement = document.createElement('div');
-                    cardElement.innerHTML = this.unstakedCard.render(nft);
-                    ownedNFTsContainer.appendChild(cardElement.firstElementChild);
-                    this.unstakedCard.attachEventListeners(cardElement.firstElementChild);
+                    const cardWrapper = document.createElement('div');
+                    cardWrapper.innerHTML = this.unstakedCard.render(nft);
+                    const cardElement = cardWrapper.firstElementChild;
+                    ownedNFTsContainer.appendChild(cardElement);
+                    this.unstakedCard.attachEventListeners(cardElement);
                 }
             }
 

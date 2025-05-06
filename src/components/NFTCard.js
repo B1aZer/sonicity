@@ -1,3 +1,5 @@
+import Logger from '../js/utils/logger.js';
+
 export class NFTCard {
     constructor(options = {}) {
         this.options = {
@@ -62,6 +64,11 @@ export class NFTCard {
     }
 
     attachEventListeners(element) {
+        if (!element) {
+            Logger.warn('No element provided to attach event listeners');
+            return;
+        }
+
         if (this.options.showStakeButton && this.options.onStake) {
             const stakeButton = element.querySelector('.stake-button');
             if (stakeButton) {
