@@ -94,8 +94,8 @@ export class GameStateContract extends BaseContract {
         return await this.transact('setNFTMetadata', tokenId, metadata);
     }
 
-    async getNFTMetadata(tokenId) {
-        return await this.call('nftMetadata', tokenId);
+    async getNFTMetadata(collectionAddress, tokenId) {
+        return await this.call('getNFTMetadata', collectionAddress, tokenId);
     }
 
     async verifyNFTOwnership(collectionAddress, tokenId) {
