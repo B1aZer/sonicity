@@ -1,9 +1,18 @@
 class AppState {
     constructor() {
-        this.walletConnected = false;
-        this.hasVerifiedNFT = false;
-        this.currentWallet = null;
-        this.currentCityId = 0; // 0 means not in any city
+        // Load persisted state from localStorage
+        const persistedState = localStorage.getItem('appState');
+        const initialState = persistedState ? JSON.parse(persistedState) : {
+            walletConnected: false,
+            hasVerifiedNFT: false,
+            currentWallet: null,
+            currentCityId: 0
+        };
+
+        this.walletConnected = initialState.walletConnected;
+        this.hasVerifiedNFT = initialState.hasVerifiedNFT;
+        this.currentWallet = initialState.currentWallet;
+        this.currentCityId = initialState.currentCityId;
         this.listeners = new Set();
     }
 
@@ -18,22 +27,36 @@ class AppState {
         this.listeners.forEach(listener => listener(this));
     }
 
+    // Persist state to localStorage
+    persistState() {
+        const state = {
+            walletConnected: this.walletConnected,
+            hasVerifiedNFT: this.hasVerifiedNFT,
+            currentWallet: this.currentWallet,
+            currentCityId: this.currentCityId
+        };
+        localStorage.setItem('appState', JSON.stringify(state));
+    }
+
     // Update wallet connection state
     setWalletConnected(connected, wallet = null) {
         this.walletConnected = connected;
         this.currentWallet = wallet;
+        this.persistState();
         this.notify();
     }
 
     // Update NFT verification state
     setNFTVerified(verified) {
         this.hasVerifiedNFT = verified;
+        this.persistState();
         this.notify();
     }
 
     // Update city ID
     setCurrentCityId(cityId) {
         this.currentCityId = cityId;
+        this.persistState();
         this.notify();
     }
 
@@ -45,6 +68,16 @@ class AppState {
             currentWallet: this.currentWallet,
             currentCityId: this.currentCityId
         };
+    }
+
+    // Clear all state (useful for logout)
+    clearState() {
+        this.walletConnected = false;
+        this.hasVerifiedNFT = false;
+        this.currentWallet = null;
+        this.currentCityId = 0;
+        localStorage.removeItem('appState');
+        this.notify();
     }
 }
 
