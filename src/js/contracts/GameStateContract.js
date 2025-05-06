@@ -103,7 +103,46 @@ export class GameStateContract extends BaseContract {
     }
 
     async createBuilding(buildingType) {
-        return await this.transact('createBuilding', buildingType);
+        try {
+            // Ensure building type is a string and properly formatted
+            const formattedType = String(buildingType).toLowerCase();
+            console.log('Creating building with type:', formattedType);
+            
+            // Check if the building type is valid
+            const cost = await this.call('buildingCosts', formattedType);
+            console.log('Building cost in gold:', cost.toString());
+            
+            // Check player's gold balance
+            const address = await this.getAddress();
+            const gold = await this.call('getPlayerGold', address);
+            console.log('Player gold:', gold.toString());
+            
+            // Check building slots
+            const slots = await this.call('getBuildingSlots', address);
+            console.log('Available building slots:', slots.toString());
+            
+            // Check if player is in a city
+            const cityId = await this.call('playerCity', address);
+            console.log('Player city ID:', cityId.toString());
+
+            // Check if player has enough gold
+            if (gold < cost) {
+                throw new Error(`Insufficient gold. Required: ${cost}, Available: ${gold}`);
+            }
+
+            // Check if player has available slots
+            const totalBuildings = await this.call('getTotalBuildings', address);
+            if (totalBuildings >= slots) {
+                throw new Error(`No building slots available. Total buildings: ${totalBuildings}, Available slots: ${slots}`);
+            }
+
+            // Create the building
+            console.log('Sending createBuilding transaction with type:', formattedType);
+            return await this.transact('createBuilding', formattedType);
+        } catch (error) {
+            console.error('Error in createBuilding:', error);
+            throw error;
+        }
     }
 
     async getBuildingIds() {

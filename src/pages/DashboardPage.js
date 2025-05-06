@@ -52,6 +52,10 @@ export class DashboardPage {
         try {
             Logger.info(`Starting handleBuildingAction for: ${buildingType}`);
             
+            // Convert building type to lowercase to match contract expectations
+            const formattedBuildingType = buildingType.toLowerCase();
+            Logger.info(`Formatted building type: ${formattedBuildingType}`);
+            
             // Check if player is in a city
             const cityId = await this.gameState.getPlayerCity();
             Logger.info(`Player city ID: ${cityId}`);
@@ -87,7 +91,7 @@ export class DashboardPage {
             // Show confirmation dialog
             Logger.info('Showing confirmation dialog');
             const result = await this.modal.confirm(
-                `Build a ${buildingType} for ${requiredGold} Gold?`,
+                `Build a ${formattedBuildingType} for ${requiredGold} Gold?`,
                 { title: 'Confirm Building' }
             );
 
@@ -99,11 +103,11 @@ export class DashboardPage {
                     
                     // Create the building
                     Logger.info('Calling createBuilding on contract');
-                    const tx = await this.gameState.createBuilding(buildingType);
+                    const tx = await this.gameState.createBuilding(formattedBuildingType);
                     Logger.info('Transaction sent, waiting for confirmation');
                     
                     // Wait for transaction to be mined
-                    await tx.wait();
+                    const receipt = await tx;
                     Logger.info('Transaction confirmed');
                     
                     // Close loading modal
@@ -112,18 +116,18 @@ export class DashboardPage {
                     // Reload player data to update UI
                     await this.loadPlayerData();
                     
-                    this.modal.success(`Successfully built ${buildingType}!`);
-                    Logger.info(`Successfully built: ${buildingType}`);
+                    this.modal.success(`Successfully built ${formattedBuildingType}!`);
+                    Logger.info(`Successfully built: ${formattedBuildingType}`);
                 } catch (error) {
-                    Logger.error(`Error building ${buildingType}:`, error);
-                    this.modal.error(`Error building ${buildingType}: ${error.message}`);
+                    Logger.error(`Error building ${formattedBuildingType}:`, error);
+                    this.modal.error(`Error building ${formattedBuildingType}: ${error.message}`);
                 }
             } else {
                 Logger.info('User cancelled building action');
             }
         } catch (error) {
-            Logger.error(`Error in handleBuildingAction for ${buildingType}:`, error);
-            this.modal.error(`Error building ${buildingType}: ${error.message}`);
+            Logger.error(`Error in handleBuildingAction for ${formattedBuildingType}:`, error);
+            this.modal.error(`Error building ${formattedBuildingType}: ${error.message}`);
         }
     }
 
