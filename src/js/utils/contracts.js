@@ -1,29 +1,28 @@
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES } from './constants.js';
-import SonicityNFTABI from '../../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
-import GameStateABI from '../../../contracts/artifacts/contracts/GameState.sol/GameState.json';
-import AltarABI from '../../../contracts/artifacts/contracts/Altar.sol/Altar.json';
 import Logger from './logger.js';
+import { GameStateContract } from '../contracts/GameStateContract.js';
+import { AltarContract } from '../contracts/AltarContract.js';
+import { NFTContract } from '../contracts/NFTContract.js';
 
 export class ContractManager {
     static async initializeContracts(signer) {
         try {
+            const nftContract = new NFTContract();
+            const gameStateContract = new GameStateContract();
+            const altarContract = new AltarContract();
+
+            // Initialize all contracts
+            await Promise.all([
+                nftContract.initialize(),
+                gameStateContract.initialize(),
+                altarContract.initialize()
+            ]);
+
             const contracts = {
-                nft: new ethers.Contract(
-                    CONTRACT_ADDRESSES.SONICITY_NFT,
-                    SonicityNFTABI.abi,
-                    signer
-                ),
-                gameState: new ethers.Contract(
-                    CONTRACT_ADDRESSES.GAME_STATE,
-                    GameStateABI.abi,
-                    signer
-                ),
-                altar: new ethers.Contract(
-                    CONTRACT_ADDRESSES.ALTAR,
-                    AltarABI.abi,
-                    signer
-                )
+                nft: nftContract,
+                gameState: gameStateContract,
+                altar: altarContract
             };
 
             Logger.info('Contracts initialized successfully');
