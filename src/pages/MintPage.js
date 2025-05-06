@@ -2,6 +2,8 @@ import { BasePage } from '../js/core/BasePage.js';
 import { NFTCollection } from '../components/NFTCollection.js';
 import { CONTRACT_CONFIG } from '../js/utils/constants.js';
 import { WalletManager } from '../js/utils/wallet.js';
+import { ethers } from 'ethers';
+import { appState } from '../js/core/state.js';
 import '../styles/nft-collection.css';
 import '../styles/mint-page.css';
 import Logger from '../js/utils/logger.js';
@@ -122,12 +124,12 @@ export class MintPage extends BasePage {
             ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
 
             // Get user's NFTs from the contract
-            const balance = await this.nftContract.balanceOf(this.signer.address);
+            const balance = await this.contracts.nft.balanceOf(this.signer.address);
             const nfts = [];
 
             // Get token IDs for each NFT owned by the user
             for (let i = 0; i < balance; i++) {
-                const tokenId = await this.nftContract.tokenOfOwnerByIndex(this.signer.address, i);
+                const tokenId = await this.contracts.nft.tokenOfOwnerByIndex(this.signer.address, i);
                 nfts.push(tokenId);
             }
 
@@ -141,13 +143,13 @@ export class MintPage extends BasePage {
 
             // Create NFT cards for each owned NFT
             for (const tokenId of nfts) {
-                const metadata = await this.gameStateContract.getNFTMetadata(
-                    this.nftContractAddress,
+                const metadata = await this.contracts.gameState.getNFTMetadata(
+                    this.contracts.nft.address,
                     tokenId
                 );
 
                 // Get token URI for metadata
-                const tokenURI = await this.nftContract.tokenURI(tokenId);
+                const tokenURI = await this.contracts.nft.tokenURI(tokenId);
                 
                 // Fetch and parse metadata JSON
                 const response = await fetch(tokenURI);
@@ -191,7 +193,7 @@ export class MintPage extends BasePage {
         try {
             Logger.info('Getting mint count');
             // Get total supply from contract
-            const totalSupply = await this.nftContract.totalSupply();
+            const totalSupply = await this.contracts.nft.totalSupply();
             this.tokensMinted = Number(totalSupply);
             
             // Update UI
@@ -207,7 +209,10 @@ export class MintPage extends BasePage {
     }
 
     async handleMint() {
-        if (!this.walletConnected) return;
+        if (!this.contracts || !this.signer) {
+            this.modal.error('Please connect your wallet first');
+            return;
+        }
         
         const statusElement = this.element.querySelector('#mint-status');
         const amountInput = this.element.querySelector('#mint-amount');
@@ -223,7 +228,7 @@ export class MintPage extends BasePage {
             const totalPrice = pricePerToken * BigInt(amount);
             
             // Call the mint function on the contract
-            const tx = await this.nftContract.mint(amount, { value: totalPrice });
+            const tx = await this.contracts.nft.mint(amount, { value: totalPrice });
             
             // Wait for transaction to be mined
             statusElement.textContent = "Transaction sent! Waiting for confirmation...";
@@ -233,7 +238,7 @@ export class MintPage extends BasePage {
             this.lastMintedTokenId = this.tokensMinted + 1;
             
             // Update the preview with the minted NFT
-            this.updateNFTPreview(this.lastMintedTokenId);
+            await this.updateNFTPreview(this.lastMintedTokenId);
             
             statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
             statusElement.style.color = "green";
@@ -256,13 +261,13 @@ export class MintPage extends BasePage {
         
         try {
             // Get metadata from GameState
-            const metadata = await this.gameStateContract.getNFTMetadata(
-                this.nftContractAddress,
+            const metadata = await this.contracts.gameState.getNFTMetadata(
+                this.contracts.nft.address,
                 tokenId
             );
             
             // Get token URI for metadata
-            const tokenURI = await this.nftContract.tokenURI(tokenId);
+            const tokenURI = await this.contracts.nft.tokenURI(tokenId);
             
             // Fetch and parse metadata JSON
             const response = await fetch(tokenURI);
