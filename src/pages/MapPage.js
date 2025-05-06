@@ -1,15 +1,15 @@
 import '../styles/map-page.css';
-import { GameStateContract } from '../js/contracts/GameStateContract.js';
-import { Toast } from '../js/utils/toast.js';
+import { Modal } from '../js/utils/modal.js';
+import Logger from '../js/utils/logger.js';
 import { appState } from '../js/core/state.js';
+import { GameStateContract } from '../js/contracts/GameStateContract.js';
 
 export class MapPage {
     constructor() {
         this.element = document.createElement('div');
         this.element.className = 'map-page';
+        this.modal = new Modal();
         this.gameStateContract = new GameStateContract();
-        this.render();
-        this.setupEventListeners();
     }
 
     setupEventListeners() {
@@ -20,7 +20,7 @@ export class MapPage {
                 try {
                     // Check if wallet is connected
                     if (!window.ethereum) {
-                        Toast.warning('Please install MetaMask to interact with cities');
+                        this.modal.error('Please install MetaMask to interact with cities');
                         return;
                     }
 
@@ -28,9 +28,9 @@ export class MapPage {
                     await this.gameStateContract.initialize();
 
                     const cityId = this.getCityIdFromElement(city);
-                    console.log('Attempting to join city with ID:', cityId);
+                    Logger.info('Attempting to join city with ID:', cityId);
                     const currentCity = await this.gameStateContract.getPlayerCity();
-                    console.log('Current player city:', currentCity);
+                    Logger.info('Current player city:', currentCity);
 
                     if (currentCity) {
                         // Player is already in a city, just navigate to dashboard
@@ -41,7 +41,7 @@ export class MapPage {
                     }
 
                     // Show loading message
-                    Toast.info('Joining city...');
+                    this.modal.loading('Joining city...');
 
                     // Join the city
                     await this.gameStateContract.joinCity(cityId);
@@ -49,12 +49,18 @@ export class MapPage {
                     // Update app state with the city ID
                     appState.setCurrentCityId(cityId);
 
+                    // Close loading modal
+                    this.modal.close();
+
+                    // Show success message
+                    this.modal.success('Successfully joined city!');
+
                     // Navigate to dashboard
                     window.history.pushState({}, '', '/dashboard');
                     window.dispatchEvent(new PopStateEvent('popstate'));
                 } catch (error) {
-                    console.error('Error joining city:', error);
-                    Toast.error(error.message || 'Failed to join city');
+                    Logger.error('Error joining city:', error);
+                    this.modal.error(error.message || 'Failed to join city');
                 }
             });
         });
@@ -86,6 +92,8 @@ export class MapPage {
 
     mount(container) {
         container.appendChild(this.element);
+        this.render();
+        this.setupEventListeners();
     }
 
     unmount() {
