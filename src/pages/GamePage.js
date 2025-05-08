@@ -206,30 +206,6 @@ export class GamePage extends BasePage {
         });
     }
 
-    showStakeNFTModal() {
-        const modal = document.createElement('div');
-        modal.className = 'stake-modal';
-        modal.innerHTML = `
-            <div class="modal-content">
-                <h2>Stake NFTs</h2>
-                <p>Stake your NFTs to receive building slots for houses.</p>
-                <div class="nft-grid">
-                    <!-- NFTs will be loaded here -->
-                </div>
-                <div class="modal-actions">
-                    <button class="stake-button">Stake Selected</button>
-                    <button class="close-button">Close</button>
-                </div>
-            </div>
-        `;
-
-        modal.querySelector('.close-button').addEventListener('click', () => {
-            modal.remove();
-        });
-
-        this.element.appendChild(modal);
-    }
-
     render() {
         this.element.innerHTML = `
             <div id="renderDiv"></div>
@@ -245,27 +221,10 @@ export class GamePage extends BasePage {
         `;
     }
 
-    async updateBuildingSlots() {
-        try {
-            const buildingSlots = await this.gameStateContract.getBuildingSlots();
-            const maxBuildingSlots = await this.gameStateContract.getMaxBuildingSlots();
-            
-            const buildingSlotsElement = this.element.querySelector('#building-slots');
-            const maxBuildingSlotsElement = this.element.querySelector('#max-building-slots');
-            
-            if (buildingSlotsElement && maxBuildingSlotsElement) {
-                buildingSlotsElement.textContent = buildingSlots;
-                maxBuildingSlotsElement.textContent = maxBuildingSlots;
-            }
-        } catch (error) {
-            console.error('Error updating building slots:', error);
-        }
-    }
-
     mount(container) {
         container.appendChild(this.element);
     }
-
+ 
     unmount() {
         // Clear the resource update interval
         if (this.resourceUpdateInterval) {
