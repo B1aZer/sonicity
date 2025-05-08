@@ -141,7 +141,7 @@ export class GamePage extends BasePage {
 
             // Set up click handlers for the buildings
             if (this.game.renderer && this.game.renderer.domElement) {
-                this.setupBuildingClickHandlers();
+                this.setupClickHandlers();
             } else {
                 Logger.error('Renderer not initialized');
             }
@@ -157,49 +157,53 @@ export class GamePage extends BasePage {
         }
     }
 
-    setupBuildingClickHandlers() {
-        // Add click handler to the renderer
+    setupClickHandlers() {
+        if (!this.game.renderer) {
+            Logger.error('Renderer not initialized');
+            return;
+        }
+
         this.game.renderer.domElement.addEventListener('click', (event) => {
             // Calculate mouse position in normalized device coordinates
             const rect = this.game.renderer.domElement.getBoundingClientRect();
             const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
             const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
+            
             // Update the picking ray with the camera and mouse position
-            this.game.raycaster.setFromCamera(new THREE.Vector2(x, y), this.game.camera);
-
-            // Calculate objects intersecting the picking ray
+            this.game.raycaster.setFromCamera({ x, y }, this.game.camera);
+            
+            // Find intersections
             const intersects = this.game.raycaster.intersectObjects(this.game.scene.children, true);
-
+            
+            Logger.info('Click detected, intersections:', intersects.length);
+            
             if (intersects.length > 0) {
                 const clickedObject = intersects[0].object;
-                // Find the parent building mesh if we clicked a child mesh
-                const buildingMesh = this.findParentBuilding(clickedObject);
+                Logger.info('Clicked object:', {
+                    name: clickedObject.name,
+                    userData: clickedObject.userData,
+                    type: clickedObject.type,
+                    parent: clickedObject.parent ? {
+                        name: clickedObject.parent.name,
+                        userData: clickedObject.parent.userData
+                    } : null
+                });
                 
-                if (buildingMesh) {
-                    if (buildingMesh.userData.isMine) {
-                        this.modal.info('Mine is not operational yet. Coming soon!');
-                    } else if (buildingMesh.userData.isCityHall) {
-                        window.history.pushState({}, '', '/dashboard');
-                        window.dispatchEvent(new PopStateEvent('popstate'));
-                    } else if (buildingMesh.userData.isAltar) {
-                        window.history.pushState({}, '', '/stake');
-                        window.dispatchEvent(new PopStateEvent('popstate'));
-                    }
+                // Check for building types
+                if (clickedObject.userData.isMine) {
+                    Logger.info('Mine clicked');
+                    this.modal.show('Mine is not operational yet. Coming soon!', { title: 'Mine' });
+                } else if (clickedObject.userData.isCityHall) {
+                    Logger.info('City Hall clicked');
+                    window.history.pushState({}, '', '/dashboard');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isAltar) {
+                    Logger.info('Altar clicked');
+                    window.history.pushState({}, '', '/stake');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                 }
             }
         });
-    }
-
-    findParentBuilding(object) {
-        let current = object;
-        while (current) {
-            if (current.userData.isMine || current.userData.isCityHall || current.userData.isAltar) {
-                return current;
-            }
-            current = current.parent;
-        }
-        return null;
     }
 
     showStakeNFTModal() {

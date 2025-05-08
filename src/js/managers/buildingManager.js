@@ -104,6 +104,15 @@ export class BuildingManager {
                 building.castShadow = true;
                 building.receiveShadow = true;
                 
+                // Set userData on the building and all its children
+                const propertyName = `is${type.charAt(0) + type.slice(1).toLowerCase().replace('_', '')}`;
+                building.userData[propertyName] = true;
+                building.traverse((child) => {
+                    if (child.isMesh) {
+                        child.userData[propertyName] = true;
+                    }
+                });
+                
                 // Scale and position the model
                 const box = new THREE.Box3().setFromObject(building);
                 const modelSize = new THREE.Vector3();
@@ -128,7 +137,7 @@ export class BuildingManager {
                     buildingData.size.y,
                     buildingData.size.z
                 );
-                const material = new THREE.MeshStandardMaterial({
+                const material = new THREE.MeshStandardMaterial({ 
                     color: buildingData.color,
                     metalness: 0.5,
                     roughness: 0.6
@@ -136,6 +145,11 @@ export class BuildingManager {
                 const building = new THREE.Mesh(geometry, material);
                 building.castShadow = true;
                 building.receiveShadow = true;
+                
+                // Set userData on the fallback mesh
+                const propertyName = `is${type.charAt(0) + type.slice(1).toLowerCase().replace('_', '')}`;
+                building.userData[propertyName] = true;
+                
                 return building;
             }
         } catch (error) {
@@ -144,13 +158,8 @@ export class BuildingManager {
         }
     }
 
-    placeFixedBuilding(type, position, rotation = 0) {
+    placeFixedBuilding(type, position, rotation) {
         try {
-            if (!this.scene) {
-                Logger.error('Scene not initialized in BuildingManager');
-                return null;
-            }
-
             // Create building mesh
             const building = this.createBuildingMesh(type);
             if (!building) {
@@ -158,21 +167,15 @@ export class BuildingManager {
                 return null;
             }
 
-            // Position and rotate building
+            // Set position and rotation
             building.position.copy(position);
             building.rotation.y = rotation;
+
+            // Set userData for click handling
+            building.userData[`is${type.charAt(0) + type.slice(1).toLowerCase()}`] = true;
             
             // Add to scene
             this.scene.add(building);
-            
-            // Store building reference
-            const buildingKey = `fixed_${type}_${position.x}_${position.z}`;
-            this.buildings.set(buildingKey, {
-                type,
-                mesh: building,
-                position: position.clone(),
-                isFixed: true
-            });
             
             Logger.info('Fixed building placed:', {
                 type,
