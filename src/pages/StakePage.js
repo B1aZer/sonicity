@@ -131,6 +131,11 @@ export class StakePage extends BasePage {
         await this.loadUserNFTs();
     }
 
+    updateWalletStatus(address) {
+        const connectButton = this.container.querySelector('.connect-button');
+        connectButton.textContent = formatAddress(address);
+    }
+
     async loadUserNFTs() {
         try {
             const ownedNFTsContainer = this.container.querySelector('.nft-list');
@@ -152,8 +157,8 @@ export class StakePage extends BasePage {
             stakedNFTsContainer.appendChild(stakedLoading);
 
             // Get all staked NFTs first
-            const userAddress = await this.nftContract.getAddress();
-            const stakedTokenIds = await this.altarContract.getUserStakes(userAddress);
+            const userAddress = await this.contracts.nft.getAddress();
+            const stakedTokenIds = await this.contracts.altar.getUserStakes(userAddress);
             const stakedSet = new Set(stakedTokenIds.map(id => id.toString()));
 
             // Clear loading messages
@@ -162,14 +167,14 @@ export class StakePage extends BasePage {
 
             // Load staked NFTs
             for (const tokenId of stakedTokenIds) {
-                const tokenURI = await this.nftContract.tokenURI(tokenId);
+                const tokenURI = await this.contracts.nft.tokenURI(tokenId);
                 const response = await fetch(tokenURI);
                 const metadata = await response.json();
-                const gameStateMetadata = await this.gameStateContract.getNFTMetadata(this.nftContract.getContractAddress(), tokenId);
+                const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(this.contracts.nft.getContractAddress(), tokenId);
                 
                 const nft = {
                     tokenId,
-                    contractAddress: this.nftContract.getContractAddress(),
+                    contractAddress: this.contracts.nft.getContractAddress(),
                     tokenURI,
                     metadata,
                     gameStateMetadata
@@ -183,23 +188,23 @@ export class StakePage extends BasePage {
             }
 
             // Get all owned NFTs that are not staked
-            const balance = await this.nftContract.balanceOf(userAddress);
+            const balance = await this.contracts.nft.balanceOf(userAddress);
 
             if (balance > 0n) {
                 for (let i = 0; i < balance; i++) {
-                    const tokenId = await this.nftContract.tokenOfOwnerByIndex(userAddress, i);
+                    const tokenId = await this.contracts.nft.tokenOfOwnerByIndex(userAddress, i);
                     if (stakedSet.has(tokenId.toString())) {
                         continue;
                     }
                     
-                    const tokenURI = await this.nftContract.tokenURI(tokenId);
+                    const tokenURI = await this.contracts.nft.tokenURI(tokenId);
                     const response = await fetch(tokenURI);
                     const metadata = await response.json();
-                    const gameStateMetadata = await this.gameStateContract.getNFTMetadata(this.nftContract.getContractAddress(), tokenId);
+                    const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(this.contracts.nft.getContractAddress(), tokenId);
                     
                     const nft = {
                         tokenId,
-                        contractAddress: this.nftContract.getContractAddress(),
+                        contractAddress: this.contracts.nft.getContractAddress(),
                         tokenURI,
                         metadata,
                         gameStateMetadata
