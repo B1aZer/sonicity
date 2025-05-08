@@ -19,26 +19,30 @@ export class Game {
         this.raycaster = new THREE.Raycaster();
         this.pointer = new THREE.Vector2();
         this.clock = new THREE.Clock();
-        this.incomeTimer = 0; // Timer for income generation
-        this.incomeInterval = 5.0; // Generate income every 5 seconds
-        this.functionalityCheckTimer = 0; // Timer for checking building functionality
-        this.functionalityCheckInterval = 1.0; // Check functionality every 1 second
+        
+        // Game state timers
+        this.timers = {
+            income: { current: 0, interval: 5.0 },
+            functionality: { current: 0, interval: 1.0 }
+        };
+        
         // Grid properties
         this.gridSize = 0; // Will be set in init
         this.gridCellSize = 0; // Will be set in init
         this.grid = []; // Logical grid to track occupied cells (stores building type or false)
-        // State properties
+        
+        // Game state
         this.selectedBuildingType = BUILDING_TYPES_KEYS[0]; // Which building to place in 'BUILD' mode
         this.currentMode = 'BUILD'; // 'BUILD' or 'BULLDOZE'
+        this.money = 5000; // Starting money
+        this.isRunning = false;
+        
         // Managers
         this.resourceManager = new ResourceManager();
-        this.assetLoader = new AssetLoader(); // Create the asset loader instance
+        this.assetLoader = new AssetLoader();
         this.buildingManager = new BuildingManager(this.gridManager, this.resourceManager, 0, this.assetLoader);
-        this.money = 5000; // Starting money
         this.ui = new UI();
         this.inputHandler = new InputHandler(this);
-        this.isRunning = false;
-        this.boundOnWindowResize = this.onWindowResize.bind(this);
         
         // Initialize contracts
         this.gameStateContract = new GameStateContract();
@@ -47,95 +51,98 @@ export class Game {
     async init() {
         Logger.info("Game: Starting initialization");
         
-        try {
-            // Initialize grid manager first with gameStateContract
-            await this.gridManager.initialize(this.gameStateContract);
-            Logger.info("Grid initialized:", {
-                gridSize: this.gridManager.getGridSize(),
-                cellSize: this.gridManager.getCellSize(),
-                totalSize: this.gridManager.getTotalSize()
-            });
-            
-            // Set up scene with dynamic grid
-            const { scene, camera, renderer, controls, groundPlane, gridHelper } = 
-                await this.sceneManager.setupScene(this.renderDiv);
-            
-            // Store scene components
-            this.scene = scene;
-            this.camera = camera;
-            this.renderer = renderer;
-            this.controls = controls;
-            this.groundPlane = groundPlane;
-            this.gridHelper = gridHelper;
-            
-            // Initialize the logical grid
-            this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
-            
-            // Update building manager with scene components
-            this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.assetLoader);
-            
-            // Set up input handlers
-            Logger.info("Game: Setting up input handlers");
-            this.inputHandler.setupEventListeners();
-            
-            // Show UI and update initial state
-            Logger.info("Game: Setting up UI");
-            this.ui.show();
-            this.updateUI();
-            
-            // Set up window resize handler
-            window.addEventListener('resize', this.boundOnWindowResize);
-            
-            // Start the game loop
-            Logger.info("Game: Starting game loop");
-            this.start();
-            
-            Logger.info("Game: Initialization complete");
-        } catch (error) {
-            Logger.error("Game: Initialization error:", error);
-            const errorMessage = document.createElement('div');
-            errorMessage.style.position = 'absolute';
-            errorMessage.style.top = '50%';
-            errorMessage.style.left = '50%';
-            errorMessage.style.transform = 'translate(-50%, -50%)';
-            errorMessage.style.color = 'red';
-            errorMessage.style.backgroundColor = 'white';
-            errorMessage.style.padding = '20px';
-            errorMessage.style.borderRadius = '5px';
-            errorMessage.style.zIndex = '1000';
-            errorMessage.textContent = `Failed to initialize game: ${error.message}`;
-            this.renderDiv.appendChild(errorMessage);
-        }
+        // Initialize grid manager first with gameStateContract
+        await this.gridManager.initialize(this.gameStateContract);
+        Logger.info("Grid initialized:", {
+            gridSize: this.gridManager.getGridSize(),
+            cellSize: this.gridManager.getCellSize(),
+            totalSize: this.gridManager.getTotalSize()
+        });
+        
+        // Set up scene with dynamic grid
+        const { scene, camera, renderer, controls, groundPlane, gridHelper } = 
+            await this.sceneManager.setupScene(this.renderDiv);
+        
+        // Store scene components
+        this.scene = scene;
+        this.camera = camera;
+        this.renderer = renderer;
+        this.controls = controls;
+        this.groundPlane = groundPlane;
+        this.gridHelper = gridHelper;
+        
+        // Initialize the logical grid
+        this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
+        
+        // Update building manager with scene components
+        this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.assetLoader);
+        
+        // Set up input handlers
+        Logger.info("Game: Setting up input handlers");
+        this.inputHandler.setupEventListeners();
+        
+        // Show UI and update initial state
+        Logger.info("Game: Setting up UI");
+        this.ui.show();
+        this.updateUI();
+        
+        // Start the game loop
+        Logger.info("Game: Starting game loop");
+        this.start();
+        
+        Logger.info("Game: Initialization complete");
     }
+
     start() {
+        this.isRunning = true;
         this.animate();
     }
 
-    animate() {
-        this.animationFrameId = requestAnimationFrame(() => this.animate());
+    stop() {
+        this.isRunning = false;
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
 
+    animate() {
+        if (!this.isRunning) return;
+        
+        this.animationFrameId = requestAnimationFrame(() => this.animate());
         const deltaTime = this.clock.getDelta();
         
+        this.updateGameState(deltaTime);
+        this.render();
+    }
+
+    updateGameState(deltaTime) {
         // Update controls
         if (this.controls) {
             this.controls.update();
         }
 
-        // Check building functionality periodically
-        this.functionalityCheckTimer += deltaTime;
-        if (this.functionalityCheckTimer >= this.functionalityCheckInterval) {
-            this.functionalityCheckTimer = 0;
+        // Update timers and check conditions
+        this.updateTimers(deltaTime);
+    }
+
+    updateTimers(deltaTime) {
+        // Update functionality check timer
+        this.timers.functionality.current += deltaTime;
+        if (this.timers.functionality.current >= this.timers.functionality.interval) {
+            this.timers.functionality.current = 0;
             this.checkAllBuildingFunctionality();
         }
 
-        // Generate income periodically
-        this.incomeTimer += deltaTime;
-        if (this.incomeTimer >= this.incomeInterval) {
-            this.incomeTimer = 0;
+        // Update income timer
+        this.timers.income.current += deltaTime;
+        if (this.timers.income.current >= this.timers.income.interval) {
+            this.timers.income.current = 0;
             this.generateIncome();
         }
+    }
 
-        // Render the scene
+    render() {
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -270,12 +277,7 @@ export class Game {
         // Update UI (now only shows money/gold)
         this.ui.updateUI(money);
     }
-    // Handle window resize
-    onWindowResize() {
-        this.camera.aspect = window.innerWidth / window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-    }
+
     // --- Income and Functionality Logic ---
     // All buildings are now functional by default (simplified)
     checkAllBuildingFunctionality() {
@@ -317,8 +319,8 @@ export class Game {
         // 1. Reset Money
         this.money = 5000; // Back to starting value
         // 2. Reset Timers
-        this.incomeTimer = 0;
-        this.functionalityCheckTimer = 0;
+        this.timers.income.current = 0;
+        this.timers.functionality.current = 0;
         // 3. Reset Game Mode and Selection
         this.currentMode = 'BUILD';
         this.selectedBuildingType = BUILDING_TYPES_KEYS[0]; // Default selection
@@ -344,19 +346,12 @@ export class Game {
     dispose() {
         console.log("Game: dispose() method called");
         
-        // Stop animation loop
-        if (this.animationFrameId) {
-            cancelAnimationFrame(this.animationFrameId);
-        }
+        // Stop game loop
+        this.stop();
         
         // Remove event listeners
         if (this.inputHandler) {
             this.inputHandler.dispose();
-        }
-        
-        // Remove window resize listener
-        if (this.boundOnWindowResize) {
-            window.removeEventListener('resize', this.boundOnWindowResize);
         }
         
         // Clean up buildings
@@ -367,43 +362,14 @@ export class Game {
             });
         }
         
-        // Dispose of Three.js resources
-        if (this.scene) {
-            this.scene.traverse((object) => {
-                if (object.geometry) {
-                    object.geometry.dispose();
-                }
-                if (object.material) {
-                    if (Array.isArray(object.material)) {
-                        object.material.forEach(material => material.dispose());
-                    } else {
-                        object.material.dispose();
-                    }
-                }
-            });
-        }
-        
-        // Remove renderer from DOM
-        if (this.renderer && this.renderer.domElement && this.renderer.domElement.parentNode) {
-            this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
-        }
-        
-        // Dispose of renderer
-        if (this.renderer) {
-            this.renderer.dispose();
-        }
+        // Dispose of scene manager
+        this.sceneManager.dispose();
         
         // Clear references
-        this.scene = null;
-        this.camera = null;
-        this.renderer = null;
-        this.controls = null;
-        this.groundPlane = null;
         this.buildingManager = null;
         this.resourceManager = null;
         this.ui = null;
         this.inputHandler = null;
-        this.boundOnWindowResize = null;
         
         console.log("Game: dispose() method completed");
     }
