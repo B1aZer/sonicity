@@ -71,11 +71,8 @@ export class GamePage extends BasePage {
             // Initialize the game and wait for it to complete
             await this.game.init();
             
-            // Load assets first
+            // Load assets and wait for them to be fully loaded
             await this.game.assetLoader.loadAssets();
-            
-            // Wait for assets to load and ensure they're ready
-            await this.game.assetLoader.waitForLoad();
             
             // Check if player is in a city
             if (!await AccessControl.checkCityAccess()) {
@@ -104,7 +101,7 @@ export class GamePage extends BasePage {
             const gridRadius = (gridSize * cellSize) / 2;
             
             // Calculate positions in a semi-circle around the grid
-            const radius = gridRadius + (cellSize * 2); // Place buildings 2 cells away from grid edge
+            const radius = gridRadius + (cellSize * 2); // Increased distance from grid edge
             
             // Place Mine (right side)
             const minePosition = new THREE.Vector3(
