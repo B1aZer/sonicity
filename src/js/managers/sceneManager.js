@@ -176,8 +176,9 @@ export class SceneManager {
         );
         
         // Position camera to look at City Hall
-        camera.position.set(15, 12, 15);
-        camera.lookAt(0, 0, -radius); // Look at City Hall position
+        const height = 20; // Height for overview
+        const distance = 35; // Distance from center
+        camera.position.set(0, height, distance); // Position camera behind City Hall
         
         return camera;
     }
@@ -220,7 +221,7 @@ export class SceneManager {
         controls.panSpeed = 1.0;
         controls.enableRotate = true;
         controls.rotateSpeed = 1.0;
-        controls.target.set(0, 0, 0);
+        controls.target.set(0, 0, 0); // Look at City Hall position
         controls.update();
         return controls;
     }
