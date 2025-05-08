@@ -4,9 +4,9 @@ import { AssetLoader } from './assetLoader.js';
 import Logger from '../utils/logger.js';
 
 export class BuildingManager {
-    constructor(gridManager, resourceManager, initialMoney, assetLoader) {
+    constructor(gridManager, gameStateContract, initialMoney, assetLoader) {
         this.gridManager = gridManager;
-        this.resourceManager = resourceManager;
+        this.gameStateContract = gameStateContract;
         this.money = initialMoney;
         this.assetLoader = assetLoader;
         this.scene = null;
@@ -73,13 +73,8 @@ export class BuildingManager {
             // Mark cell as occupied
             this.gridManager.occupyCell(gridPos.x, gridPos.z, building);
             
-            // Register resource supply/demand
-            if (buildingData.generates) {
-                this.resourceManager.addSupply(buildingData.generates);
-            }
-            if (buildingData.consumes) {
-                this.resourceManager.addDemand(buildingData.consumes);
-            }
+            // Update contract state
+            this.gameStateContract.addBuilding(type, gridPos.x, gridPos.z);
             
             Logger.info('Building placed:', {
                 type,
@@ -200,13 +195,8 @@ export class BuildingManager {
                 // Free the cell
                 this.gridManager.freeCell(gridPos.x, gridPos.z);
                 
-                // Remove resource supply/demand
-                if (building.data.generates) {
-                    this.resourceManager.removeSupply(building.data.generates);
-                }
-                if (building.data.consumes) {
-                    this.resourceManager.removeDemand(building.data.consumes);
-                }
+                // Update contract state
+                this.gameStateContract.removeBuilding(gridPos.x, gridPos.z);
                 
                 // Remove from buildings map
                 this.buildings.delete(buildingKey);

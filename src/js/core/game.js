@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 import { InputHandler } from '../utils/inputHandler.js';
 import { BuildingManager } from '../managers/buildingManager.js';
-import { ResourceManager } from '../managers/resourceManager.js';
-import { UI } from '../utils/ui.js';
 import { AssetLoader } from '../managers/assetLoader.js';
 import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from '../utils/constants.js';
 import { GridManager } from '../managers/gridManager.js';
@@ -28,14 +26,15 @@ export class Game {
         this.isRunning = false;
         
         // Managers
-        this.resourceManager = new ResourceManager();
         this.assetLoader = new AssetLoader();
-        this.buildingManager = new BuildingManager(this.gridManager, this.resourceManager, 0, this.assetLoader);
-        this.ui = new UI();
+        this.buildingManager = new BuildingManager(this.gridManager, this.gameStateContract, 0, this.assetLoader);
         this.inputHandler = new InputHandler(this);
         
         // Initialize contracts
         this.gameStateContract = new GameStateContract();
+
+        // Get reference to money display
+        this.goldDisplay = document.getElementById('gold-amount');
     }
 
     async init() {
@@ -73,7 +72,7 @@ export class Game {
         
         // Show UI and update initial state
         Logger.info("Game: Setting up UI");
-        this.ui.show();
+        this.showUI();
         this.updateUI();
         
         // Start the game loop
@@ -117,12 +116,28 @@ export class Game {
         this.renderer.render(this.scene, this.camera);
     }
 
-    // Update UI elements
+    // UI methods
+    showUI() {
+        const uiContainer = document.getElementById('ui-container');
+        if (uiContainer) {
+            uiContainer.style.display = 'block';
+        }
+    }
+
+    hideUI() {
+        const uiContainer = document.getElementById('ui-container');
+        if (uiContainer) {
+            uiContainer.style.display = 'none';
+        }
+    }
+
     updateUI() {
-        // Get money from ResourceManager
-        const money = this.resourceManager.getMoney();
-        // Update UI (now only shows money/gold)
-        this.ui.updateUI(money);
+        // Get money from contract (default to 0 if not implemented yet)
+        const money = this.gameStateContract.getMoney?.() ?? 0;
+        // Update gold display
+        if (this.goldDisplay) {
+            this.goldDisplay.textContent = money;
+        }
     }
 
     // --- Game Reset Logic ---
@@ -141,10 +156,7 @@ export class Game {
         // 2. Reset Logical Grid
         this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
         
-        // 3. Reset Resource Manager
-        this.resourceManager.reset(); // Call the new reset method
-        
-        // 4. Update UI to reflect reset state
+        // 3. Update UI to reflect reset state
         this.updateUI();
         
         console.log("Game: restartGame() method finished successfully.");
@@ -175,8 +187,6 @@ export class Game {
         
         // Clear references
         this.buildingManager = null;
-        this.resourceManager = null;
-        this.ui = null;
         this.inputHandler = null;
         
         console.log("Game: dispose() method completed");
