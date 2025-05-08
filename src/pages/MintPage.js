@@ -26,7 +26,6 @@ export class MintPage extends BasePage {
         this.nftCard = new NFTCard();
         this.render();
         this.setupEventListeners();
-        this.initialize();
     }
 
     setupEventListeners() {
@@ -77,13 +76,21 @@ export class MintPage extends BasePage {
     }
 
     async onInitialized(walletResult) {
-        await this.getMintCount();
-        await this.loadUserNFTs();
+        try {
+            await this.getMintCount();
+            await this.loadUserNFTs();
+        } catch (error) {
+            Logger.error("Error in onInitialized:", error);
+        }
     }
 
     async onWalletConnected(walletResult) {
-        await this.getMintCount();
-        await this.loadUserNFTs();
+        try {
+            await this.getMintCount();
+            await this.loadUserNFTs();
+        } catch (error) {
+            Logger.error("Error in onWalletConnected:", error);
+        }
     }
 
     updateTotalPrice() {
@@ -181,12 +188,13 @@ export class MintPage extends BasePage {
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
             ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
 
-            const balance = await this.contracts.nft.balanceOf(this.signer.address);
+            const userAddress = await this.contracts.nft.getAddress();
+            const balance = await this.contracts.nft.balanceOf(userAddress);
             const nfts = [];
 
             for (let i = 0; i < balance; i++) {
-                const tokenId = await this.contracts.nft.tokenOfOwnerByIndex(this.signer.address, i);
-                const contractAddress = await this.contracts.nft.getContractAddress();
+                const tokenId = await this.contracts.nft.tokenOfOwnerByIndex(userAddress, i);
+                const contractAddress = this.contracts.nft.getContractAddress();
                 const tokenURI = await this.contracts.nft.tokenURI(tokenId);
                 
                 // Fetch and parse metadata JSON
@@ -194,7 +202,7 @@ export class MintPage extends BasePage {
                 const metadata = await response.json();
                 
                 // Get game state metadata
-                const gameStateMetadata = await this.contracts.gameState.call('getNFTMetadata',
+                const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(
                     contractAddress,
                     tokenId
                 );
@@ -251,86 +259,81 @@ export class MintPage extends BasePage {
             
             // Update UI
             const tokensMintedElement = this.element.querySelector('#tokens-minted');
-            const progressFill = this.element.querySelector('.progress-fill');
+            if (tokensMintedElement) {
+                tokensMintedElement.textContent = this.tokensMinted;
+            }
             
-            tokensMintedElement.textContent = this.tokensMinted;
-            progressFill.style.width = `${(this.tokensMinted / this.maxSupply) * 100}%`;
+            // Update progress bar
+            const progressFill = this.element.querySelector('.progress-fill');
+            if (progressFill) {
+                progressFill.style.width = `${(this.tokensMinted / this.maxSupply) * 100}%`;
+            }
         } catch (error) {
-            Logger.error('Error getting mint count:', error);
-            this.modal.error('Failed to get mint count. Please try again.');
+            Logger.error("Error getting mint count:", error);
         }
     }
 
     async handleMint() {
-        if (!this.contracts || !this.signer) {
-            this.modal.error('Please connect your wallet first');
-            return;
-        }
-        
         const statusElement = this.element.querySelector('#mint-status');
+        const mintButton = this.element.querySelector('#mint-button');
         const amountInput = this.element.querySelector('#mint-amount');
-        const amount = parseInt(amountInput.value);
         
         try {
-            Logger.info('Attempting to mint NFT');
-            statusElement.textContent = `Minting ${amount} NFT(s)...`;
+            const amount = parseInt(amountInput.value);
+            if (amount < 1 || amount > 10) {
+                throw new Error("Invalid mint amount");
+            }
+            
+            // Check if we have enough supply
+            if (this.tokensMinted + amount > this.maxSupply) {
+                throw new Error("Not enough NFTs left to mint");
+            }
+            
+            // Calculate total price
+            const totalPrice = ethers.parseEther((parseFloat(this.mintPrice) * amount).toString());
+            
+            // Disable mint button and show status
+            mintButton.disabled = true;
+            statusElement.textContent = "Minting...";
             statusElement.style.color = "blue";
             
-            // Calculate total price in wei
-            const pricePerToken = ethers.parseEther(this.mintPrice);
-            const totalPrice = pricePerToken * BigInt(amount);
+            // Mint NFT
+            const tx = await this.contracts.nft.mint(amount, { value: totalPrice });
+            statusElement.textContent = "Transaction sent! Waiting for confirmation...";
             
-            // Call the mint function on the contract
-            await this.contracts.nft.transact('mint', amount, { value: totalPrice });
+            // Wait for transaction to be mined
+            const receipt = await tx.wait();
             
-            // Update minted count
-            await this.getMintCount();
-
-            // Set NFT as verified in global state
-            appState.setNFTVerified(true);
-            
-            // Get the latest minted NFT
-            const balance = await this.contracts.nft.balanceOf(this.signer.address);
-            const latestTokenId = await this.contracts.nft.tokenOfOwnerByIndex(this.signer.address, balance - 1n);
-            const contractAddress = await this.contracts.nft.getContractAddress();
-            const tokenURI = await this.contracts.nft.tokenURI(latestTokenId);
-            
-            // Fetch and parse metadata
-            const response = await fetch(tokenURI);
-            const metadata = await response.json();
-            
-            // Get game state metadata
-            const gameStateMetadata = await this.contracts.gameState.call('getNFTMetadata',
-                contractAddress,
-                latestTokenId
+            // Get the minted token IDs
+            const event = receipt.logs.find(log => 
+                log.fragment && log.fragment.name === 'Transfer' && 
+                log.args.from === ethers.ZeroAddress
             );
-
-            // Update preview with the newly minted NFT
-            const previewContainer = this.element.querySelector('.nft-preview');
-            const nft = {
-                tokenId: latestTokenId,
-                contractAddress,
-                tokenURI,
-                metadata,
-                gameStateMetadata
-            };
-            previewContainer.innerHTML = this.nftCard.render(nft);
             
-            // Reload user's NFTs to update the list, but don't update the preview
-            await this.loadUserNFTs(false);
-            
-            statusElement.textContent = `Successfully minted ${amount} NFT(s)!`;
-            statusElement.style.color = "green";
+            if (event) {
+                this.lastMintedTokenId = event.args.tokenId;
+                statusElement.textContent = `Successfully minted NFT #${this.lastMintedTokenId}!`;
+                statusElement.style.color = "green";
+                
+                // Update mint count and user's NFTs
+                await this.getMintCount();
+                await this.loadUserNFTs();
+            } else {
+                throw new Error("Could not find mint event in transaction");
+            }
         } catch (error) {
-            Logger.error('Minting error:', error);
-            statusElement.textContent = "Failed to mint: " + (error.message || "Unknown error");
+            Logger.error("Error minting NFT:", error);
+            statusElement.textContent = "Error: " + (error.message || "Unknown error");
             statusElement.style.color = "red";
-            this.modal.error('Failed to mint NFT. Please try again.');
+        } finally {
+            mintButton.disabled = false;
         }
     }
 
-    mount(container) {
+    async mount(container) {
         container.appendChild(this.element);
+        // Initialize contracts when mounting
+        await this.initialize();
     }
 
     unmount() {
