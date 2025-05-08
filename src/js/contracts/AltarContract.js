@@ -16,12 +16,12 @@ export class AltarContract extends BaseContract {
     }
 
     async getStakeData(tokenId) {
-        return await this.call('getStakeData', tokenId);
+        return await this.call('stakes', tokenId);
     }
 
     async getUserStakes() {
         const address = await this.getAddress();
-        return await this.call('getUserStakes', address);
+        return await this.call('userStakes', address);
     }
 
     async isStaked(tokenId) {
@@ -35,5 +35,9 @@ export class AltarContract extends BaseContract {
 
     async getGameStateAddress() {
         return await this.call('gameState');
+    }
+
+    async getSonicityNFTAddress() {
+        return await this.call('sonicityNFT');
     }
 } 

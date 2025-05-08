@@ -26,4 +26,12 @@ export class NFTContract extends BaseContract {
     async totalSupply() {
         return await this.call('totalSupply');
     }
+
+    async approve(to, tokenId) {
+        return await this.transact('approve', to, tokenId);
+    }
+
+    async ownerOf(tokenId) {
+        return await this.call('ownerOf', tokenId);
+    }
 } 

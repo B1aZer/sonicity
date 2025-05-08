@@ -28,14 +28,9 @@ export class GameStateContract extends BaseContract {
     }
 
     async getPlayerCity() {
-        try {
-            const address = await this.getAddress();
-            const cityId = await this.call('playerCity', address);
-            return cityId && cityId !== '0x' ? Number(cityId) : null;
-        } catch (error) {
-            console.error('Error getting player city:', error);
-            return null;
-        }
+        const address = await this.getAddress();
+        const cityId = await this.call('playerCity', address);
+        return cityId === 0n ? null : cityId;
     }
 
     async getCityTreasury(cityId) {
@@ -149,16 +144,16 @@ export class GameStateContract extends BaseContract {
         return await this.call('approvedCollections', collectionAddress);
     }
 
-    async setNFTMetadata(tokenId, metadata) {
-        return await this.transact('setNFTMetadata', tokenId, metadata);
+    async setNFTMetadata(collectionAddress, tokenId, metadata) {
+        return await this.transact('setNFTMetadata', collectionAddress, tokenId, metadata);
     }
 
     async getNFTMetadata(collectionAddress, tokenId) {
         return await this.call('getNFTMetadata', collectionAddress, tokenId);
     }
 
-    async verifyNFTOwnership(collectionAddress, tokenId) {
-        return await this.call('verifyNFTOwnership', collectionAddress, tokenId);
+    async verifyNFTOwnership(collectionAddress, tokenId, owner) {
+        return await this.call('verifyNFTOwnership', collectionAddress, tokenId, owner);
     }
 
     // Building Costs
