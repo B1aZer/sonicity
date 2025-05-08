@@ -1,5 +1,7 @@
 import { WalletManager } from '../utils/wallet.js';
-import { ContractManager } from '../utils/contracts.js';
+import { GameStateContract } from '../contracts/GameStateContract.js';
+import { AltarContract } from '../contracts/AltarContract.js';
+import { NFTContract } from '../contracts/NFTContract.js';
 import { Modal } from '../utils/modal.js';
 import Logger from '../utils/logger.js';
 
@@ -8,7 +10,11 @@ export class BasePage {
         this.modal = new Modal();
         this.provider = null;
         this.signer = null;
-        this.contracts = null;
+        this.contracts = {
+            gameState: new GameStateContract(),
+            altar: new AltarContract(),
+            nft: new NFTContract()
+        };
     }
 
     async initialize() {
@@ -17,8 +23,11 @@ export class BasePage {
             const walletResult = await WalletManager.initializeConnection();
             if (walletResult.success) {
                 // Initialize contracts
-                this.signer = await ContractManager.getSigner();
-                this.contracts = await ContractManager.initializeContracts(this.signer);
+                await Promise.all([
+                    this.contracts.gameState.initialize(),
+                    this.contracts.altar.initialize(),
+                    this.contracts.nft.initialize()
+                ]);
                 
                 // Update UI with wallet address
                 this.updateWalletStatus(walletResult.address);
@@ -37,8 +46,11 @@ export class BasePage {
             const result = await WalletManager.connectWallet();
             if (result.success) {
                 // Initialize contracts
-                this.signer = await ContractManager.getSigner();
-                this.contracts = await ContractManager.initializeContracts(this.signer);
+                await Promise.all([
+                    this.contracts.gameState.initialize(),
+                    this.contracts.altar.initialize(),
+                    this.contracts.nft.initialize()
+                ]);
                 
                 // Update UI with wallet address
                 this.updateWalletStatus(result.address);
