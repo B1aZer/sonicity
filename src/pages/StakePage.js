@@ -337,7 +337,7 @@ export class StakePage extends BasePage {
             // Check if user has joined a city
             const playerCity = await this.contracts.gameState.getPlayerCity();
             if (!playerCity) {
-                Toast.error("You must join a city before unstaking NFTs");
+                this.modal.error("You must join a city before unstaking NFTs");
                 return;
             }
             
@@ -348,19 +348,19 @@ export class StakePage extends BasePage {
                 Logger.debug("Stake data:", stakeData);
                 
                 if (!stakeData.isActive) {
-                    Toast.error("This NFT is not staked");
+                    this.modal.error("This NFT is not staked");
                     return;
                 }
                 
                 // Check if caller is the staker
                 const userAddress = await this.contracts.nft.getAddress();
                 if (stakeData.owner.toLowerCase() !== userAddress.toLowerCase()) {
-                    Toast.error("You are not the staker of this NFT");
+                    this.modal.error("You are not the staker of this NFT");
                     return;
                 }
             } catch (error) {
                 Logger.error("Error getting stake data:", error);
-                Toast.error("Failed to get stake data. The NFT may not be staked.");
+                this.modal.error("Failed to get stake data. The NFT may not be staked.");
                 return;
             }
             
@@ -373,7 +373,10 @@ export class StakePage extends BasePage {
             if (currentTime < minimumStakeTime) {
                 const remainingTime = minimumStakeTime - currentTime;
                 const remainingDays = Math.ceil(Number(remainingTime) / (24 * 60 * 60));
-                Toast.warning(`You need to wait ${remainingDays} more days before you can unstake this NFT. The minimum staking period is 7 days.`);
+                this.modal.show(`You need to wait ${remainingDays} more days before you can unstake this NFT. The minimum staking period is 7 days.`, {
+                    title: 'Cannot Unstake Yet',
+                    icon: 'info'
+                });
                 return;
             }
             
@@ -383,12 +386,12 @@ export class StakePage extends BasePage {
             Logger.debug("NFT metadata:", metadata);
             
             if (metadata.buildingSlots === 0) {
-                Toast.error("NFT must have at least 1 building slot");
+                this.modal.error("NFT must have at least 1 building slot");
                 return;
             }
             
-            // Unstake NFT
-            Toast.warning("Unstaking NFT... Your NFT is being returned to your wallet");
+            // Show loading message
+            this.modal.loading("Unstaking NFT... Your NFT is being returned to your wallet");
             
             try {
                 Logger.debug("Attempting to unstake NFT:", tokenId);
@@ -398,23 +401,25 @@ export class StakePage extends BasePage {
                 await unstakeTx.wait();
                 Logger.debug("Unstake transaction confirmed");
                 
-                Toast.success("NFT Unstaked Successfully! Your NFT has been returned to your wallet");
+                this.modal.success("NFT Unstaked Successfully! Your NFT has been returned to your wallet");
                 
                 // Reload the user's NFTs to update the list
                 await this.loadUserNFTs();
             } catch (txError) {
                 Logger.error("Transaction error:", txError);
+                let errorMessage = "Failed to execute unstake transaction";
                 if (txError.code === 'CALL_EXCEPTION') {
-                    Toast.error("Contract call failed. Please check if the NFT is properly staked.");
+                    errorMessage = "Contract call failed. Please check if the NFT is properly staked.";
                 } else if (txError.code === 'INSUFFICIENT_FUNDS') {
-                    Toast.error("Insufficient funds for gas. Please add more ETH to your wallet.");
+                    errorMessage = "Insufficient funds for gas. Please add more ETH to your wallet.";
                 } else {
-                    Toast.error(`Failed to execute unstake transaction: ${txError.message}`);
+                    errorMessage = txError.message;
                 }
+                this.modal.error(errorMessage);
             }
         } catch (error) {
             Logger.error("Error unstaking NFT:", error);
-            Toast.error(error.message || "Unknown error occurred while unstaking NFT");
+            this.modal.error(error.message || "Unknown error occurred while unstaking NFT");
         }
     }
 
