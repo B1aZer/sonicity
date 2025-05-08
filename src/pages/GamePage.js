@@ -112,7 +112,7 @@ export class GamePage extends BasePage {
                 0,
                 0        // Z position
             );
-            const mine = this.game.buildingManager.placeFixedBuilding('MINE', minePosition, Math.PI / 2);
+            const mine = this.game.buildingManager.placeFixedBuilding('MINE', minePosition, -Math.PI / 2);
             if (!mine) {
                 Logger.error('Failed to place Mine');
             }
@@ -134,7 +134,7 @@ export class GamePage extends BasePage {
                 0,
                 0         // Z position
             );
-            const altar = this.game.buildingManager.placeFixedBuilding('ALTAR', altarPosition, -Math.PI / 2);
+            const altar = this.game.buildingManager.placeFixedBuilding('ALTAR', altarPosition, Math.PI / 2);
             if (!altar) {
                 Logger.error('Failed to place Altar');
             }
