@@ -5,14 +5,12 @@ class AppState {
         const initialState = persistedState ? JSON.parse(persistedState) : {
             walletConnected: false,
             hasVerifiedNFT: false,
-            currentWallet: null,
-            currentCityId: 0
+            currentWallet: null
         };
 
         this.walletConnected = initialState.walletConnected;
         this.hasVerifiedNFT = initialState.hasVerifiedNFT;
         this.currentWallet = initialState.currentWallet;
-        this.currentCityId = initialState.currentCityId;
         this.listeners = new Set();
     }
 
@@ -32,8 +30,7 @@ class AppState {
         const state = {
             walletConnected: this.walletConnected,
             hasVerifiedNFT: this.hasVerifiedNFT,
-            currentWallet: this.currentWallet,
-            currentCityId: this.currentCityId
+            currentWallet: this.currentWallet
         };
         localStorage.setItem('appState', JSON.stringify(state));
     }
@@ -53,20 +50,12 @@ class AppState {
         this.notify();
     }
 
-    // Update city ID
-    setCurrentCityId(cityId) {
-        this.currentCityId = cityId;
-        this.persistState();
-        this.notify();
-    }
-
     // Get current state
     getState() {
         return {
             walletConnected: this.walletConnected,
             hasVerifiedNFT: this.hasVerifiedNFT,
-            currentWallet: this.currentWallet,
-            currentCityId: this.currentCityId
+            currentWallet: this.currentWallet
         };
     }
 
@@ -75,7 +64,6 @@ class AppState {
         this.walletConnected = false;
         this.hasVerifiedNFT = false;
         this.currentWallet = null;
-        this.currentCityId = 0;
         localStorage.removeItem('appState');
         this.notify();
     }

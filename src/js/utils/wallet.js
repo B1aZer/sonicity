@@ -64,10 +64,7 @@ export class WalletManager {
             const gameState = new GameStateContract();
             await gameState.initialize();
             const cityId = await gameState.getPlayerCity();
-            if (cityId > 0) {
-                appState.setCurrentCityId(cityId);
-            }
-
+            
             return {
                 success: true,
                 address: walletAddress,
