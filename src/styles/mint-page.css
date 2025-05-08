@@ -88,6 +88,30 @@
     font-size: 0.85rem;
 }
 
+.success-message {
+    background-color: rgba(76, 175, 80, 0.2);
+    border: 1px solid rgba(76, 175, 80, 0.5);
+    color: #4CAF50;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 12px;
+    text-align: center;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: rgba(76, 175, 80, 0.2);
+    }
+    50% {
+        background-color: rgba(76, 175, 80, 0.3);
+    }
+    100% {
+        background-color: rgba(76, 175, 80, 0.2);
+    }
+}
+
 .nft-attributes {
     display: grid;
     grid-template-columns: repeat(2, 1fr);

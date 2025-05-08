@@ -233,6 +233,41 @@ export class MintPage extends BasePage {
             // Only update preview if requested
             if (updatePreview) {
                 const previewContainer = this.element.querySelector('.nft-preview');
+                
+                // Check if we have a last minted token ID and if that NFT exists in our loaded NFTs
+                if (this.lastMintedTokenId) {
+                    const lastMintedNft = nfts.find(nft => nft.tokenId.toString() === this.lastMintedTokenId.toString());
+                    
+                    if (lastMintedNft) {
+                        // Display the last minted NFT in the preview
+                        Logger.info('Displaying last minted NFT in preview:', this.lastMintedTokenId);
+                        previewContainer.innerHTML = `
+                            <div class="minted-nft">
+                                <img src="${lastMintedNft.metadata.image}" onerror="this.src='/images/placeholder.jpg'" alt="Land Plot #${lastMintedNft.tokenId}" />
+                                <div class="nft-details">
+                                    <h3>${lastMintedNft.metadata.name}</h3>
+                                    <p>${lastMintedNft.metadata.description}</p>
+                                    <div class="nft-attributes">
+                                        ${lastMintedNft.gameStateMetadata ? `
+                                            <div class="attribute">
+                                                <span class="label">District:</span>
+                                                <span class="value">${['Central', 'North', 'East', 'South'][lastMintedNft.gameStateMetadata.district]}</span>
+                                            </div>
+                                            <div class="attribute">
+                                                <span class="label">Building Slots:</span>
+                                                <span class="value">${lastMintedNft.gameStateMetadata.buildingSlots}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                    <div class="success-message">Minted Successfully!</div>
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                }
+                
+                // If no last minted NFT or it wasn't found, show placeholder
                 previewContainer.innerHTML = this.getPlaceholderHTML();
             }
         } catch (error) {
@@ -300,19 +335,31 @@ export class MintPage extends BasePage {
             statusElement.textContent = "Transaction confirmed!";
             
             // Get the minted token IDs
-            const event = receipt.logs.find(log => 
+            const events = receipt.logs.filter(log => 
                 log.fragment && log.fragment.name === 'Transfer' && 
                 log.args.from === ethers.ZeroAddress
             );
             
-            if (event) {
-                this.lastMintedTokenId = event.args.tokenId;
-                statusElement.textContent = `Successfully minted NFT #${this.lastMintedTokenId}!`;
+            if (events && events.length > 0) {
+                // Use the last minted token for display
+                const lastEvent = events[events.length - 1];
+                this.lastMintedTokenId = lastEvent.args.tokenId;
+                Logger.info(`Successfully minted ${events.length} NFTs, last token ID: ${this.lastMintedTokenId}`);
+                
+                statusElement.textContent = `Successfully minted ${events.length} NFT${events.length > 1 ? 's' : ''}!`;
                 statusElement.style.color = "green";
                 
                 // Update mint count and user's NFTs
                 await this.getMintCount();
-                await this.loadUserNFTs();
+                
+                // Make sure to update the preview with the new NFT
+                await this.loadUserNFTs(true);
+                
+                // Scroll to the NFT preview section
+                const previewContainer = this.element.querySelector('.nft-preview');
+                if (previewContainer) {
+                    previewContainer.scrollIntoView({ behavior: 'smooth' });
+                }
             } else {
                 throw new Error("Could not find mint event in transaction");
             }
