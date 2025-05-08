@@ -21,8 +21,7 @@ export class Game {
         
         // Game state timers
         this.timers = {
-            income: { current: 0, interval: 5.0 },
-            functionality: { current: 0, interval: 1.0 }
+            income: { current: 0, interval: 5.0 }
         };
         
         // Grid properties
@@ -126,13 +125,6 @@ export class Game {
     }
 
     updateTimers(deltaTime) {
-        // Update functionality check timer
-        this.timers.functionality.current += deltaTime;
-        if (this.timers.functionality.current >= this.timers.functionality.interval) {
-            this.timers.functionality.current = 0;
-            this.checkAllBuildingFunctionality();
-        }
-
         // Update income timer
         this.timers.income.current += deltaTime;
         if (this.timers.income.current >= this.timers.income.interval) {
@@ -166,36 +158,37 @@ export class Game {
             // Check if the grid coordinates are within bounds
             if (gridX >= 0 && gridX < this.gridSize && gridZ >= 0 && gridZ < this.gridSize) {
                 if (this.currentMode === 'BUILD') {
-                    // Check if the cell is empty in the contract
-                    const isCellEmpty = await this.checkCellEmptyInContract(gridX, gridZ);
-                    if (isCellEmpty) {
-                        // Get building data
-                        const buildingData = BUILDING_TYPES[this.selectedBuildingType];
-                        if (!buildingData) {
-                            console.error(`Invalid building type selected: ${this.selectedBuildingType}`);
-                            return;
-                        }
+                    // Get building data
+                    const buildingData = BUILDING_TYPES[this.selectedBuildingType];
+                    if (!buildingData) {
+                        console.error(`Invalid building type selected: ${this.selectedBuildingType}`);
+                        return;
+                    }
 
-                        // Check if player can afford the building
-                        const canAfford = await this.checkPlayerCanAfford(buildingData.cost);
-                        if (canAfford) {
-                            try {
-                                // Call contract to place building
-                                await this.placeBuilding(gridX, gridZ, this.selectedBuildingType);
-                                this.updateUI();
-                            } catch (error) {
-                                console.error('Error placing building:', error);
-                            }
-                        } else {
-                            console.log(`Not enough resources to place ${this.selectedBuildingType}`);
+                    // Check if player can afford the building
+                    if (this.money >= buildingData.cost) {
+                        try {
+                            // Place building
+                            await this.buildingManager.placeBuilding(
+                                this.selectedBuildingType,
+                                new THREE.Vector3(
+                                    (gridX - this.gridSize / 2) * this.gridCellSize,
+                                    0,
+                                    (gridZ - this.gridSize / 2) * this.gridCellSize
+                                )
+                            );
+                            this.money -= buildingData.cost;
+                            this.updateUI();
+                        } catch (error) {
+                            console.error('Error placing building:', error);
                         }
                     } else {
-                        console.log(`Cell [${gridX}, ${gridZ}] is already occupied`);
+                        console.log(`Not enough resources to place ${this.selectedBuildingType}`);
                     }
                 } else if (this.currentMode === 'BULLDOZE') {
                     try {
-                        // Call contract to remove building
-                        await this.removeBuildingFromContract(gridX, gridZ);
+                        // Remove building
+                        await this.buildingManager.removeBuildingAt(gridX, gridZ);
                         this.updateUI();
                     } catch (error) {
                         console.error('Error removing building:', error);
@@ -205,47 +198,24 @@ export class Game {
         }
     }
 
-    // Contract interaction methods
-    async checkCellEmptyInContract(x, z) {
-        // TODO: Implement contract call to check if cell is empty
-        return true; // Placeholder
-    }
-
-    async checkPlayerCanAfford(cost) {
-        // TODO: Implement contract call to check player resources
-        return true; // Placeholder
-    }
-
-    async placeBuilding(x, z, type) {
-        // TODO: Implement contract call to place building
-        console.log(`Placing ${type} at [${x}, ${z}]`);
-    }
-
-    async removeBuildingFromContract(x, z) {
-        // TODO: Implement contract call to remove building
-        console.log(`Removing building at [${x}, ${z}]`);
-    }
-
     // Called by UI button clicks
     handleBuildingSelection(selectionKey) {
-         if (selectionKey === 'BULLDOZE') {
-             this.currentMode = 'BULLDOZE';
-             this.selectedBuildingType = null; // No building type selected in bulldoze mode
-             console.log('Mode set to: BULLDOZE');
-             // Optional: Change mouse cursor
-             this.renderDiv.style.cursor = 'crosshair'; // Example cursor
-         } else if (BUILDING_TYPES[selectionKey]) {
-             this.currentMode = 'BUILD';
+        if (selectionKey === 'BULLDOZE') {
+            this.currentMode = 'BULLDOZE';
+            this.selectedBuildingType = null; // No building type selected in bulldoze mode
+            console.log('Mode set to: BULLDOZE');
+            this.renderDiv.style.cursor = 'crosshair';
+        } else if (BUILDING_TYPES[selectionKey]) {
+            this.currentMode = 'BUILD';
             this.selectedBuildingType = selectionKey;
-            console.log(`Game: handleBuildingSelection - Set selectedBuildingType to: ${this.selectedBuildingType}`); // Log selection set
+            console.log(`Game: handleBuildingSelection - Set selectedBuildingType to: ${this.selectedBuildingType}`);
             console.log(`Mode set to: BUILD, Selected: ${selectionKey}`);
-            // Optional: Restore default cursor
             this.renderDiv.style.cursor = 'default';
-         } else {
-              console.warn(`Invalid selection key: ${selectionKey}`);
-              return; // Do nothing if invalid key
-         }
-         this.updateUI(); // Update UI to show selection/mode and affordability
+        } else {
+            console.warn(`Invalid selection key: ${selectionKey}`);
+            return;
+        }
+        this.updateUI();
     }
 
     // Update UI elements
@@ -256,53 +226,35 @@ export class Game {
         this.ui.updateUI(money);
     }
 
-    // --- Income and Functionality Logic ---
-    // All buildings are now functional by default (simplified)
-    checkAllBuildingFunctionality() {
-        // No-op (all buildings are functional by default now)
-    }
-    
-    // All buildings are now functional by default (simplified)
-    checkBuildingFunctionality(building) {
-        // Set all buildings to functional
-        building.isFunctional = true;
-        
-        // Update visuals if needed
-        this.buildingManager.updateBuildingVisuals(building);
-    }
-    
-    // Utilities in range check no longer needed (simplified)
-    hasUtilitiesInRange(gridX, gridZ) {
-        // Always return true (simplified)
-        return true;
-    }
     generateIncome() {
         let cycleIncome = 0;
         this.buildingManager.buildings.forEach(building => {
-            // Check if the building is a HOUSE and is functional
-            if (building.type === 'HOUSE' && building.isFunctional && building.data.income) {
+            if (building.type === 'HOUSE' && building.data.income) {
                 cycleIncome += building.data.income;
             }
-            // Add income rules for other buildings here if needed
         });
         if (cycleIncome > 0) {
             this.money += cycleIncome;
             console.log(`Generated $${cycleIncome} income. Total money: $${this.money}`);
-            this.updateUI(); // Update money display
+            this.updateUI();
         }
     }
+
     // --- Game Reset Logic ---
     restartGame() {
-        console.log("Game: restartGame() method entered."); // Log 5: Method start
+        console.log("Game: restartGame() method entered.");
+        
         // 1. Reset Money
         this.money = 5000; // Back to starting value
+        
         // 2. Reset Timers
         this.timers.income.current = 0;
-        this.timers.functionality.current = 0;
+        
         // 3. Reset Game Mode and Selection
         this.currentMode = 'BUILD';
         this.selectedBuildingType = BUILDING_TYPES_KEYS[0]; // Default selection
         this.renderDiv.style.cursor = 'default'; // Reset cursor
+        
         // 4. Clear Buildings
         // Make a copy of the array because removeBuilding modifies it
         const buildingsToRemove = [...this.buildingManager.buildings];
@@ -311,15 +263,19 @@ export class Game {
         });
         // Ensure the buildings array is definitely empty
         this.buildingManager.buildings = [];
+        
         // 5. Reset Logical Grid
         this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
+        
         // 6. Reset Resource Manager
         this.resourceManager.reset(); // Call the new reset method
+        
         // 7. Update UI to reflect reset state
         this.updateUI();
-        console.log("Game: restartGame() method finished successfully."); // Log 6: Method end
+        
+        console.log("Game: restartGame() method finished successfully.");
     }
-    
+
     // Add dispose method to clean up resources when switching pages
     dispose() {
         console.log("Game: dispose() method called");
