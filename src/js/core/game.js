@@ -5,7 +5,6 @@ import { ResourceManager } from '../managers/resourceManager.js';
 import { UI } from '../utils/ui.js';
 import { AssetLoader } from '../managers/assetLoader.js';
 import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from '../utils/constants.js';
-import { LoadingScreen } from '../utils/loadingScreen.js';
 import { GridManager } from '../managers/gridManager.js';
 import { SceneManager } from '../managers/sceneManager.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
@@ -183,9 +182,7 @@ export class Game {
                             try {
                                 // Call contract to place building
                                 await this.placeBuilding(gridX, gridZ, this.selectedBuildingType);
-                                
-                                // Update local state from contract
-                                await this.syncWithContract();
+                                this.updateUI();
                             } catch (error) {
                                 console.error('Error placing building:', error);
                             }
@@ -199,9 +196,7 @@ export class Game {
                     try {
                         // Call contract to remove building
                         await this.removeBuildingFromContract(gridX, gridZ);
-                        
-                        // Update local state from contract
-                        await this.syncWithContract();
+                        this.updateUI();
                     } catch (error) {
                         console.error('Error removing building:', error);
                     }
@@ -229,23 +224,6 @@ export class Game {
     async removeBuildingFromContract(x, z) {
         // TODO: Implement contract call to remove building
         console.log(`Removing building at [${x}, ${z}]`);
-    }
-
-    async syncWithContract() {
-        try {
-            // TODO: Get state from contract
-            const contractState = {
-                buildings: [] // Placeholder
-            };
-
-            // Update visual representation
-            await this.buildingManager.syncWithContractState(contractState);
-            
-            // Update UI
-            this.updateUI();
-        } catch (error) {
-            console.error('Error syncing with contract:', error);
-        }
     }
 
     // Called by UI button clicks
