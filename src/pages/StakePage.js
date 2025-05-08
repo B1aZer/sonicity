@@ -158,7 +158,7 @@ export class StakePage extends BasePage {
 
             // Get all staked NFTs first
             const userAddress = await this.contracts.nft.getAddress();
-            const stakedTokenIds = await this.contracts.altar.getUserStakes(userAddress);
+            const stakedTokenIds = await this.contracts.altar.getUserStakes();
             const stakedSet = new Set(stakedTokenIds.map(id => id.toString()));
 
             // Clear loading messages
@@ -170,11 +170,12 @@ export class StakePage extends BasePage {
                 const tokenURI = await this.contracts.nft.tokenURI(tokenId);
                 const response = await fetch(tokenURI);
                 const metadata = await response.json();
-                const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(this.contracts.nft.getContractAddress(), tokenId);
+                const nftAddress = await this.contracts.nft.getContractAddress();
+                const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
                 
                 const nft = {
                     tokenId,
-                    contractAddress: this.contracts.nft.getContractAddress(),
+                    contractAddress: nftAddress,
                     tokenURI,
                     metadata,
                     gameStateMetadata
@@ -200,11 +201,12 @@ export class StakePage extends BasePage {
                     const tokenURI = await this.contracts.nft.tokenURI(tokenId);
                     const response = await fetch(tokenURI);
                     const metadata = await response.json();
-                    const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(this.contracts.nft.getContractAddress(), tokenId);
+                    const nftAddress = await this.contracts.nft.getContractAddress();
+                    const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
                     
                     const nft = {
                         tokenId,
-                        contractAddress: this.contracts.nft.getContractAddress(),
+                        contractAddress: nftAddress,
                         tokenURI,
                         metadata,
                         gameStateMetadata
@@ -235,14 +237,20 @@ export class StakePage extends BasePage {
 
     async stakeNFT(tokenId) {
         try {
+            Logger.info('Starting stakeNFT process for token:', tokenId);
+            
             // Check if user has joined a city
-            const playerCity = await this.contracts.gameState.playerCity(await this.contracts.nft.getAddress());
-            if (playerCity === 0n) {
+            const playerCity = await this.contracts.gameState.getPlayerCity();
+            Logger.info('Player city:', playerCity);
+            if (!playerCity) {
                 throw new Error("You must join a city before staking NFTs");
             }
             
             // Check if NFT collection is approved
-            const isApproved = await this.contracts.gameState.approvedCollections(this.contracts.nft.getContractAddress());
+            const nftAddress = await this.contracts.nft.getContractAddress();
+            Logger.info('Checking approval for NFT collection:', nftAddress);
+            const isApproved = await this.contracts.gameState.isCollectionApproved(nftAddress);
+            Logger.info('NFT collection approved:', isApproved);
             if (!isApproved) {
                 throw new Error("This NFT collection is not approved for staking");
             }
@@ -250,37 +258,39 @@ export class StakePage extends BasePage {
             // Check if NFT is already staked
             try {
                 const stakeData = await this.contracts.altar.getStakeData(tokenId);
+                Logger.info('Stake data:', stakeData);
                 if (stakeData.isActive) {
                     throw new Error("This NFT is already staked");
                 }
             } catch (error) {
+                Logger.info('No existing stake data found, proceeding with staking');
                 // Continue if the error is just that the NFT isn't staked yet
             }
             
             // Check if NFT is already approved
             try {
-                const currentApproval = await this.contracts.nft.getApproved(tokenId);
-                const needsApproval = currentApproval !== this.contracts.altar.getContractAddress();
-                
-                if (needsApproval) {
-                    // Step 1: Approve NFT transfer
-                    this.showStatus(`
-                        <div class="loading">
-                            <div class="step">Step 1/2: Approving NFT transfer...</div>
-                            <div class="description">This allows the Altar contract to receive your NFT</div>
-                        </div>
-                    `, 'loading');
-                    const approveTx = await this.contracts.nft.approve(this.contracts.altar.getContractAddress(), tokenId);
-                    await approveTx.wait();
-                } else {
-                    this.showStatus(`
-                        <div class="loading">
-                            <div class="step">Step 1/2: Already Approved</div>
-                            <div class="description">Your NFT is already approved for staking</div>
-                        </div>
-                    `, 'loading');
+                const userAddress = await this.contracts.nft.getAddress();
+                const altarAddress = await this.contracts.altar.getContractAddress();
+                const isOwner = await this.contracts.gameState.verifyNFTOwnership(nftAddress, tokenId, userAddress);
+                Logger.info('NFT ownership verified:', isOwner);
+                if (!isOwner) {
+                    throw new Error("You don't own this NFT");
                 }
+                
+                // Step 1: Approve NFT transfer
+                this.showStatus(`
+                    <div class="loading">
+                        <div class="step">Step 1/2: Approving NFT transfer...</div>
+                        <div class="description">This allows the Altar contract to receive your NFT</div>
+                    </div>
+                `, 'loading');
+                Logger.info('Approving NFT transfer...');
+                const approveTx = await this.contracts.nft.approve(altarAddress, tokenId);
+                Logger.info('Approval transaction sent:', approveTx.hash);
+                await approveTx.wait();
+                Logger.info('Approval transaction confirmed');
             } catch (error) {
+                Logger.error('Error in approval process:', error);
                 throw new Error(`Error checking NFT approval: ${error.message}`);
             }
             
@@ -294,13 +304,17 @@ export class StakePage extends BasePage {
                 `, 'loading');
                 
                 // Get NFT metadata to check building slots
-                const metadata = await this.contracts.gameState.getNFTMetadata(this.contracts.nft.getContractAddress(), tokenId);
+                const metadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
+                Logger.info('NFT metadata:', metadata);
                 if (metadata.buildingSlots === 0) {
                     throw new Error("NFT must have at least 1 building slot");
                 }
                 
+                Logger.info('Sending stake transaction...');
                 const stakeTx = await this.contracts.altar.stake(tokenId);
+                Logger.info('Stake transaction sent:', stakeTx.hash);
                 await stakeTx.wait();
+                Logger.info('Stake transaction confirmed');
                 
                 // Success message
                 this.showStatus(`
@@ -313,9 +327,11 @@ export class StakePage extends BasePage {
                 // Reload the user's NFTs to update the list
                 await this.loadUserNFTs();
             } catch (error) {
+                Logger.error('Error in staking process:', error);
                 throw new Error(`Error staking NFT: ${error.message}`);
             }
         } catch (error) {
+            Logger.error('Error in stakeNFT:', error);
             this.showStatus(`
                 <div class="error">
                     <div class="title">Error Staking NFT</div>
@@ -328,8 +344,8 @@ export class StakePage extends BasePage {
     async unstakeNFT(tokenId) {
         try {
             // Check if user has joined a city
-            const playerCity = await this.gameStateContract.playerCity(await this.nftContract.getAddress());
-            if (playerCity === 0n) {
+            const playerCity = await this.contracts.gameState.getPlayerCity();
+            if (!playerCity) {
                 Toast.error("You must join a city before unstaking NFTs");
                 return;
             }
@@ -337,7 +353,7 @@ export class StakePage extends BasePage {
             // Check if NFT is actually staked
             let stakeData;
             try {
-                stakeData = await this.altarContract.getStakeData(tokenId);
+                stakeData = await this.contracts.altar.getStakeData(tokenId);
                 Logger.debug("Stake data:", stakeData);
                 
                 if (!stakeData.isActive) {
@@ -346,7 +362,7 @@ export class StakePage extends BasePage {
                 }
                 
                 // Check if caller is the staker
-                const userAddress = await this.nftContract.getAddress();
+                const userAddress = await this.contracts.nft.getAddress();
                 if (stakeData.owner.toLowerCase() !== userAddress.toLowerCase()) {
                     Toast.error("You are not the staker of this NFT");
                     return;
@@ -371,7 +387,8 @@ export class StakePage extends BasePage {
             }
             
             // Check if NFT has building slots
-            const metadata = await this.gameStateContract.getNFTMetadata(this.nftContract.getContractAddress(), tokenId);
+            const nftAddress = await this.contracts.nft.getContractAddress();
+            const metadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
             Logger.debug("NFT metadata:", metadata);
             
             if (metadata.buildingSlots === 0) {
@@ -384,7 +401,7 @@ export class StakePage extends BasePage {
             
             try {
                 Logger.debug("Attempting to unstake NFT:", tokenId);
-                const unstakeTx = await this.altarContract.unstake(tokenId);
+                const unstakeTx = await this.contracts.altar.unstake(tokenId);
                 Logger.debug("Unstake transaction sent:", unstakeTx.hash);
                 
                 await unstakeTx.wait();
