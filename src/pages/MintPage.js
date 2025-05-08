@@ -186,7 +186,8 @@ export class MintPage extends BasePage {
         try {
             Logger.info('Loading user NFTs');
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
-            ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
+            ownedNFTsContainer.innerHTML = '<div class="nft-grid"></div>';
+            const grid = ownedNFTsContainer.querySelector('.nft-grid');
 
             const userAddress = await this.contracts.nft.getAddress();
             const balance = await this.contracts.nft.balanceOf(userAddress);
@@ -221,14 +222,11 @@ export class MintPage extends BasePage {
             if (nfts.length === 0) {
                 ownedNFTsContainer.innerHTML = '<p class="no-nfts">You don\'t own any NFTs yet.</p>';
             } else {
-                // Clear loading message
-                ownedNFTsContainer.innerHTML = '';
-
-                // Create NFT cards for each owned NFT
+                // Add NFT cards to the grid
                 for (const nft of nfts) {
                     const cardElement = document.createElement('div');
                     cardElement.innerHTML = this.nftCard.render(nft);
-                    ownedNFTsContainer.appendChild(cardElement.firstElementChild);
+                    grid.appendChild(cardElement.firstElementChild);
                 }
             }
 
