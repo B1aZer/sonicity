@@ -157,12 +157,28 @@ export class SceneManager {
 
     /**
      * Sets up the camera
+     * @param {HTMLElement} renderDiv - The container element
      * @returns {THREE.PerspectiveCamera} The camera
      */
-    setupCamera() {
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(15, 12, 0);
-        camera.lookAt(0, 0, 0);
+    setupCamera(renderDiv) {
+        // Calculate grid dimensions
+        const gridSize = this.gridManager.getGridSize();
+        const cellSize = this.gridManager.getCellSize();
+        const totalSize = gridSize * cellSize;
+        const radius = totalSize / 2;
+
+        // Create camera
+        const camera = new THREE.PerspectiveCamera(
+            75,
+            renderDiv.clientWidth / renderDiv.clientHeight,
+            0.1,
+            1000
+        );
+        
+        // Position camera to look at City Hall
+        camera.position.set(15, 12, 15);
+        camera.lookAt(0, 0, -radius); // Look at City Hall position
+        
         return camera;
     }
 
@@ -256,7 +272,7 @@ export class SceneManager {
             this.scene.add(this.lights.sunLight);
             
             // Setup camera
-            this.camera = this.setupCamera();
+            this.camera = this.setupCamera(renderDiv);
             
             // Setup renderer
             this.renderer = this.setupRenderer(renderDiv);

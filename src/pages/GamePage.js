@@ -61,82 +61,100 @@ export class GamePage extends BasePage {
     }
 
     async setupGame() {
-        const renderDiv = this.element.querySelector('#renderDiv');
-        this.game = new Game(renderDiv);
-        
-        // Show loading screen before starting initialization
-        LoadingScreen.show(renderDiv);
-        
-        // Initialize the game and wait for it to complete
-        await this.game.init();
-        
-        // Load assets first
-        await this.game.assetLoader.loadAssets();
-        
-        // Wait for assets to load and ensure they're ready
-        await this.game.assetLoader.waitForLoad();
-        
-        // Check if player is in a city
-        if (!await AccessControl.checkCityAccess()) {
-            return;
-        }
+        try {
+            const renderDiv = this.element.querySelector('#renderDiv');
+            this.game = new Game(renderDiv);
+            
+            // Show loading screen before starting initialization
+            LoadingScreen.show(renderDiv);
+            
+            // Initialize the game and wait for it to complete
+            await this.game.init();
+            
+            // Load assets first
+            await this.game.assetLoader.loadAssets();
+            
+            // Wait for assets to load and ensure they're ready
+            await this.game.assetLoader.waitForLoad();
+            
+            // Check if player is in a city
+            if (!await AccessControl.checkCityAccess()) {
+                LoadingScreen.hide(renderDiv);
+                return;
+            }
 
-        // Update resource display initially
-        await this.updateResourceDisplay();
-        
-        // Set up periodic updates for resource display
-        this.resourceUpdateInterval = setInterval(() => {
-            this.updateResourceDisplay().catch(error => {
-                Logger.error('Error in periodic resource update:', error);
-            });
-        }, 10000); // Update every 10 seconds
-        
-        // Place the fixed buildings around the grid
-        const gridSize = this.game.gridManager.getGridSize();
-        const cellSize = this.game.gridManager.getCellSize();
-        const gridRadius = (gridSize * cellSize) / 2;
-        
-        // Calculate positions in a semi-circle around the grid
-        const radius = gridRadius + (cellSize * 2); // Place buildings 2 cells away from grid edge
-        
-        // Place Mine (right side)
-        const minePosition = new THREE.Vector3(
-            radius,  // X position
-            0,
-            0        // Z position
-        );
-        const mine = this.game.buildingManager.placeFixedBuilding('MINE', minePosition, Math.PI / 2);
-        if (mine && mine.mesh) {
-            mine.mesh.userData.isMine = true;
-        }
-        
-        // Place City Hall (left side)
-        const cityHallPosition = new THREE.Vector3(
-            -radius,  // X position
-            0,
-            0         // Z position
-        );
-        const cityHall = this.game.buildingManager.placeFixedBuilding('CITY_HALL', cityHallPosition, -Math.PI / 2);
-        if (cityHall && cityHall.mesh) {
-            cityHall.mesh.userData.isCityHall = true;
-        }
-        
-        // Place Altar (top)
-        const altarPosition = new THREE.Vector3(
-            0,        // X position
-            0,
-            -radius   // Z position
-        );
-        const altar = this.game.buildingManager.placeFixedBuilding('ALTAR', altarPosition, Math.PI);
-        if (altar && altar.mesh) {
-            altar.mesh.userData.isAltar = true;
-        }
+            // Update resource display initially
+            await this.updateResourceDisplay();
+            
+            // Set up periodic updates for resource display
+            this.resourceUpdateInterval = setInterval(() => {
+                this.updateResourceDisplay().catch(error => {
+                    Logger.error('Error in periodic resource update:', error);
+                });
+            }, 10000); // Update every 10 seconds
+            
+            // Ensure scene is initialized before placing buildings
+            if (!this.game.scene) {
+                throw new Error('Scene not initialized');
+            }
+            
+            // Place the fixed buildings around the grid
+            const gridSize = this.game.gridManager.getGridSize();
+            const cellSize = this.game.gridManager.getCellSize();
+            const gridRadius = (gridSize * cellSize) / 2;
+            
+            // Calculate positions in a semi-circle around the grid
+            const radius = gridRadius + (cellSize * 2); // Place buildings 2 cells away from grid edge
+            
+            // Place Mine (right side)
+            const minePosition = new THREE.Vector3(
+                radius,  // X position
+                0,
+                0        // Z position
+            );
+            const mine = this.game.buildingManager.placeFixedBuilding('MINE', minePosition, Math.PI / 2);
+            if (!mine) {
+                Logger.error('Failed to place Mine');
+            }
+            
+            // Place City Hall (top)
+            const cityHallPosition = new THREE.Vector3(
+                0,        // X position
+                0,
+                -radius   // Z position
+            );
+            const cityHall = this.game.buildingManager.placeFixedBuilding('CITY_HALL', cityHallPosition, Math.PI);
+            if (!cityHall) {
+                Logger.error('Failed to place City Hall');
+            }
+            
+            // Place Altar (left side)
+            const altarPosition = new THREE.Vector3(
+                -radius,  // X position
+                0,
+                0         // Z position
+            );
+            const altar = this.game.buildingManager.placeFixedBuilding('ALTAR', altarPosition, -Math.PI / 2);
+            if (!altar) {
+                Logger.error('Failed to place Altar');
+            }
 
-        // Set up click handlers for the buildings
-        this.setupBuildingClickHandlers();
+            // Set up click handlers for the buildings
+            if (this.game.renderer && this.game.renderer.domElement) {
+                this.setupBuildingClickHandlers();
+            } else {
+                Logger.error('Renderer not initialized');
+            }
 
-        // Hide loading screen after all buildings are placed and click handlers are set up
-        LoadingScreen.hide(renderDiv);
+            // Hide loading screen after all buildings are placed and click handlers are set up
+            LoadingScreen.hide(renderDiv);
+            
+            Logger.info('Game setup complete');
+        } catch (error) {
+            Logger.error('Error in game setup:', error);
+            LoadingScreen.hide(this.element.querySelector('#renderDiv'));
+            this.modal.error('Failed to initialize game. Please try refreshing the page.');
+        }
     }
 
     setupBuildingClickHandlers() {

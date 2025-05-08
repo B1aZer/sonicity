@@ -146,6 +146,12 @@ export class BuildingManager {
 
     placeFixedBuilding(type, position, rotation = 0) {
         try {
+            if (!this.scene) {
+                Logger.error('Scene not initialized in BuildingManager');
+                return null;
+            }
+
+            // Create building mesh
             const building = this.createBuildingMesh(type);
             if (!building) {
                 Logger.error('Failed to create building mesh for type:', type);
@@ -159,32 +165,22 @@ export class BuildingManager {
             // Add to scene
             this.scene.add(building);
             
-            // Create building object
-            const buildingData = BUILDING_TYPES[type];
-            const buildingObj = {
-                id: THREE.MathUtils.generateUUID(),
+            // Store building reference
+            const buildingKey = `fixed_${type}_${position.x}_${position.z}`;
+            this.buildings.set(buildingKey, {
                 type,
                 mesh: building,
                 position: position.clone(),
-                rotation,
-                data: buildingData,
-                isUsingModel: true,
-                isFunctional: true,
-                originalColor: new THREE.Color(buildingData.color),
-                noResourceColor: new THREE.Color(0x555555)
-            };
-            
-            // Store building reference
-            const buildingKey = `${position.x},${position.z}`;
-            this.fixedBuildings.set(buildingKey, buildingObj);
+                isFixed: true
+            });
             
             Logger.info('Fixed building placed:', {
                 type,
-                position: position.toArray(),
+                position,
                 rotation
             });
             
-            return buildingObj;
+            return building;
         } catch (error) {
             Logger.error('Error placing fixed building:', error);
             return null;
