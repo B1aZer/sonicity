@@ -30,8 +30,6 @@ export class Game {
         this.grid = []; // Logical grid to track occupied cells (stores building type or false)
         
         // Game state
-        this.selectedBuildingType = BUILDING_TYPES_KEYS[0]; // Which building to place in 'BUILD' mode
-        this.currentMode = 'BUILD'; // 'BUILD' or 'BULLDOZE'
         this.money = 5000; // Starting money
         this.isRunning = false;
         
@@ -137,87 +135,6 @@ export class Game {
         this.renderer.render(this.scene, this.camera);
     }
 
-    // Called by InputHandler on click
-    async handlePlacement(event) {
-        // Get the renderer's DOM element dimensions and position
-        const rect = this.renderer.domElement.getBoundingClientRect();
-        
-        // Calculate mouse position relative to the renderer element
-        this.pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-        this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-        this.raycaster.setFromCamera(this.pointer, this.camera);
-        const intersects = this.raycaster.intersectObject(this.groundPlane);
-
-        if (intersects.length > 0) {
-            const intersectPoint = intersects[0].point;
-            // Convert world coordinates to grid coordinates
-            const gridX = Math.floor(intersectPoint.x / this.gridCellSize + this.gridSize / 2);
-            const gridZ = Math.floor(intersectPoint.z / this.gridCellSize + this.gridSize / 2);
-
-            // Check if the grid coordinates are within bounds
-            if (gridX >= 0 && gridX < this.gridSize && gridZ >= 0 && gridZ < this.gridSize) {
-                if (this.currentMode === 'BUILD') {
-                    // Get building data
-                    const buildingData = BUILDING_TYPES[this.selectedBuildingType];
-                    if (!buildingData) {
-                        console.error(`Invalid building type selected: ${this.selectedBuildingType}`);
-                        return;
-                    }
-
-                    // Check if player can afford the building
-                    if (this.money >= buildingData.cost) {
-                        try {
-                            // Place building
-                            await this.buildingManager.placeBuilding(
-                                this.selectedBuildingType,
-                                new THREE.Vector3(
-                                    (gridX - this.gridSize / 2) * this.gridCellSize,
-                                    0,
-                                    (gridZ - this.gridSize / 2) * this.gridCellSize
-                                )
-                            );
-                            this.money -= buildingData.cost;
-                            this.updateUI();
-                        } catch (error) {
-                            console.error('Error placing building:', error);
-                        }
-                    } else {
-                        console.log(`Not enough resources to place ${this.selectedBuildingType}`);
-                    }
-                } else if (this.currentMode === 'BULLDOZE') {
-                    try {
-                        // Remove building
-                        await this.buildingManager.removeBuildingAt(gridX, gridZ);
-                        this.updateUI();
-                    } catch (error) {
-                        console.error('Error removing building:', error);
-                    }
-                }
-            }
-        }
-    }
-
-    // Called by UI button clicks
-    handleBuildingSelection(selectionKey) {
-        if (selectionKey === 'BULLDOZE') {
-            this.currentMode = 'BULLDOZE';
-            this.selectedBuildingType = null; // No building type selected in bulldoze mode
-            console.log('Mode set to: BULLDOZE');
-            this.renderDiv.style.cursor = 'crosshair';
-        } else if (BUILDING_TYPES[selectionKey]) {
-            this.currentMode = 'BUILD';
-            this.selectedBuildingType = selectionKey;
-            console.log(`Game: handleBuildingSelection - Set selectedBuildingType to: ${this.selectedBuildingType}`);
-            console.log(`Mode set to: BUILD, Selected: ${selectionKey}`);
-            this.renderDiv.style.cursor = 'default';
-        } else {
-            console.warn(`Invalid selection key: ${selectionKey}`);
-            return;
-        }
-        this.updateUI();
-    }
-
     // Update UI elements
     updateUI() {
         // Get money from ResourceManager
@@ -250,12 +167,7 @@ export class Game {
         // 2. Reset Timers
         this.timers.income.current = 0;
         
-        // 3. Reset Game Mode and Selection
-        this.currentMode = 'BUILD';
-        this.selectedBuildingType = BUILDING_TYPES_KEYS[0]; // Default selection
-        this.renderDiv.style.cursor = 'default'; // Reset cursor
-        
-        // 4. Clear Buildings
+        // 3. Clear Buildings
         // Make a copy of the array because removeBuilding modifies it
         const buildingsToRemove = [...this.buildingManager.buildings];
         buildingsToRemove.forEach(building => {
@@ -264,13 +176,13 @@ export class Game {
         // Ensure the buildings array is definitely empty
         this.buildingManager.buildings = [];
         
-        // 5. Reset Logical Grid
+        // 4. Reset Logical Grid
         this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
         
-        // 6. Reset Resource Manager
+        // 5. Reset Resource Manager
         this.resourceManager.reset(); // Call the new reset method
         
-        // 7. Update UI to reflect reset state
+        // 6. Update UI to reflect reset state
         this.updateUI();
         
         console.log("Game: restartGame() method finished successfully.");
@@ -306,18 +218,5 @@ export class Game {
         this.inputHandler = null;
         
         console.log("Game: dispose() method completed");
-    }
-
-    updateUtilityEffects() {
-        // Update utility coverage for each utility building
-        const utilityBuildings = this.buildingManager.getUtilityBuildings();
-        
-        utilityBuildings.forEach(utilityBuilding => {
-            if (utilityBuilding.type === 'MINE') {
-                this.resourceManager.addResource('electricity', utilityBuilding.data.generates.electricity);
-            } else if (utilityBuilding.type === 'CITY_HALL') {
-                this.resourceManager.addResource('water', utilityBuilding.data.generates.water);
-            }
-        });
     }
 }
