@@ -285,17 +285,10 @@ export class StakePage extends BasePage {
                     </div>
                 `, 'loading');
                 Logger.info('Approving NFT transfer...');
-                const approveTx = await this.contracts.nft.approve(altarAddress, tokenId);
-                Logger.info('Approval transaction sent:', approveTx.hash);
-                await approveTx.wait();
-                Logger.info('Approval transaction confirmed');
-            } catch (error) {
-                Logger.error('Error in approval process:', error);
-                throw new Error(`Error checking NFT approval: ${error.message}`);
-            }
-            
-            // Step 2: Stake NFT
-            try {
+                const approveReceipt = await this.contracts.nft.approve(altarAddress, tokenId);
+                Logger.info('Approval transaction confirmed:', approveReceipt.hash);
+                
+                // Step 2: Stake NFT
                 this.showStatus(`
                     <div class="loading">
                         <div class="step">Step 2/2: Staking NFT...</div>
@@ -311,10 +304,8 @@ export class StakePage extends BasePage {
                 }
                 
                 Logger.info('Sending stake transaction...');
-                const stakeTx = await this.contracts.altar.stake(tokenId);
-                Logger.info('Stake transaction sent:', stakeTx.hash);
-                await stakeTx.wait();
-                Logger.info('Stake transaction confirmed');
+                const stakeReceipt = await this.contracts.altar.stake(tokenId);
+                Logger.info('Stake transaction confirmed:', stakeReceipt.hash);
                 
                 // Success message
                 this.showStatus(`
@@ -327,8 +318,8 @@ export class StakePage extends BasePage {
                 // Reload the user's NFTs to update the list
                 await this.loadUserNFTs();
             } catch (error) {
-                Logger.error('Error in staking process:', error);
-                throw new Error(`Error staking NFT: ${error.message}`);
+                Logger.error('Error in approval process:', error);
+                throw new Error(`Error checking NFT approval: ${error.message}`);
             }
         } catch (error) {
             Logger.error('Error in stakeNFT:', error);
