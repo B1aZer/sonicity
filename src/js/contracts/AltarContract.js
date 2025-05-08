@@ -21,7 +21,7 @@ export class AltarContract extends BaseContract {
 
     async getUserStakes() {
         const address = await this.getAddress();
-        return await this.call('userStakes', address);
+        return await this.call('getUserStakes', address);
     }
 
     async isStaked(tokenId) {
