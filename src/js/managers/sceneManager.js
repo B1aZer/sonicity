@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Logger from '../utils/logger.js';
 import { GrassBlades } from '../objects/GrassBlades.js';
+import { River } from '../objects/River.js';
 
 export class SceneManager {
     constructor(gridManager) {
@@ -15,6 +16,7 @@ export class SceneManager {
         this.sky = null;
         this.sun = null;
         this.grassBlades = null;
+        //this.river = null;
         this.lights = {
             sunLight: null,
             ambientLight: null,
@@ -295,11 +297,24 @@ export class SceneManager {
             // Create animated grass
             this.grassBlades = new GrassBlades(this.scene, {
                 width: this.gridManager.getTotalSize(),
-                instances: 100000, // Adjust based on performance
+                instances: 10000,
                 width: 200,
                 bladeWidth: 0.04,
                 bladeHeight: 1.8,
             });
+
+            // Create river
+            /*
+            this.river = new River(this.scene, {
+                start: new THREE.Vector3(-80, 0.01, -60),
+                end: new THREE.Vector3(80, 0.01, 60),
+                numPoints: 8,
+                width: 8,
+                winding: 18,
+                color: 0x3399ff,
+                opacity: 0.7
+            });
+            */
             
             // Setup lighting
             this.setupLighting();
@@ -354,6 +369,14 @@ export class SceneManager {
             this.grassBlades.dispose();
             this.grassBlades = null;
         }
+
+        // Dispose of river
+        /*
+        if (this.river) {
+            this.river.dispose();
+            this.river = null;
+        }
+        */
 
         // Dispose of Three.js resources
         if (this.scene) {
