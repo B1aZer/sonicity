@@ -34,7 +34,6 @@ export class MapPage {
 
                     if (currentCity) {
                         // Player is already in a city, just navigate to dashboard
-                        appState.setCurrentCityId(currentCity);
                         window.history.pushState({}, '', '/dashboard');
                         window.dispatchEvent(new PopStateEvent('popstate'));
                         return;
@@ -45,9 +44,6 @@ export class MapPage {
 
                     // Join the city
                     await this.gameStateContract.joinCity(cityId);
-
-                    // Update app state with the city ID
-                    appState.setCurrentCityId(cityId);
 
                     // Close loading modal
                     this.modal.close();

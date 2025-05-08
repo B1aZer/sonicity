@@ -1,33 +1,47 @@
 import { appState } from '../core/state.js';
 import { Modal } from './modal.js';
+import { GameStateContract } from '../contracts/GameStateContract.js';
 
 export class AccessControl {
     static modal = new Modal();
+    static gameState = null;
+
+    static async initialize() {
+        if (!this.gameState) {
+            this.gameState = new GameStateContract();
+            await this.gameState.initialize();
+        }
+    }
 
     /**
      * Check if the user can access the dashboard
      * Requires wallet connection, NFT verification, and being in a city
      */
-    static canAccessDashboard() {
+    static async canAccessDashboard() {
         const state = appState.getState();
-        return state.walletConnected && 
-               state.hasVerifiedNFT && 
-               state.currentCityId > 0;
+        if (!state.walletConnected || !state.hasVerifiedNFT) {
+            return false;
+        }
+        await this.initialize();
+        const cityId = await this.gameState.getPlayerCity();
+        return cityId !== null;
     }
 
     /**
      * Check if the user can access the city overview
      * Same requirements as dashboard
      */
-    static canAccessOverview() {
-        return this.canAccessDashboard();
+    static async canAccessOverview() {
+        return await this.canAccessDashboard();
     }
 
     /**
      * Check if the user is in a city
      */
-    static isInCity() {
-        return appState.getState().currentCityId > 0;
+    static async isInCity() {
+        await this.initialize();
+        const cityId = await this.gameState.getPlayerCity();
+        return cityId !== null;
     }
 
     /**
@@ -45,11 +59,12 @@ export class AccessControl {
     }
 
     static async checkCityAccess() {
-        if (!this.canAccessDashboard()) {
-            if (this.hasVerifiedNFT() && !this.isInCity()) {
-                this.modal.error('Please join a city first to access the dashboard.');
-                return false;
-            }
+        if (!this.isWalletConnected() || !this.hasVerifiedNFT()) {
+            return false;
+        }
+        const inCity = await this.isInCity();
+        if (!inCity) {
+            this.modal.error('Please join a city first to access the dashboard.');
             return false;
         }
         return true;

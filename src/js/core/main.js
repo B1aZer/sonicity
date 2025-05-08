@@ -31,9 +31,6 @@ class App {
         // Mount navbar
         this.navbar.mount(this.container);
 
-        // Try to fetch user's city ID from contract if wallet is connected
-        await this.initializePlayerCityId();
-
         // Handle initial route
         this.handleRoute();
 
@@ -42,23 +39,6 @@ class App {
 
         // Handle state changes
         appState.subscribe(() => this.handleStateChange());
-    }
-
-    async initializePlayerCityId() {
-        try {
-            const state = appState.getState();
-            // Only try to get the city ID if wallet is connected
-            if (state.walletConnected && state.currentWallet) {
-                const gameStateContract = new GameStateContract();
-                await gameStateContract.initialize();
-                const cityId = await gameStateContract.getPlayerCity();
-                // Update appState with the cityId (will be 0 if not in a city)
-                appState.setCurrentCityId(cityId);
-            }
-        } catch (error) {
-            console.error('Error initializing player city ID:', error);
-            // Don't show error to user, just log it
-        }
     }
 
     handleStateChange() {
