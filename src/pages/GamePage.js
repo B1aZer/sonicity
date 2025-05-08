@@ -193,7 +193,7 @@ export class GamePage extends BasePage {
                 if (clickedObject.userData.isMine) {
                     Logger.info('Mine clicked');
                     this.modal.show('Mine is not operational yet. Coming soon!', { title: 'Mine' });
-                } else if (clickedObject.userData.isCityHall) {
+                } else if (clickedObject.userData.isCityhall) {
                     Logger.info('City Hall clicked');
                     window.history.pushState({}, '', '/dashboard');
                     window.dispatchEvent(new PopStateEvent('popstate'));

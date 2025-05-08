@@ -170,9 +170,6 @@ export class BuildingManager {
             // Set position and rotation
             building.position.copy(position);
             building.rotation.y = rotation;
-
-            // Set userData for click handling
-            building.userData[`is${type.charAt(0) + type.slice(1).toLowerCase()}`] = true;
             
             // Add to scene
             this.scene.add(building);
