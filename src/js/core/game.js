@@ -19,18 +19,12 @@ export class Game {
         this.pointer = new THREE.Vector2();
         this.clock = new THREE.Clock();
         
-        // Game state timers
-        this.timers = {
-            income: { current: 0, interval: 5.0 }
-        };
-        
         // Grid properties
         this.gridSize = 0; // Will be set in init
         this.gridCellSize = 0; // Will be set in init
         this.grid = []; // Logical grid to track occupied cells (stores building type or false)
         
         // Game state
-        this.money = 5000; // Starting money
         this.isRunning = false;
         
         // Managers
@@ -117,18 +111,6 @@ export class Game {
         if (this.controls) {
             this.controls.update();
         }
-
-        // Update timers and check conditions
-        this.updateTimers(deltaTime);
-    }
-
-    updateTimers(deltaTime) {
-        // Update income timer
-        this.timers.income.current += deltaTime;
-        if (this.timers.income.current >= this.timers.income.interval) {
-            this.timers.income.current = 0;
-            this.generateIncome();
-        }
     }
 
     render() {
@@ -143,31 +125,11 @@ export class Game {
         this.ui.updateUI(money);
     }
 
-    generateIncome() {
-        let cycleIncome = 0;
-        this.buildingManager.buildings.forEach(building => {
-            if (building.type === 'HOUSE' && building.data.income) {
-                cycleIncome += building.data.income;
-            }
-        });
-        if (cycleIncome > 0) {
-            this.money += cycleIncome;
-            console.log(`Generated $${cycleIncome} income. Total money: $${this.money}`);
-            this.updateUI();
-        }
-    }
-
     // --- Game Reset Logic ---
     restartGame() {
         console.log("Game: restartGame() method entered.");
         
-        // 1. Reset Money
-        this.money = 5000; // Back to starting value
-        
-        // 2. Reset Timers
-        this.timers.income.current = 0;
-        
-        // 3. Clear Buildings
+        // 1. Clear Buildings
         // Make a copy of the array because removeBuilding modifies it
         const buildingsToRemove = [...this.buildingManager.buildings];
         buildingsToRemove.forEach(building => {
@@ -176,13 +138,13 @@ export class Game {
         // Ensure the buildings array is definitely empty
         this.buildingManager.buildings = [];
         
-        // 4. Reset Logical Grid
+        // 2. Reset Logical Grid
         this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
         
-        // 5. Reset Resource Manager
+        // 3. Reset Resource Manager
         this.resourceManager.reset(); // Call the new reset method
         
-        // 6. Update UI to reflect reset state
+        // 4. Update UI to reflect reset state
         this.updateUI();
         
         console.log("Game: restartGame() method finished successfully.");
