@@ -29,11 +29,11 @@ export class StakePage extends BasePage {
                 <div class="nft-sections">
                     <div class="nft-section">
                         <h2>Your NFTs</h2>
-                        <div class="nft-list"></div>
+                        <div class="nft-list nft-grid"></div>
                     </div>
                     <div class="nft-section">
                         <h2>Staked NFTs</h2>
-                        <div class="staked-nft-list"></div>
+                        <div class="staked-nft-list nft-grid"></div>
                     </div>
                 </div>
             </div>

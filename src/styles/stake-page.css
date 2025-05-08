@@ -1,124 +1,112 @@
 .stake-page {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
+    color: #fff;
 }
 
 .stake-container {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }
 
 .stake-container h1 {
-    text-align: center;
-    color: #fff;
-    margin-bottom: 1rem;
     font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #fff;
 }
 
 .stake-description {
-    text-align: center;
-    color: #ccc;
-    margin-bottom: 2rem;
     font-size: 1.1rem;
+    color: rgba(255, 255, 255, 0.8);
+    margin-bottom: 2rem;
 }
 
 .wallet-section {
-    display: flex;
-    justify-content: center;
     margin-bottom: 2rem;
 }
 
-.stake-status {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
-    padding: 1rem;
-    margin-bottom: 2rem;
-    text-align: center;
+.connect-button {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.stake-status .loading,
-.stake-status .success,
-.stake-status .error {
+.connect-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.nft-sections {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-}
-
-.stake-status .step {
-    font-weight: bold;
-    color: #2196F3;
-}
-
-.stake-status .description {
-    color: #ccc;
-    font-size: 0.9rem;
-}
-
-.stake-status .title {
-    font-weight: bold;
-    font-size: 1.1rem;
-}
-
-.stake-status .success .title {
-    color: #4CAF50;
-}
-
-.stake-status .error .title {
-    color: #F44336;
+    gap: 3rem;
 }
 
 .nft-section {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 15px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+    text-align: left;
 }
 
 .nft-section h2 {
-    color: #fff;
+    font-size: 1.8rem;
     margin-bottom: 1.5rem;
-    font-size: 1.5rem;
+    color: #fff;
 }
 
-/* Stake page specific button styles */
-.stake-button {
-    background: linear-gradient(45deg, #4CAF50, #388E3C);
-    color: white;
+.nft-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2.5rem;
+    width: 100%;
+    margin: 0 auto;
+    justify-content: center;
 }
 
-.unstake-button {
-    background: linear-gradient(45deg, #F44336, #D32F2F);
-    color: white;
+.nft-list,
+.staked-nft-list {
+    min-height: 200px;
 }
 
-.stake-button:hover,
-.unstake-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.loading,
-.no-nfts,
-.error {
+.no-nfts {
     text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.1rem;
     padding: 2rem;
-    color: #ccc;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.error {
-    color: #F44336;
+.loading {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.1rem;
+    padding: 2rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
+    .nft-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .nft-grid {
+        grid-template-columns: 1fr;
+    }
+    
     .stake-page {
         padding: 1rem;
     }
-
-    .stake-container {
-        padding: 1.5rem;
+    
+    .stake-container h1 {
+        font-size: 2rem;
+    }
+    
+    .nft-section h2 {
+        font-size: 1.5rem;
     }
 } 
