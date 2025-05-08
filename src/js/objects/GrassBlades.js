@@ -176,9 +176,10 @@ export class GrassBlades {
     }
     
     getYPosition(x, z) {
-        let y = 2 * this.noise2D(x / 50, z / 50);
-        y += 4 * this.noise2D(x / 100, z / 100);
-        y += 0.2 * this.noise2D(x / 10, z / 10);
+        // Minimal variation for flat ground
+        let y = 0.03 * this.noise2D(x / 50, z / 50);
+        y += 0.05 * this.noise2D(x / 100, z / 100);
+        y += 0.01 * this.noise2D(x / 10, z / 10);
         return y;
     }
     
