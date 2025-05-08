@@ -236,20 +236,20 @@ export class StakePage extends BasePage {
     async stakeNFT(tokenId) {
         try {
             // Check if user has joined a city
-            const playerCity = await this.gameStateContract.playerCity(await this.nftContract.getAddress());
+            const playerCity = await this.contracts.gameState.playerCity(await this.contracts.nft.getAddress());
             if (playerCity === 0n) {
                 throw new Error("You must join a city before staking NFTs");
             }
             
             // Check if NFT collection is approved
-            const isApproved = await this.gameStateContract.approvedCollections(this.nftContract.getContractAddress());
+            const isApproved = await this.contracts.gameState.approvedCollections(this.contracts.nft.getContractAddress());
             if (!isApproved) {
                 throw new Error("This NFT collection is not approved for staking");
             }
             
             // Check if NFT is already staked
             try {
-                const stakeData = await this.altarContract.getStakeData(tokenId);
+                const stakeData = await this.contracts.altar.getStakeData(tokenId);
                 if (stakeData.isActive) {
                     throw new Error("This NFT is already staked");
                 }
@@ -259,8 +259,8 @@ export class StakePage extends BasePage {
             
             // Check if NFT is already approved
             try {
-                const currentApproval = await this.nftContract.getApproved(tokenId);
-                const needsApproval = currentApproval !== this.altarContract.getContractAddress();
+                const currentApproval = await this.contracts.nft.getApproved(tokenId);
+                const needsApproval = currentApproval !== this.contracts.altar.getContractAddress();
                 
                 if (needsApproval) {
                     // Step 1: Approve NFT transfer
@@ -270,7 +270,7 @@ export class StakePage extends BasePage {
                             <div class="description">This allows the Altar contract to receive your NFT</div>
                         </div>
                     `, 'loading');
-                    const approveTx = await this.nftContract.approve(this.altarContract.getContractAddress(), tokenId);
+                    const approveTx = await this.contracts.nft.approve(this.contracts.altar.getContractAddress(), tokenId);
                     await approveTx.wait();
                 } else {
                     this.showStatus(`
@@ -294,12 +294,12 @@ export class StakePage extends BasePage {
                 `, 'loading');
                 
                 // Get NFT metadata to check building slots
-                const metadata = await this.gameStateContract.getNFTMetadata(this.nftContract.getContractAddress(), tokenId);
+                const metadata = await this.contracts.gameState.getNFTMetadata(this.contracts.nft.getContractAddress(), tokenId);
                 if (metadata.buildingSlots === 0) {
                     throw new Error("NFT must have at least 1 building slot");
                 }
                 
-                const stakeTx = await this.altarContract.stake(tokenId);
+                const stakeTx = await this.contracts.altar.stake(tokenId);
                 await stakeTx.wait();
                 
                 // Success message
