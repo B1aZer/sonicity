@@ -26,7 +26,7 @@ export class StakePage extends BasePage {
                 <div class="wallet-section">
                     <button class="connect-button">Connect Wallet</button>
                 </div>
-                <div class="nft-grid">
+                <div class="nft-sections">
                     <div class="nft-section">
                         <h2>Your NFTs</h2>
                         <div class="nft-list"></div>
