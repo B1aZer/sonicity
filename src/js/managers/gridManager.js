@@ -10,8 +10,10 @@ export class GridManager {
     async initialize(gameStateContract) {
         try {
             const maxSlots = await gameStateContract.getMaxBuildingSlots();
+            // Convert BigInt to Number for calculations
+            const maxSlotsNumber = Number(maxSlots);
             // Calculate grid dimensions to be as square as possible
-            const gridSize = Math.ceil(Math.sqrt(maxSlots));
+            const gridSize = Math.ceil(Math.sqrt(maxSlotsNumber));
             this.totalSize = gridSize;
             this.cellSize = 10; // Standard cell size
             this.grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(null));

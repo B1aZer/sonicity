@@ -8,6 +8,7 @@ import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from '../utils/constants.js';
 import { LoadingScreen } from '../utils/loadingScreen.js';
 import { GridManager } from '../managers/gridManager.js';
 import { SceneManager } from '../managers/sceneManager.js';
+import { GameStateContract } from '../contracts/GameStateContract.js';
 import Logger from '../utils/logger.js';
 
 export class Game {
@@ -36,12 +37,25 @@ export class Game {
         this.money = 5000; // Starting money
         this.ui = new UI();
         this.inputHandler = new InputHandler(this);
+        this.isRunning = false;
+        this.boundOnWindowResize = this.onWindowResize.bind(this);
+        
+        // Initialize contracts
+        this.gameStateContract = new GameStateContract();
     }
 
     async init() {
         Logger.info("Game: Starting initialization");
         
         try {
+            // Initialize grid manager first with gameStateContract
+            await this.gridManager.initialize(this.gameStateContract);
+            Logger.info("Grid initialized:", {
+                gridSize: this.gridManager.getGridSize(),
+                cellSize: this.gridManager.getCellSize(),
+                totalSize: this.gridManager.getTotalSize()
+            });
+            
             // Set up scene with dynamic grid
             const { scene, camera, renderer, controls, groundPlane, gridHelper } = 
                 await this.sceneManager.setupScene(this.renderDiv);
@@ -70,7 +84,6 @@ export class Game {
             this.updateUI();
             
             // Set up window resize handler
-            this.boundOnWindowResize = this.onWindowResize.bind(this);
             window.addEventListener('resize', this.boundOnWindowResize);
             
             // Start the game loop
@@ -86,9 +99,11 @@ export class Game {
             errorMessage.style.left = '50%';
             errorMessage.style.transform = 'translate(-50%, -50%)';
             errorMessage.style.color = 'red';
-            errorMessage.style.fontSize = '18px';
-            errorMessage.style.fontFamily = 'Arial, sans-serif';
-            errorMessage.textContent = 'Failed to initialize game. Please refresh the page.';
+            errorMessage.style.backgroundColor = 'white';
+            errorMessage.style.padding = '20px';
+            errorMessage.style.borderRadius = '5px';
+            errorMessage.style.zIndex = '1000';
+            errorMessage.textContent = `Failed to initialize game: ${error.message}`;
             this.renderDiv.appendChild(errorMessage);
         }
     }

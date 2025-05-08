@@ -91,52 +91,45 @@ export class GamePage extends BasePage {
             });
         }, 10000); // Update every 10 seconds
         
-        // Place the buildings
-        const gridSize = this.game.gridSize;
-        const cellSize = this.game.gridCellSize;
+        // Place the fixed buildings around the grid
+        const gridSize = this.game.gridManager.getGridSize();
+        const cellSize = this.game.gridManager.getCellSize();
         const gridRadius = (gridSize * cellSize) / 2;
         
         // Calculate positions in a semi-circle around the grid
         const radius = gridRadius + (cellSize * 2); // Place buildings 2 cells away from grid edge
-        const angleStep = Math.PI / 3; // 60 degrees between buildings
         
-        // Place PowerPlant as Mine (right side)
-        const mineAngle = - Math.PI / 2; // 0 degrees (right side)
+        // Place Mine (right side)
         const minePosition = new THREE.Vector3(
-            Math.cos(mineAngle) * radius,  // X position
+            radius,  // X position
             0,
-            Math.sin(mineAngle) * radius   // Z position
+            0        // Z position
         );
-        const mine = this.game.buildingManager.placeBuilding('MINE', minePosition);
+        const mine = this.game.buildingManager.placeFixedBuilding('MINE', minePosition, Math.PI / 2);
         if (mine && mine.mesh) {
             mine.mesh.userData.isMine = true;
-            mine.mesh.rotation.y = Math.PI / 2; // Rotate 90 degrees to face center
         }
         
-        // Place WaterPump as City Hall (left side)
-        const cityHallAngle = Math.PI; // 180 degrees
+        // Place City Hall (left side)
         const cityHallPosition = new THREE.Vector3(
-            Math.cos(cityHallAngle) * radius,  // X position
+            -radius,  // X position
             0,
-            Math.sin(cityHallAngle) * radius   // Z position
+            0         // Z position
         );
-        const cityHall = this.game.buildingManager.placeBuilding('CITY_HALL', cityHallPosition);
+        const cityHall = this.game.buildingManager.placeFixedBuilding('CITY_HALL', cityHallPosition, -Math.PI / 2);
         if (cityHall && cityHall.mesh) {
             cityHall.mesh.userData.isCityHall = true;
-            cityHall.mesh.rotation.y = 0; // Rotate 180 degrees
         }
         
-        // Place Shop as Altar (top)
-        const altarAngle = Math.PI / 2;
+        // Place Altar (top)
         const altarPosition = new THREE.Vector3(
-            Math.cos(altarAngle) * radius,  // X position
+            0,        // X position
             0,
-            Math.sin(altarAngle) * radius   // Z position
+            -radius   // Z position
         );
-        const altar = this.game.buildingManager.placeBuilding('ALTAR', altarPosition);
+        const altar = this.game.buildingManager.placeFixedBuilding('ALTAR', altarPosition, Math.PI);
         if (altar && altar.mesh) {
             altar.mesh.userData.isAltar = true;
-            altar.mesh.rotation.y = altarAngle; // Rotate to face center
         }
 
         // Set up click handlers for the buildings
