@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Logger from '../utils/logger.js';
+import { GrassBlades } from '../objects/GrassBlades.js';
 
 export class SceneManager {
     constructor(gridManager) {
@@ -13,12 +14,14 @@ export class SceneManager {
         this.gridHelper = null;
         this.sky = null;
         this.sun = null;
+        this.grassBlades = null;
         this.lights = {
             sunLight: null,
             ambientLight: null,
             hemisphereLight: null
         };
         this.boundOnWindowResize = null;
+        this.clock = new THREE.Clock();
     }
 
     /**
@@ -289,6 +292,12 @@ export class SceneManager {
             this.gridHelper = this.createGridHelper();
             this.scene.add(this.gridHelper);
             
+            // Create animated grass
+            this.grassBlades = new GrassBlades(this.scene, {
+                width: this.gridManager.getTotalSize(),
+                instances: 100000 // Adjust based on performance
+            });
+            
             // Setup lighting
             this.setupLighting();
             
@@ -316,12 +325,31 @@ export class SceneManager {
     }
 
     /**
+     * Updates the scene
+     */
+    update() {
+        if (this.controls) {
+            this.controls.update();
+        }
+        
+        if (this.grassBlades) {
+            this.grassBlades.update(this.clock.getElapsedTime());
+        }
+    }
+
+    /**
      * Cleans up resources
      */
     dispose() {
         // Remove window resize listener
         if (this.boundOnWindowResize) {
             window.removeEventListener('resize', this.boundOnWindowResize);
+        }
+
+        // Dispose of grass blades
+        if (this.grassBlades) {
+            this.grassBlades.dispose();
+            this.grassBlades = null;
         }
 
         // Dispose of Three.js resources
