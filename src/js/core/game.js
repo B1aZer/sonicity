@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { setupScene } from './sceneSetup.js';
 import { InputHandler } from '../utils/inputHandler.js';
 import { BuildingManager } from '../managers/buildingManager.js';
 import { ResourceManager } from '../managers/resourceManager.js';
@@ -7,15 +6,15 @@ import { UI } from '../utils/ui.js';
 import { AssetLoader } from '../managers/assetLoader.js';
 import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from '../utils/constants.js';
 import { LoadingScreen } from '../utils/loadingScreen.js';
+import { GridManager } from '../managers/gridManager.js';
+import { SceneManager } from '../managers/sceneManager.js';
+import Logger from '../utils/logger.js';
 
 export class Game {
     constructor(renderDiv) {
         this.renderDiv = renderDiv;
-        this.scene = null;
-        this.camera = null;
-        this.renderer = null;
-        this.controls = null;
-        this.groundPlane = null;
+        this.gridManager = new GridManager();
+        this.sceneManager = new SceneManager(this.gridManager);
         this.raycaster = new THREE.Raycaster();
         this.pointer = new THREE.Vector2();
         this.clock = new THREE.Clock();
@@ -33,19 +32,19 @@ export class Game {
         // Managers
         this.resourceManager = new ResourceManager();
         this.assetLoader = new AssetLoader(); // Create the asset loader instance
-        this.buildingManager = new BuildingManager(null, this.resourceManager, 0, this.assetLoader);
+        this.buildingManager = new BuildingManager(this.gridManager, this.resourceManager, 0, this.assetLoader);
         this.money = 5000; // Starting money
         this.ui = new UI();
         this.inputHandler = new InputHandler(this);
     }
 
     async init() {
-        console.log("Game: Starting initialization");
+        Logger.info("Game: Starting initialization");
         
         try {
-            // Set up scene first
-            console.log("Game: Setting up scene");
-            const { scene, camera, renderer, controls, groundPlane, gridSize, gridCellSize } = setupScene(this.renderDiv);
+            // Set up scene with dynamic grid
+            const { scene, camera, renderer, controls, groundPlane, gridHelper } = 
+                await this.sceneManager.setupScene(this.renderDiv);
             
             // Store scene components
             this.scene = scene;
@@ -53,21 +52,20 @@ export class Game {
             this.renderer = renderer;
             this.controls = controls;
             this.groundPlane = groundPlane;
-            this.gridSize = gridSize;
-            this.gridCellSize = gridCellSize;
+            this.gridHelper = gridHelper;
             
             // Initialize the logical grid
             this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
             
             // Update building manager with scene components
-            this.buildingManager.setScene(this.scene, this.gridCellSize, this.assetLoader);
+            this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.assetLoader);
             
-            // Set up input handlers AFTER renderer is available
-            console.log("Game: Setting up input handlers");
+            // Set up input handlers
+            Logger.info("Game: Setting up input handlers");
             this.inputHandler.setupEventListeners();
             
             // Show UI and update initial state
-            console.log("Game: Setting up UI");
+            Logger.info("Game: Setting up UI");
             this.ui.show();
             this.updateUI();
             
@@ -76,12 +74,12 @@ export class Game {
             window.addEventListener('resize', this.boundOnWindowResize);
             
             // Start the game loop
-            console.log("Game: Starting game loop");
+            Logger.info("Game: Starting game loop");
             this.start();
             
-            console.log("Game: Initialization complete");
+            Logger.info("Game: Initialization complete");
         } catch (error) {
-            console.error("Game: Initialization error:", error);
+            Logger.error("Game: Initialization error:", error);
             const errorMessage = document.createElement('div');
             errorMessage.style.position = 'absolute';
             errorMessage.style.top = '50%';
