@@ -297,12 +297,9 @@ export class MintPage extends BasePage {
             statusElement.textContent = "Minting...";
             statusElement.style.color = "blue";
             
-            // Mint NFT
-            const tx = await this.contracts.nft.mint(amount, { value: totalPrice });
-            statusElement.textContent = "Transaction sent! Waiting for confirmation...";
-            
-            // Wait for transaction to be mined
-            const receipt = await tx.wait();
+            // Mint NFT - transact method already waits for confirmation
+            const receipt = await this.contracts.nft.mint(amount, { value: totalPrice });
+            statusElement.textContent = "Transaction confirmed!";
             
             // Get the minted token IDs
             const event = receipt.logs.find(log => 
