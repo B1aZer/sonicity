@@ -27,7 +27,7 @@ export class Game {
         
         // Managers
         this.assetLoader = new AssetLoader();
-        this.buildingManager = new BuildingManager(this.gridManager, this.gameStateContract, 0, this.assetLoader);
+        this.buildingManager = null; // Will be initialized after assets are loaded
         this.inputHandler = new InputHandler(this);
         
         // Initialize contracts
@@ -63,7 +63,11 @@ export class Game {
         // Initialize the logical grid
         this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
         
-        // Update building manager with scene components
+        // Load assets first
+        await this.assetLoader.loadAssets();
+        
+        // Now create building manager after assets are loaded
+        this.buildingManager = new BuildingManager(this.gridManager, this.gameStateContract, 0, this.assetLoader);
         this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.assetLoader);
         
         // Set up input handlers
