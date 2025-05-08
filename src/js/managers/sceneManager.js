@@ -295,7 +295,7 @@ export class SceneManager {
             // Create animated grass
             this.grassBlades = new GrassBlades(this.scene, {
                 width: this.gridManager.getTotalSize(),
-                instances: 80000, // Adjust based on performance
+                instances: 100000, // Adjust based on performance
                 width: 200,
                 bladeWidth: 0.04,
                 bladeHeight: 1.8,
