@@ -4,17 +4,26 @@ import Logger from '../js/utils/logger.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { ethers } from 'ethers';
 import { Modal } from '../js/utils/modal.js';
+import { BasePage } from '../js/core/BasePage.js';
 
-export class DashboardPage {
+export class DashboardPage extends BasePage {
     constructor() {
+        super();
         Logger.info('DashboardPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'dashboard-page';
-        this.gameState = new GameStateContract();
         this.modal = new Modal();
         this.render();
         this.setupEventListeners();
-        this.loadPlayerData();
+    }
+
+    async onInitialized(walletResult) {
+        try {
+            await this.loadPlayerData();
+        } catch (error) {
+            Logger.error('Error initializing dashboard:', error);
+            this.modal.error('Failed to initialize dashboard. Please try refreshing the page.');
+        }
     }
 
     showModal(content, isError = false) {
@@ -28,8 +37,8 @@ export class DashboardPage {
     async loadPlayerData() {
         try {
             const [gold, buildingSlots] = await Promise.all([
-                this.gameState.getPlayerGold(),
-                this.gameState.getBuildingSlots()
+                this.contracts.gameState.getPlayerGold(),
+                this.contracts.gameState.getBuildingSlots()
             ]);
 
             // Update gold display
@@ -45,6 +54,7 @@ export class DashboardPage {
             }
         } catch (error) {
             Logger.error('Error loading player data:', error);
+            this.modal.error('Failed to load player data. Please try refreshing the page.');
         }
     }
 
@@ -57,7 +67,7 @@ export class DashboardPage {
             Logger.info(`Formatted building type: ${formattedBuildingType}`);
             
             // Check if player is in a city
-            const cityId = await this.gameState.getPlayerCity();
+            const cityId = await this.contracts.gameState.getPlayerCity();
             Logger.info(`Player city ID: ${cityId}`);
             if (!cityId) {
                 Logger.info('Player not in a city, showing modal');
@@ -66,7 +76,7 @@ export class DashboardPage {
             }
 
             // Check available building slots
-            const slots = await this.gameState.getBuildingSlots();
+            const slots = await this.contracts.gameState.getBuildingSlots();
             Logger.info(`Building slots: ${slots}`);
             if (slots <= 0) {
                 Logger.info('No building slots available, showing modal');
@@ -75,7 +85,7 @@ export class DashboardPage {
             }
 
             // Check gold balance
-            const gold = await this.gameState.getPlayerGold();
+            const gold = await this.contracts.gameState.getPlayerGold();
             const requiredGold = 100; // 100 Gold for a house
             Logger.info(`Player gold: ${gold}, Required: ${requiredGold}`);
             if (Number(gold) < requiredGold) {
@@ -103,7 +113,7 @@ export class DashboardPage {
                     
                     // Create the building
                     Logger.info('Calling createBuilding on contract');
-                    const tx = await this.gameState.createBuilding(formattedBuildingType);
+                    const tx = await this.contracts.gameState.createBuilding(formattedBuildingType);
                     Logger.info('Transaction sent, waiting for confirmation');
                     
                     // Wait for transaction to be mined
