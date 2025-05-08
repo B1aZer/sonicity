@@ -6,15 +6,52 @@ import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { AccessControl } from '../js/utils/accessControl.js';
+import { BasePage } from '../js/core/BasePage.js';
 
-export class GamePage {
+export class GamePage extends BasePage {
     constructor() {
+        super();
         this.element = document.createElement('div');
         this.element.className = 'game-page';
         this.gameStateContract = new GameStateContract();
         this.modal = new Modal();
         this.render();
         this.setupGame();
+    }
+
+    async onInitialized(walletResult) {
+        try {
+            await this.updateResourceDisplay();
+        } catch (error) {
+            Logger.error('Error initializing game page:', error);
+            this.modal.error('Failed to initialize game page. Please try refreshing the page.');
+        }
+    }
+
+    async updateResourceDisplay() {
+        try {
+            const [gold, buildingSlots, maxBuildingSlots] = await Promise.all([
+                this.contracts.gameState.getPlayerGold(),
+                this.contracts.gameState.getBuildingSlots(),
+                this.contracts.gameState.getMaxBuildingSlots()
+            ]);
+            
+            const goldElement = this.element.querySelector('#gold-amount');
+            const buildingSlotsElement = this.element.querySelector('#building-slots');
+            const maxBuildingSlotsElement = this.element.querySelector('#max-building-slots');
+            
+            if (goldElement) {
+                goldElement.textContent = gold.toString();
+            }
+            if (buildingSlotsElement) {
+                buildingSlotsElement.textContent = buildingSlots.toString();
+            }
+            if (maxBuildingSlotsElement) {
+                maxBuildingSlotsElement.textContent = maxBuildingSlots.toString();
+            }
+        } catch (error) {
+            Logger.error('Error updating resource display:', error);
+        }
     }
 
     async setupGame() {
@@ -25,83 +62,82 @@ export class GamePage {
         LoadingScreen.show(renderDiv);
         
         // Initialize the game and wait for it to complete
-        this.game.init().then(() => {
-            // Load assets first
-            return this.game.assetLoader.loadAssets();
-        }).then(() => {
-            // Wait for assets to load and ensure they're ready
-            return this.game.assetLoader.waitForLoad();
-        }).then(async () => {
-            // Check if player is in a city
-            if (!await AccessControl.checkCityAccess()) {
-                return;
-            }
+        await this.game.init();
+        
+        // Load assets first
+        await this.game.assetLoader.loadAssets();
+        
+        // Wait for assets to load and ensure they're ready
+        await this.game.assetLoader.waitForLoad();
+        
+        // Check if player is in a city
+        if (!await AccessControl.checkCityAccess()) {
+            return;
+        }
 
-            // Initialize game state contract
-            this.gameStateContract = new GameStateContract();
-            await this.gameStateContract.initialize();
+        // Update resource display initially
+        await this.updateResourceDisplay();
+        
+        // Set up periodic updates for resource display
+        this.resourceUpdateInterval = setInterval(() => {
+            this.updateResourceDisplay().catch(error => {
+                Logger.error('Error in periodic resource update:', error);
+            });
+        }, 10000); // Update every 10 seconds
+        
+        // Place the buildings
+        const gridSize = this.game.gridSize;
+        const cellSize = this.game.gridCellSize;
+        const gridRadius = (gridSize * cellSize) / 2;
+        
+        // Calculate positions in a semi-circle around the grid
+        const radius = gridRadius + (cellSize * 2); // Place buildings 2 cells away from grid edge
+        const angleStep = Math.PI / 3; // 60 degrees between buildings
+        
+        // Place PowerPlant as Mine (right side)
+        const mineAngle = - Math.PI / 2; // 0 degrees (right side)
+        const minePosition = new THREE.Vector3(
+            Math.cos(mineAngle) * radius,  // X position
+            0,
+            Math.sin(mineAngle) * radius   // Z position
+        );
+        const mine = this.game.buildingManager.placeBuilding('MINE', minePosition);
+        if (mine && mine.mesh) {
+            mine.mesh.userData.isMine = true;
+            mine.mesh.rotation.y = Math.PI / 2; // Rotate 90 degrees to face center
+        }
+        
+        // Place WaterPump as City Hall (left side)
+        const cityHallAngle = Math.PI; // 180 degrees
+        const cityHallPosition = new THREE.Vector3(
+            Math.cos(cityHallAngle) * radius,  // X position
+            0,
+            Math.sin(cityHallAngle) * radius   // Z position
+        );
+        const cityHall = this.game.buildingManager.placeBuilding('CITY_HALL', cityHallPosition);
+        if (cityHall && cityHall.mesh) {
+            cityHall.mesh.userData.isCityHall = true;
+            cityHall.mesh.rotation.y = 0; // Rotate 180 degrees
+        }
+        
+        // Place Shop as Altar (top)
+        const altarAngle = Math.PI / 2;
+        const altarPosition = new THREE.Vector3(
+            Math.cos(altarAngle) * radius,  // X position
+            0,
+            Math.sin(altarAngle) * radius   // Z position
+        );
+        const altar = this.game.buildingManager.placeBuilding('ALTAR', altarPosition);
+        if (altar && altar.mesh) {
+            altar.mesh.userData.isAltar = true;
+            altar.mesh.rotation.y = altarAngle; // Rotate to face center
+        }
 
-            // Update building slots display
-            await this.updateBuildingSlots();
-        }).then(() => {
-            // Place the buildings
-            const gridSize = this.game.gridSize;
-            const cellSize = this.game.gridCellSize;
-            const gridRadius = (gridSize * cellSize) / 2;
-            
-            // Calculate positions in a semi-circle around the grid
-            const radius = gridRadius + (cellSize * 2); // Place buildings 2 cells away from grid edge
-            const angleStep = Math.PI / 3; // 60 degrees between buildings
-            
-            // Place PowerPlant as Mine (right side)
-            const mineAngle = - Math.PI / 2; // 0 degrees (right side)
-            const minePosition = new THREE.Vector3(
-                Math.cos(mineAngle) * radius,  // X position
-                0,
-                Math.sin(mineAngle) * radius   // Z position
-            );
-            const mine = this.game.buildingManager.placeBuilding('MINE', minePosition);
-            if (mine && mine.mesh) {
-                mine.mesh.userData.isMine = true;
-                mine.mesh.rotation.y = Math.PI / 2; // Rotate 90 degrees to face center
-            }
-            
-            // Place WaterPump as City Hall (left side)
-            const cityHallAngle = Math.PI; // 180 degrees
-            const cityHallPosition = new THREE.Vector3(
-                Math.cos(cityHallAngle) * radius,  // X position
-                0,
-                Math.sin(cityHallAngle) * radius   // Z position
-            );
-            const cityHall = this.game.buildingManager.placeBuilding('CITY_HALL', cityHallPosition);
-            if (cityHall && cityHall.mesh) {
-                cityHall.mesh.userData.isCityHall = true;
-                cityHall.mesh.rotation.y = 0; // Rotate 180 degrees
-            }
-            
-            // Place Shop as Altar (top)
-            const altarAngle = Math.PI / 2; // 90 degrees
-            const altarPosition = new THREE.Vector3(
-                Math.cos(altarAngle) * radius,  // X position
-                0,
-                Math.sin(altarAngle) * radius   // Z position
-            );
-            const altar = this.game.buildingManager.placeBuilding('ALTAR', altarPosition);
-            if (altar && altar.mesh) {
-                altar.mesh.userData.isAltar = true;
-                altar.mesh.rotation.y = altarAngle; // Rotate to face center
-            }
+        // Set up click handlers for the buildings
+        this.setupBuildingClickHandlers();
 
-            // Set up click handlers for the buildings
-            this.setupBuildingClickHandlers();
-
-            // Hide loading screen after all buildings are placed and click handlers are set up
-            LoadingScreen.hide(renderDiv);
-        }).catch(error => {
-            console.error('Error during game setup:', error);
-            LoadingScreen.hide(renderDiv);
-            this.modal.error('Error during game setup. Please try again.');
-        });
+        // Hide loading screen after all buildings are placed and click handlers are set up
+        LoadingScreen.hide(renderDiv);
     }
 
     setupBuildingClickHandlers() {
@@ -210,6 +246,11 @@ export class GamePage {
     }
 
     unmount() {
+        // Clear the resource update interval
+        if (this.resourceUpdateInterval) {
+            clearInterval(this.resourceUpdateInterval);
+        }
+        
         if (this.game) {
             this.game.dispose();
         }
