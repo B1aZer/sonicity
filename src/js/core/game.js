@@ -114,6 +114,16 @@ export class Game {
         if (this.controls) {
             this.controls.update();
         }
+        
+        // Update scene (including grass animation)
+        if (this.sceneManager) {
+            this.sceneManager.update();
+        }
+        
+        // Update building manager
+        if (this.buildingManager) {
+            this.buildingManager.update(deltaTime);
+        }
     }
 
     render() {

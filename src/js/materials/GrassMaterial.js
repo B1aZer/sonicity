@@ -7,10 +7,11 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 time: { value: 0 },
                 map: { value: null },
                 alphaMap: { value: null },
-                windStrength: { value: 0.3 },
+                windStrength: { value: 0.2 },
                 windSpeed: { value: 0.5 },
                 tipColor: { value: new THREE.Color(0.0, 0.6, 0.0).convertSRGBToLinear() },
-                bottomColor: { value: new THREE.Color(0.0, 0.1, 0.0).convertSRGBToLinear() }
+                bottomColor: { value: new THREE.Color(0.0, 0.1, 0.0).convertSRGBToLinear() },
+                windDirection: { value: new THREE.Vector2(1.0, 0.0) }
             },
             vertexShader: `
                 attribute vec3 offset;
@@ -22,10 +23,12 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 uniform float time;
                 uniform float windStrength;
                 uniform float windSpeed;
+                uniform vec2 windDirection;
                 
                 varying vec2 vUv;
                 varying float vWindStrength;
                 varying float frc;
+                varying vec3 vPosition;
                 
                 // Quaternion multiplication
                 vec4 qmul(vec4 q1, vec4 q2) {
@@ -52,17 +55,44 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     );
                 }
                 
+                // Improved wind function with more natural movement
+                float wind(float x, float y, float time) {
+                    // Primary wind wave
+                    float wind = sin(time * windSpeed + x * 0.1) * windStrength;
+                    
+                    // Secondary wind wave (slower, wider)
+                    wind += sin(time * windSpeed * 0.5 + x * 0.05) * windStrength * 0.3;
+                    
+                    // Tertiary wind wave (very slow, very wide)
+                    wind += sin(time * windSpeed * 0.25 + x * 0.025) * windStrength * 0.15;
+                    
+                    // Add some turbulence
+                    wind += sin(time * windSpeed * 2.0 + x * 0.2) * windStrength * 0.05;
+                    
+                    return wind;
+                }
+                
                 void main() {
                     vUv = uv;
                     frc = position.y;
+                    vPosition = position;
                     
-                    // Calculate wind effect
-                    float wind = sin(time * windSpeed + position.x * 0.1) * windStrength;
-                    vWindStrength = wind;
+                    // Calculate wind effect with multiple frequencies
+                    float windX = wind(position.x, position.y, time) * windDirection.x;
+                    float windZ = wind(position.x, position.y, time) * windDirection.y;
+                    vWindStrength = length(vec2(windX, windZ));
                     
-                    // Apply wind to vertex position
+                    // Apply wind to vertex position with height-based influence
                     vec3 pos = position;
-                    pos.x += wind * (1.0 - position.y / 1.0);
+                    float heightFactor = smoothstep(0.0, 1.0, position.y / 1.0);
+                    
+                    // Apply wind with more natural movement
+                    pos.x += windX * heightFactor * heightFactor; // Square the height factor for more natural movement
+                    pos.z += windZ * heightFactor * heightFactor;
+                    
+                    // Add slight vertical movement that follows the wind
+                    float verticalWind = sin(time * windSpeed * 0.5 + position.x * 0.1) * windStrength * 0.1;
+                    pos.y += verticalWind * heightFactor * heightFactor;
                     
                     // Apply stretch
                     pos.y *= stretch;
@@ -87,6 +117,7 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 varying vec2 vUv;
                 varying float vWindStrength;
                 varying float frc;
+                varying vec3 vPosition;
                 
                 void main() {
                     vec4 color = texture2D(map, vUv);
@@ -95,12 +126,17 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     // If transparent, don't draw
                     if(alpha < 0.15) discard;
                     
-                    // Add color variation based on height
-                    color = mix(vec4(tipColor, 1.0), color, frc);
-                    color = mix(vec4(bottomColor, 1.0), color, frc);
+                    // Add color variation based on height with smooth transition
+                    float heightFactor = smoothstep(0.0, 1.0, frc);
+                    color = mix(vec4(bottomColor, 1.0), vec4(tipColor, 1.0), heightFactor);
                     
                     // Add some color variation based on wind
-                    color.rgb *= 1.0 + vWindStrength * 0.1;
+                    float windFactor = smoothstep(0.0, 0.5, vWindStrength);
+                    color.rgb *= 1.0 + windFactor * 0.2;
+                    
+                    // Add slight color variation based on position
+                    float noise = fract(sin(dot(vPosition.xy, vec2(12.9898, 78.233))) * 43758.5453);
+                    color.rgb *= 1.0 + (noise - 0.5) * 0.1;
                     
                     gl_FragColor = color;
                 }

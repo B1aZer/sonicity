@@ -12,6 +12,7 @@ export class GrassBlades {
             joints: 5,
             instances: 10000,
             width: 100,
+            density: 1.0,
             ...options
         };
         
@@ -50,7 +51,7 @@ export class GrassBlades {
             
             Logger.info('Textures loaded successfully');
             
-            // Create base geometry for a single blade
+            // Create base geometry for a single blade using triangles
             const baseGeom = new THREE.PlaneGeometry(
                 this.options.bladeWidth,
                 this.options.bladeHeight,
@@ -93,7 +94,7 @@ export class GrassBlades {
     }
     
     getAttributeData() {
-        const { instances, width } = this.options;
+        const { instances, width, density } = this.options;
         const offsets = [];
         const orientations = [];
         const stretches = [];
@@ -106,19 +107,36 @@ export class GrassBlades {
         const min = -0.25;
         const max = 0.25;
         
+        // Create a grid for better distribution
+        const gridSize = Math.ceil(Math.sqrt(instances));
+        const cellSize = width / gridSize;
+        
         for (let i = 0; i < instances; i++) {
-            // Offset of the roots
-            const offsetX = Math.random() * width - width / 2;
-            const offsetZ = Math.random() * width - width / 2;
+            // Calculate grid position
+            const gridX = i % gridSize;
+            const gridZ = Math.floor(i / gridSize);
+            
+            // Add jitter to grid position
+            const jitterX = (Math.random() - 0.5) * cellSize * 0.8;
+            const jitterZ = (Math.random() - 0.5) * cellSize * 0.8;
+            
+            // Calculate final position
+            const offsetX = (gridX * cellSize - width / 2) + jitterX;
+            const offsetZ = (gridZ * cellSize - width / 2) + jitterZ;
+            
+            // Apply density noise
+            const densityNoise = this.noise2D(offsetX / 20, offsetZ / 20);
+            if (densityNoise < -0.2) continue; // Skip some blades based on density
+            
             const offsetY = this.getYPosition(offsetX, offsetZ);
             offsets.push(offsetX, offsetY, offsetZ);
             
-            // Define random growth directions
+            // Define random growth directions with more variation
             let angle = Math.PI - Math.random() * (2 * Math.PI);
             halfRootAngleSin.push(Math.sin(0.5 * angle));
             halfRootAngleCos.push(Math.cos(0.5 * angle));
             
-            // Rotate around Y
+            // Rotate around Y with more variation
             let rotationAxis = new THREE.Vector3(0, 1, 0);
             let x = rotationAxis.x * Math.sin(angle / 2.0);
             let y = rotationAxis.y * Math.sin(angle / 2.0);
@@ -126,7 +144,7 @@ export class GrassBlades {
             let w = Math.cos(angle / 2.0);
             quaternion_0.set(x, y, z, w).normalize();
             
-            // Rotate around X
+            // Rotate around X with more variation
             angle = Math.random() * (max - min) + min;
             rotationAxis = new THREE.Vector3(1, 0, 0);
             x = rotationAxis.x * Math.sin(angle / 2.0);
@@ -137,7 +155,7 @@ export class GrassBlades {
             
             quaternion_0 = this.multiplyQuaternions(quaternion_0, quaternion_1);
             
-            // Rotate around Z
+            // Rotate around Z with more variation
             angle = Math.random() * (max - min) + min;
             rotationAxis = new THREE.Vector3(0, 0, 1);
             x = rotationAxis.x * Math.sin(angle / 2.0);
@@ -150,11 +168,17 @@ export class GrassBlades {
             
             orientations.push(quaternion_0.x, quaternion_0.y, quaternion_0.z, quaternion_0.w);
             
-            // Define variety in height
-            if (i < instances / 3) {
-                stretches.push(Math.random() * 1.8);
+            // Define variety in height with more natural distribution
+            const heightVariation = Math.random();
+            if (heightVariation < 0.1) {
+                // Some very tall blades
+                stretches.push(1.8 + Math.random() * 0.4);
+            } else if (heightVariation < 0.3) {
+                // Medium height blades
+                stretches.push(1.2 + Math.random() * 0.4);
             } else {
-                stretches.push(Math.random());
+                // Regular height blades
+                stretches.push(0.8 + Math.random() * 0.4);
             }
         }
         
@@ -176,16 +200,29 @@ export class GrassBlades {
     }
     
     getYPosition(x, z) {
-        // Minimal variation for flat ground
-        let y = 0.03 * this.noise2D(x / 50, z / 50);
-        y += 0.05 * this.noise2D(x / 100, z / 100);
-        y += 0.01 * this.noise2D(x / 10, z / 10);
+        // Enhanced terrain variation
+        let y = 0.05 * this.noise2D(x / 50, z / 50);
+        y += 0.1 * this.noise2D(x / 100, z / 100);
+        y += 0.02 * this.noise2D(x / 10, z / 10);
         return y;
     }
     
     update(time) {
         if (this.material) {
             this.material.uniforms.time.value = time;
+            
+            // Update wind direction with more subtle variation
+            const angle = Math.sin(time * 0.1) * Math.PI * 0.25; // Reduced from 0.2 and 0.5
+            const strength = 0.6 + Math.sin(time * 0.05) * 0.1; // Reduced from 0.8/0.2 and 0.1
+            
+            this.material.uniforms.windDirection.value.set(
+                Math.cos(angle) * strength,
+                Math.sin(angle) * strength
+            );
+            
+            // Update wind strength and speed with more subtle variation
+            this.material.uniforms.windStrength.value = 0.2 + Math.sin(time * 0.05) * 0.05; // Reduced from 0.5 and 0.1
+            this.material.uniforms.windSpeed.value = 0.5 + Math.sin(time * 0.1) * 0.1; // Reduced from 1.0 and 0.2
         }
     }
     
