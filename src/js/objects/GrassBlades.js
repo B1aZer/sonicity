@@ -154,7 +154,7 @@ export class GrassBlades {
             
             // Apply density noise (lower threshold for more blades)
             const densityNoise = this.noise2D(offsetX / 20, offsetZ / 20);
-            if (densityNoise < -0.4) continue;
+            if (densityNoise < -0.6) continue;
             
             const offsetY = this.getYPosition(offsetX, offsetZ);
             offsets.push(offsetX, offsetY, offsetZ);
