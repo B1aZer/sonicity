@@ -297,10 +297,10 @@ export class SceneManager {
             // Create animated grass
             this.grassBlades = new GrassBlades(this.scene, {
                 width: this.gridManager.getTotalSize(),
-                instances: 100000,
+                instances: 420000,
                 width: 200,
                 bladeWidth: 0.04,
-                bladeHeight: 1.8,
+                bladeHeight: 1.2,
             });
 
             // Create river

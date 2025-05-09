@@ -116,17 +116,17 @@ export class GrassBlades {
             const gridX = i % gridSize;
             const gridZ = Math.floor(i / gridSize);
             
-            // Add jitter to grid position
-            const jitterX = (Math.random() - 0.5) * cellSize * 0.8;
-            const jitterZ = (Math.random() - 0.5) * cellSize * 0.8;
+            // Add less jitter to grid position for more even coverage
+            const jitterX = (Math.random() - 0.5) * cellSize * 0.3;
+            const jitterZ = (Math.random() - 0.5) * cellSize * 0.3;
             
             // Calculate final position
             const offsetX = (gridX * cellSize - width / 2) + jitterX;
             const offsetZ = (gridZ * cellSize - width / 2) + jitterZ;
             
-            // Apply density noise
+            // Apply density noise (lower threshold for more blades)
             const densityNoise = this.noise2D(offsetX / 20, offsetZ / 20);
-            if (densityNoise < -0.2) continue; // Skip some blades based on density
+            if (densityNoise < -0.4) continue;
             
             const offsetY = this.getYPosition(offsetX, offsetZ);
             offsets.push(offsetX, offsetY, offsetZ);
