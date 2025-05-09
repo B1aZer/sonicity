@@ -102,7 +102,8 @@ export class GamePage extends BasePage {
             
             // Calculate positions in a semi-circle around the grid
             const radius = gridRadius + (cellSize * 2); // Increased distance from grid edge
-            
+
+            // Place static buildings first
             // Place Mine (right side)
             const minePosition = new THREE.Vector3(
                 radius,  // X position
@@ -113,7 +114,7 @@ export class GamePage extends BasePage {
             if (!mine) {
                 Logger.error('Failed to place Mine');
             }
-            
+
             // Place City Hall (top)
             const cityHallPosition = new THREE.Vector3(
                 0,        // X position
@@ -124,7 +125,7 @@ export class GamePage extends BasePage {
             if (!cityHall) {
                 Logger.error('Failed to place City Hall');
             }
-            
+
             // Place Altar (left side)
             const altarPosition = new THREE.Vector3(
                 -radius,  // X position
@@ -134,6 +135,63 @@ export class GamePage extends BasePage {
             const altar = this.game.buildingManager.placeFixedBuilding('ALTAR', altarPosition, Math.PI / 2);
             if (!altar) {
                 Logger.error('Failed to place Altar');
+            }
+
+            // Get all house building IDs from contract
+            const houseIds = await this.contracts.gameState.getBuildingIdsOfType('house');
+            Logger.info('Retrieved house IDs:', houseIds);
+
+            // Place houses on the grid
+            for (const houseId of houseIds) {
+                const house = await this.contracts.gameState.getBuilding(houseId);
+                if (!house.active) continue;
+
+                Logger.info('Placing house:', house);
+
+                // Find an available grid position
+                let foundPosition = false;
+                let gridX = 0, gridZ = 0;
+
+                // Start from the center and spiral outward
+                const center = Math.floor(gridSize / 2);
+                for (let layer = 0; layer < gridSize; layer++) {
+                    for (let i = -layer; i <= layer; i++) {
+                        // Check all positions in the current layer
+                        const positions = [
+                            { x: center + i, z: center + layer },
+                            { x: center + layer, z: center - i },
+                            { x: center - i, z: center - layer },
+                            { x: center - layer, z: center + i }
+                        ];
+
+                        for (const pos of positions) {
+                            if (this.game.gridManager.isValidPosition(pos.x, pos.z) && 
+                                !this.game.gridManager.isCellOccupied(pos.x, pos.z)) {
+                                gridX = pos.x;
+                                gridZ = pos.z;
+                                foundPosition = true;
+                                break;
+                            }
+                        }
+                        if (foundPosition) break;
+                    }
+                    if (foundPosition) break;
+                }
+
+                if (!foundPosition) {
+                    Logger.error('No available grid cells for house placement');
+                    continue;
+                }
+
+                // Convert grid position to world position
+                const worldPos = this.game.gridManager.getWorldPosition(gridX, gridZ);
+                
+                // Place the house
+                const placedHouse = this.game.buildingManager.placeBuilding('HOUSE', worldPos);
+                if (!placedHouse) {
+                    Logger.error('Failed to place house');
+                    this.game.gridManager.freeCell(gridX, gridZ);
+                }
             }
 
             // Set up click handlers for the buildings
@@ -160,7 +218,7 @@ export class GamePage extends BasePage {
             return;
         }
 
-        this.game.renderer.domElement.addEventListener('click', (event) => {
+        this.game.renderer.domElement.addEventListener('click', async (event) => {
             // Calculate mouse position in normalized device coordinates
             const rect = this.game.renderer.domElement.getBoundingClientRect();
             const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -186,7 +244,7 @@ export class GamePage extends BasePage {
                     } : null
                 });
                 
-                // Check for building types
+                // Check for building types using userData flags
                 if (clickedObject.userData.isMine) {
                     Logger.info('Mine clicked');
                     this.modal.show('Mine is not operational yet. Coming soon!', { title: 'Mine' });
@@ -198,6 +256,9 @@ export class GamePage extends BasePage {
                     Logger.info('Altar clicked');
                     window.history.pushState({}, '', '/stake');
                     window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isHouse) {
+                    Logger.info('House clicked');
+                    this.modal.show('This is your house. It provides basic shelter and generates a small amount of gold.', { title: 'House' });
                 }
             }
         });
