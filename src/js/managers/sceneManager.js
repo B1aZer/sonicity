@@ -126,7 +126,7 @@ export class SceneManager {
                 side: THREE.DoubleSide,
                 roughness: 0.9,
                 metalness: 0.1,
-                color: new THREE.Color(0x9ed99d).convertSRGBToLinear()
+                color: new THREE.Color(0xc0cba7).convertSRGBToLinear()
             });
 
             const groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
