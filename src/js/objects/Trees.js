@@ -56,11 +56,12 @@ export class Trees {
                 // Random rotation
                 tree.rotation.y = Math.random() * Math.PI * 2;
                 
-                // Random scale variation
-                const scaleVariation = 0.8 + Math.random() * 0.4; // 0.8 to 1.2
+                // Random scale variation for more natural look
+                const scaleVariation = 0.6 + Math.random() * 0.8; // Random scale between 0.6 and 1.4
+                const heightVariation = 0.8 + Math.random() * 0.4; // Slightly different height variation
                 tree.scale.set(
                     this.options.scale * scaleVariation,
-                    this.options.scale * scaleVariation,
+                    this.options.scale * heightVariation,
                     this.options.scale * scaleVariation
                 );
                 
