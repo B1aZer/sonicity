@@ -3,13 +3,28 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { appState } from '../js/core/state.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
+import { BasePage } from '../js/core/BasePage.js';
 
-export class MapPage {
+export class MapPage extends BasePage {
     constructor() {
+        super();
+        Logger.info('MapPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'map-page';
         this.modal = new Modal();
         this.gameStateContract = new GameStateContract();
+        this.render();
+        this.setupEventListeners();
+    }
+
+    async onInitialized(walletResult) {
+        Logger.info('MapPage onInitialized called with wallet:', walletResult.address);
+        try {
+            // Any map-specific initialization
+        } catch (error) {
+            Logger.error('Error initializing map page:', error);
+            this.modal.error('Failed to initialize map page. Please try refreshing the page.');
+        }
     }
 
     setupEventListeners() {
@@ -87,9 +102,13 @@ export class MapPage {
     }
 
     mount(container) {
+        Logger.info('Mounting map page...');
         container.appendChild(this.element);
-        this.render();
-        this.setupEventListeners();
+        // Initialize using base class method
+        this.initialize().catch(error => {
+            Logger.error('Error during map page initialization:', error);
+            this.modal.error('Failed to initialize map page. Please try refreshing the page.');
+        });
     }
 
     unmount() {

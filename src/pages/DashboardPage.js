@@ -18,12 +18,20 @@ export class DashboardPage extends BasePage {
     }
 
     async onInitialized(walletResult) {
+        Logger.info('Dashboard onInitialized called with wallet:', walletResult.address);
         try {
             await this.loadPlayerData();
+            Logger.info('Player data loaded successfully');
         } catch (error) {
             Logger.error('Error initializing dashboard:', error);
             this.modal.error('Failed to initialize dashboard. Please try refreshing the page.');
         }
+    }
+
+    updateWalletStatus(address) {
+        Logger.info('Updating wallet status with address:', address);
+        // The dashboard doesn't need to display the wallet address,
+        // but we need to implement this method to satisfy the BasePage requirement
     }
 
     showModal(content, isError = false) {
@@ -36,21 +44,44 @@ export class DashboardPage extends BasePage {
 
     async loadPlayerData() {
         try {
+            Logger.info('Starting to load player data...');
+            
             const [gold, buildingSlots] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
                 this.contracts.gameState.getBuildingSlots()
             ]);
 
+            Logger.info('Received data from contract:', {
+                gold: gold.toString(),
+                buildingSlots: buildingSlots.toString()
+            });
+
             // Update gold display
-            const goldValue = this.element.querySelector('.status-value');
+            const goldValue = this.element.querySelector('.status-item:first-child .status-value');
+            Logger.info('Found gold value element:', {
+                exists: !!goldValue,
+                currentText: goldValue ? goldValue.textContent : 'not found'
+            });
+
             if (goldValue) {
                 goldValue.textContent = gold.toString();
+                Logger.info('Updated gold value to:', gold.toString());
+            } else {
+                Logger.error('Gold value element not found in DOM');
             }
 
             // Update building slots display
             const slotsItem = this.element.querySelector('.status-item:last-child .status-value');
+            Logger.info('Found building slots element:', {
+                exists: !!slotsItem,
+                currentText: slotsItem ? slotsItem.textContent : 'not found'
+            });
+
             if (slotsItem) {
                 slotsItem.textContent = buildingSlots.toString();
+                Logger.info('Updated building slots to:', buildingSlots.toString());
+            } else {
+                Logger.error('Building slots element not found in DOM');
             }
         } catch (error) {
             Logger.error('Error loading player data:', error);
@@ -255,7 +286,13 @@ export class DashboardPage extends BasePage {
     }
 
     mount(container) {
+        Logger.info('Mounting dashboard page...');
         container.appendChild(this.element);
+        // Initialize using base class method
+        this.initialize().catch(error => {
+            Logger.error('Error during dashboard initialization:', error);
+            this.modal.error('Failed to initialize dashboard. Please try refreshing the page.');
+        });
     }
 
     unmount() {

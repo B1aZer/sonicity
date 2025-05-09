@@ -219,7 +219,13 @@ export class GamePage extends BasePage {
     }
 
     mount(container) {
+        Logger.info('Mounting game page...');
         container.appendChild(this.element);
+        // Initialize using base class method
+        this.initialize().catch(error => {
+            Logger.error('Error during game page initialization:', error);
+            this.modal.error('Failed to initialize game page. Please try refreshing the page.');
+        });
     }
  
     unmount() {

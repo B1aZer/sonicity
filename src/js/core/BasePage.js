@@ -65,8 +65,8 @@ export class BasePage {
     }
 
     updateWalletStatus(address) {
-        // To be implemented by child classes
-        throw new Error('updateWalletStatus must be implemented by child class');
+        // Optional method - child classes can override if they need to display wallet status
+        Logger.debug('Base updateWalletStatus called with address:', address);
     }
 
     async onInitialized(walletResult) {

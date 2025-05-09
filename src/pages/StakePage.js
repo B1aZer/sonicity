@@ -424,7 +424,13 @@ export class StakePage extends BasePage {
     }
 
     mount(container) {
+        Logger.info('Mounting stake page...');
         container.appendChild(this.container);
+        // Initialize using base class method
+        this.initialize().catch(error => {
+            Logger.error('Error during stake page initialization:', error);
+            this.modal.error('Failed to initialize stake page. Please try refreshing the page.');
+        });
     }
 
     unmount() {
