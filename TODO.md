@@ -1,3 +1,5 @@
+- check staking page design, what happend to status message?
+
 - PLayer can join any city wo nFTS
 
 
