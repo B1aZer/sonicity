@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import Logger from '../utils/logger.js';
 
 export class GrassMaterial extends THREE.ShaderMaterial {
     constructor(parameters = {}) {
@@ -7,10 +8,11 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 time: { value: 0 },
                 map: { value: null },
                 alphaMap: { value: null },
+                colorMap: { value: null },
                 windStrength: { value: 0.2 },
                 windSpeed: { value: 0.5 },
-                tipColor: { value: new THREE.Color(0.0, 0.6, 0.0).convertSRGBToLinear() },
-                bottomColor: { value: new THREE.Color(0.0, 0.1, 0.0).convertSRGBToLinear() },
+                tipColor: { value: new THREE.Color(0.38, 0.82, 0.21).convertSRGBToLinear() },
+                bottomColor: { value: new THREE.Color(0.12, 0.36, 0.08).convertSRGBToLinear() },
                 windDirection: { value: new THREE.Vector2(1.0, 0.0) }
             },
             vertexShader: `
@@ -19,6 +21,7 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 attribute float stretch;
                 attribute float halfRootAngleSin;
                 attribute float halfRootAngleCos;
+                attribute vec3 rootPosition;
                 
                 uniform float time;
                 uniform float windStrength;
@@ -29,6 +32,7 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 varying float vWindStrength;
                 varying float frc;
                 varying vec3 vPosition;
+                varying vec3 vRootPosition;
                 
                 // Quaternion multiplication
                 vec4 qmul(vec4 q1, vec4 q2) {
@@ -76,6 +80,7 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     vUv = uv;
                     frc = position.y;
                     vPosition = position;
+                    vRootPosition = rootPosition;
                     
                     // Calculate wind effect with multiple frequencies
                     float windX = wind(position.x, position.y, time) * windDirection.x;
@@ -111,6 +116,7 @@ export class GrassMaterial extends THREE.ShaderMaterial {
             fragmentShader: `
                 uniform sampler2D map;
                 uniform sampler2D alphaMap;
+                uniform sampler2D colorMap;
                 uniform vec3 tipColor;
                 uniform vec3 bottomColor;
                 
@@ -118,6 +124,7 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 varying float vWindStrength;
                 varying float frc;
                 varying vec3 vPosition;
+                varying vec3 vRootPosition;
                 
                 void main() {
                     vec4 color = texture2D(map, vUv);
@@ -126,19 +133,29 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     // If transparent, don't draw
                     if(alpha < 0.15) discard;
                     
-                    // Add color variation based on height with smooth transition
-                    float heightFactor = smoothstep(0.0, 1.0, frc);
-                    color = mix(vec4(bottomColor, 1.0), vec4(tipColor, 1.0), heightFactor);
+                    // Sample grayscale texture for variation
+                    vec2 variationUV = vUv * 3.0;
+                    // Add some variation to UV based on position
+                    variationUV.x += sin(vPosition.x * 0.5) * 0.1;
+                    variationUV.y += cos(vPosition.z * 0.5) * 0.1;
+                    float variation = texture2D(colorMap, variationUV).r; // Use just the red channel for grayscale
                     
-                    // Add some color variation based on wind
-                    float windFactor = smoothstep(0.0, 0.5, vWindStrength);
-                    color.rgb *= 1.0 + windFactor * 0.2;
+                    // Create base color by blending between bottom and tip colors
+                    float heightFactor = smoothstep(0.0, 0.7, frc);
+                    vec3 baseColor = mix(bottomColor, tipColor, heightFactor);
                     
-                    // Add slight color variation based on position
-                    float noise = fract(sin(dot(vPosition.xy, vec2(12.9898, 78.233))) * 43758.5453);
-                    color.rgb *= 1.0 + (noise - 0.5) * 0.1;
+                    // Apply variation from texture
+                    baseColor *= mix(0.7, 1.3, variation); // Use texture to vary brightness
                     
-                    gl_FragColor = color;
+                    // Add subtle darkening at the base
+                    float baseShadow = (1.0 - frc) * 0.3;
+                    baseColor *= (1.0 - baseShadow);
+                    
+                    // Add slight brightness variation based on wind
+                    float windBrightness = 1.0 + (vWindStrength * 0.1);
+                    baseColor *= windBrightness;
+                    
+                    gl_FragColor = vec4(baseColor, 1.0);
                 }
             `,
             transparent: true,
@@ -148,10 +165,23 @@ export class GrassMaterial extends THREE.ShaderMaterial {
 
         // Set the textures as uniforms
         if (parameters.map) {
+            Logger.info('Setting map texture in GrassMaterial');
             this.uniforms.map.value = parameters.map;
         }
         if (parameters.alphaMap) {
+            Logger.info('Setting alphaMap texture in GrassMaterial');
             this.uniforms.alphaMap.value = parameters.alphaMap;
+        }
+        if (parameters.colorMap) {
+            Logger.info('Setting colorMap texture in GrassMaterial');
+            this.uniforms.colorMap.value = parameters.colorMap;
+            Logger.info('ColorMap texture details:', {
+                image: parameters.colorMap.image ? 'present' : 'missing',
+                size: parameters.colorMap.image ? `${parameters.colorMap.image.width}x${parameters.colorMap.image.height}` : 'unknown',
+                format: parameters.colorMap.format,
+                type: parameters.colorMap.type,
+                colorSpace: parameters.colorMap.colorSpace
+            });
         }
     }
 } 

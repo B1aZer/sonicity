@@ -30,11 +30,16 @@ export class GrassBlades {
         try {
             // Load textures
             Logger.info('Loading grass textures...');
-            const [bladeDiffuse, bladeAlpha] = await Promise.all([
+            const [bladeDiffuse, bladeAlpha, colorMap] = await Promise.all([
                 new Promise((resolve, reject) => {
                     textureLoader.load(
                         '/assets/textures/blade_diffuse.jpg',
-                        resolve,
+                        (texture) => {
+                            Logger.info('Blade diffuse texture loaded successfully');
+                            texture.wrapS = THREE.RepeatWrapping;
+                            texture.wrapT = THREE.RepeatWrapping;
+                            resolve(texture);
+                        },
                         undefined,
                         reject
                     );
@@ -42,14 +47,34 @@ export class GrassBlades {
                 new Promise((resolve, reject) => {
                     textureLoader.load(
                         '/assets/textures/blade_alpha.jpg',
-                        resolve,
+                        (texture) => {
+                            Logger.info('Blade alpha texture loaded successfully');
+                            texture.wrapS = THREE.RepeatWrapping;
+                            texture.wrapT = THREE.RepeatWrapping;
+                            resolve(texture);
+                        },
+                        undefined,
+                        reject
+                    );
+                }),
+                new Promise((resolve, reject) => {
+                    textureLoader.load(
+                        '/assets/textures/test.png',
+                        (texture) => {
+                            Logger.info('Color texture loaded successfully');
+                            texture.wrapS = THREE.RepeatWrapping;
+                            texture.wrapT = THREE.RepeatWrapping;
+                            texture.colorSpace = THREE.SRGBColorSpace;
+                            texture.needsUpdate = true;
+                            resolve(texture);
+                        },
                         undefined,
                         reject
                     );
                 })
             ]);
             
-            Logger.info('Textures loaded successfully');
+            Logger.info('All textures loaded successfully');
             
             // Create base geometry for a single blade using triangles
             const baseGeom = new THREE.PlaneGeometry(
@@ -75,11 +100,14 @@ export class GrassBlades {
             instancedGeometry.setAttribute('stretch', new THREE.InstancedBufferAttribute(new Float32Array(attributeData.stretches), 1));
             instancedGeometry.setAttribute('halfRootAngleSin', new THREE.InstancedBufferAttribute(new Float32Array(attributeData.halfRootAngleSin), 1));
             instancedGeometry.setAttribute('halfRootAngleCos', new THREE.InstancedBufferAttribute(new Float32Array(attributeData.halfRootAngleCos), 1));
+            // Add root position for color lookup
+            instancedGeometry.setAttribute('rootPosition', new THREE.InstancedBufferAttribute(new Float32Array(attributeData.offsets), 3));
             
             // Create material
             this.material = new GrassMaterial({
                 map: bladeDiffuse,
                 alphaMap: bladeAlpha,
+                colorMap: colorMap,
                 toneMapped: false
             });
             
