@@ -16,6 +16,9 @@ export const CONTRACT_CONFIG = {
     DEFAULT_CITY_ID: 1 // Default city ID for testing
 };
 
+// Performance monitoring
+export const SHOW_PERFORMANCE_MONITOR = true;
+
 export const BUILDING_TYPES = {
     HOUSE: {
         name: 'House',

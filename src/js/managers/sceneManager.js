@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Logger from '../utils/logger.js';
 import { GrassBlades } from '../objects/GrassBlades.js';
 import { River } from '../objects/River.js';
+import { SHOW_PERFORMANCE_MONITOR } from '../utils/constants.js';
 
 export class SceneManager {
     constructor(gridManager) {
@@ -16,6 +17,7 @@ export class SceneManager {
         this.sky = null;
         this.sun = null;
         this.grassBlades = null;
+        this.performanceMonitor = null;
         //this.river = null;
         this.lights = {
             sunLight: null,
@@ -24,6 +26,10 @@ export class SceneManager {
         };
         this.boundOnWindowResize = null;
         this.clock = new THREE.Clock();
+        this.frameCount = 0;
+        this.lastTime = performance.now();
+        this.fps = 0;
+        this.boundOnKeyDown = null;
     }
 
     /**
@@ -188,6 +194,70 @@ export class SceneManager {
         return camera;
     }
 
+    createPerformanceMonitor(renderDiv) {
+        const monitor = document.createElement('div');
+        monitor.style.position = 'absolute';
+        monitor.style.top = '10px';
+        monitor.style.right = '10px';
+        monitor.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        monitor.style.color = '#fff';
+        monitor.style.padding = '10px';
+        monitor.style.fontFamily = 'monospace';
+        monitor.style.fontSize = '12px';
+        monitor.style.borderRadius = '5px';
+        monitor.style.zIndex = '1000';
+        monitor.style.display = SHOW_PERFORMANCE_MONITOR ? 'block' : 'none';
+        renderDiv.appendChild(monitor);
+        return monitor;
+    }
+
+    setupKeyBindings() {
+        this.boundOnKeyDown = (event) => {
+            if (event.key === GameConfig.performance.monitor.toggleKey) {
+                this.togglePerformanceMonitor();
+            }
+        };
+        window.addEventListener('keydown', this.boundOnKeyDown);
+    }
+
+    togglePerformanceMonitor() {
+        if (this.performanceMonitor) {
+            const isVisible = this.performanceMonitor.style.display !== 'none';
+            this.performanceMonitor.style.display = isVisible ? 'none' : 'block';
+            GameConfig.performance.monitor.enabled = !isVisible;
+            Logger.info(`Performance monitor ${isVisible ? 'disabled' : 'enabled'}`);
+        }
+    }
+
+    updatePerformanceMonitor() {
+        if (!this.performanceMonitor) return;
+
+        this.frameCount++;
+        const currentTime = performance.now();
+        const elapsed = currentTime - this.lastTime;
+
+        if (elapsed >= 1000) {
+            this.fps = Math.round((this.frameCount * 1000) / elapsed);
+            this.frameCount = 0;
+            this.lastTime = currentTime;
+
+            // Get GPU info if available
+            const gl = this.renderer.getContext();
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : 'Not available';
+            
+            // Update monitor content
+            this.performanceMonitor.innerHTML = `
+                FPS: ${this.fps}<br>
+                GPU: ${renderer}<br>
+                Draw Calls: ${this.renderer.info.render.calls}<br>
+                Triangles: ${this.renderer.info.render.triangles}<br>
+                Points: ${this.renderer.info.render.points}<br>
+                Lines: ${this.renderer.info.render.lines}
+            `;
+        }
+    }
+
     /**
      * Sets up the renderer
      * @param {HTMLElement} renderDiv - The container element
@@ -203,6 +273,13 @@ export class SceneManager {
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.2;
         renderDiv.appendChild(renderer.domElement);
+
+        // Create performance monitor
+        this.performanceMonitor = this.createPerformanceMonitor(renderDiv);
+        
+        // Setup key bindings
+        this.setupKeyBindings();
+
         return renderer;
     }
 
@@ -353,12 +430,26 @@ export class SceneManager {
         if (this.grassBlades) {
             this.grassBlades.update(this.clock.getElapsedTime());
         }
+
+        if (SHOW_PERFORMANCE_MONITOR) {
+            this.updatePerformanceMonitor();
+        }
     }
 
     /**
      * Cleans up resources
      */
     dispose() {
+        // Remove key binding
+        if (this.boundOnKeyDown) {
+            window.removeEventListener('keydown', this.boundOnKeyDown);
+        }
+
+        // Remove performance monitor
+        if (this.performanceMonitor && this.performanceMonitor.parentNode) {
+            this.performanceMonitor.parentNode.removeChild(this.performanceMonitor);
+        }
+
         // Remove window resize listener
         if (this.boundOnWindowResize) {
             window.removeEventListener('resize', this.boundOnWindowResize);
