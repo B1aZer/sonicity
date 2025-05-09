@@ -7,7 +7,10 @@
     "test": "hardhat test",
     "deploy": "npx hardhat run scripts/deploy.js --network localhost && npx hardhat run scripts/approveCollection.js --network localhost && ../scripts/update-addresses.sh",
     "deploy:testnet": "npx hardhat run scripts/deploy.js --network testnet && npx hardhat run scripts/approveCollection.js --network testnet && ../scripts/update-addresses.sh",
-    "deploy:mainnet": "npx hardhat run scripts/deploy.js --network mainnet && npx hardhat run scripts/approveCollection.js --network mainnet && ../scripts/update-addresses.sh"
+    "deploy:mainnet": "npx hardhat run scripts/deploy.js --network mainnet && npx hardhat run scripts/approveCollection.js --network mainnet && ../scripts/update-addresses.sh",
+    "upgrade": "npx hardhat run scripts/upgrade.js --network localhost && ../scripts/update-addresses.sh",
+    "upgrade:testnet": "npx hardhat run scripts/upgrade.js --network testnet && ../scripts/update-addresses.sh",
+    "upgrade:mainnet": "npx hardhat run scripts/upgrade.js --network mainnet && ../scripts/update-addresses.sh"
   },
   "keywords": [],
   "author": "",

@@ -11,21 +11,21 @@ async function main() {
   console.log("Upgrading GameState...");
   const GameState = await ethers.getContractFactory("GameState");
   const gameStateProxy = await upgrades.upgradeProxy(addresses.gameStateProxy, GameState);
-  await gameStateProxy.deployed();
-  console.log("GameState upgraded to:", gameStateProxy.address);
+  await gameStateProxy.waitForDeployment();
+  console.log("GameState upgraded to:", await gameStateProxy.getAddress());
 
   // Upgrade Altar
   console.log("Upgrading Altar...");
   const Altar = await ethers.getContractFactory("Altar");
   const altarProxy = await upgrades.upgradeProxy(addresses.altarProxy, Altar);
-  await altarProxy.deployed();
-  console.log("Altar upgraded to:", altarProxy.address);
+  await altarProxy.waitForDeployment();
+  console.log("Altar upgraded to:", await altarProxy.getAddress());
 
   // Update addresses file
   const newAddresses = {
     ...addresses,
-    gameStateProxy: gameStateProxy.address,
-    altarProxy: altarProxy.address,
+    gameStateProxy: await gameStateProxy.getAddress(),
+    altarProxy: await altarProxy.getAddress(),
   };
 
   fs.writeFileSync(
