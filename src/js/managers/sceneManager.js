@@ -18,6 +18,7 @@ export class SceneManager {
         this.sun = null;
         this.grassBlades = null;
         this.performanceMonitor = null;
+        this.birdSound = null;
         //this.river = null;
         this.lights = {
             sunLight: null,
@@ -334,6 +335,59 @@ export class SceneManager {
         window.addEventListener('resize', this.boundOnWindowResize);
     }
 
+    setupAudio() {
+        // Create audio listener
+        const listener = new THREE.AudioListener();
+        this.camera.add(listener);
+
+        // Create bird sound
+        this.birdSound = new THREE.Audio(listener);
+
+        // Load bird sound
+        const audioLoader = new THREE.AudioLoader();
+        audioLoader.load(
+            'assets/sound/bird.wav',  // Updated path to include sound directory
+            (buffer) => {
+                try {
+                    this.birdSound.setBuffer(buffer);
+                    this.birdSound.setLoop(true);
+                    this.birdSound.setVolume(0.3); // Reduced volume
+                    this.birdSound.play();
+                    Logger.info('Bird sound loaded and playing');
+                } catch (error) {
+                    Logger.error('Error setting up bird sound:', error);
+                }
+            },
+            // Progress callback
+            (xhr) => {
+                Logger.info('Loading bird sound:', (xhr.loaded / xhr.total * 100) + '% loaded');
+            },
+            // Error callback
+            (error) => {
+                Logger.error('Error loading bird sound:', error);
+                // Try to load a fallback format if available
+                audioLoader.load(
+                    'assets/sound/bird.mp3',  // Try MP3 as fallback
+                    (buffer) => {
+                        try {
+                            this.birdSound.setBuffer(buffer);
+                            this.birdSound.setLoop(true);
+                            this.birdSound.setVolume(0.3);
+                            this.birdSound.play();
+                            Logger.info('Bird sound (MP3) loaded and playing');
+                        } catch (error) {
+                            Logger.error('Error setting up bird sound (MP3):', error);
+                        }
+                    },
+                    undefined,
+                    (error) => {
+                        Logger.error('Error loading bird sound (MP3):', error);
+                    }
+                );
+            }
+        );
+    }
+
     /**
      * Sets up the scene
      * @param {HTMLElement} renderDiv - The container element
@@ -393,6 +447,9 @@ export class SceneManager {
                 opacity: 0.7
             });
             */
+
+            // Setup audio
+            this.setupAudio();
             
             // Setup lighting
             this.setupLighting();
@@ -456,19 +513,17 @@ export class SceneManager {
             window.removeEventListener('resize', this.boundOnWindowResize);
         }
 
+        // Stop and dispose of bird sound
+        if (this.birdSound) {
+            this.birdSound.stop();
+            this.birdSound = null;
+        }
+
         // Dispose of grass blades
         if (this.grassBlades) {
             this.grassBlades.dispose();
             this.grassBlades = null;
         }
-
-        // Dispose of river
-        /*
-        if (this.river) {
-            this.river.dispose();
-            this.river = null;
-        }
-        */
 
         // Dispose of Three.js resources
         if (this.scene) {
@@ -495,6 +550,15 @@ export class SceneManager {
         if (this.renderer) {
             this.renderer.dispose();
         }
+
+        // Dispose of river
+        /*
+        if (this.river) {
+            this.river.dispose();
+            this.river = null;
+        }
+        */
+
 
         // Clear references
         this.scene = null;
