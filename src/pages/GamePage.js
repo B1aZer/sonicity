@@ -71,9 +71,6 @@ export class GamePage extends BasePage {
             // Initialize the game and wait for it to complete
             await this.game.init();
             
-            // Load assets and wait for them to be fully loaded
-            await this.game.assetLoader.loadAssets();
-            
             // Check if player is in a city
             if (!await AccessControl.checkCityAccess()) {
                 LoadingScreen.hide(renderDiv);
@@ -90,9 +87,9 @@ export class GamePage extends BasePage {
                 });
             }, 10000); // Update every 10 seconds
             
-            // Ensure scene is initialized before placing buildings
-            if (!this.game.scene) {
-                throw new Error('Scene not initialized');
+            // Ensure scene and assets are initialized before placing buildings
+            if (!this.game.scene || !this.game.assetLoader.isLoadingComplete) {
+                throw new Error('Scene or assets not initialized');
             }
             
             // Place the fixed buildings around the grid
