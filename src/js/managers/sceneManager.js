@@ -118,13 +118,15 @@ export class SceneManager {
 
             grassTexture.wrapS = THREE.RepeatWrapping;
             grassTexture.wrapT = THREE.RepeatWrapping;
-            grassTexture.repeat.set(25, 25);
+            grassTexture.repeat.set(15, 15);
+            grassTexture.colorSpace = THREE.SRGBColorSpace;
 
             const groundMaterial = new THREE.MeshStandardMaterial({ 
                 map: grassTexture,
                 side: THREE.DoubleSide,
-                roughness: 0.8,
-                metalness: 0.2
+                roughness: 0.9,
+                metalness: 0.1,
+                color: new THREE.Color(0x9ed99d).convertSRGBToLinear()
             });
 
             const groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -141,10 +143,10 @@ export class SceneManager {
             Logger.error('Error loading ground texture:', error);
             // Fallback to basic material if texture fails to load
             const groundMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x808080,
+                color: new THREE.Color(0x7dae8a).convertSRGBToLinear(),
                 side: THREE.DoubleSide,
-                roughness: 0.8,
-                metalness: 0.2
+                roughness: 0.9,
+                metalness: 0.1
             });
             const groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
             groundPlane.rotation.x = -Math.PI / 2;
