@@ -73,8 +73,8 @@ export class BuildingManager {
             // Mark cell as occupied
             this.gridManager.occupyCell(gridPos.x, gridPos.z, building);
             
-            // Update contract state
-            this.gameStateContract.addBuilding(type, gridPos.x, gridPos.z);
+            // No need to create building in contract - it's already created through dashboard
+            // Just place the visual representation
             
             Logger.info('Building placed:', {
                 type,
