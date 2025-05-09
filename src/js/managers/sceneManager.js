@@ -215,7 +215,7 @@ export class SceneManager {
 
     setupKeyBindings() {
         this.boundOnKeyDown = (event) => {
-            if (event.key === GameConfig.performance.monitor.toggleKey) {
+            if (event.key === 'p') { // Using 'p' key for performance monitor toggle
                 this.togglePerformanceMonitor();
             }
         };
@@ -226,7 +226,6 @@ export class SceneManager {
         if (this.performanceMonitor) {
             const isVisible = this.performanceMonitor.style.display !== 'none';
             this.performanceMonitor.style.display = isVisible ? 'none' : 'block';
-            GameConfig.performance.monitor.enabled = !isVisible;
             Logger.info(`Performance monitor ${isVisible ? 'disabled' : 'enabled'}`);
         }
     }
