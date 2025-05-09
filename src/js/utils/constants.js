@@ -19,7 +19,7 @@ export const CONTRACT_CONFIG = {
 export const BUILDING_TYPES = {
     HOUSE: {
         name: 'House',
-        size: new THREE.Vector3(2, 2, 2), // Size for visual representation
+        size: new THREE.Vector3(8, 8, 8), // Increased size to fill more of the cell
         color: 0xADD8E6, // Light Blue
         cost: 100,
         income: 10 // Generates $10 per cycle
