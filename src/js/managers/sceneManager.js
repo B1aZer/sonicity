@@ -299,7 +299,7 @@ export class SceneManager {
                 width: this.gridManager.getTotalSize(),
                 instances: 420000,
                 width: 200,
-                bladeWidth: 0.04,
+                bladeWidth: 0.08,
                 bladeHeight: 1.2,
             });
 
