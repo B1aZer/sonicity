@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Logger from '../utils/logger.js';
 import { GrassBlades } from '../objects/GrassBlades.js';
 import { River } from '../objects/River.js';
+import { Trees } from '../objects/Trees.js';
 import { SHOW_PERFORMANCE_MONITOR } from '../utils/constants.js';
 
 export class SceneManager {
@@ -19,6 +20,7 @@ export class SceneManager {
         this.grassBlades = null;
         this.performanceMonitor = null;
         this.birdSound = null;
+        this.trees = null;
         //this.river = null;
         this.lights = {
             sunLight: null,
@@ -435,6 +437,14 @@ export class SceneManager {
                 bladeHeight: 1.2,
             });
 
+            // Create trees
+            this.trees = new Trees(this.scene, {
+                count: 30,
+                minDistance: 10,
+                maxDistance: 70,
+                scale: 1.2
+            });
+
             // Create river
             /*
             this.river = new River(this.scene, {
@@ -447,15 +457,15 @@ export class SceneManager {
                 opacity: 0.7
             });
             */
-
-            // Setup audio
-            this.setupAudio();
             
             // Setup lighting
             this.setupLighting();
             
             // Setup window resize handler
             this.setupWindowResizeHandler();
+            
+            // Setup audio
+            this.setupAudio();
             
             Logger.info('Scene setup complete:', {
                 gridSize: this.gridManager.getGridSize(),
@@ -487,6 +497,10 @@ export class SceneManager {
         
         if (this.grassBlades) {
             this.grassBlades.update(this.clock.getElapsedTime());
+        }
+
+        if (this.trees) {
+            this.trees.update(this.clock.getElapsedTime());
         }
 
         if (SHOW_PERFORMANCE_MONITOR) {
@@ -525,6 +539,20 @@ export class SceneManager {
             this.grassBlades = null;
         }
 
+        // Dispose of trees
+        if (this.trees) {
+            this.trees.dispose();
+            this.trees = null;
+        }
+
+        // Dispose of river
+        /*
+        if (this.river) {
+            this.river.dispose();
+            this.river = null;
+        }
+        */
+
         // Dispose of Three.js resources
         if (this.scene) {
             this.scene.traverse((object) => {
@@ -550,15 +578,6 @@ export class SceneManager {
         if (this.renderer) {
             this.renderer.dispose();
         }
-
-        // Dispose of river
-        /*
-        if (this.river) {
-            this.river.dispose();
-            this.river = null;
-        }
-        */
-
 
         // Clear references
         this.scene = null;
