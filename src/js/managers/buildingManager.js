@@ -49,10 +49,10 @@ export class BuildingManager {
             const worldPos = this.gridManager.getWorldPosition(gridPos.x, gridPos.z);
             building.position.set(worldPos.x, 0, worldPos.z);
             
-            // Add random rotation for houses to make them look more natural
+            // Add subtle random rotation for houses to make them look more natural
             if (type === 'HOUSE') {
-                // Random rotation in 90-degree increments (0, 90, 180, or 270 degrees)
-                const rotation = Math.floor(Math.random() * 4) * (Math.PI / 2);
+                // Random rotation between -15 and +15 degrees
+                const rotation = (Math.random() * 30 - 15) * (Math.PI / 180);
                 building.rotation.y = rotation;
             }
             
