@@ -10,7 +10,6 @@ export class Navbar {
             <div class="nav-content">
                 <div class="nav-brand" id="logo">Sonicity</div>
                 <div class="nav-links">
-                    <a href="/" class="nav-link" data-page="dashboard">Dashboard</a>
                     <a href="/overview" class="nav-link" data-page="overview">Overview</a>
                     <a href="/mint" class="nav-link" data-page="mint">Mint</a>
                 </div>
