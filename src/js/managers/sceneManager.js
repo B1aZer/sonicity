@@ -440,8 +440,8 @@ export class SceneManager {
             // Create trees
             this.trees = new Trees(this.scene, {
                 count: 30,
-                minDistance: 10,
-                maxDistance: 70,
+                minDistance: 30,
+                maxDistance: 90,
                 scale: 1.2
             });
 
