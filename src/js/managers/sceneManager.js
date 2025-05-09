@@ -189,8 +189,8 @@ export class SceneManager {
         );
         
         // Position camera to look at City Hall
-        const height = 28; // Height for overview
-        const distance = 35; // Distance from center
+        const height = 20; // Height for overview
+        const distance = 40; // Distance from center
         camera.position.set(0, height, distance); // Position camera behind City Hall
         
         return camera;
