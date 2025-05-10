@@ -14,34 +14,38 @@ export class BuildingManager {
         this.fixedBuildings = new Map();
         this.updateTimer = 0;
         this.updateInterval = 0.5;
+        Logger.info('BuildingManager initialized', { initialMoney });
     }
 
     setScene(scene, cellSize, assetLoader) {
         this.scene = scene;
         this.cellSize = cellSize;
         this.assetLoader = assetLoader;
+        Logger.debug('BuildingManager scene set', { cellSize });
     }
 
     placeBuilding(type, position) {
         try {
+            Logger.debug('Attempting to place building', { type, position });
+            
             // Convert world position to grid position
             const gridPos = this.gridManager.getGridPosition(position.x, position.z);
             
             // Check if position is valid and not occupied
             if (!this.gridManager.isValidPosition(gridPos.x, gridPos.z)) {
-                Logger.warn('Invalid building position:', gridPos);
+                Logger.warn('Invalid building position:', { type, gridPos });
                 return null;
             }
             
             if (this.gridManager.isCellOccupied(gridPos.x, gridPos.z)) {
-                Logger.warn('Cell already occupied:', gridPos);
+                Logger.warn('Cell already occupied:', { type, gridPos });
                 return null;
             }
 
             // Create building mesh with full functionality
             const building = this.createBuildingMesh(type);
             if (!building) {
-                Logger.error('Failed to create building mesh for type:', type);
+                Logger.error('Failed to create building mesh', { type });
                 return null;
             }
 
@@ -51,9 +55,9 @@ export class BuildingManager {
             
             // Add subtle random rotation for houses to make them look more natural
             if (type === 'HOUSE') {
-                // Random rotation between -15 and +15 degrees
                 const rotation = (Math.random() * 30 - 15) * (Math.PI / 180);
                 building.rotation.y = rotation;
+                Logger.debug('Applied random rotation to house', { rotation: rotation * (180 / Math.PI) });
             }
             
             // Add to scene
@@ -80,28 +84,28 @@ export class BuildingManager {
             // Mark cell as occupied
             this.gridManager.occupyCell(gridPos.x, gridPos.z, building);
             
-            // No need to create building in contract - it's already created through dashboard
-            // Just place the visual representation
-            
-            Logger.info('Building placed:', {
+            Logger.info('Building placed successfully', {
                 type,
-                position: gridPos,
+                id: buildingObj.id,
+                gridPosition: gridPos,
                 worldPosition: worldPos
             });
             
             return buildingObj;
         } catch (error) {
-            Logger.error('Error placing building:', error);
+            Logger.error('Error placing building:', { type, position, error: error.message });
             return null;
         }
     }
 
     createBuildingMesh(type) {
         try {
+            Logger.debug('Creating building mesh', { type });
             const buildingData = BUILDING_TYPES[type];
             const model = this.assetLoader.getModel(type);
             
             if (model) {
+                Logger.debug('Using 3D model for building', { type });
                 const building = model.clone();
                 building.castShadow = true;
                 building.receiveShadow = true;
@@ -129,10 +133,12 @@ export class BuildingManager {
                     const pointLight = new THREE.PointLight(0xffffff, 0.7, 4);
                     pointLight.position.set(0, 1, 0);
                     building.add(pointLight);
+                    Logger.debug('Added point light to building', { type });
                 }
                 
                 return building;
             } else {
+                Logger.debug('Using fallback cube geometry for building', { type });
                 // Fallback to cube geometry
                 const geometry = new THREE.BoxGeometry(
                     buildingData.size.x,
@@ -155,17 +161,19 @@ export class BuildingManager {
                 return building;
             }
         } catch (error) {
-            Logger.error('Error creating building mesh:', error);
+            Logger.error('Error creating building mesh:', { type, error: error.message });
             return null;
         }
     }
 
     placeFixedBuilding(type, position, rotation) {
         try {
+            Logger.debug('Attempting to place fixed building', { type, position, rotation });
+            
             // Create building mesh
             const building = this.createBuildingMesh(type);
             if (!building) {
-                Logger.error('Failed to create building mesh for type:', type);
+                Logger.error('Failed to create fixed building mesh', { type });
                 return null;
             }
 
@@ -176,7 +184,7 @@ export class BuildingManager {
             // Add to scene
             this.scene.add(building);
             
-            Logger.info('Fixed building placed:', {
+            Logger.info('Fixed building placed successfully', {
                 type,
                 position,
                 rotation
@@ -184,13 +192,14 @@ export class BuildingManager {
             
             return building;
         } catch (error) {
-            Logger.error('Error placing fixed building:', error);
+            Logger.error('Error placing fixed building:', { type, position, rotation, error: error.message });
             return null;
         }
     }
 
     removeBuilding(position) {
         try {
+            Logger.debug('Attempting to remove building', { position });
             const gridPos = this.gridManager.getGridPosition(position.x, position.z);
             const buildingKey = `${gridPos.x},${gridPos.z}`;
             const building = this.buildings.get(buildingKey);
@@ -208,23 +217,26 @@ export class BuildingManager {
                 // Remove from buildings map
                 this.buildings.delete(buildingKey);
                 
-                Logger.info('Building removed:', {
+                Logger.info('Building removed successfully', {
                     type: building.type,
+                    id: building.id,
                     position: gridPos
                 });
                 
                 return true;
             }
             
+            Logger.warn('No building found at position', { position, gridPos });
             return false;
         } catch (error) {
-            Logger.error('Error removing building:', error);
+            Logger.error('Error removing building:', { position, error: error.message });
             return false;
         }
     }
 
     removeFixedBuilding(position) {
         try {
+            Logger.debug('Attempting to remove fixed building', { position });
             const buildingKey = `${position.x},${position.z}`;
             const building = this.fixedBuildings.get(buildingKey);
             
@@ -235,7 +247,7 @@ export class BuildingManager {
                 // Remove from buildings map
                 this.fixedBuildings.delete(buildingKey);
                 
-                Logger.info('Fixed building removed:', {
+                Logger.info('Fixed building removed successfully', {
                     type: building.type,
                     position: position.toArray()
                 });
@@ -243,23 +255,34 @@ export class BuildingManager {
                 return true;
             }
             
+            Logger.warn('No fixed building found at position', { position });
             return false;
         } catch (error) {
-            Logger.error('Error removing fixed building:', error);
+            Logger.error('Error removing fixed building:', { position, error: error.message });
             return false;
         }
     }
 
     getBuildingAt(position) {
         const gridPos = this.gridManager.getGridPosition(position.x, position.z);
-        return this.buildings.get(`${gridPos.x},${gridPos.z}`);
+        const building = this.buildings.get(`${gridPos.x},${gridPos.z}`);
+        Logger.debug('Getting building at position', { position, gridPos, found: !!building });
+        return building;
     }
 
     getAllBuildings() {
-        return Array.from(this.buildings.values());
+        const buildings = Array.from(this.buildings.values());
+        Logger.debug('Getting all buildings', { count: buildings.length });
+        return buildings;
     }
 
     updateBuildingVisuals(building) {
+        Logger.debug('Updating building visuals', { 
+            type: building.type,
+            id: building.id,
+            isFunctional: building.isFunctional
+        });
+        
         if (!building.isUsingModel && building.mesh.material) {
             const targetColor = building.isFunctional ? building.originalColor : building.noResourceColor;
             building.mesh.material.color.copy(targetColor);
@@ -297,6 +320,10 @@ export class BuildingManager {
         this.updateTimer += deltaTime;
         if (this.updateTimer >= this.updateInterval) {
             this.updateTimer = 0;
+            Logger.debug('BuildingManager update cycle completed', { 
+                buildingCount: this.buildings.size,
+                fixedBuildingCount: this.fixedBuildings.size
+            });
         }
     }
 }
