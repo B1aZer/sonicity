@@ -1,0 +1,54 @@
+.swal2-popup {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+}
+
+.swal2-title {
+    color: var(--text-primary);
+}
+
+.swal2-html-container {
+    color: var(--text-secondary);
+}
+
+.swal2-confirm {
+    background-color: var(--color-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+.swal2-confirm:hover {
+    background-color: var(--color-primary-dark) !important;
+}
+
+.swal2-cancel {
+    background-color: var(--bg-light) !important;
+    color: var(--text-primary) !important;
+}
+
+.swal2-cancel:hover {
+    background-color: var(--bg-lighter) !important;
+}
+
+.swal2-icon {
+    border-color: var(--color-primary) !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: var(--color-primary) !important;
+}
+
+.swal2-icon.swal2-error {
+    border-color: var(--color-danger) !important;
+}
+
+.swal2-icon.swal2-warning {
+    border-color: var(--color-warning) !important;
+}
+
+.swal2-icon.swal2-info {
+    border-color: var(--color-secondary) !important;
+}
+
+.swal2-icon.swal2-question {
+    border-color: var(--color-accent) !important;
+} 

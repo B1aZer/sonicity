@@ -1,12 +1,15 @@
 @import 'sweetalert2/dist/sweetalert2.min.css';
 @import './base.css';
+@import './layout.css';
+@import './game.css';
+@import './sweetalert.css';
 
-/* Reset and base styles */
+/* Essential base styles */
 body {
     margin: 0;
     padding: 0;
-    overflow-y: auto; /* Allow vertical scrolling by default */
-    background-color: #000;
+    overflow-y: auto;
+    background-color: var(--bg-dark);
     font-family: Arial, sans-serif;
 }
 
