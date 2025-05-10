@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Game } from './game.js';
-import { Navbar } from '../../components/Navbar.js';
+import { Layout } from '../../components/Layout.js';
 import { GamePage } from '../../pages/GamePage.js';
 import { DashboardPage } from '../../pages/DashboardPage.js';
 import { MapPage } from '../../pages/MapPage.js';
@@ -16,10 +16,11 @@ import '../../styles/dashboard-page.css';
 import '../../styles/map-page.css';
 import '../../styles/stake-page.css';
 import '../../styles/toastr.css';
+import '../../styles/layout.css';
 
 class App {
     constructor() {
-        this.navbar = new Navbar();
+        this.layout = new Layout();
         this.currentPage = null;
         this.game = null;
         this.container = document.getElementById('app');
@@ -28,8 +29,8 @@ class App {
     }
 
     async init() {
-        // Mount navbar
-        this.navbar.mount(this.container);
+        // Mount layout
+        this.layout.mount(this.container);
 
         // Handle initial route
         this.handleRoute();
@@ -71,27 +72,27 @@ class App {
         switch (page) {
             case '':
                 this.currentPage = new MapPage();
-                this.currentPage.mount(this.container);
+                this.currentPage.mount(this.layout.content);
                 break;
             case 'dashboard':
                 this.currentPage = new DashboardPage();
-                this.currentPage.mount(this.container);
+                this.currentPage.mount(this.layout.content);
                 break;
             case 'overview':
                 this.currentPage = new GamePage();
-                this.currentPage.mount(this.container);
+                this.currentPage.mount(this.layout.content);
                 break;
             case 'mint':
                 this.currentPage = new MintPage();
-                this.currentPage.mount(this.container);
+                this.currentPage.mount(this.layout.content);
                 break;
             case 'access':
                 this.currentPage = new AccessPage();
-                this.currentPage.mount(this.container);
+                this.currentPage.mount(this.layout.content);
                 break;
             case 'stake':
                 this.currentPage = new StakePage();
-                this.currentPage.mount(this.container);
+                this.currentPage.mount(this.layout.content);
                 break;
             default:
                 window.history.pushState({}, '', '/access');
