@@ -1,4 +1,5 @@
 @import 'sweetalert2/dist/sweetalert2.min.css';
+@import './base.css';
 
 /* Reset and base styles */
 body {
@@ -40,22 +41,22 @@ body {
     position: fixed;
     top: 80px;
     left: 10px;
-    padding: 10px;
+    padding: var(--spacing-sm);
     background-color: rgba(0, 0, 0, 0.5);
-    color: white;
+    color: var(--text-primary);
     font-size: 14px;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
     pointer-events: none;
     user-select: none;
     z-index: 1001;
 }
 
 #money-display {
-    margin-top: 5px;
+    margin-top: var(--spacing-xs);
 }
 
 #resource-display {
-    margin-top: 5px;
+    margin-top: var(--spacing-xs);
 }
 
 /* Navbar Styles */
@@ -65,13 +66,13 @@ body {
     left: 0;
     right: 0;
     background-color: rgba(0, 0, 0, 0.8);
-    padding: 1rem;
+    padding: var(--spacing-md);
     z-index: 1000;
     backdrop-filter: blur(5px);
 }
 
 .nav-content {
-    max-width: 1200px;
+    max-width: var(--container-max-width);
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -79,26 +80,26 @@ body {
 }
 
 .nav-brand {
-    color: #fff;
+    color: var(--text-primary);
     font-size: 1.5rem;
     font-weight: bold;
 }
 
 .nav-links {
     display: flex;
-    gap: 1rem;
+    gap: var(--spacing-md);
 }
 
 .nav-link {
-    color: #fff;
+    color: var(--text-primary);
     text-decoration: none;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    transition: background-color 0.3s;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-normal);
 }
 
 .nav-link:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-light);
 }
 
 /* Mint Page Styles */

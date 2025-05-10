@@ -1,8 +1,10 @@
+@import './base.css';
+
 .mint-page {
-    max-width: 1200px;
+    max-width: var(--container-max-width);
     margin: 0 auto;
-    padding: 1rem;
-    color: #fff;
+    padding: var(--spacing-md);
+    color: var(--text-primary);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -13,35 +15,36 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: var(--spacing-md);
     margin-top: 75px;
-    padding-top: 2rem;
+    padding-top: var(--spacing-xl);
 }
 
 .mint-container h1 {
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 var(--spacing-xs) 0;
     font-size: 1.5rem;
+    color: var(--text-primary);
 }
 
 .mint-container > p {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 var(--spacing-sm) 0;
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
 }
 
 .nft-preview {
-    margin: 0.5rem auto;
+    margin: var(--spacing-sm) auto;
     max-width: 350px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    background: var(--bg-light);
+    border-radius: var(--radius-lg);
     overflow: hidden;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--bg-lighter);
     min-height: 400px;
 }
 
 .preview-placeholder {
-    padding: 1rem;
+    padding: var(--spacing-md);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -52,12 +55,12 @@
     width: 100%;
     height: 300px;
     object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 0.25rem;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-xs);
 }
 
 .preview-placeholder p {
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
     font-size: 0.9rem;
     margin: 0;
 }
@@ -66,7 +69,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 1rem;
+    padding: var(--spacing-md);
     height: 100%;
 }
 
@@ -74,8 +77,8 @@
     width: 100%;
     height: 300px;
     object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
 }
 
 .nft-details {
@@ -84,23 +87,24 @@
 }
 
 .nft-details h3 {
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 var(--spacing-xs) 0;
     font-size: 1.1rem;
+    color: var(--text-primary);
 }
 
 .nft-details p {
-    color: rgba(255, 255, 255, 0.8);
-    margin: 0 0 0.5rem 0;
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-sm) 0;
     font-size: 0.85rem;
 }
 
 .success-message {
     background-color: rgba(76, 175, 80, 0.2);
-    border: 1px solid rgba(76, 175, 80, 0.5);
-    color: #4CAF50;
-    padding: 8px;
-    border-radius: 4px;
-    margin-top: 12px;
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    margin-top: var(--spacing-md);
     text-align: center;
     font-weight: bold;
     animation: pulse 2s infinite;
@@ -121,68 +125,68 @@
 .nft-attributes {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.25rem;
+    gap: var(--spacing-xs);
 }
 
 .attribute {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    background: var(--bg-light);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-sm);
 }
 
 .attribute .label {
     display: block;
     font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
 }
 
 .attribute .value {
     display: block;
     font-size: 0.8rem;
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 500;
 }
 
 .mint-info {
-    margin: 0.5rem 0;
+    margin: var(--spacing-sm) 0;
 }
 
 .mint-progress {
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-sm);
 }
 
 .progress-bar {
     width: 100%;
     height: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 2px;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
     overflow: hidden;
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--spacing-xs);
 }
 
 .progress-fill {
     height: 100%;
-    background: #4caf50;
-    transition: width 0.3s ease;
+    background: var(--color-primary);
+    transition: width var(--transition-normal);
 }
 
 .progress-text {
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
 }
 
 .mint-controls {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 0.5rem;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
 }
 
 .mint-amount {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: var(--spacing-xs);
 }
 
 .amount-button {
@@ -190,72 +194,74 @@
     height: 32px;
     border-radius: 16px;
     border: none;
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    background: var(--bg-light);
+    color: var(--text-primary);
     font-size: 1rem;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: background var(--transition-normal);
     padding: 0;
 }
 
 .amount-button:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--bg-lighter);
 }
 
 #mint-amount {
     width: 40px;
     height: 32px;
     border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
+    border: 1px solid var(--bg-lighter);
+    background: var(--bg-light);
+    color: var(--text-primary);
     text-align: center;
     font-size: 0.9rem;
 }
 
 .mint-price {
     font-size: 0.9rem;
-    color: #4caf50;
+    color: var(--color-accent);
 }
 
 .mint-actions {
     display: flex;
-    gap: 1rem;
+    gap: var(--spacing-md);
     justify-content: center;
-    margin: 2rem 0;
+    margin: var(--spacing-xl) 0;
 }
 
 .mint-button {
-    background-color: #4CAF50;
-    color: white;
+    background-color: var(--color-primary);
+    color: var(--text-primary);
     border: none;
-    padding: 1rem 2rem;
+    padding: var(--spacing-md) var(--spacing-xl);
     font-size: 1.2rem;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all var(--transition-normal);
     min-width: 180px;
 }
 
 .mint-button:hover {
-    background-color: #45a049;
+    background-color: var(--color-primary-dark);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+    box-shadow: var(--shadow-md);
 }
 
 .mint-button:disabled {
-    background: rgba(76, 175, 80, 0.5);
+    background: var(--text-muted);
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 .mint-status {
-    margin: 0.25rem 0;
+    margin: var(--spacing-xs) 0;
     font-size: 0.9rem;
     min-height: 1.25rem;
 }
 
 .mint-details {
-    margin-top: 1rem;
+    margin-top: var(--spacing-md);
     text-align: left;
     max-width: 800px;
     margin-left: auto;
@@ -263,13 +269,15 @@
 }
 
 .mint-details h2 {
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-sm);
     font-size: 1.1rem;
+    color: var(--text-primary);
 }
 
 .mint-details p {
     font-size: 0.85rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-secondary);
 }
 
 .mint-details ul {
@@ -279,65 +287,67 @@
 }
 
 .mint-details li {
-    margin: 0.15rem 0;
-    padding-left: 1rem;
+    margin: var(--spacing-xs) 0;
+    padding-left: var(--spacing-md);
     position: relative;
     font-size: 0.85rem;
+    color: var(--text-secondary);
 }
 
 .mint-details li:before {
     content: "•";
-    color: #4caf50;
+    color: var(--color-primary);
     position: absolute;
-    left: 0.25rem;
+    left: var(--spacing-xs);
 }
 
 .owned-nfts-container {
-    margin-top: 3rem;
-    padding: 2rem;
-    background: rgba(15, 15, 15, 0.9);
-    border-radius: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: var(--spacing-xxl);
+    padding: var(--spacing-xl);
+    background: var(--bg-dark);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--bg-lighter);
 }
 
 .owned-nfts-container h2 {
     font-size: 1.8rem;
-    margin: 0 0 1.5rem 0;
-    color: #4CAF50;
+    margin: 0 0 var(--spacing-lg) 0;
+    color: var(--color-primary);
     text-align: center;
 }
 
 .owned-nfts {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    max-width: 1200px;
+    gap: var(--spacing-xl);
+    max-width: var(--container-max-width);
     margin: 0 auto;
 }
 
 .loading, .no-nfts, .error {
     text-align: center;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-secondary);
     font-size: 1.1rem;
-    padding: 2rem;
+    padding: var(--spacing-xl);
 }
 
 .error {
-    color: #ff6b6b;
+    color: var(--color-danger);
 }
 
 .nft-card {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    background: var(--bg-light);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    transition: transform 0.3s ease;
+    transition: transform var(--transition-normal);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--bg-lighter);
 }
 
 .nft-card:hover {
     transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
 }
 
 .nft-image {
@@ -353,36 +363,36 @@
 }
 
 .nft-info {
-    padding: 1.5rem;
+    padding: var(--spacing-lg);
 }
 
 .nft-info h3 {
-    margin: 0 0 0.5rem 0;
-    color: #fff;
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--text-primary);
     font-size: 1.25rem;
 }
 
 .nft-attributes {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
 }
 
 .attribute {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 0.5rem;
-    border-radius: 6px;
+    background: var(--bg-light);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
 }
 
 .attribute .label {
     display: block;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
 }
 
 .attribute .value {
     display: block;
     font-size: 0.9rem;
-    color: #fff;
+    color: var(--text-primary);
     font-weight: 500;
 } 
