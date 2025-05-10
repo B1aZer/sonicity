@@ -3,7 +3,7 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { appState } from '../js/core/state.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
-import { BasePage } from '../js/core/BasePage.js';
+import { BasePage } from './BasePage.js';
 
 export class MapPage extends BasePage {
     constructor() {

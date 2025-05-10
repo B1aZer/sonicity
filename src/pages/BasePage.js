@@ -1,9 +1,9 @@
-import { WalletManager } from '../utils/wallet.js';
-import { GameStateContract } from '../contracts/GameStateContract.js';
-import { AltarContract } from '../contracts/AltarContract.js';
-import { NFTContract } from '../contracts/NFTContract.js';
-import { Modal } from '../utils/modal.js';
-import Logger from '../utils/logger.js';
+import { WalletManager } from '../js/utils/wallet.js';
+import { GameStateContract } from '../js/contracts/GameStateContract.js';
+import { AltarContract } from '../js/contracts/AltarContract.js';
+import { NFTContract } from '../js/contracts/NFTContract.js';
+import { Modal } from '../js/utils/modal.js';
+import Logger from '../js/utils/logger.js';
 
 export class BasePage {
     constructor() {

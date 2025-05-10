@@ -5,7 +5,7 @@ import { checkExistingConnection, connectWallet, formatAddress } from '../js/uti
 import { Toast } from '../js/utils/toast.js';
 import Logger from '../js/utils/logger.js';
 import { NFTCard } from '../components/NFTCard.js';
-import { BasePage } from '../js/core/BasePage.js';
+import { BasePage } from './BasePage.js';
 import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
 import GameStateABI from '../../contracts/artifacts/contracts/GameState.sol/GameState.json';
 import AltarABI from '../../contracts/artifacts/contracts/Altar.sol/Altar.json';

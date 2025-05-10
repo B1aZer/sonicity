@@ -6,7 +6,7 @@ import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { AccessControl } from '../js/utils/accessControl.js';
-import { BasePage } from '../js/core/BasePage.js';
+import { BasePage } from './BasePage.js';
 
 export class GamePage extends BasePage {
     constructor() {

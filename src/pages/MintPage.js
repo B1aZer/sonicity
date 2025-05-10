@@ -1,4 +1,4 @@
-import { BasePage } from '../js/core/BasePage.js';
+import { BasePage } from './BasePage.js';
 import { NFTCollection } from '../components/NFTCollection.js';
 import { NFTCard } from '../components/NFTCard.js';
 import { CONTRACT_CONFIG } from '../js/utils/constants.js';

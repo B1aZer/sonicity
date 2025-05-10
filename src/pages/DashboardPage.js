@@ -4,7 +4,7 @@ import Logger from '../js/utils/logger.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { ethers } from 'ethers';
 import { Modal } from '../js/utils/modal.js';
-import { BasePage } from '../js/core/BasePage.js';
+import { BasePage } from './BasePage.js';
 
 export class DashboardPage extends BasePage {
     constructor() {
