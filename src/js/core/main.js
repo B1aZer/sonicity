@@ -80,17 +80,6 @@ class App {
             case 'overview':
                 this.currentPage = new GamePage();
                 this.currentPage.mount(this.container);
-                
-                // Initialize game if it doesn't exist
-                if (!this.game) {
-                    const renderDiv = document.getElementById('renderDiv');
-                    if (renderDiv) {
-                        this.game = new Game(renderDiv);
-                        await this.game.init();
-                    } else {
-                        console.error('Render div not found');
-                    }
-                }
                 break;
             case 'mint':
                 this.currentPage = new MintPage();
