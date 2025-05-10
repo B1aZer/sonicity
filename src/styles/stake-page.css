@@ -93,6 +93,46 @@
     padding: var(--spacing-xl);
 }
 
+/* Stake Status Styles */
+.stake-status {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.stake-status .loading,
+.stake-status .success,
+.stake-status .error {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.stake-status .step {
+    font-weight: bold;
+    color: #2196F3;
+}
+
+.stake-status .description {
+    color: #ccc;
+    font-size: 0.9rem;
+}
+
+.stake-status .title {
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.stake-status .success .title {
+    color: #4CAF50;
+}
+
+.stake-status .error .title {
+    color: #F44336;
+}
+
 @media (max-width: 900px) {
     .nft-grid {
         grid-template-columns: repeat(2, 1fr);
