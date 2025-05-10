@@ -1,4 +1,5 @@
 import { Navbar } from './Navbar.js';
+import '../styles/layout.css';
 
 export class Layout {
     constructor() {

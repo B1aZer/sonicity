@@ -11,12 +11,6 @@ import { appState } from './state.js';
 import { AccessControl } from '../utils/accessControl.js';
 import { Modal } from '../utils/modal.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
-import '../../styles/access-page.css';
-import '../../styles/dashboard-page.css';
-import '../../styles/map-page.css';
-import '../../styles/stake-page.css';
-import '../../styles/toastr.css';
-import '../../styles/layout.css';
 
 class App {
     constructor() {
