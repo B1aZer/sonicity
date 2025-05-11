@@ -21,15 +21,16 @@
 }
 
 .page-container h1 {
-    font-size: 2.5rem;
     margin-bottom: var(--spacing-lg);
     color: var(--text-primary);
     text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
     text-align: center;
+    font-size: var(--font-size-2xl);
+    color: var(--text-primary);
 }
 
 .page-container p {
-    font-size: 1.2rem;
+    font-size: var(--font-size-md);
     color: var(--text-secondary);
     margin: 0;
 }
@@ -43,9 +44,15 @@
 }
 
 .page-section h2 {
-    font-size: 1.8rem;
+    font-size: var(--font-size-lg);
     margin-bottom: var(--spacing-md);
     color: var(--color-primary);
     border-bottom: 1px solid var(--bg-lighter);
     padding-bottom: var(--spacing-xs);
+}
+
+.page-description {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
 }

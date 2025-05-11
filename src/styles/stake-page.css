@@ -27,16 +27,6 @@
     color: var(--text-primary);
 }
 
-.page-description {
-    margin: 0 0 var(--spacing-sm) 0;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-}
-
-.page-section {
-    width: 100%;
-    margin-bottom: var(--spacing-xl);
-}
 
 .wallet-section {
     display: flex;
