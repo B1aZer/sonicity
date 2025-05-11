@@ -2,6 +2,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    min-height: 100vh;
+    padding: var(--spacing-xl);
+    background-color: var(--bg-dark);
+    background-image: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+    color: var(--text-primary);
 }
 
 .mint-container {
@@ -25,8 +30,13 @@
     color: var(--text-secondary);
 }
 
+/* Preview Section */
+.preview-section {
+    text-align: center;
+}
+
 .nft-preview {
-    margin: var(--spacing-sm) auto;
+    margin: var(--spacing-md) auto;
     max-width: 350px;
     background: var(--bg-light);
     border-radius: var(--radius-lg);
@@ -34,7 +44,7 @@
     backdrop-filter: blur(10px);
     border: 1px solid var(--bg-lighter);
     min-height: 400px;
-    box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+    box-shadow: var(--shadow-lg);
 }
 
 .preview-placeholder {
@@ -141,22 +151,41 @@
     font-weight: 500;
 }
 
+/* Mint Info Section */
 .mint-info {
-    margin: var(--spacing-sm) auto;
-    background-color: rgba(0, 0, 0, 0.2);
-    padding: var(--spacing-xxl);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-md);
 }
 
-.mint-progress {
+.info-card {
+    background: var(--bg-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--bg-lighter);
+    transition: transform var(--transition-normal);
+}
+
+.info-card:hover {
+    transform: translateY(-5px);
+}
+
+.info-card h3 {
+    color: var(--color-primary);
     margin-bottom: var(--spacing-sm);
+    font-size: var(--font-size-lg);
+}
+
+/* Progress Bar */
+.mint-progress {
+    margin-top: var(--spacing-md);
 }
 
 .progress-bar {
     width: 100%;
-    height: 4px;
-    background: var(--bg-light);
+    height: 8px;
+    background: var(--bg-lighter);
     border-radius: var(--radius-sm);
     overflow: hidden;
     margin-bottom: var(--spacing-xs);
@@ -169,167 +198,189 @@
 }
 
 .progress-text {
-    font-size: 0.8rem;
+    font-size: var(--font-size-sm);
     color: var(--text-secondary);
+    text-align: right;
 }
 
+/* Mint Controls */
 .mint-controls {
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-sm);
+    margin-top: var(--spacing-md);
 }
 
 .mint-amount {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    justify-content: center;
+    gap: var(--spacing-sm);
+    background: var(--bg-lighter);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
 }
 
 .amount-button {
-    width: 32px;
-    height: 32px;
-    border-radius: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
     border: none;
     background: var(--bg-light);
     color: var(--text-primary);
-    font-size: 1rem;
+    font-size: var(--font-size-lg);
     cursor: pointer;
-    transition: background var(--transition-normal);
-    padding: 0;
+    transition: all var(--transition-normal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .amount-button:hover {
-    background: var(--bg-lighter);
+    background: var(--color-primary);
+    transform: translateY(-2px);
 }
 
 #mint-amount {
-    width: 40px;
-    height: 32px;
-    border-radius: 16px;
+    width: 60px;
+    height: 36px;
+    border-radius: var(--radius-sm);
     border: 1px solid var(--bg-lighter);
     background: var(--bg-light);
     color: var(--text-primary);
     text-align: center;
-    font-size: 0.9rem;
+    font-size: var(--font-size-md);
 }
 
 .mint-price {
-    font-size: 0.9rem;
+    text-align: center;
+    font-size: var(--font-size-md);
     color: var(--color-accent);
+    font-weight: 500;
 }
 
+/* Actions Section */
 .mint-actions {
     display: flex;
     gap: var(--spacing-md);
     justify-content: center;
-    margin: var(--spacing-sm) 0;
+    margin-top: var(--spacing-md);
 }
 
+.connect-button,
 .mint-button {
-    background-color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: var(--font-size-lg);
     color: var(--text-primary);
     border: none;
-    padding: var(--spacing-md) var(--spacing-xl);
-    font-size: 1.2rem;
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: all var(--transition-normal);
-    min-width: 180px;
+    min-width: 200px;
 }
 
-.mint-button:hover {
-    background-color: var(--color-primary-dark);
+.connect-button {
+    background: var(--color-secondary);
+}
+
+.connect-button:hover {
+    background: var(--color-secondary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.mint-button {
+    background: var(--color-primary);
+}
+
+.mint-button:hover:not(:disabled) {
+    background: var(--color-primary-dark);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
 .mint-button:disabled {
-    background: var(--text-muted);
+    background: var(--bg-lighter);
+    color: var(--text-muted);
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
 }
 
+.button-text {
+    font-weight: 500;
+    text-align: center;
+    flex: 1;
+}
+
 .mint-status {
-    margin: var(--spacing-xs) 0;
-    font-size: 0.9rem;
-    min-height: 1.25rem;
+    margin: var(--spacing-md) 0;
+    text-align: center;
+    min-height: 24px;
+    font-size: var(--font-size-sm);
 }
 
-.mint-details {
-    margin-top: var(--spacing-md);
-    text-align: left;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.mint-details h2 {
-    margin-bottom: var(--spacing-sm);
-    font-size: 1.1rem;
-    color: var(--text-primary);
-}
-
-.mint-details p {
-    font-size: 0.85rem;
-    margin-bottom: var(--spacing-sm);
-    color: var(--text-secondary);
-}
-
-.mint-details ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-}
-
-.mint-details li {
-    margin: var(--spacing-xs) 0;
-    padding-left: var(--spacing-md);
-    position: relative;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-
-.mint-details li:before {
-    content: "•";
-    color: var(--color-primary);
-    position: absolute;
-    left: var(--spacing-xs);
-}
-
+/* Owned NFTs Section */
 .owned-nfts-container {
     margin-top: var(--spacing-xxl);
-    padding: var(--spacing-xl);
-    background: var(--bg-dark);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--bg-lighter);
 }
 
 .owned-nfts-container h2 {
-    font-size: 1.8rem;
-    margin: 0 0 var(--spacing-lg) 0;
-    color: var(--color-primary);
     text-align: center;
+    margin-bottom: var(--spacing-xl);
+    color: var(--color-primary);
 }
 
 .owned-nfts {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: var(--spacing-xl);
-    max-width: var(--container-max-width);
+    width: 100%;
     margin: 0 auto;
+    justify-content: center;
 }
 
-.loading, .no-nfts, .error {
+.no-nfts {
     text-align: center;
     color: var(--text-secondary);
-    font-size: 1.1rem;
+    font-size: var(--font-size-md);
     padding: var(--spacing-xl);
+    background: var(--bg-light);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--bg-lighter);
 }
 
-.error {
-    color: var(--color-danger);
+/* Responsive adjustments */
+@media (min-width: 1024px) {
+    .mint-info {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) and (min-height: 800px) {
+    .mint-info {
+        grid-template-columns: repeat(2, minmax(400px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .mint-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .mint-actions {
+        flex-direction: column;
+    }
+    
+    .connect-button,
+    .mint-button {
+        width: 100%;
+    }
+    
+    .owned-nfts {
+        grid-template-columns: 1fr;
+    }
 } 

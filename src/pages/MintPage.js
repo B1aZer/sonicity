@@ -137,45 +137,67 @@ export class MintPage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="page-container mint-container">
+            <div class="page-container">
                 <h1>Mint Your Sonicity NFT</h1>
                 
-                <div class="nft-preview">
-                    ${this.getPlaceholderHTML()}
+                <!-- Preview Section -->
+                <div class="page-section preview-section">
+                    <h2>NFT Preview</h2>
+                    <div class="nft-preview">
+                        ${this.getPlaceholderHTML()}
+                    </div>
                 </div>
                 
-                <div class="mint-info">
-                    <div class="mint-progress">
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
-                        </div>
-                        <div class="progress-text">
-                            <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span> minted
-                        </div>
-                    </div>
-                    
-                    <div class="mint-controls">
-                        <div class="mint-amount">
-                            <button id="decrease-amount" class="amount-button">-</button>
-                            <input type="number" id="mint-amount" value="1" min="1" max="10">
-                            <button id="increase-amount" class="amount-button">+</button>
+                <!-- Mint Info Section -->
+                <div class="page-section mint-info-section">
+                    <h2>Mint Information</h2>
+                    <div class="mint-info">
+                        <div class="info-card">
+                            <h3>Collection Progress</h3>
+                            <div class="mint-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span> minted
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="mint-price">
-                            <span>Price: <span id="total-price">${this.mintPrice}</span> ETH</span>
+                        <div class="info-card">
+                            <h3>Mint Controls</h3>
+                            <div class="mint-controls">
+                                <div class="mint-amount">
+                                    <button id="decrease-amount" class="amount-button">-</button>
+                                    <input type="number" id="mint-amount" value="1" min="1" max="10">
+                                    <button id="increase-amount" class="amount-button">+</button>
+                                </div>
+                                
+                                <div class="mint-price">
+                                    <span>Price: <span id="total-price">${this.mintPrice}</span> ETH</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="mint-actions">
-                    <button id="connect-wallet" class="connect-button">Connect Wallet</button>
-                    <button id="mint-button" class="mint-button" disabled>Mint NFT</button>
+                <!-- Actions Section -->
+                <div class="page-section actions-section">
+                    <h2>Actions</h2>
+                    <div class="mint-actions">
+                        <button id="connect-wallet" class="connect-button">
+                            <span class="button-text">Connect Wallet</span>
+                        </button>
+                        <button id="mint-button" class="mint-button" disabled>
+                            <span class="button-text">Mint NFT</span>
+                        </button>
+                    </div>
+                    <div id="mint-status" class="mint-status"></div>
                 </div>
-                
-                <div id="mint-status" class="mint-status"></div>
             </div>
 
-            <div class="owned-nfts-container">
+            <!-- Owned NFTs Section -->
+            <div class="page-container owned-nfts-container">
                 <h2>Your NFTs</h2>
                 <div id="owned-nfts" class="owned-nfts"></div>
             </div>
