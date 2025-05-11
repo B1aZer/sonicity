@@ -11,7 +11,7 @@
     color: var(--text-primary);
 }
 
-.page-container {
+.stake-page .page-container {
     max-width: var(--container-max-width);
     width: 100%;
     text-align: center;
@@ -20,13 +20,6 @@
     flex-direction: column;
     gap: var(--spacing-md);
 }
-
-.page-container h1 {
-    margin: 0 0 var(--spacing-xs) 0;
-    font-size: 1.5rem;
-    color: var(--text-primary);
-}
-
 
 .wallet-section {
     display: flex;
