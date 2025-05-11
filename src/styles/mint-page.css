@@ -34,6 +34,7 @@
     backdrop-filter: blur(10px);
     border: 1px solid var(--bg-lighter);
     min-height: 400px;
+    box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
 }
 
 .preview-placeholder {
@@ -142,6 +143,10 @@
 
 .mint-info {
     margin: var(--spacing-sm) auto;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: var(--spacing-xxl);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .mint-progress {
@@ -219,7 +224,7 @@
     display: flex;
     gap: var(--spacing-md);
     justify-content: center;
-    margin: var(--spacing-xl) 0;
+    margin: var(--spacing-sm) 0;
 }
 
 .mint-button {
