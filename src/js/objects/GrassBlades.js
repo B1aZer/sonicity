@@ -237,11 +237,13 @@ export class GrassBlades {
     
     update(time) {
         if (this.material) {
-            this.material.uniforms.time.value = time;
+            // Normalize time to prevent large jumps
+            const normalizedTime = time % 1000; // Keep time within a reasonable range
+            this.material.uniforms.time.value = normalizedTime;
             
             // Update wind direction with more subtle variation
-            const angle = Math.sin(time * 0.1) * Math.PI * 0.25; // Reduced from 0.2 and 0.5
-            const strength = 0.6 + Math.sin(time * 0.05) * 0.1; // Reduced from 0.8/0.2 and 0.1
+            const angle = Math.sin(normalizedTime * 0.1) * Math.PI * 0.25;
+            const strength = 0.6 + Math.sin(normalizedTime * 0.05) * 0.1;
             
             this.material.uniforms.windDirection.value.set(
                 Math.cos(angle) * strength,
@@ -249,8 +251,8 @@ export class GrassBlades {
             );
             
             // Update wind strength and speed with more subtle variation
-            this.material.uniforms.windStrength.value = 0.2 + Math.sin(time * 0.05) * 0.05; // Reduced from 0.5 and 0.1
-            this.material.uniforms.windSpeed.value = 0.5 + Math.sin(time * 0.1) * 0.1; // Reduced from 1.0 and 0.2
+            this.material.uniforms.windStrength.value = 0.2 + Math.sin(normalizedTime * 0.05) * 0.05;
+            this.material.uniforms.windSpeed.value = 0.5 + Math.sin(normalizedTime * 0.1) * 0.1;
         }
     }
     
