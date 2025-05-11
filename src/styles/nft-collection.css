@@ -68,7 +68,7 @@
 .nft-info p {
     margin: 0 0 1.5rem 0;
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.9rem;
+    font-size: var(--font-size-sm);
     line-height: 1.6;
 }
 
@@ -94,7 +94,7 @@
 
 .attribute .value {
     display: block;
-    font-size: 1.1rem;
+    font-size: var(--font-size-sm);
     color: #fff;
     font-weight: 500;
 }
