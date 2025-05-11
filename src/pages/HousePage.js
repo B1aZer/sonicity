@@ -132,19 +132,68 @@ export class HousePage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="house-page-content">
+            <div class="page-container">
                 <h1>House Management</h1>
-                <div class="house-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">Total Houses:</span>
-                        <span class="house-count">0</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Claimable Gold:</span>
-                        <span class="claimable-gold">0</span>
+                
+                <!-- Status Section -->
+                <div class="page-section status-section">
+                    <h2>House Statistics</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Total Houses:</span>
+                            <span class="status-value house-count">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Claimable Gold:</span>
+                            <span class="status-value claimable-gold">0</span>
+                        </div>
                     </div>
                 </div>
-                <button class="claim-button" disabled>Claim Gold</button>
+
+                <!-- House Details Section -->
+                <div class="page-section house-details-section">
+                    <h2>House Details</h2>
+                    <div class="house-info">
+                        <div class="info-card">
+                            <h3>Production Rate</h3>
+                            <p>10 gold per hour per house</p>
+                            <div class="info-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Base Rate:</span>
+                                    <span class="detail-value">10 gold/hour</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Level Bonus:</span>
+                                    <span class="detail-value">Multiplies base rate</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="info-card">
+                            <h3>Collection Rules</h3>
+                            <p>Collect gold from your houses</p>
+                            <div class="info-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Max Collection:</span>
+                                    <span class="detail-value">24 hours</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label">Collection Cooldown:</span>
+                                    <span class="detail-value">None</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions Section -->
+                <div class="page-section actions-section">
+                    <h2>Actions</h2>
+                    <div class="actions-container">
+                        <button class="claim-button" disabled>
+                            <span class="button-text">Claim Gold</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         `;
     }
