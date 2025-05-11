@@ -144,14 +144,14 @@ export class MintPage extends BasePage {
 
     showStatus(message, type = 'info') {
         // Remove any existing status
-        const existingStatus = this.element.querySelector('.mint-status');
+        const existingStatus = this.element.querySelector('.status-component');
         if (existingStatus) {
             existingStatus.remove();
         }
 
         // Create new status element
         const statusDiv = document.createElement('div');
-        statusDiv.className = `mint-status ${type}`;
+        statusDiv.className = `status-component ${type}`;
         statusDiv.innerHTML = message;
 
         // Insert after mint actions
