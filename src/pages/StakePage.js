@@ -66,55 +66,63 @@ export class StakePage extends BasePage {
         }
     }
 
-    showStatus(message, type = 'info') {
-        // Remove any existing status
-        const existingStatus = this.container.querySelector('.stake-status');
-        if (existingStatus) {
-            existingStatus.remove();
+    showStatus(type, message, title = '') {
+        const statusElement = document.querySelector('.status-component');
+        if (statusElement) {
+            statusElement.remove();
         }
 
-        // Create new status element
-        const statusDiv = document.createElement('div');
-        statusDiv.className = `stake-status ${type}`;
-        statusDiv.innerHTML = message;
+        const status = document.createElement('div');
+        status.className = `status-component ${type}`;
 
-        // Insert after wallet section
+        if (type === 'loading') {
+            status.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div>
+                    <div class="step">${message}</div>
+                    <div class="description">Please wait while we process your request...</div>
+                </div>
+            `;
+        } else if (type === 'success') {
+            status.innerHTML = `
+                <div>
+                    <div class="title">${title || 'Success!'}</div>
+                    <div class="description">${message}</div>
+                </div>
+            `;
+        } else if (type === 'error') {
+            status.innerHTML = `
+                <div>
+                    <div class="title">${title || 'Error'}</div>
+                    <div class="description">${message}</div>
+                </div>
+            `;
+        }
+
         const walletSection = this.container.querySelector('.wallet-section');
-        walletSection.after(statusDiv);
+        walletSection.after(status);
+
+        if (type === 'success' || type === 'error') {
+            setTimeout(() => {
+                status.remove();
+            }, 5000);
+        }
     }
 
     async handleConnectWallet() {
         try {
-            this.showStatus(`
-                <div class="loading">
-                    <div class="step">Connecting...</div>
-                </div>
-            `, 'loading');
+            this.showStatus('loading', 'Connecting...');
             
             const result = await connectWallet();
             if (result.success) {
                 await this.initializeWallet(result.address);
-                this.showStatus(`
-                    <div class="success">
-                        <div class="title">Connected!</div>
-                    </div>
-                `, 'success');
+                this.showStatus('success', 'Connected!', 'Connected!');
             } else {
-                this.showStatus(`
-                    <div class="error">
-                        <div class="title">Connection Failed</div>
-                        <div class="description">${result.error || "MetaMask not detected! Please install MetaMask."}</div>
-                    </div>
-                `, 'error');
+                this.showStatus('error', result.error || "MetaMask not detected! Please install MetaMask.", 'Connection Failed');
             }
         } catch (error) {
             console.error("Connection error:", error);
-            this.showStatus(`
-                <div class="error">
-                    <div class="title">Connection Error</div>
-                    <div class="description">${error.message || "Unknown error"}</div>
-                </div>
-            `, 'error');
+            this.showStatus('error', error.message || "Unknown error", 'Connection Error');
         }
     }
 
@@ -278,23 +286,13 @@ export class StakePage extends BasePage {
                 }
                 
                 // Step 1: Approve NFT transfer
-                this.showStatus(`
-                    <div class="loading">
-                        <div class="step">Step 1/2: Approving NFT transfer...</div>
-                        <div class="description">This allows the Altar contract to receive your NFT</div>
-                    </div>
-                `, 'loading');
+                this.showStatus('loading', 'Step 1/2: Approving NFT transfer...', 'Approving NFT transfer');
                 Logger.info('Approving NFT transfer...');
                 const approveReceipt = await this.contracts.nft.approve(altarAddress, tokenId);
                 Logger.info('Approval transaction confirmed:', approveReceipt.hash);
                 
                 // Step 2: Stake NFT
-                this.showStatus(`
-                    <div class="loading">
-                        <div class="step">Step 2/2: Staking NFT...</div>
-                        <div class="description">Your NFT is being staked in the Altar contract</div>
-                    </div>
-                `, 'loading');
+                this.showStatus('loading', 'Step 2/2: Staking NFT...', 'Staking NFT');
                 
                 // Get NFT metadata to check building slots
                 const metadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
@@ -308,12 +306,7 @@ export class StakePage extends BasePage {
                 Logger.info('Stake transaction confirmed:', stakeReceipt.hash);
                 
                 // Success message
-                this.showStatus(`
-                    <div class="success">
-                        <div class="title">NFT Staked Successfully!</div>
-                        <div class="description">Your NFT is now staked and you've received building slots</div>
-                    </div>
-                `, 'success');
+                this.showStatus('success', 'Your NFT is now staked and you\'ve received building slots', 'NFT Staked Successfully!');
                 
                 // Reload the user's NFTs to update the list
                 await this.loadUserNFTs();
@@ -323,12 +316,7 @@ export class StakePage extends BasePage {
             }
         } catch (error) {
             Logger.error('Error in stakeNFT:', error);
-            this.showStatus(`
-                <div class="error">
-                    <div class="title">Error Staking NFT</div>
-                    <div class="description">${error.message || "Unknown error"}</div>
-                </div>
-            `, 'error');
+            this.showStatus('error', error.message || "Unknown error", 'Error Staking NFT');
         }
     }
 
