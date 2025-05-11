@@ -55,6 +55,10 @@ export class HousePage extends BasePage {
             const totalHouses = await this.contracts.gameState.getBuildingsByType(address, 'house');
             Logger.info('Total houses from contract:', totalHouses);
 
+            // Get the current production rate from contract
+            const productionRate = await this.contracts.gameState.getBuildingProductionRate('house');
+            Logger.info('Current house production rate:', productionRate.toString());
+
             // Update UI with house count
             const houseCountElement = this.element.querySelector('.house-count');
             if (houseCountElement) {
@@ -64,53 +68,18 @@ export class HousePage extends BasePage {
                 Logger.warn('House count element not found in DOM');
             }
 
-            // Calculate total claimable gold
-            let totalClaimableGold = BigInt(0);
-            const currentTime = BigInt(Math.floor(Date.now() / 1000)); // Current time in seconds
-            Logger.info('Current time for gold calculation:', currentTime.toString());
-
-            for (const houseId of houseIds) {
-                Logger.info('Processing house ID:', houseId);
-                const building = await this.contracts.gameState.getBuilding(houseId);
-                Logger.info('Building data:', building);
-                
-                if (building.active) {
-                    const timePassed = currentTime - BigInt(building.lastCollectionTime);
-                    const totalTimeSinceCreation = currentTime - BigInt(building.lastUpgradeTime);
-                    Logger.info('Time calculations for house', houseId, {
-                        timePassed: timePassed.toString(),
-                        totalTimeSinceCreation: totalTimeSinceCreation.toString(),
-                        lastCollectionTime: building.lastCollectionTime.toString(),
-                        lastUpgradeTime: building.lastUpgradeTime.toString()
-                    });
-                    
-                    // Calculate claimable gold for this house
-                    let claimableTime = timePassed;
-                    if (totalTimeSinceCreation > BigInt(24 * 3600)) { // 24 hours in seconds
-                        if (BigInt(building.lastCollectionTime) >= BigInt(building.lastUpgradeTime) + BigInt(24 * 3600)) {
-                            Logger.info('House', houseId, 'has already collected all possible gold');
-                            continue; // Skip if already collected all possible gold
-                        }
-                        claimableTime = (BigInt(building.lastUpgradeTime) + BigInt(24 * 3600)) - BigInt(building.lastCollectionTime);
-                    }
-                    
-                    const productionRate = BigInt(10); // 10 gold per hour for houses
-                    const level = BigInt(building.level);
-                    const claimableGold = (productionRate * claimableTime * level) / BigInt(3600);
-                    Logger.info('Gold calculation for house', houseId, {
-                        claimableTime: claimableTime.toString(),
-                        productionRate: productionRate.toString(),
-                        level: level.toString(),
-                        claimableGold: claimableGold.toString()
-                    });
-                    
-                    totalClaimableGold += claimableGold;
-                } else {
-                    Logger.info('House', houseId, 'is not active');
-                }
+            // Update UI with production rate
+            const productionRateElements = this.element.querySelectorAll('.detail-value');
+            if (productionRateElements && productionRateElements.length > 0) {
+                productionRateElements[0].textContent = `${productionRate.toString()} gold/hour`;
+                Logger.info('Updated UI with production rate:', productionRate.toString());
+            } else {
+                Logger.warn('Production rate element not found in DOM');
             }
 
-            Logger.info('Total claimable gold:', totalClaimableGold.toString());
+            // Get total claimable gold directly from contract
+            const totalClaimableGold = await this.contracts.gameState.calculateTotalClaimableGold();
+            Logger.info('Total claimable gold from contract:', totalClaimableGold.toString());
 
             // Update UI with claimable gold
             const claimableGoldElement = this.element.querySelector('.claimable-gold');
@@ -202,11 +171,11 @@ export class HousePage extends BasePage {
                     <div class="house-info">
                         <div class="info-card">
                             <h3>Production Rate</h3>
-                            <p>10 gold per hour per house</p>
+                            <p>Current production rate per house</p>
                             <div class="info-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Base Rate:</span>
-                                    <span class="detail-value">10 gold/hour</span>
+                                    <span class="detail-value">Loading...</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Level Bonus:</span>
@@ -242,6 +211,12 @@ export class HousePage extends BasePage {
                 </div>
             </div>
         `;
+        
+        // Setup event listeners after rendering
+        this.setupEventListeners();
+        
+        // Load initial data
+        this.loadHouseData();
     }
 
     mount(container) {
