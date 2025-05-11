@@ -9,10 +9,6 @@
     color: var(--text-primary);
 }
 
-.house-page .page-container {
-    min-width: 800px;
-}
-
 /* House Info Section */
 .house-info {
     display: grid;
@@ -117,6 +113,13 @@
     }
     
     .claim-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 800px) {
+    .house-page .page-container {
+        min-width: unset;
         width: 100%;
     }
 } 

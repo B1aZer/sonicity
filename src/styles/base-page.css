@@ -20,6 +20,30 @@
     margin-bottom: var(--spacing-xl);
 }
 
+/* Container width utilities */
+.container-min-width-800 {
+    min-width: 800px;
+}
+
+.container-min-width-1000 {
+    min-width: 1000px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 800px) {
+    .container-min-width-800 {
+        min-width: unset;
+        width: 100%;
+    }
+}
+
+@media (max-width: 1000px) {
+    .container-min-width-1000 {
+        min-width: unset;
+        width: 100%;
+    }
+}
+
 .page-container h1 {
     margin-bottom: var(--spacing-lg);
     color: var(--text-primary);

@@ -13,7 +13,7 @@ export class StakePage extends BasePage {
         this.container.className = 'base-page stake-page';
         this.statusComponent = new StatusComponent();
         this.container.innerHTML = `
-            <div class="page-container">
+            <div class="page-container container-min-width-1000">
                 <h1>Stake Your NFTs</h1>
 
                 <div class="page-section wallet-section">

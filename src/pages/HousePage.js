@@ -132,7 +132,7 @@ export class HousePage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="page-container">
+            <div class="page-container container-min-width-800">
                 <h1>House Management</h1>
                 
                 <!-- Status Section -->
