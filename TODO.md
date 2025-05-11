@@ -1,3 +1,8 @@
+- decouple mit status page from staking page and reuse
+- shit with main wrapper, becuse of columns on stake page
+- decouple connect wallet and other button styles. Organize in single place like buttons
+
+
 - check staking page design, what happend to status message?
 
 - PLayer can join any city wo nFTS
