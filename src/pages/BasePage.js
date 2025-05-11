@@ -4,6 +4,7 @@ import { AltarContract } from '../js/contracts/AltarContract.js';
 import { NFTContract } from '../js/contracts/NFTContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
+import '../styles/base-page.css';
 
 export class BasePage {
     constructor() {
