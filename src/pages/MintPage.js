@@ -109,22 +109,54 @@ export class MintPage extends BasePage {
         const mintButton = this.element.querySelector('#mint-button');
         
         try {
-            statusElement.textContent = "Connecting...";
+            this.showStatus(`
+                <div class="loading">
+                    <div class="step">Connecting...</div>
+                </div>
+            `, 'loading');
             
             const result = await WalletManager.connectWallet();
             if (result.success) {
                 await this.onWalletConnected(result);
-                statusElement.textContent = "Connected!";
-                statusElement.style.color = "green";
+                this.showStatus(`
+                    <div class="success">
+                        <div class="title">Connected!</div>
+                    </div>
+                `, 'success');
             } else {
-                statusElement.textContent = result.error || "MetaMask not detected! Please install MetaMask.";
-                statusElement.style.color = "red";
+                this.showStatus(`
+                    <div class="error">
+                        <div class="title">Connection Failed</div>
+                        <div class="description">${result.error || "MetaMask not detected! Please install MetaMask."}</div>
+                    </div>
+                `, 'error');
             }
         } catch (error) {
             console.error("Connection error:", error);
-            statusElement.textContent = "Failed to connect: " + (error.message || "Unknown error");
-            statusElement.style.color = "red";
+            this.showStatus(`
+                <div class="error">
+                    <div class="title">Connection Error</div>
+                    <div class="description">${error.message || "Unknown error"}</div>
+                </div>
+            `, 'error');
         }
+    }
+
+    showStatus(message, type = 'info') {
+        // Remove any existing status
+        const existingStatus = this.element.querySelector('.mint-status');
+        if (existingStatus) {
+            existingStatus.remove();
+        }
+
+        // Create new status element
+        const statusDiv = document.createElement('div');
+        statusDiv.className = `mint-status ${type}`;
+        statusDiv.innerHTML = message;
+
+        // Insert after mint actions
+        const actionsSection = this.element.querySelector('.mint-actions');
+        actionsSection.after(statusDiv);
     }
 
     getPlaceholderHTML() {
@@ -329,7 +361,6 @@ export class MintPage extends BasePage {
     }
 
     async handleMint() {
-        const statusElement = this.element.querySelector('#mint-status');
         const mintButton = this.element.querySelector('#mint-button');
         const amountInput = this.element.querySelector('#mint-amount');
         
@@ -349,12 +380,15 @@ export class MintPage extends BasePage {
             
             // Disable mint button and show status
             mintButton.disabled = true;
-            statusElement.textContent = "Minting...";
-            statusElement.style.color = "blue";
+            this.showStatus(`
+                <div class="loading">
+                    <div class="step">Minting NFT${amount > 1 ? 's' : ''}...</div>
+                    <div class="description">Please confirm the transaction in your wallet</div>
+                </div>
+            `, 'loading');
             
             // Mint NFT - transact method already waits for confirmation
             const receipt = await this.contracts.nft.mint(amount, { value: totalPrice });
-            statusElement.textContent = "Transaction confirmed!";
             
             // Get the minted token IDs
             const events = receipt.logs.filter(log => 
@@ -368,8 +402,12 @@ export class MintPage extends BasePage {
                 this.lastMintedTokenId = lastEvent.args.tokenId;
                 Logger.info(`Successfully minted ${events.length} NFTs, last token ID: ${this.lastMintedTokenId}`);
                 
-                statusElement.textContent = `Successfully minted ${events.length} NFT${events.length > 1 ? 's' : ''}!`;
-                statusElement.style.color = "green";
+                this.showStatus(`
+                    <div class="success">
+                        <div class="title">Successfully Minted!</div>
+                        <div class="description">You've minted ${events.length} NFT${events.length > 1 ? 's' : ''}</div>
+                    </div>
+                `, 'success');
                 
                 // Update mint count and user's NFTs
                 await this.getMintCount();
@@ -387,8 +425,12 @@ export class MintPage extends BasePage {
             }
         } catch (error) {
             Logger.error("Error minting NFT:", error);
-            statusElement.textContent = "Error: " + (error.message || "Unknown error");
-            statusElement.style.color = "red";
+            this.showStatus(`
+                <div class="error">
+                    <div class="title">Error Minting NFT</div>
+                    <div class="description">${error.message || "Unknown error"}</div>
+                </div>
+            `, 'error');
         } finally {
             mintButton.disabled = false;
         }

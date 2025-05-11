@@ -316,11 +316,45 @@
     flex: 1;
 }
 
+/* Status Styles */
 .mint-status {
+    background: var(--bg-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
     margin: var(--spacing-md) 0;
     text-align: center;
-    min-height: 24px;
+    border: 1px solid var(--bg-lighter);
+}
+
+.mint-status .loading,
+.mint-status .success,
+.mint-status .error {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.mint-status .step {
+    font-weight: bold;
+    color: var(--color-primary);
+}
+
+.mint-status .description {
+    color: var(--text-secondary);
     font-size: var(--font-size-sm);
+}
+
+.mint-status .title {
+    font-weight: bold;
+    font-size: var(--font-size-lg);
+}
+
+.mint-status .success .title {
+    color: var(--color-success);
+}
+
+.mint-status .error .title {
+    color: var(--color-danger);
 }
 
 /* Owned NFTs Section */
