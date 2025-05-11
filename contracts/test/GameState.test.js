@@ -387,5 +387,34 @@ describe("GameState", function () {
       // Should get no additional gold
       expect(goldAfterThirdCollection - goldBeforeThirdCollection).to.equal(0);
     });
+
+    it("Should allow owner to update building production rates", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Update house production rate to 100 gold per hour
+      await gameState.connect(owner).setBuildingProductionRate("house", 100);
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect gold
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectGold(0);
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // House should now produce 100 gold per hour at level 1
+      expect(finalGold - initialGold).to.equal(100);
+    });
+
+    it("Should not allow non-owner to update building production rates", async function () {
+      // Try to update house production rate as non-owner
+      await expect(
+        gameState.connect(player1).setBuildingProductionRate("house", 100)
+      ).to.be.revertedWithCustomError(gameState, "OwnableUnauthorizedAccount");
+    });
   });
 }); 
