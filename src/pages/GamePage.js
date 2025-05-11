@@ -255,7 +255,8 @@ export class GamePage extends BasePage {
                     window.dispatchEvent(new PopStateEvent('popstate'));
                 } else if (clickedObject.userData.isHouse) {
                     Logger.info('House clicked');
-                    this.modal.show('This is your house. It provides basic shelter and generates a small amount of gold.', { title: 'House' });
+                    window.history.pushState({}, '', '/house');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                 }
             }
         });

@@ -7,6 +7,7 @@ import { MapPage } from '../../pages/MapPage.js';
 import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
 import { StakePage } from '../../pages/StakePage.js';
+import { HousePage } from '../../pages/HousePage.js';
 import { appState } from './state.js';
 import { AccessControl } from '../utils/accessControl.js';
 import { Modal } from '../utils/modal.js';
@@ -56,7 +57,7 @@ class App {
         }
 
         // Handle protected routes
-        if (page === 'dashboard' || page === 'overview') {
+        if (page === 'dashboard' || page === 'overview' || page === 'house') {
             if (!await AccessControl.checkCityAccess()) {
                 page = AccessControl.hasVerifiedNFT() ? '' : 'access';
             }
@@ -86,6 +87,10 @@ class App {
                 break;
             case 'stake':
                 this.currentPage = new StakePage();
+                this.currentPage.mount(this.layout.content);
+                break;
+            case 'house':
+                this.currentPage = new HousePage();
                 this.currentPage.mount(this.layout.content);
                 break;
             default:
