@@ -1,5 +1,5 @@
-- decouple mit status page from staking page and reuse
-- shit with main wrapper, becuse of columns on stake page
++ decouple mint status page from staking page and reuse
++ shit with main wrapper, becuse of columns on stake page
 - decouple connect wallet and other button styles. Organize in single place like buttons
 - put wallet from pages on top
 
