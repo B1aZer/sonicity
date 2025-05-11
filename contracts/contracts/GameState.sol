@@ -57,6 +57,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         string buildingType;
         uint256 level;
         uint256 lastUpgradeTime;
+        uint256 lastCollectionTime;  // New field to track last gold collection
         bool active;
     }
 
@@ -74,6 +75,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Building costs
     mapping(string => uint256) public buildingCosts;
 
+    // Building production rates (gold per hour)
+    mapping(string => uint256) public buildingProductionRates;
+
     // Events
     event CityJoined(address indexed player, uint256 indexed cityId);
     event CityTierUpgraded(uint256 indexed cityId, uint8 newTier);
@@ -87,6 +91,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event BuildingCreated(address indexed player, string buildingType, uint256 buildingId);
     event BuildingRemoved(address indexed player, string buildingType, uint256 buildingId);
     event BuildingUpgraded(address indexed player, string buildingType, uint256 buildingId, uint256 newLevel);
+    event GoldCollected(address indexed player, uint256 buildingId, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -108,6 +113,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         buildingCosts["house"] = 100;  // 100 Gold for a house
         buildingCosts["water-supply"] = 200;
         buildingCosts["workshop"] = 300;
+
+        // Initialize building production rates (gold per hour)
+        buildingProductionRates["house"] = 10;  // 10 gold per hour
+        buildingProductionRates["water-supply"] = 15;
+        buildingProductionRates["workshop"] = 20;
         
         // Initialize building requirements
         // Format: buildingRequirements[tier]["buildingName"] = goldCost
@@ -381,6 +391,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             buildingType: buildingType,
             level: 1,
             lastUpgradeTime: block.timestamp,
+            lastCollectionTime: block.timestamp,
             active: true
         });
         
@@ -474,11 +485,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Get all building IDs for a player
+     * @dev Get all building IDs for a player (internal)
      * @param player The address of the player
      * @return uint256[] Array of active building IDs
      */
-    function getBuildingIds(address player) external view returns (uint256[] memory) {
+    function getBuildingIds(address player) internal view returns (uint256[] memory) {
         uint256 totalBuildings = playerBuildingCounts[player].total;
         uint256[] memory result = new uint256[](totalBuildings);
         uint256 resultIndex = 0;
@@ -492,6 +503,55 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         }
         
         return result;
+    }
+
+    /**
+     * @dev Get all building IDs for a player (external)
+     * @param player The address of the player
+     * @return uint256[] Array of active building IDs
+     */
+    function getPlayerBuildingIds(address player) external view returns (uint256[] memory) {
+        return getBuildingIds(player);
+    }
+
+    /**
+     * @dev Collect gold from all buildings
+     * @return uint256 Total gold collected
+     */
+    function collectAllGold() external nonReentrant returns (uint256) {
+        uint256 totalGold = 0;
+        uint256 currentTime = block.timestamp;
+        uint256 cityId = playerCity[msg.sender];
+        
+        // Get all building IDs
+        uint256[] memory buildingIds = getBuildingIds(msg.sender);
+        
+        for (uint256 i = 0; i < buildingIds.length; i++) {
+            uint256 buildingId = buildingIds[i];
+            Building storage building = buildings[msg.sender][buildingId];
+            
+            if (building.active) {
+                // Calculate time passed since last collection
+                uint256 timePassed = currentTime - building.lastCollectionTime;
+                
+                // Calculate gold to collect based on production rate and time passed
+                uint256 productionRate = buildingProductionRates[building.buildingType];
+                uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600; // Convert to per-second rate
+                
+                // Update last collection time
+                building.lastCollectionTime = currentTime;
+                
+                // Add to total gold
+                totalGold += goldToCollect;
+                
+                emit GoldCollected(msg.sender, buildingId, goldToCollect);
+            }
+        }
+        
+        // Add total gold to player's balance
+        cities[cityId].playerGold[msg.sender] += totalGold;
+        
+        return totalGold;
     }
 
     /**
@@ -526,5 +586,41 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function getBuilding(address player, uint256 buildingId) external view returns (Building memory) {
         require(buildings[player][buildingId].active, "Building doesn't exist or is inactive");
         return buildings[player][buildingId];
+    }
+
+    /**
+     * @dev Collect gold from a building
+     * @param buildingId The ID of the building to collect from
+     */
+    function collectGold(uint256 buildingId) external nonReentrant {
+        require(buildings[msg.sender][buildingId].active, "Building not active");
+        
+        Building storage building = buildings[msg.sender][buildingId];
+        uint256 currentTime = block.timestamp;
+        
+        // Calculate time passed since last collection
+        uint256 timePassed = currentTime - building.lastCollectionTime;
+        
+        // Calculate gold to collect based on production rate and time passed
+        uint256 productionRate = buildingProductionRates[building.buildingType];
+        uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600; // Convert to per-second rate
+        
+        // Update last collection time
+        building.lastCollectionTime = currentTime;
+        
+        // Add gold to player's balance
+        uint256 cityId = playerCity[msg.sender];
+        cities[cityId].playerGold[msg.sender] += goldToCollect;
+        
+        emit GoldCollected(msg.sender, buildingId, goldToCollect);
+    }
+
+    /**
+     * @dev Set building production rate (only owner)
+     * @param buildingType The type of building
+     * @param rate The new production rate (gold per hour)
+     */
+    function setBuildingProductionRate(string memory buildingType, uint256 rate) external onlyOwner {
+        buildingProductionRates[buildingType] = rate;
     }
 } 

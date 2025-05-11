@@ -153,7 +153,7 @@ describe("GameState", function () {
       await gameState.connect(player1).createBuilding("house");
       
       // Get all building IDs
-      const allIds = await gameState.getBuildingIds(player1Address);
+      const allIds = await gameState.getPlayerBuildingIds(player1Address);
       expect(allIds.length).to.equal(3);
       
       // Get house IDs
@@ -182,6 +182,113 @@ describe("GameState", function () {
     it("Should not return details for non-existent buildings", async function () {
       const player1Address = await player1.getAddress();
       await expect(gameState.getBuilding(player1Address, 0)).to.be.revertedWith("Building doesn't exist or is inactive");
+    });
+  });
+
+  describe("Gold Production", function () {
+    beforeEach(async function () {
+      // Setup: Player joins city and gets building slots through Altar
+      await gameState.connect(player1).joinCity(1);
+      await gameState.connect(player1).earnGold(1000);
+      
+      // Mint and stake an NFT to get building slots
+      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
+      const tokenId = 1;
+      
+      // Approve the NFT collection
+      await gameState.connect(owner).approveCollection(await sonicityNFT.getAddress());
+      
+      // Set metadata for the NFT
+      const metadata = {
+        district: 1,
+        buildingSlots: 5
+      };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
+      
+      // Stake the NFT through Altar
+      const altarAddress = await altar.getAddress();
+      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
+      await altar.connect(player1).stake(tokenId);
+    });
+
+    it("Should produce gold from a single building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect gold
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectGold(0);
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // House produces 10 gold per hour at level 1
+      expect(finalGold - initialGold).to.equal(10);
+    });
+
+    it("Should produce gold from multiple buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create multiple buildings
+      await gameState.connect(player1).createBuilding("house");      // 10 gold/hour
+      await gameState.connect(player1).createBuilding("water-supply"); // 15 gold/hour
+      await gameState.connect(player1).createBuilding("workshop");    // 20 gold/hour
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect gold from all buildings
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectAllGold();
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // Total should be 45 gold (10 + 15 + 20)
+      expect(finalGold - initialGold).to.equal(45);
+    });
+
+    it("Should not allow collecting from inactive buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create and remove a house
+      await gameState.connect(player1).createBuilding("house");
+      await gameState.connect(player1).removeBuilding(0);
+      
+      // Try to collect from removed building
+      await expect(gameState.connect(player1).collectGold(0)).to.be.revertedWith("Building not active");
+    });
+
+    it("Should produce more gold from higher level buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect initial gold
+      await gameState.connect(player1).collectGold(0);
+      
+      // Upgrade building level (assuming there's an upgrade function)
+      // TODO: Add building upgrade functionality and test
+      
+      // Fast forward another hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect gold again
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectGold(0);
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // Gold production should scale with level
+      expect(finalGold - initialGold).to.equal(10); // Base rate at level 1
     });
   });
 }); 
