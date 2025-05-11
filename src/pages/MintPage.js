@@ -15,7 +15,7 @@ export class MintPage extends BasePage {
         super();
         Logger.info('MintPage constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'base-page';
+        this.element.className = 'base-page mint-page';
         this.tokensMinted = 0;
         this.maxSupply = CONTRACT_CONFIG.MAX_SUPPLY;
         this.mintPrice = CONTRACT_CONFIG.MINT_PRICE;
