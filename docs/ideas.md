@@ -26,3 +26,6 @@ Instead of stealing Gold, attackers can:
 - royatles
 - nft sales (units)
 - stake brush?
+
+- stake in city get rep points
+- last buillding, stake gold for share of rev
