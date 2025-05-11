@@ -1,17 +1,17 @@
-import '../styles/dashboard-page.css';
-import '../styles/modal.css';
 import Logger from '../js/utils/logger.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { ethers } from 'ethers';
 import { Modal } from '../js/utils/modal.js';
 import { BasePage } from './BasePage.js';
 
+import '../styles/dashboard-page.css';
+
 export class DashboardPage extends BasePage {
     constructor() {
         super();
         Logger.info('DashboardPage constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'dashboard-page';
+        this.element.className = 'base-page';
         this.modal = new Modal();
         this.render();
         this.setupEventListeners();
@@ -204,11 +204,11 @@ export class DashboardPage extends BasePage {
     render() {
         Logger.info('Rendering dashboard page');
         this.element.innerHTML = `
-            <div class="dashboard-container">
+            <div class="page-container">
                 <h1>City Dashboard</h1>
                 
                 <!-- Status Section -->
-                <div class="dashboard-section status-section">
+                <div class="page-section status-section">
                     <h2>Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
@@ -227,7 +227,7 @@ export class DashboardPage extends BasePage {
                 </div>
                 
                 <!-- District Buildings Section -->
-                <div class="dashboard-section district-buildings-section">
+                <div class="page-section district-buildings-section">
                     <h2>District Buildings</h2>
                     <div class="buildings-grid">
                         <div class="building-card">
@@ -249,7 +249,7 @@ export class DashboardPage extends BasePage {
                 </div>
                 
                 <!-- City Buildings Section -->
-                <div class="dashboard-section city-buildings-section">
+                <div class="page-section city-buildings-section">
                     <h2>City Buildings</h2>
                     <div class="buildings-grid">
                         <div class="building-card">
