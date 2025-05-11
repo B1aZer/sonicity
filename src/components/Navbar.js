@@ -1,3 +1,5 @@
+import '../styles/navbar.css';
+
 export class Navbar {
     constructor() {
         this.element = document.createElement('nav');
