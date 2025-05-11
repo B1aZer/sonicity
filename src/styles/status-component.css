@@ -1,0 +1,63 @@
+@import './base.css';
+
+.status-component {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    text-align: left;
+}
+
+.status-component.loading {
+    background: var(--bg-light);
+    border: 1px solid var(--bg-lighter);
+}
+
+.status-component.success {
+    background: rgba(76, 175, 80, 0.2);
+    border: 1px solid var(--color-primary);
+}
+
+.status-component.error {
+    background: rgba(244, 67, 54, 0.2);
+    border: 1px solid var(--color-error);
+}
+
+.status-content {
+    flex: 1;
+}
+
+.status-content .title {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.status-content .step {
+    font-weight: 500;
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.status-content .description {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--bg-lighter);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    flex-shrink: 0;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+} 

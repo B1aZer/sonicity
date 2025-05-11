@@ -316,14 +316,6 @@
     flex: 1;
 }
 
-/* Status Styles */
-.mint-status {
-    margin: var(--spacing-md) 0;
-    text-align: center;
-    min-height: 24px;
-    font-size: var(--font-size-sm);
-}
-
 /* Owned NFTs Section */
 .owned-nfts-container {
     margin-top: var(--spacing-xxl);

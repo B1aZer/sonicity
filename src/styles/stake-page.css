@@ -1,4 +1,5 @@
 @import './base.css';
+@import './status-component.css';
 
 .stake-page {
     display: flex;
@@ -89,46 +90,6 @@
     background: var(--bg-light);
     border-radius: var(--radius-lg);
     border: 1px solid var(--bg-lighter);
-}
-
-/* Status Component Styles */
-.status-component {
-    margin: var(--spacing-md) 0;
-    padding: var(--spacing-md);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-}
-
-.status-component.loading {
-    background: var(--bg-light);
-    border: 1px solid var(--bg-lighter);
-}
-
-.status-component.success {
-    background: rgba(76, 175, 80, 0.2);
-    border: 1px solid var(--color-primary);
-}
-
-.status-component.error {
-    background: rgba(244, 67, 54, 0.2);
-    border: 1px solid var(--color-error);
-}
-
-.loading-spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--bg-lighter);
-    border-top-color: var(--color-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 /* Responsive adjustments */

@@ -9,6 +9,7 @@ import { Modal } from '../js/utils/modal.js';
 
 import '../styles/mint-page.css';
 import '../styles/nft-collection.css';
+import '../styles/status-component.css';
 
 export class MintPage extends BasePage {
     constructor() {
@@ -152,11 +153,41 @@ export class MintPage extends BasePage {
         // Create new status element
         const statusDiv = document.createElement('div');
         statusDiv.className = `status-component ${type}`;
-        statusDiv.innerHTML = message;
+        
+        if (type === 'loading') {
+            statusDiv.innerHTML = `
+                <div class="loading-spinner"></div>
+                <div>
+                    <div class="step">${message}</div>
+                    <div class="description">Please wait while we process your request...</div>
+                </div>
+            `;
+        } else if (type === 'success') {
+            statusDiv.innerHTML = `
+                <div class="status-content">
+                    <div class="title">Success!</div>
+                    <div class="description">${message}</div>
+                </div>
+            `;
+        } else if (type === 'error') {
+            statusDiv.innerHTML = `
+                <div class="status-content">
+                    <div class="title">Error</div>
+                    <div class="description">${message}</div>
+                </div>
+            `;
+        }
 
         // Insert after mint actions
         const actionsSection = this.element.querySelector('.mint-actions');
         actionsSection.after(statusDiv);
+
+        // Auto-remove success/error messages after 5 seconds
+        if (type === 'success' || type === 'error') {
+            setTimeout(() => {
+                statusDiv.remove();
+            }, 5000);
+        }
     }
 
     getPlaceholderHTML() {
