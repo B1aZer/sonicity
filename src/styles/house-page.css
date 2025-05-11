@@ -9,6 +9,10 @@
     color: var(--text-primary);
 }
 
+.house-page .page-container {
+    min-width: 800px;
+}
+
 /* House Info Section */
 .house-info {
     display: grid;
