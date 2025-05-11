@@ -112,8 +112,8 @@ export class HousePage extends BasePage {
             // Show loading modal
             const loadingModal = this.modal.loading('Collecting gold...');
             
-            // Collect gold from all buildings
-            const tx = await this.contracts.gameState.collectAllGold();
+            // Collect gold from all houses in a single transaction
+            const tx = await this.contracts.gameState.collectAllGoldByType('house');
             await tx;
             
             // Close loading modal
@@ -211,9 +211,6 @@ export class HousePage extends BasePage {
                 </div>
             </div>
         `;
-        
-        // Setup event listeners after rendering
-        this.setupEventListeners();
         
         // Load initial data
         this.loadHouseData();
