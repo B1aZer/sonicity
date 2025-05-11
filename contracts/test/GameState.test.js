@@ -290,5 +290,102 @@ describe("GameState", function () {
       // Gold production should scale with level
       expect(finalGold - initialGold).to.equal(10); // Base rate at level 1
     });
+
+    it("Should cap production at 24 hours for a single building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Fast forward 48 hours
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect gold
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectGold(0);
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // House produces 10 gold per hour, should be capped at 24 hours
+      expect(finalGold - initialGold).to.equal(240); // 10 gold/hour * 24 hours
+      
+      // Try to collect again - should get no gold
+      const goldBeforeSecondCollection = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectGold(0);
+      const goldAfterSecondCollection = await gameState.getPlayerGold(player1Address);
+      
+      // Should get no additional gold
+      expect(goldAfterSecondCollection - goldBeforeSecondCollection).to.equal(0);
+    });
+
+    it("Should cap production at 24 hours for multiple buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create multiple buildings
+      await gameState.connect(player1).createBuilding("house");      // 10 gold/hour
+      await gameState.connect(player1).createBuilding("water-supply"); // 15 gold/hour
+      await gameState.connect(player1).createBuilding("workshop");    // 20 gold/hour
+      
+      // Fast forward 48 hours
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect gold from all buildings
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectAllGold();
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // Total should be capped at 24 hours of production
+      // (10 + 15 + 20) gold/hour * 24 hours = 1080 gold
+      expect(finalGold - initialGold).to.equal(1080);
+      
+      // Try to collect again - should get no gold
+      const goldBeforeSecondCollection = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectAllGold();
+      const goldAfterSecondCollection = await gameState.getPlayerGold(player1Address);
+      
+      // Should get no additional gold
+      expect(goldAfterSecondCollection - goldBeforeSecondCollection).to.equal(0);
+    });
+
+    it("Should allow partial collection before 24 hours", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Fast forward 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // First collection after 12 hours
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectGold(0);
+      const goldAfterFirstCollection = await gameState.getPlayerGold(player1Address);
+      
+      // Should get approximately 12 hours worth of gold (allowing for small rounding)
+      const firstCollectionGold = goldAfterFirstCollection - initialGold;
+      expect(firstCollectionGold).to.be.closeTo(120, 1); // 10 gold/hour * 12 hours, with 1 gold tolerance
+      
+      // Fast forward another 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Second collection - should get remaining gold up to 24 hours
+      await gameState.connect(player1).collectGold(0);
+      const goldAfterSecondCollection = await gameState.getPlayerGold(player1Address);
+      
+      // Total gold should be approximately 24 hours worth (allowing for small rounding)
+      const totalGold = goldAfterSecondCollection - initialGold;
+      expect(totalGold).to.be.closeTo(240, 1); // 10 gold/hour * 24 hours, with 1 gold tolerance
+      
+      // Try to collect again - should get no gold
+      const goldBeforeThirdCollection = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectGold(0);
+      const goldAfterThirdCollection = await gameState.getPlayerGold(player1Address);
+      
+      // Should get no additional gold
+      expect(goldAfterThirdCollection - goldBeforeThirdCollection).to.equal(0);
+    });
   });
 }); 

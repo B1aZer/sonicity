@@ -78,6 +78,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Building production rates (gold per hour)
     mapping(string => uint256) public buildingProductionRates;
 
+    // Maximum production time (24 hours in seconds)
+    uint256 public constant MAX_PRODUCTION_TIME = 24 hours;
+
     // Events
     event CityJoined(address indexed player, uint256 indexed cityId);
     event CityTierUpgraded(uint256 indexed cityId, uint8 newTier);
@@ -515,6 +518,44 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Collect gold from a building
+     * @param buildingId The ID of the building to collect from
+     */
+    function collectGold(uint256 buildingId) external nonReentrant {
+        require(buildings[msg.sender][buildingId].active, "Building not active");
+        
+        Building storage building = buildings[msg.sender][buildingId];
+        uint256 currentTime = block.timestamp;
+        
+        // Calculate time passed since last collection
+        uint256 timePassed = currentTime - building.lastCollectionTime;
+        
+        // Check if building has exceeded its 24-hour production period
+        uint256 totalTimeSinceCreation = currentTime - building.lastUpgradeTime;
+        if (totalTimeSinceCreation > MAX_PRODUCTION_TIME) {
+            // If we've already collected all possible gold, return 0
+            if (building.lastCollectionTime >= building.lastUpgradeTime + MAX_PRODUCTION_TIME) {
+                return;
+            }
+            // Otherwise, only collect remaining time up to 24 hours
+            timePassed = (building.lastUpgradeTime + MAX_PRODUCTION_TIME) - building.lastCollectionTime;
+        }
+        
+        // Calculate gold to collect based on production rate and time passed
+        uint256 productionRate = buildingProductionRates[building.buildingType];
+        uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600; // Convert to per-second rate
+        
+        // Update last collection time
+        building.lastCollectionTime = currentTime;
+        
+        // Add gold to player's balance
+        uint256 cityId = playerCity[msg.sender];
+        cities[cityId].playerGold[msg.sender] += goldToCollect;
+        
+        emit GoldCollected(msg.sender, buildingId, goldToCollect);
+    }
+
+    /**
      * @dev Collect gold from all buildings
      * @return uint256 Total gold collected
      */
@@ -533,6 +574,17 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             if (building.active) {
                 // Calculate time passed since last collection
                 uint256 timePassed = currentTime - building.lastCollectionTime;
+                
+                // Check if building has exceeded its 24-hour production period
+                uint256 totalTimeSinceCreation = currentTime - building.lastUpgradeTime;
+                if (totalTimeSinceCreation > MAX_PRODUCTION_TIME) {
+                    // If we've already collected all possible gold, skip this building
+                    if (building.lastCollectionTime >= building.lastUpgradeTime + MAX_PRODUCTION_TIME) {
+                        continue;
+                    }
+                    // Otherwise, only collect remaining time up to 24 hours
+                    timePassed = (building.lastUpgradeTime + MAX_PRODUCTION_TIME) - building.lastCollectionTime;
+                }
                 
                 // Calculate gold to collect based on production rate and time passed
                 uint256 productionRate = buildingProductionRates[building.buildingType];
@@ -586,33 +638,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function getBuilding(address player, uint256 buildingId) external view returns (Building memory) {
         require(buildings[player][buildingId].active, "Building doesn't exist or is inactive");
         return buildings[player][buildingId];
-    }
-
-    /**
-     * @dev Collect gold from a building
-     * @param buildingId The ID of the building to collect from
-     */
-    function collectGold(uint256 buildingId) external nonReentrant {
-        require(buildings[msg.sender][buildingId].active, "Building not active");
-        
-        Building storage building = buildings[msg.sender][buildingId];
-        uint256 currentTime = block.timestamp;
-        
-        // Calculate time passed since last collection
-        uint256 timePassed = currentTime - building.lastCollectionTime;
-        
-        // Calculate gold to collect based on production rate and time passed
-        uint256 productionRate = buildingProductionRates[building.buildingType];
-        uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600; // Convert to per-second rate
-        
-        // Update last collection time
-        building.lastCollectionTime = currentTime;
-        
-        // Add gold to player's balance
-        uint256 cityId = playerCity[msg.sender];
-        cities[cityId].playerGold[msg.sender] += goldToCollect;
-        
-        emit GoldCollected(msg.sender, buildingId, goldToCollect);
     }
 
     /**
