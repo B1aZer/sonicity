@@ -16,17 +16,21 @@ export class StakePage extends BasePage {
     constructor() {
         super();
         this.container = document.createElement('div');
-        this.container.className = 'stake-page';
+        this.container.className = 'base-page stake-page';
         this.container.innerHTML = `
-            <div class="stake-container">
+            <div class="page-container">
                 <h1>Stake Your NFTs</h1>
-                <p class="stake-description">
+                <p class="page-description">
                     Stake your NFTs to earn rewards and participate in the Sonicity ecosystem.
                 </p>
-                <div class="wallet-section">
-                    <button class="connect-button">Connect Wallet</button>
+
+                <div class="page-section wallet-section">
+                    <button class="connect-button">
+                        <span class="button-text">Connect Wallet</span>
+                    </button>
                 </div>
-                <div class="nft-sections">
+
+                <div class="page-section nft-sections">
                     <div class="nft-section">
                         <h2>Your NFTs</h2>
                         <div class="nft-list nft-grid"></div>

@@ -1,123 +1,164 @@
 @import './base.css';
 
 .stake-page {
-    max-width: var(--container-max-width);
-    margin: 0 auto;
-    padding: var(--spacing-xl);
-    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     min-height: 100vh;
-    padding-top: 80px; /* Account for navbar height */
-}
-
-.stake-container {
-    text-align: center;
-}
-
-.stake-container h1 {
-    font-size: 2.5rem;
-    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-xl);
+    background-color: var(--bg-dark);
+    background-image: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
     color: var(--text-primary);
 }
 
-.stake-description {
-    font-size: 1.1rem;
+.page-container {
+    max-width: var(--container-max-width);
+    width: 100%;
+    text-align: center;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.page-container h1 {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: 1.5rem;
+    color: var(--text-primary);
+}
+
+.page-description {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 0.9rem;
     color: var(--text-secondary);
+}
+
+.page-section {
+    width: 100%;
     margin-bottom: var(--spacing-xl);
 }
 
 .wallet-section {
-    margin-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: center;
+    margin: var(--spacing-lg) 0;
 }
 
 .connect-button {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
     padding: var(--spacing-md) var(--spacing-xl);
-    font-size: 1.1rem;
-    background: var(--bg-light);
-    border: 1px solid var(--bg-lighter);
+    font-size: var(--font-size-lg);
     color: var(--text-primary);
+    border: none;
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: all var(--transition-normal);
+    min-width: 200px;
+    background: var(--color-secondary);
 }
 
 .connect-button:hover {
-    background: var(--bg-lighter);
+    background: var(--color-secondary-dark);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
 
+.button-text {
+    font-weight: 500;
+    text-align: center;
+    flex: 1;
+}
+
 .nft-sections {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xxl);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-md);
 }
 
 .nft-section {
-    text-align: left;
+    background: var(--bg-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--bg-lighter);
 }
 
 .nft-section h2 {
-    font-size: 1.8rem;
+    color: var(--color-primary);
     margin-bottom: var(--spacing-lg);
-    color: var(--text-primary);
+    font-size: var(--font-size-lg);
 }
 
 .nft-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--spacing-xl);
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing-md);
     width: 100%;
-    margin: 0 auto;
-    justify-content: center;
-}
-
-.nft-list,
-.staked-nft-list {
-    min-height: 200px;
 }
 
 .no-nfts {
     text-align: center;
-    color: var(--text-muted);
-    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-size: var(--font-size-md);
     padding: var(--spacing-xl);
     background: var(--bg-light);
     border-radius: var(--radius-lg);
     border: 1px solid var(--bg-lighter);
 }
 
-.loading {
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 1.1rem;
-    padding: var(--spacing-xl);
+/* Status Component Styles */
+.status-component {
+    margin: var(--spacing-md) 0;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
 }
 
-/* Remove stake-status styles since we're using the shared status component */
-.stake-status {
-    display: none;
+.status-component.loading {
+    background: var(--bg-light);
+    border: 1px solid var(--bg-lighter);
 }
 
-@media (max-width: 900px) {
-    .nft-grid {
-        grid-template-columns: repeat(2, 1fr);
+.status-component.success {
+    background: rgba(76, 175, 80, 0.2);
+    border: 1px solid var(--color-primary);
+}
+
+.status-component.error {
+    background: rgba(244, 67, 54, 0.2);
+    border: 1px solid var(--color-error);
+}
+
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--bg-lighter);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
     }
 }
 
-@media (max-width: 600px) {
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .nft-sections {
+        grid-template-columns: 1fr;
+    }
+    
     .nft-grid {
         grid-template-columns: 1fr;
     }
     
-    .stake-page {
-        padding: var(--spacing-md);
-    }
-    
-    .stake-container h1 {
-        font-size: 2rem;
-    }
-    
-    .nft-section h2 {
-        font-size: 1.5rem;
+    .connect-button {
+        width: 100%;
     }
 } 
