@@ -251,6 +251,87 @@ describe("GameState", function () {
       expect(finalGold - initialGold).to.equal(45);
     });
 
+    it("Should collect gold from buildings of a specific type", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create multiple buildings
+      await gameState.connect(player1).createBuilding("house");      // 10 gold/hour
+      await gameState.connect(player1).createBuilding("house");      // 10 gold/hour
+      await gameState.connect(player1).createBuilding("water-supply"); // 15 gold/hour
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect gold from houses only
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectAllGoldByType("house");
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // Should only collect from houses (2 * 10 = 20 gold)
+      expect(finalGold - initialGold).to.equal(20);
+    });
+
+    it("Should collect gold from buildings of a specific type with different production rates", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create multiple buildings
+      await gameState.connect(player1).createBuilding("house");      // 10 gold/hour
+      await gameState.connect(player1).createBuilding("workshop");    // 20 gold/hour
+      await gameState.connect(player1).createBuilding("workshop");    // 20 gold/hour
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect gold from workshops only
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectAllGoldByType("workshop");
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // Should only collect from workshops (2 * 20 = 40 gold)
+      expect(finalGold - initialGold).to.equal(40);
+    });
+
+    it("Should handle collecting from non-existent building type", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Try to collect from non-existent building type
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectAllGoldByType("non-existent");
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // Should not collect any gold
+      expect(finalGold - initialGold).to.equal(0);
+    });
+
+    it("Should handle collecting from removed buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create and remove a house
+      await gameState.connect(player1).createBuilding("house");
+      await gameState.connect(player1).removeBuilding(0);
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Try to collect from removed building
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gameState.connect(player1).collectAllGoldByType("house");
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      
+      // Should not collect any gold
+      expect(finalGold - initialGold).to.equal(0);
+    });
+
     it("Should not allow collecting from inactive buildings", async function () {
       const player1Address = await player1.getAddress();
       

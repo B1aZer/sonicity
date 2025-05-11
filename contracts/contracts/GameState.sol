@@ -612,7 +612,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @param buildingType The type of building
      * @return uint256[] Array of building IDs of the specified type
      */
-    function getBuildingIdsOfType(address player, string memory buildingType) external view returns (uint256[] memory) {
+    function getBuildingIdsOfType(address player, string memory buildingType) public view returns (uint256[] memory) {
         uint256 count = playerBuildingCounts[player].byType[buildingType];
         uint256[] memory result = new uint256[](count);
         uint256 resultIndex = 0;
@@ -699,5 +699,66 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function setBuildingProductionRate(string memory buildingType, uint256 rate) external onlyOwner {
         buildingProductionRates[buildingType] = rate;
+    }
+
+    /**
+     * @dev Execute multiple function calls in a single transaction
+     * @param data Array of encoded function calls
+     * @return results Array of results from each function call
+     
+    function multicall(bytes[] calldata data) external nonReentrant returns (bytes[] memory results) {
+        results = new bytes[](data.length);
+        for (uint256 i = 0; i < data.length; i++) {
+            (bool success, bytes memory result) = address(this).delegatecall(data[i]);
+            require(success, "Multicall failed");
+            results[i] = result;
+        }
+        return results;
+    }
+    */
+
+    /**
+     * @dev Collect gold from all buildings of a specific type
+     * @param buildingType The type of building to collect from
+     * @return totalCollected The total amount of gold collected
+     */
+    function collectAllGoldByType(string memory buildingType) external nonReentrant returns (uint256 totalCollected) {
+        uint256 cityId = playerCity[msg.sender];
+        require(cityId > 0, "Not in a city");
+        
+        // Get all building IDs of the specified type
+        uint256[] memory buildingIds = getBuildingIdsOfType(msg.sender, buildingType);
+        
+        // Collect gold from each building
+        for (uint256 i = 0; i < buildingIds.length; i++) {
+            uint256 buildingId = buildingIds[i];
+            Building storage building = buildings[msg.sender][buildingId];
+            
+            // Skip if building is not active or not of the specified type
+            if (!building.active || keccak256(bytes(building.buildingType)) != keccak256(bytes(buildingType))) {
+                continue;
+            }
+            
+            // Calculate time since last collection
+            uint256 timeSinceLastCollection = block.timestamp - building.lastCollectionTime;
+            if (timeSinceLastCollection > MAX_PRODUCTION_TIME) {
+                timeSinceLastCollection = MAX_PRODUCTION_TIME;
+            }
+            
+            // Calculate gold to collect
+            uint256 goldToCollect = (buildingProductionRates[buildingType] * timeSinceLastCollection) / 1 hours;
+            if (goldToCollect > 0) {
+                // Update building state
+                building.lastCollectionTime = block.timestamp;
+                
+                // Add gold to player's balance
+                cities[cityId].playerGold[msg.sender] += goldToCollect;
+                totalCollected += goldToCollect;
+                
+                emit GoldCollected(msg.sender, buildingId, goldToCollect);
+            }
+        }
+        
+        return totalCollected;
     }
 } 
