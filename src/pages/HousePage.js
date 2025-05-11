@@ -7,6 +7,7 @@ import Logger from '../js/utils/logger.js';
 export class HousePage extends BasePage {
     constructor() {
         super();
+        Logger.info('HousePage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'base-page house-page';
         this.modal = new Modal();
@@ -15,7 +16,12 @@ export class HousePage extends BasePage {
     }
 
     async onInitialized(walletResult) {
-        Logger.info('HousePage onInitialized called with wallet:', walletResult.address);
+        Logger.info('HousePage onInitialized called with wallet:', walletResult);
+        if (!walletResult || !walletResult.address) {
+            Logger.error('No wallet address provided in onInitialized');
+            this.modal.error('Please connect your wallet first.');
+            return;
+        }
         try {
             await this.loadHouseData();
             Logger.info('House data loaded successfully');
@@ -27,6 +33,11 @@ export class HousePage extends BasePage {
 
     updateWalletStatus(address) {
         Logger.info('Updating wallet status with address:', address);
+        if (address) {
+            this.loadHouseData().catch(error => {
+                Logger.error('Error loading house data after wallet update:', error);
+            });
+        }
     }
 
     async loadHouseData() {
@@ -38,50 +49,85 @@ export class HousePage extends BasePage {
             Logger.info('Retrieved house IDs:', houseIds);
 
             // Get total houses count
-            const totalHouses = await this.contracts.gameState.getBuildingsByType('house');
-            Logger.info('Total houses:', totalHouses);
+            const address = await this.contracts.gameState.getAddress();
+            Logger.info('Player address:', address);
+            
+            const totalHouses = await this.contracts.gameState.getBuildingsByType(address, 'house');
+            Logger.info('Total houses from contract:', totalHouses);
 
             // Update UI with house count
             const houseCountElement = this.element.querySelector('.house-count');
             if (houseCountElement) {
                 houseCountElement.textContent = totalHouses.toString();
+                Logger.info('Updated UI with house count:', totalHouses.toString());
+            } else {
+                Logger.warn('House count element not found in DOM');
             }
 
             // Calculate total claimable gold
-            let totalClaimableGold = 0;
-            const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+            let totalClaimableGold = BigInt(0);
+            const currentTime = BigInt(Math.floor(Date.now() / 1000)); // Current time in seconds
+            Logger.info('Current time for gold calculation:', currentTime.toString());
 
             for (const houseId of houseIds) {
+                Logger.info('Processing house ID:', houseId);
                 const building = await this.contracts.gameState.getBuilding(houseId);
+                Logger.info('Building data:', building);
+                
                 if (building.active) {
-                    const timePassed = currentTime - building.lastCollectionTime;
-                    const totalTimeSinceCreation = currentTime - building.lastUpgradeTime;
+                    const timePassed = currentTime - BigInt(building.lastCollectionTime);
+                    const totalTimeSinceCreation = currentTime - BigInt(building.lastUpgradeTime);
+                    Logger.info('Time calculations for house', houseId, {
+                        timePassed: timePassed.toString(),
+                        totalTimeSinceCreation: totalTimeSinceCreation.toString(),
+                        lastCollectionTime: building.lastCollectionTime.toString(),
+                        lastUpgradeTime: building.lastUpgradeTime.toString()
+                    });
                     
                     // Calculate claimable gold for this house
                     let claimableTime = timePassed;
-                    if (totalTimeSinceCreation > 24 * 3600) { // 24 hours in seconds
-                        if (building.lastCollectionTime >= building.lastUpgradeTime + 24 * 3600) {
+                    if (totalTimeSinceCreation > BigInt(24 * 3600)) { // 24 hours in seconds
+                        if (BigInt(building.lastCollectionTime) >= BigInt(building.lastUpgradeTime) + BigInt(24 * 3600)) {
+                            Logger.info('House', houseId, 'has already collected all possible gold');
                             continue; // Skip if already collected all possible gold
                         }
-                        claimableTime = (building.lastUpgradeTime + 24 * 3600) - building.lastCollectionTime;
+                        claimableTime = (BigInt(building.lastUpgradeTime) + BigInt(24 * 3600)) - BigInt(building.lastCollectionTime);
                     }
                     
-                    const productionRate = 10; // 10 gold per hour for houses
-                    const claimableGold = (productionRate * claimableTime * building.level) / 3600;
+                    const productionRate = BigInt(10); // 10 gold per hour for houses
+                    const level = BigInt(building.level);
+                    const claimableGold = (productionRate * claimableTime * level) / BigInt(3600);
+                    Logger.info('Gold calculation for house', houseId, {
+                        claimableTime: claimableTime.toString(),
+                        productionRate: productionRate.toString(),
+                        level: level.toString(),
+                        claimableGold: claimableGold.toString()
+                    });
+                    
                     totalClaimableGold += claimableGold;
+                } else {
+                    Logger.info('House', houseId, 'is not active');
                 }
             }
+
+            Logger.info('Total claimable gold:', totalClaimableGold.toString());
 
             // Update UI with claimable gold
             const claimableGoldElement = this.element.querySelector('.claimable-gold');
             if (claimableGoldElement) {
-                claimableGoldElement.textContent = Math.floor(totalClaimableGold).toString();
+                claimableGoldElement.textContent = totalClaimableGold.toString();
+                Logger.info('Updated UI with claimable gold:', totalClaimableGold.toString());
+            } else {
+                Logger.warn('Claimable gold element not found in DOM');
             }
 
             // Enable/disable claim button based on claimable gold
             const claimButton = this.element.querySelector('.claim-button');
             if (claimButton) {
-                claimButton.disabled = totalClaimableGold <= 0;
+                claimButton.disabled = totalClaimableGold <= BigInt(0);
+                Logger.info('Updated claim button state:', !claimButton.disabled);
+            } else {
+                Logger.warn('Claim button not found in DOM');
             }
 
         } catch (error) {
@@ -199,7 +245,13 @@ export class HousePage extends BasePage {
     }
 
     mount(container) {
+        Logger.info('Mounting house page...');
         container.appendChild(this.element);
+        // Initialize using base class method
+        this.initialize().catch(error => {
+            Logger.error('Error during house page initialization:', error);
+            this.modal.error('Failed to initialize house page. Please try refreshing the page.');
+        });
     }
 
     unmount() {
