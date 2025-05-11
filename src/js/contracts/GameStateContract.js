@@ -181,4 +181,8 @@ export class GameStateContract extends BaseContract {
         const address = await this.getAddress();
         return await this.call('calculateTotalClaimableGold', address);
     }
+
+    async collectAllGoldByType(buildingType) {
+        return await this.transact('collectAllGoldByType', buildingType);
+    }
 } 
