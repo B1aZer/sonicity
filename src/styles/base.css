@@ -44,8 +44,11 @@
     --transition-slow: 0.5s ease;
     
     /* Container */
-    --container-max-width: 1200px;
+    --container-max-width: 1440px;
     --container-padding: var(--spacing-xl);
+
+    /* Navbar */
+    --navbar-height: 60px;
 }
 
 /* Base Styles */
@@ -164,27 +167,6 @@ h3 {
     grid-template-columns: repeat(4, 1fr);
 }
 
-/* Status Items */
-.status-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--spacing-md);
-    background: var(--bg-light);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--bg-lighter);
-}
-
-.status-label {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.status-value {
-    font-weight: bold;
-    color: var(--color-primary);
-}
-
 /* Responsive */
 @media (max-width: 1200px) {
     .grid-4 {
@@ -214,4 +196,4 @@ h3 {
     h3 {
         font-size: 1.25rem;
     }
-} 
+}
