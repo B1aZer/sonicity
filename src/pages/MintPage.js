@@ -4,18 +4,18 @@ import { NFTCard } from '../components/NFTCard.js';
 import { CONTRACT_CONFIG } from '../js/utils/constants.js';
 import { WalletManager } from '../js/utils/wallet.js';
 import { ethers } from 'ethers';
-import { appState } from '../js/core/state.js';
-import '../styles/nft-collection.css';
-import '../styles/mint-page.css';
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
+
+import '../styles/mint-page.css';
+import '../styles/nft-collection.css';
 
 export class MintPage extends BasePage {
     constructor() {
         super();
         Logger.info('MintPage constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'mint-page';
+        this.element.className = 'base-page';
         this.tokensMinted = 0;
         this.maxSupply = CONTRACT_CONFIG.MAX_SUPPLY;
         this.mintPrice = CONTRACT_CONFIG.MINT_PRICE;
@@ -137,7 +137,7 @@ export class MintPage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="mint-container">
+            <div class="base-container">
                 <h1>Mint Your Sonicity NFT</h1>
                 
                 <div class="nft-preview">
