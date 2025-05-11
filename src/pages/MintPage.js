@@ -137,7 +137,7 @@ export class MintPage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="base-container">
+            <div class="page-container mint-container">
                 <h1>Mint Your Sonicity NFT</h1>
                 
                 <div class="nft-preview">
