@@ -165,12 +165,16 @@ export class GameStateContract extends BaseContract {
         return await this.call('upgradeCosts', buildingType);
     }
 
-    async getBuildingsByType(player, buildingType) {
-        return await this.call('getBuildingsByType', player, buildingType);
+    async getBuildingProductionRate(buildingType) {
+        return await this.call('getBuildingProductionRate', buildingType);
     }
 
     async setBuildingProductionRate(buildingType, rate) {
         return await this.transact('setBuildingProductionRate', buildingType, rate);
+    }
+
+    async getBuildingsByType(player, buildingType) {
+        return await this.call('getBuildingsByType', player, buildingType);
     }
 
     async calculateTotalClaimableGold() {

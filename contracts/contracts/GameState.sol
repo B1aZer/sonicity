@@ -684,6 +684,15 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Get building production rate
+     * @param buildingType The type of building
+     * @return uint256 The production rate in gold per hour
+     */
+    function getBuildingProductionRate(string memory buildingType) external view returns (uint256) {
+        return buildingProductionRates[buildingType];
+    }
+
+    /**
      * @dev Set building production rate (only owner)
      * @param buildingType The type of building
      * @param rate The new production rate (gold per hour)
