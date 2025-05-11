@@ -641,6 +641,49 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Calculate total claimable gold for a player without collecting it
+     * @param player The address of the player
+     * @return uint256 Total claimable gold
+     */
+    function calculateTotalClaimableGold(address player) external view returns (uint256) {
+        uint256 totalGold = 0;
+        uint256 currentTime = block.timestamp;
+        
+        // Get all building IDs
+        uint256[] memory buildingIds = getBuildingIds(player);
+        
+        for (uint256 i = 0; i < buildingIds.length; i++) {
+            uint256 buildingId = buildingIds[i];
+            Building storage building = buildings[player][buildingId];
+            
+            if (building.active) {
+                // Calculate time passed since last collection
+                uint256 timePassed = currentTime - building.lastCollectionTime;
+                
+                // Check if building has exceeded its 24-hour production period
+                uint256 totalTimeSinceCreation = currentTime - building.lastUpgradeTime;
+                if (totalTimeSinceCreation > MAX_PRODUCTION_TIME) {
+                    // If we've already collected all possible gold, skip this building
+                    if (building.lastCollectionTime >= building.lastUpgradeTime + MAX_PRODUCTION_TIME) {
+                        continue;
+                    }
+                    // Otherwise, only collect remaining time up to 24 hours
+                    timePassed = (building.lastUpgradeTime + MAX_PRODUCTION_TIME) - building.lastCollectionTime;
+                }
+                
+                // Calculate gold to collect based on production rate and time passed
+                uint256 productionRate = buildingProductionRates[building.buildingType];
+                uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600; // Convert to per-second rate
+                
+                // Add to total gold
+                totalGold += goldToCollect;
+            }
+        }
+        
+        return totalGold;
+    }
+
+    /**
      * @dev Set building production rate (only owner)
      * @param buildingType The type of building
      * @param rate The new production rate (gold per hour)

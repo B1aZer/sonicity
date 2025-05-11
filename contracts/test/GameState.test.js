@@ -416,5 +416,116 @@ describe("GameState", function () {
         gameState.connect(player1).setBuildingProductionRate("house", 100)
       ).to.be.revertedWithCustomError(gameState, "OwnableUnauthorizedAccount");
     });
+
+    it("Should correctly calculate total claimable gold for a single building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Calculate claimable gold
+      const claimableGold = await gameState.calculateTotalClaimableGold(player1Address);
+      
+      // House produces 10 gold per hour at level 1
+      expect(claimableGold).to.equal(10);
+    });
+
+    it("Should correctly calculate total claimable gold for multiple buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create multiple buildings
+      await gameState.connect(player1).createBuilding("house");      // 10 gold/hour
+      await gameState.connect(player1).createBuilding("water-supply"); // 15 gold/hour
+      await gameState.connect(player1).createBuilding("workshop");    // 20 gold/hour
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Calculate claimable gold
+      const claimableGold = await gameState.calculateTotalClaimableGold(player1Address);
+      
+      // Total should be 45 gold (10 + 15 + 20)
+      expect(claimableGold).to.equal(45);
+    });
+
+    it("Should cap calculated gold at 24 hours for a single building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Fast forward 48 hours
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Calculate claimable gold
+      const claimableGold = await gameState.calculateTotalClaimableGold(player1Address);
+      
+      // House produces 10 gold per hour, should be capped at 24 hours
+      expect(claimableGold).to.equal(240); // 10 gold/hour * 24 hours
+    });
+
+    it("Should cap calculated gold at 24 hours for multiple buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create multiple buildings
+      await gameState.connect(player1).createBuilding("house");      // 10 gold/hour
+      await gameState.connect(player1).createBuilding("water-supply"); // 15 gold/hour
+      await gameState.connect(player1).createBuilding("workshop");    // 20 gold/hour
+      
+      // Fast forward 48 hours
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Calculate claimable gold
+      const claimableGold = await gameState.calculateTotalClaimableGold(player1Address);
+      
+      // Total should be capped at 24 hours of production
+      // (10 + 15 + 20) gold/hour * 24 hours = 1080 gold
+      expect(claimableGold).to.equal(1080);
+    });
+
+    it("Should return 0 for removed buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create and remove a house
+      await gameState.connect(player1).createBuilding("house");
+      await gameState.connect(player1).removeBuilding(0);
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Calculate claimable gold
+      const claimableGold = await gameState.calculateTotalClaimableGold(player1Address);
+      
+      // Should be 0 since the building was removed
+      expect(claimableGold).to.equal(0);
+    });
+
+    it("Should reflect updated production rates in calculations", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Update house production rate to 100 gold per hour
+      await gameState.connect(owner).setBuildingProductionRate("house", 100);
+      
+      // Fast forward 1 hour
+      await ethers.provider.send("evm_increaseTime", [3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Calculate claimable gold
+      const claimableGold = await gameState.calculateTotalClaimableGold(player1Address);
+      
+      // House should now produce 100 gold per hour at level 1
+      expect(claimableGold).to.equal(100);
+    });
   });
 }); 

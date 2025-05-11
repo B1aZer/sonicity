@@ -172,4 +172,9 @@ export class GameStateContract extends BaseContract {
     async setBuildingProductionRate(buildingType, rate) {
         return await this.transact('setBuildingProductionRate', buildingType, rate);
     }
+
+    async calculateTotalClaimableGold() {
+        const address = await this.getAddress();
+        return await this.call('calculateTotalClaimableGold', address);
+    }
 } 
