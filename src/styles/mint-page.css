@@ -1,5 +1,10 @@
+.base-page {
+    display: flex;
+    flex-direction: column;
+}
+
 .mint-container {
-    max-width: var(--container-max-width);
+    max-width: 400px;
     text-align: center;
     flex: 1;
     display: flex;
