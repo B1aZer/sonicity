@@ -1,22 +1,17 @@
-import { ethers } from 'ethers';
-import { CONTRACT_ADDRESSES, CONTRACT_CONFIG } from '../js/utils/constants.js';
-import { appState } from '../js/core/state.js';
 import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
-import { Toast } from '../js/utils/toast.js';
 import Logger from '../js/utils/logger.js';
 import { NFTCard } from '../components/NFTCard.js';
 import { BasePage } from './BasePage.js';
-import SonicityNFTABI from '../../contracts/artifacts/contracts/SonicityNFT.sol/SonicityNFT.json';
-import GameStateABI from '../../contracts/artifacts/contracts/GameState.sol/GameState.json';
-import AltarABI from '../../contracts/artifacts/contracts/Altar.sol/Altar.json';
 import './../styles/stake-page.css';
 import './../styles/nft-collection.css';
+import { StatusComponent } from '../components/StatusComponent.js';
 
 export class StakePage extends BasePage {
     constructor() {
         super();
         this.container = document.createElement('div');
         this.container.className = 'base-page stake-page';
+        this.statusComponent = new StatusComponent();
         this.container.innerHTML = `
             <div class="page-container">
                 <h1>Stake Your NFTs</h1>
@@ -71,46 +66,9 @@ export class StakePage extends BasePage {
     }
 
     showStatus(type, message, title = '') {
-        const statusElement = document.querySelector('.status-component');
-        if (statusElement) {
-            statusElement.remove();
-        }
-
-        const status = document.createElement('div');
-        status.className = `status-component ${type}`;
-
-        if (type === 'loading') {
-            status.innerHTML = `
-                <div class="loading-spinner"></div>
-                <div>
-                    <div class="step">${message}</div>
-                    <div class="description">Please wait while we process your request...</div>
-                </div>
-            `;
-        } else if (type === 'success') {
-            status.innerHTML = `
-                <div>
-                    <div class="title">${title || 'Success!'}</div>
-                    <div class="description">${message}</div>
-                </div>
-            `;
-        } else if (type === 'error') {
-            status.innerHTML = `
-                <div>
-                    <div class="title">${title || 'Error'}</div>
-                    <div class="description">${message}</div>
-                </div>
-            `;
-        }
-
+        const statusElement = this.statusComponent.show(message, type);
         const walletSection = this.container.querySelector('.wallet-section');
-        walletSection.after(status);
-
-        if (type === 'success' || type === 'error') {
-            setTimeout(() => {
-                status.remove();
-            }, 5000);
-        }
+        walletSection.after(statusElement);
     }
 
     async handleConnectWallet() {

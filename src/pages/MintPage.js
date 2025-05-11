@@ -6,10 +6,10 @@ import { WalletManager } from '../js/utils/wallet.js';
 import { ethers } from 'ethers';
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
+import { StatusComponent } from '../components/StatusComponent.js';
 
 import '../styles/mint-page.css';
 import '../styles/nft-collection.css';
-import '../styles/status-component.css';
 
 export class MintPage extends BasePage {
     constructor() {
@@ -25,6 +25,7 @@ export class MintPage extends BasePage {
         this.modal = new Modal();
         this.userNFTs = [];
         this.nftCard = new NFTCard();
+        this.statusComponent = new StatusComponent();
         this.render();
         this.setupEventListeners();
     }
@@ -144,50 +145,9 @@ export class MintPage extends BasePage {
     }
 
     showStatus(message, type = 'info') {
-        // Remove any existing status
-        const existingStatus = this.element.querySelector('.status-component');
-        if (existingStatus) {
-            existingStatus.remove();
-        }
-
-        // Create new status element
-        const statusDiv = document.createElement('div');
-        statusDiv.className = `status-component ${type}`;
-        
-        if (type === 'loading') {
-            statusDiv.innerHTML = `
-                <div class="loading-spinner"></div>
-                <div>
-                    <div class="step">${message}</div>
-                    <div class="description">Please wait while we process your request...</div>
-                </div>
-            `;
-        } else if (type === 'success') {
-            statusDiv.innerHTML = `
-                <div class="status-content">
-                    <div class="title">Success!</div>
-                    <div class="description">${message}</div>
-                </div>
-            `;
-        } else if (type === 'error') {
-            statusDiv.innerHTML = `
-                <div class="status-content">
-                    <div class="title">Error</div>
-                    <div class="description">${message}</div>
-                </div>
-            `;
-        }
-
-        // Insert after mint actions
+        const statusElement = this.statusComponent.show(message, type);
         const actionsSection = this.element.querySelector('.mint-actions');
-        actionsSection.after(statusDiv);
-
-        // Auto-remove success/error messages after 5 seconds
-        if (type === 'success' || type === 'error') {
-            setTimeout(() => {
-                statusDiv.remove();
-            }, 5000);
-        }
+        actionsSection.after(statusElement);
     }
 
     getPlaceholderHTML() {
