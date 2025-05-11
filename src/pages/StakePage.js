@@ -15,9 +15,6 @@ export class StakePage extends BasePage {
         this.container.innerHTML = `
             <div class="page-container">
                 <h1>Stake Your NFTs</h1>
-                <p class="page-description">
-                    Stake your NFTs to earn rewards and participate in the Sonicity ecosystem.
-                </p>
 
                 <div class="page-section wallet-section">
                     <button class="connect-button">
