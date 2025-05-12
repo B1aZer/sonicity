@@ -645,7 +645,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @param player The address of the player
      * @return uint256 Total claimable gold
      */
-    function calculateTotalClaimableGold(address player) external view returns (uint256) {
+    function calculateTotalClaimableGold(address player) public view returns (uint256) {
         uint256 totalGold = 0;
         uint256 currentTime = block.timestamp;
         
@@ -660,15 +660,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
                 // Calculate time passed since last collection
                 uint256 timePassed = currentTime - building.lastCollectionTime;
                 
-                // Check if building has exceeded its 24-hour production period
-                uint256 totalTimeSinceCreation = currentTime - building.lastUpgradeTime;
-                if (totalTimeSinceCreation > MAX_PRODUCTION_TIME) {
-                    // If we've already collected all possible gold, skip this building
-                    if (building.lastCollectionTime >= building.lastUpgradeTime + MAX_PRODUCTION_TIME) {
-                        continue;
-                    }
-                    // Otherwise, only collect remaining time up to 24 hours
-                    timePassed = (building.lastUpgradeTime + MAX_PRODUCTION_TIME) - building.lastCollectionTime;
+                // Cap the time passed at 24 hours
+                if (timePassed > MAX_PRODUCTION_TIME) {
+                    timePassed = MAX_PRODUCTION_TIME;
                 }
                 
                 // Calculate gold to collect based on production rate and time passed

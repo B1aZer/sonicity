@@ -608,5 +608,47 @@ describe("GameState", function () {
       // House should now produce 100 gold per hour at level 1
       expect(claimableGold).to.equal(100);
     });
+
+    it("Should correctly calculate claimable gold for old building with recent collection", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Fast forward 48 hours (building is now 48 hours old)
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect gold (this sets lastCollectionTime)
+      await gameState.connect(player1).collectGold(0);
+      
+      // Fast forward 12 hours (12 hours since last collection)
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Calculate claimable gold
+      const claimableGold = await gameState.calculateTotalClaimableGold(player1Address);
+      
+      // Should get 12 hours worth of gold (10 gold/hour * 12 hours = 120 gold)
+      expect(claimableGold).to.equal(120);
+    });
+
+    it("Should correctly calculate claimable gold for old building with no recent collection", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Fast forward 48 hours (building is now 48 hours old)
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Don't collect gold, just check claimable amount
+      const claimableGold = await gameState.calculateTotalClaimableGold(player1Address);
+      
+      // Should get 24 hours worth of gold (10 gold/hour * 24 hours = 240 gold)
+      // because it's capped at 24 hours of production
+      expect(claimableGold).to.equal(240);
+    });
   });
 }); 
