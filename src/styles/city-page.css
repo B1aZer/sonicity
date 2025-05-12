@@ -14,18 +14,9 @@
     transition: width var(--transition-normal);
 }
 
-.donation-section {
-    text-align: center;
-}
-
 .donation-form {
     display: flex;
     gap: var(--spacing-md);
-    justify-content: center;
-    margin-top: var(--spacing-md);
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 .donation-amount {

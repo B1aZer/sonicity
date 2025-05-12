@@ -5,6 +5,12 @@
     gap: var(--spacing-md);
 }
 
+.status-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 /* Status Items */
 .status-item {
     display: flex;
