@@ -36,26 +36,34 @@ export class DistrictPage extends BasePage {
         try {
             Logger.info('Starting to load district data...');
             
-            const [gold, buildingSlots] = await Promise.all([
+            const [gold, buildingSlots, totalBuildings] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
-                this.contracts.gameState.getBuildingSlots()
+                this.contracts.gameState.getBuildingSlots(),
+                this.contracts.gameState.getTotalBuildings()
             ]);
 
             Logger.info('Received data from contract:', {
                 gold: gold.toString(),
-                buildingSlots: buildingSlots.toString()
+                buildingSlots: buildingSlots.toString(),
+                totalBuildings: totalBuildings.toString()
             });
 
             // Update gold display
-            const goldValue = this.element.querySelector('.status-item:first-child .status-value');
+            const goldValue = this.element.querySelector('.gold-value');
             if (goldValue) {
                 goldValue.textContent = gold.toString();
             }
 
+            // Update total buildings display
+            const buildingsValue = this.element.querySelector('.total-buildings-value');
+            if (buildingsValue) {
+                buildingsValue.textContent = totalBuildings.toString();
+            }
+
             // Update building slots display
-            const slotsItem = this.element.querySelector('.status-item:last-child .status-value');
-            if (slotsItem) {
-                slotsItem.textContent = buildingSlots.toString();
+            const slotsValue = this.element.querySelector('.building-slots-value');
+            if (slotsValue) {
+                slotsValue.textContent = buildingSlots.toString();
             }
 
         } catch (error) {
@@ -179,11 +187,15 @@ export class DistrictPage extends BasePage {
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Gold:</span>
-                            <span class="status-value">Loading...</span>
+                            <span class="status-value gold-value">Loading...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Total Buildings:</span>
+                            <span class="status-value total-buildings-value">Loading...</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Building Slots:</span>
-                            <span class="status-value">Loading...</span>
+                            <span class="status-value building-slots-value">Loading...</span>
                         </div>
                     </div>
                 </div>
