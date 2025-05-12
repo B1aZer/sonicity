@@ -123,9 +123,8 @@ export class CityPage extends BasePage {
                     // Show transaction pending message
                     const loadingModal = this.modal.loading('Transaction submitted! Waiting for confirmation...');
                     
-                    // Execute donation
-                    const tx = await this.contracts.gameState.donateGold(amount);
-                    await tx.wait();
+                    // Execute donation using transact
+                    await this.contracts.gameState.donateGold(amount);
                     
                     // Close loading modal
                     loadingModal.close();

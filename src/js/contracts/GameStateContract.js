@@ -13,7 +13,7 @@ export class GameStateContract extends BaseContract {
         try {
             const city = await this.contract.cities(cityId);
             return {
-                treasury: ethers.formatEther(city.treasury),
+                treasury: city.treasury,
                 tier: city.tier,
                 peaceShield: city.peaceShield
             };
