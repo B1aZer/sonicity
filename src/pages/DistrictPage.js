@@ -36,34 +36,26 @@ export class DistrictPage extends BasePage {
         try {
             Logger.info('Starting to load district data...');
             
-            const [playerGold, buildingSlots, buildings] = await Promise.all([
+            const [gold, buildingSlots] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
-                this.contracts.gameState.getPlayerBuildingSlots(),
-                this.contracts.gameState.getPlayerBuildings()
+                this.contracts.gameState.getBuildingSlots()
             ]);
 
             Logger.info('Received data from contract:', {
-                playerGold: playerGold.toString(),
-                buildingSlots: buildingSlots.toString(),
-                buildings: buildings
+                gold: gold.toString(),
+                buildingSlots: buildingSlots.toString()
             });
 
-            // Update player gold display
-            const goldValue = this.element.querySelector('.player-gold');
+            // Update gold display
+            const goldValue = this.element.querySelector('.status-item:first-child .status-value');
             if (goldValue) {
-                goldValue.textContent = playerGold.toString();
+                goldValue.textContent = gold.toString();
             }
 
             // Update building slots display
-            const slotsValue = this.element.querySelector('.building-slots');
-            if (slotsValue) {
-                slotsValue.textContent = buildingSlots.toString();
-            }
-
-            // Update buildings grid
-            const buildingsGrid = this.element.querySelector('.buildings-grid');
-            if (buildingsGrid) {
-                buildingsGrid.innerHTML = buildings.map(building => this.renderBuildingCard(building)).join('');
+            const slotsItem = this.element.querySelector('.status-item:last-child .status-value');
+            if (slotsItem) {
+                slotsItem.textContent = buildingSlots.toString();
             }
 
         } catch (error) {
@@ -72,80 +64,106 @@ export class DistrictPage extends BasePage {
         }
     }
 
-    renderBuildingCard(building) {
-        return `
-            <div class="building-card" data-building-id="${building.id}">
-                <h3>${building.type}</h3>
-                <p>Level: <span class="level-value">${building.level}</span></p>
-                <p>Production: <span class="production-value">${building.productionRate}</span>/hour</p>
-                <p>Last Collection: <span class="last-collection">${new Date(building.lastCollectionTime * 1000).toLocaleString()}</span></p>
-                <div class="building-actions">
-                    <button class="collect-button" data-building-id="${building.id}">Collect Gold</button>
-                    <button class="upgrade-button" data-building-id="${building.id}">Upgrade</button>
-                </div>
-            </div>
-        `;
-    }
-
-    async handleBuildingAction(action, buildingId) {
+    async handleBuildingAction(buildingType) {
         try {
-            Logger.info(`Starting ${action} for building ${buildingId}`);
+            Logger.info(`Starting handleBuildingAction for: ${buildingType}`);
             
+            // Convert building type to lowercase to match contract expectations
+            const formattedBuildingType = buildingType.toLowerCase();
+            Logger.info(`Formatted building type: ${formattedBuildingType}`);
+            
+            // Check if player is in a city
+            const cityId = await this.contracts.gameState.getPlayerCity();
+            Logger.info(`Player city ID: ${cityId}`);
+            if (!cityId) {
+                Logger.info('Player not in a city, showing modal');
+                this.modal.error('You need to join a city before building!');
+                return;
+            }
+
+            // Check available building slots
+            const slots = await this.contracts.gameState.getBuildingSlots();
+            Logger.info(`Building slots: ${slots}`);
+            if (slots <= 0) {
+                Logger.info('No building slots available, showing modal');
+                this.modal.error('No building slots available! You need to stake an NFT to get more slots.');
+                return;
+            }
+
+            // Check gold balance
+            const gold = await this.contracts.gameState.getPlayerGold();
+            const requiredGold = 100; // 100 Gold for a house
+            Logger.info(`Player gold: ${gold}, Required: ${requiredGold}`);
+            if (Number(gold) < requiredGold) {
+                Logger.info('Insufficient gold, showing modal');
+                this.modal.error(
+                    `Insufficient gold!<br>
+                    Required: ${requiredGold} Gold<br>
+                    Current balance: ${gold} Gold`
+                );
+                return;
+            }
+
             // Show confirmation dialog
+            Logger.info('Showing confirmation dialog');
             const result = await this.modal.confirm(
-                `Are you sure you want to ${action} this building?`,
-                { title: `Confirm ${action}` }
+                `Build a ${formattedBuildingType} for ${requiredGold} Gold?`,
+                { title: 'Confirm Building' }
             );
 
             if (result.isConfirmed) {
-                Logger.info(`User confirmed ${action}`);
+                Logger.info('User confirmed building action');
                 try {
                     // Show transaction pending message
                     const loadingModal = this.modal.loading('Transaction submitted! Waiting for confirmation...');
                     
-                    // Execute action
-                    let tx;
-                    if (action === 'collect') {
-                        tx = await this.contracts.gameState.collectGold(buildingId);
-                    } else if (action === 'upgrade') {
-                        tx = await this.contracts.gameState.upgradeBuilding(buildingId);
-                    }
+                    // Create the building
+                    Logger.info('Calling createBuilding on contract');
+                    const tx = await this.contracts.gameState.createBuilding(formattedBuildingType);
+                    Logger.info('Transaction sent, waiting for confirmation');
                     
-                    await tx.wait();
+                    // Wait for transaction to be mined
+                    const receipt = await tx;
+                    Logger.info('Transaction confirmed');
                     
                     // Close loading modal
                     loadingModal.close();
                     
-                    // Reload district data
+                    // Reload district data to update UI
                     await this.loadDistrictData();
                     
-                    this.modal.success(`Successfully ${action}ed building!`);
+                    this.modal.success(`Successfully built ${formattedBuildingType}!`);
+                    Logger.info(`Successfully built: ${formattedBuildingType}`);
                 } catch (error) {
-                    Logger.error(`Error ${action}ing building:`, error);
-                    this.modal.error(`Error ${action}ing building: ${error.message}`);
+                    Logger.error(`Error building ${formattedBuildingType}:`, error);
+                    this.modal.error(`Error building ${formattedBuildingType}: ${error.message}`);
                 }
+            } else {
+                Logger.info('User cancelled building action');
             }
         } catch (error) {
-            Logger.error(`Error in handleBuildingAction:`, error);
-            this.modal.error(`Error ${action}ing building: ${error.message}`);
+            Logger.error(`Error in handleBuildingAction for ${buildingType}:`, error);
+            this.modal.error(`Error building ${buildingType}: ${error.message}`);
         }
     }
 
     setupEventListeners() {
         Logger.info('Setting up event listeners');
         
-        // Building action buttons
-        this.element.addEventListener('click', async (event) => {
-            const collectButton = event.target.closest('.collect-button');
-            const upgradeButton = event.target.closest('.upgrade-button');
-            
-            if (collectButton) {
-                const buildingId = collectButton.dataset.buildingId;
-                await this.handleBuildingAction('collect', buildingId);
-            } else if (upgradeButton) {
-                const buildingId = upgradeButton.dataset.buildingId;
-                await this.handleBuildingAction('upgrade', buildingId);
-            }
+        // Add click event listeners for building buttons
+        const buildingButtons = this.element.querySelectorAll('.building-button');
+        buildingButtons.forEach(button => {
+            Logger.info(`Setting up listener for button: ${button.getAttribute('data-building')}`);
+            button.addEventListener('click', (event) => {
+                Logger.info('Building button clicked');
+                const buildingType = button.getAttribute('data-building');
+                if (buildingType) {
+                    Logger.info(`Attempting to build: ${buildingType}`);
+                    this.handleBuildingAction(buildingType).catch(error => {
+                        Logger.error('Error in handleBuildingAction:', error);
+                    });
+                }
+            });
         });
     }
 
@@ -160,12 +178,12 @@ export class DistrictPage extends BasePage {
                     <h2>District Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
-                            <span class="status-label">Your Gold:</span>
-                            <span class="status-value player-gold">Loading...</span>
+                            <span class="status-label">Gold:</span>
+                            <span class="status-value">Loading...</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Building Slots:</span>
-                            <span class="status-value building-slots">Loading...</span>
+                            <span class="status-value">Loading...</span>
                         </div>
                     </div>
                 </div>
