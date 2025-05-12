@@ -123,7 +123,7 @@ export class CityPage extends BasePage {
         Logger.info('Setting up event listeners');
         
         // Donation form
-        const donateButton = this.element.querySelector('.donate-button');
+        const donateButton = this.element.querySelector('.btn-primary');
         const donationInput = this.element.querySelector('.donation-amount');
         
         if (donateButton && donationInput) {
@@ -184,7 +184,7 @@ export class CityPage extends BasePage {
                     <h2>Donate to City</h2>
                     <div class="donation-form">
                         <input type="number" class="donation-amount" placeholder="Amount to donate">
-                        <button class="donate-button">Donate Gold</button>
+                        <button class="btn btn-primary">Donate Gold</button>
                     </div>
                 </div>
 
