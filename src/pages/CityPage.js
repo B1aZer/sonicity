@@ -36,30 +36,42 @@ export class CityPage extends BasePage {
         try {
             Logger.info('Starting to load city data...');
             
-            const [cityId, tier, treasury, nextTierCost] = await Promise.all([
-                this.contracts.gameState.getPlayerCity(),
-                this.contracts.gameState.getCityTier(),
-                this.contracts.gameState.getCityTreasury(),
-                this.contracts.gameState.getNextTierRequirement()
+            const cityId = await this.contracts.gameState.getPlayerCity();
+            if (!cityId) {
+                this.modal.error('You are not in a city! Please join a city first.');
+                return;
+            }
+
+            const [cityInfo, playerRep, nextTierCost] = await Promise.all([
+                this.contracts.gameState.getCityInfo(cityId),
+                this.contracts.gameState.getPlayerRep(),
+                this.contracts.gameState.getNextTierCost(cityId)
             ]);
 
             Logger.info('Received data from contract:', {
                 cityId: cityId.toString(),
-                tier: tier.toString(),
-                treasury: treasury.toString(),
+                tier: cityInfo.tier.toString(),
+                treasury: cityInfo.treasury.toString(),
+                playerRep: playerRep.toString(),
                 nextTierCost: nextTierCost.toString()
             });
 
             // Update city tier display
             const tierValue = this.element.querySelector('.city-tier');
             if (tierValue) {
-                tierValue.textContent = tier.toString();
+                tierValue.textContent = cityInfo.tier.toString();
             }
 
             // Update treasury display
             const treasuryValue = this.element.querySelector('.treasury-amount');
             if (treasuryValue) {
-                treasuryValue.textContent = treasury.toString();
+                treasuryValue.textContent = cityInfo.treasury.toString();
+            }
+
+            // Update rep points display
+            const repValue = this.element.querySelector('.rep-points');
+            if (repValue) {
+                repValue.textContent = playerRep.toString();
             }
 
             // Update next tier cost display
@@ -71,9 +83,23 @@ export class CityPage extends BasePage {
             // Update progress bar
             const progressBar = this.element.querySelector('.tier-progress-bar');
             if (progressBar) {
-                const progress = (Number(treasury) / Number(nextTierCost)) * 100;
+                const treasury = Number(cityInfo.treasury);
+                const cost = Number(nextTierCost);
+                const progress = (treasury / cost) * 100;
                 progressBar.style.width = `${Math.min(progress, 100)}%`;
+                
+                // Add a title to show exact progress
+                progressBar.title = `${Math.min(progress, 100).toFixed(2)}% (${treasury}/${cost})`;
             }
+
+            // Update building levels
+            const buildingCards = this.element.querySelectorAll('.building-card');
+            buildingCards.forEach(card => {
+                const levelValue = card.querySelector('.level-value');
+                if (levelValue) {
+                    levelValue.textContent = '1'; // Default level for now
+                }
+            });
 
         } catch (error) {
             Logger.error('Error loading city data:', error);
