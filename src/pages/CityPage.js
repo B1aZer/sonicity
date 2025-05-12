@@ -196,23 +196,34 @@ export class CityPage extends BasePage {
                             <p>Current Tier: <span class="tier-value">1</span></p>
                             <p>Production Bonus: <span class="bonus-value">100%</span></p>
                         </div>
-                        <div class="building-card">
+                        <div class="building-card locked">
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock lock-icon"></i>
+                            </div>
                             <h3>Treasury</h3>
                             <p>Current Level: <span class="level-value">1</span></p>
                             <p>Weekly Import Limit: <span class="limit-value">1000</span></p>
-                            <!-- <button class="upgrade-button" data-building="treasury">Upgrade</button> -->
                         </div>
-                        <div class="building-card">
+                        <div class="building-card locked">
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock lock-icon"></i>
+                            </div>
                             <h3>Barracks</h3>
                             <p>Current Level: <span class="level-value">1</span></p>
                             <p>Unit Capacity: <span class="capacity-value">10</span></p>
                         </div>
-                        <div class="building-card">
+                        <div class="building-card locked">
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock lock-icon"></i>
+                            </div>
                             <h3>Diplomacy Center</h3>
                             <p>Current Level: <span class="level-value">1</span></p>
                             <p>Alliance Slots: <span class="slots-value">1</span></p>
                         </div>
-                        <div class="building-card">
+                        <div class="building-card locked">
+                            <div class="lock-overlay">
+                                <i class="fas fa-lock lock-icon"></i>
+                            </div>
                             <h3>Bank</h3>
                             <p>Current Level: <span class="level-value">1</span></p>
                             <p>Trading Fee: <span class="fee-value">5%</span></p>
