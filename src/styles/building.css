@@ -27,6 +27,12 @@
     font-size: var(--font-size-sm);
 }
 
+.building-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
 .building-card.locked {
     opacity: 0.7;
     background: var(--bg-lighter);
@@ -80,5 +86,9 @@
 
     .buildings-grid {
         grid-template-columns: 1fr;
+    }
+
+    .building-actions {
+        flex-direction: column;
     }
 }
