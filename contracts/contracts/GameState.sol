@@ -330,6 +330,17 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Get player's reputation balance
+     * @param player The address of the player
+     * @return uint256 Player's reputation balance
+     */
+    function getPlayerRep(address player) external view returns (uint256) {
+        uint256 cityId = playerCity[player];
+        require(cityId > 0, "Player not in a city");
+        return cities[cityId].playerRep[player];
+    }
+
+    /**
      * @dev Get city's treasury balance
      * @param cityId The ID of the city
      * @return uint256 City's treasury balance

@@ -110,6 +110,18 @@ export class GameStateContract extends BaseContract {
         return await this.call('getPlayerGold', address);
     }
 
+    async getPlayerRep() {
+        const address = await this.getAddress();
+        return await this.call('getPlayerRep', address);
+    }
+
+    async getNextTierCost(cityId) {
+        const cityInfo = await this.getCityInfo(cityId);
+        const currentTier = Number(cityInfo.tier);
+        const nextTierCost = await this.call('tierRequirements', currentTier + 1);
+        return nextTierCost;
+    }
+
     async earnGold(amount) {
         return await this.transact('earnGold', amount);
     }
