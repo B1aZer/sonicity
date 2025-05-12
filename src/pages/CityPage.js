@@ -178,6 +178,15 @@ export class CityPage extends BasePage {
                     </div>
                 </div>
 
+                <!-- Donation Section -->
+                <div class="page-section donation-section">
+                    <h2>Donate to City</h2>
+                    <div class="donation-form">
+                        <input type="number" class="donation-amount" placeholder="Amount to donate">
+                        <button class="donate-button">Donate Gold</button>
+                    </div>
+                </div>
+
                 <!-- City Buildings Section -->
                 <div class="page-section city-buildings-section">
                     <h2>City Buildings</h2>
@@ -186,41 +195,28 @@ export class CityPage extends BasePage {
                             <h3>Town Hall</h3>
                             <p>Current Tier: <span class="tier-value">1</span></p>
                             <p>Production Bonus: <span class="bonus-value">100%</span></p>
-                            <button class="upgrade-button" data-building="town-hall">Upgrade</button>
                         </div>
                         <div class="building-card">
                             <h3>Treasury</h3>
                             <p>Current Level: <span class="level-value">1</span></p>
                             <p>Weekly Import Limit: <span class="limit-value">1000</span></p>
-                            <button class="upgrade-button" data-building="treasury">Upgrade</button>
+                            <!-- <button class="upgrade-button" data-building="treasury">Upgrade</button> -->
                         </div>
                         <div class="building-card">
                             <h3>Barracks</h3>
                             <p>Current Level: <span class="level-value">1</span></p>
                             <p>Unit Capacity: <span class="capacity-value">10</span></p>
-                            <button class="upgrade-button" data-building="barracks">Upgrade</button>
                         </div>
                         <div class="building-card">
                             <h3>Diplomacy Center</h3>
                             <p>Current Level: <span class="level-value">1</span></p>
                             <p>Alliance Slots: <span class="slots-value">1</span></p>
-                            <button class="upgrade-button" data-building="diplomacy">Upgrade</button>
                         </div>
                         <div class="building-card">
                             <h3>Bank</h3>
                             <p>Current Level: <span class="level-value">1</span></p>
                             <p>Trading Fee: <span class="fee-value">5%</span></p>
-                            <button class="upgrade-button" data-building="bank">Upgrade</button>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Donation Section -->
-                <div class="page-section donation-section">
-                    <h2>Donate to City</h2>
-                    <div class="donation-form">
-                        <input type="number" class="donation-amount" placeholder="Amount to donate">
-                        <button class="donate-button">Donate Gold</button>
                     </div>
                 </div>
             </div>
