@@ -9,10 +9,10 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 map: { value: null },
                 alphaMap: { value: null },
                 colorMap: { value: null },
-                windStrength: { value: 0.2 },
-                windSpeed: { value: 0.5 },
-                tipColor: { value: new THREE.Color(0.38, 0.82, 0.21).convertSRGBToLinear() },
-                bottomColor: { value: new THREE.Color(0.12, 0.36, 0.08).convertSRGBToLinear() },
+                windStrength: { value: 0.15 },
+                windSpeed: { value: 0.3 },
+                tipColor: { value: new THREE.Color(0.35, 0.75, 0.18).convertSRGBToLinear() },
+                bottomColor: { value: new THREE.Color(0.15, 0.35, 0.1).convertSRGBToLinear() },
                 windDirection: { value: new THREE.Vector2(1.0, 0.0) }
             },
             vertexShader: `
@@ -59,19 +59,19 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     );
                 }
                 
-                // Improved wind function with more natural movement
+                // Improved wind function with more subtle movement
                 float wind(float x, float y, float time) {
-                    // Primary wind wave
-                    float wind = sin(time * windSpeed + x * 0.1) * windStrength;
+                    // Primary wind wave with more subtle frequency
+                    float wind = sin(time * windSpeed + x * 0.06) * windStrength;
                     
                     // Secondary wind wave (slower, wider)
-                    wind += sin(time * windSpeed * 0.5 + x * 0.05) * windStrength * 0.3;
+                    wind += sin(time * windSpeed * 0.3 + x * 0.03) * windStrength * 0.3;
                     
                     // Tertiary wind wave (very slow, very wide)
-                    wind += sin(time * windSpeed * 0.25 + x * 0.025) * windStrength * 0.15;
+                    wind += sin(time * windSpeed * 0.15 + x * 0.015) * windStrength * 0.15;
                     
-                    // Add some turbulence
-                    wind += sin(time * windSpeed * 2.0 + x * 0.2) * windStrength * 0.05;
+                    // Add some very subtle turbulence
+                    wind += sin(time * windSpeed * 1.2 + x * 0.12) * windStrength * 0.05;
                     
                     return wind;
                 }
@@ -92,11 +92,11 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     float heightFactor = smoothstep(0.0, 1.0, position.y / 1.0);
                     
                     // Apply wind with more natural movement
-                    pos.x += windX * heightFactor * heightFactor; // Square the height factor for more natural movement
-                    pos.z += windZ * heightFactor * heightFactor;
+                    pos.x += windX * heightFactor * heightFactor * heightFactor; // Cube the height factor for more natural movement
+                    pos.z += windZ * heightFactor * heightFactor * heightFactor;
                     
                     // Add slight vertical movement that follows the wind
-                    float verticalWind = sin(time * windSpeed * 0.5 + position.x * 0.1) * windStrength * 0.1;
+                    float verticalWind = sin(time * windSpeed * 0.4 + position.x * 0.08) * windStrength * 0.15;
                     pos.y += verticalWind * heightFactor * heightFactor;
                     
                     // Apply stretch
@@ -131,28 +131,28 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     float alpha = texture2D(alphaMap, vUv).r;
                     
                     // If transparent, don't draw
-                    if(alpha < 0.15) discard;
+                    if(alpha < 0.2) discard;
                     
                     // Sample grayscale texture for variation
-                    vec2 variationUV = vUv * 3.0;
+                    vec2 variationUV = vUv * 2.5;
                     // Add some variation to UV based on position
-                    variationUV.x += sin(vPosition.x * 0.5) * 0.1;
-                    variationUV.y += cos(vPosition.z * 0.5) * 0.1;
-                    float variation = texture2D(colorMap, variationUV).r; // Use just the red channel for grayscale
+                    variationUV.x += sin(vPosition.x * 0.4) * 0.08;
+                    variationUV.y += cos(vPosition.z * 0.4) * 0.08;
+                    float variation = texture2D(colorMap, variationUV).r;
                     
                     // Create base color by blending between bottom and tip colors
-                    float heightFactor = smoothstep(0.0, 0.7, frc);
+                    float heightFactor = smoothstep(0.0, 0.8, frc);
                     vec3 baseColor = mix(bottomColor, tipColor, heightFactor);
                     
-                    // Apply variation from texture
-                    baseColor *= mix(0.7, 1.3, variation); // Use texture to vary brightness
+                    // Apply variation from texture with more subtle effect
+                    baseColor *= mix(0.8, 1.2, variation);
                     
                     // Add subtle darkening at the base
-                    float baseShadow = (1.0 - frc) * 0.3;
+                    float baseShadow = (1.0 - frc) * 0.25;
                     baseColor *= (1.0 - baseShadow);
                     
-                    // Add slight brightness variation based on wind
-                    float windBrightness = 1.0 + (vWindStrength * 0.1);
+                    // Add very slight brightness variation based on wind
+                    float windBrightness = 1.0 + (vWindStrength * 0.05);
                     baseColor *= windBrightness;
                     
                     gl_FragColor = vec4(baseColor, 1.0);

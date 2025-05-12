@@ -132,8 +132,9 @@ export class GrassBlades {
         let quaternion_0 = new THREE.Vector4();
         let quaternion_1 = new THREE.Vector4();
         
-        const min = -0.25;
-        const max = 0.25;
+        // Increase the range of random angles for more natural bending
+        const min = -0.5;
+        const max = 0.5;
         
         // Create a grid for better distribution
         const gridSize = Math.ceil(Math.sqrt(instances));
@@ -144,17 +145,17 @@ export class GrassBlades {
             const gridX = i % gridSize;
             const gridZ = Math.floor(i / gridSize);
             
-            // Add less jitter to grid position for more even coverage
-            const jitterX = (Math.random() - 0.5) * cellSize * 0.3;
-            const jitterZ = (Math.random() - 0.5) * cellSize * 0.3;
+            // Add more jitter to grid position for more natural distribution
+            const jitterX = (Math.random() - 0.5) * cellSize * 0.6;
+            const jitterZ = (Math.random() - 0.5) * cellSize * 0.6;
             
             // Calculate final position
             const offsetX = (gridX * cellSize - width / 2) + jitterX;
             const offsetZ = (gridZ * cellSize - width / 2) + jitterZ;
             
-            // Apply density noise (lower threshold for more blades)
-            const densityNoise = this.noise2D(offsetX / 20, offsetZ / 20);
-            if (densityNoise < -0.6) continue;
+            // Apply density noise with more variation
+            const densityNoise = this.noise2D(offsetX / 12, offsetZ / 12);
+            if (densityNoise < -0.4) continue;
             
             const offsetY = this.getYPosition(offsetX, offsetZ);
             offsets.push(offsetX, offsetY, offsetZ);
@@ -198,15 +199,15 @@ export class GrassBlades {
             
             // Define variety in height with more natural distribution
             const heightVariation = Math.random();
-            if (heightVariation < 0.1) {
+            if (heightVariation < 0.2) {
                 // Some very tall blades
-                stretches.push(1.8 + Math.random() * 0.4);
-            } else if (heightVariation < 0.3) {
+                stretches.push(1.6 + Math.random() * 0.4);
+            } else if (heightVariation < 0.4) {
                 // Medium height blades
-                stretches.push(1.2 + Math.random() * 0.4);
+                stretches.push(1.1 + Math.random() * 0.3);
             } else {
                 // Regular height blades
-                stretches.push(0.8 + Math.random() * 0.4);
+                stretches.push(0.9 + Math.random() * 0.3);
             }
         }
         
@@ -240,18 +241,18 @@ export class GrassBlades {
             // Use raw time for consistent animation
             this.material.uniforms.time.value = time;
             
-            // Update wind direction with more subtle variation
-            const angle = Math.sin(time * 0.05) * Math.PI * 0.25;
-            const strength = 0.6 + Math.sin(time * 0.02) * 0.1;
+            // Update wind direction with more natural variation
+            const angle = Math.sin(time * 0.03) * Math.PI * 0.3;
+            const strength = 0.5 + Math.sin(time * 0.015) * 0.15;
             
             this.material.uniforms.windDirection.value.set(
                 Math.cos(angle) * strength,
                 Math.sin(angle) * strength
             );
             
-            // Use more stable wind parameters
-            this.material.uniforms.windStrength.value = 0.2;
-            this.material.uniforms.windSpeed.value = 0.5;
+            // Use more natural wind parameters
+            this.material.uniforms.windStrength.value = 0.25;
+            this.material.uniforms.windSpeed.value = 0.4;
         }
     }
     
