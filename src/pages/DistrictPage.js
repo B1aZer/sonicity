@@ -171,9 +171,29 @@ export class DistrictPage extends BasePage {
 
                 <!-- District Buildings Section -->
                 <div class="page-section district-buildings-section">
-                    <h2>Your Buildings</h2>
+                    <h2>District Buildings</h2>
                     <div class="buildings-grid">
-                        <!-- Buildings will be dynamically added here -->
+                        <div class="building-card">
+                            <h3>House</h3>
+                            <p>Basic residential building for citizens</p>
+                            <p>Production: 10 gold/hour</p>
+                            <p>Cost: 100 gold</p>
+                            <button class="building-button" data-building="house" type="button">Build House</button>
+                        </div>
+                        <div class="building-card">
+                            <h3>Water Supply</h3>
+                            <p>Provides water infrastructure for the district</p>
+                            <p>Production: 15 gold/hour</p>
+                            <p>Cost: 200 gold</p>
+                            <button class="building-button" data-building="water-supply" type="button">Build Water Supply</button>
+                        </div>
+                        <div class="building-card">
+                            <h3>Workshop</h3>
+                            <p>Produces goods and provides employment</p>
+                            <p>Production: 20 gold/hour</p>
+                            <p>Cost: 300 gold</p>
+                            <button class="building-button" data-building="workshop" type="button">Build Workshop</button>
+                        </div>
                     </div>
                 </div>
             </div>
