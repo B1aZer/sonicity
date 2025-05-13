@@ -22,7 +22,7 @@ async function main() {
         const gameState = await GameState.attach(gameStateAddress);
         
         // New production rate (in gold per hour)
-        const newProductionRate = 10000; // Adjust this value as needed
+        const newProductionRate = 10; // Adjust this value as needed
         
         console.log(`Updating house production rate to ${newProductionRate} gold per hour...`);
         
