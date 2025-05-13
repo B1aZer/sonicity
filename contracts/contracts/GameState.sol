@@ -107,10 +107,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         __ReentrancyGuard_init();
         
         // Initialize tier requirements
-        tierRequirements[1] = 1000;  // 1000 Gold for Tier 1
-        tierRequirements[2] = 5000;  // 5000 Gold for Tier 2
-        tierRequirements[3] = 10000; // 10000 Gold for Tier 3
-        tierRequirements[4] = 50000; // 50000 Gold for Tier 4
+        tierRequirements[0] = 0;      // Tier 0 is the starting tier, no requirement
+        tierRequirements[1] = 1000;   // 1000 Gold for Tier 1
+        tierRequirements[2] = 5000;   // 5000 Gold for Tier 2
+        tierRequirements[3] = 10000;  // 10000 Gold for Tier 3
+        tierRequirements[4] = 50000;  // 50000 Gold for Tier 4
         
         // Initialize building costs
         buildingCosts["house"] = 100;  // 100 Gold for a house
@@ -222,6 +223,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         
         // Grant initial gold to new players
         cities[cityId].playerGold[msg.sender] = 500; // Starting gold amount
+        cities[cityId].tier = 0; // Start at tier 0
         
         emit CityJoined(msg.sender, cityId);
     }
@@ -238,7 +240,28 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         cities[cityId].playerGold[msg.sender] -= amount;
         cities[cityId].treasury += amount;
         
+        // Check for tier upgrade
+        uint8 currentTier = cities[cityId].tier;
+        uint8 nextTier = currentTier + 1;
+        if (nextTier <= 4 && cities[cityId].treasury >= tierRequirements[nextTier]) {
+            cities[cityId].tier = nextTier;
+            cities[cityId].lastTierUpgrade = block.timestamp;
+            emit CityTierUpgraded(cityId, nextTier);
+        }
+        
+        // Calculate rep points (1% of donated amount, with tier multiplier)
+        uint256 repPoints = (amount * 1) / 100; // 1% base rate
+        
+        // Apply tier multiplier (each tier gives 20% bonus, starting from tier 1)
+        if (currentTier > 0) {
+            repPoints = repPoints * (100 + (currentTier * 20)) / 100;
+        }
+        
+        // Award rep points
+        cities[cityId].playerRep[msg.sender] += repPoints;
+        
         emit GoldDonated(msg.sender, amount);
+        emit RepEarned(msg.sender, repPoints);
     }
 
     /**

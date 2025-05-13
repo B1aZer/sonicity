@@ -33,6 +33,9 @@ describe("GameState", function () {
       await gameState.connect(player1).joinCity(1);
       const cityId = await gameState.playerCity(await player1.getAddress());
       expect(cityId).to.equal(1);
+      // City should start at tier 0
+      const city = await gameState.cities(1);
+      expect(city.tier).to.equal(0);
     });
 
     it("Should not allow players to join multiple cities", async function () {
@@ -61,6 +64,69 @@ describe("GameState", function () {
     it("Should not allow players to donate more gold than they have", async function () {
       await gameState.connect(player1).joinCity(1);
       await expect(gameState.connect(player1).donateGold(1000)).to.be.revertedWith("Insufficient Gold");
+    });
+  });
+
+  describe("Reputation Points", function () {
+    beforeEach(async function () {
+      await gameState.connect(player1).joinCity(1);
+      await gameState.connect(player1).earnGold(1000);
+    });
+
+    it("Should award rep points for gold donations", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Initial rep points should be 0
+      const initialRep = await gameState.getPlayerRep(player1Address);
+      expect(initialRep).to.equal(0);
+
+      // Donate 1000 gold (should get 10 rep points in tier 1)
+      await gameState.connect(player1).donateGold(1000);
+      
+      const finalRep = await gameState.getPlayerRep(player1Address);
+      expect(finalRep).to.equal(10); // 1% of 1000 = 10
+    });
+
+    it("Should apply tier multiplier to rep points", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Set tier 2 requirement to 1000
+      await gameState.connect(owner).setTierRequirement(2, 1000);
+      // Donate 1000 gold to reach tier 1
+      await gameState.connect(player1).donateGold(1000);
+      // Verify tier upgrade to tier 1
+      const city = await gameState.cities(1);
+      expect(city.tier).to.equal(1);
+      // Donate 1000 gold to reach tier 2
+      await gameState.connect(player1).earnGold(1000);
+      await gameState.connect(player1).donateGold(1000);
+      // Verify tier upgrade to tier 2
+      const city2 = await gameState.cities(1);
+      expect(city2.tier).to.equal(2);
+      // Now test donation at tier 2
+      await gameState.connect(player1).earnGold(1000);
+      await gameState.connect(player1).donateGold(1000);
+      const finalRep = await gameState.getPlayerRep(player1Address);
+      // Should be 14 (1% of 1000 * 1.4)
+      expect(finalRep).to.equal(36);
+    });
+
+    it("Should accumulate rep points from multiple donations", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Make multiple donations
+      await gameState.connect(player1).donateGold(500);
+      await gameState.connect(player1).earnGold(500);
+      await gameState.connect(player1).donateGold(500);
+      
+      const finalRep = await gameState.getPlayerRep(player1Address);
+      expect(finalRep).to.equal(10); // 1% of 500 + 1% of 500 = 10
+    });
+
+    it("Should emit RepEarned event when donating gold", async function () {
+      await expect(gameState.connect(player1).donateGold(1000))
+        .to.emit(gameState, "RepEarned")
+        .withArgs(await player1.getAddress(), 10); // 1% of 1000 = 10
     });
   });
 
