@@ -34,9 +34,9 @@ export class HousePage extends BasePage {
     updateWalletStatus(address) {
         Logger.info('Updating wallet status with address:', address);
         if (address) {
-            this.loadHouseData().catch(error => {
-                Logger.error('Error loading house data after wallet update:', error);
-            });
+                this.loadHouseData().catch(error => {
+                    Logger.error('Error loading house data after wallet update:', error);
+                });
         }
     }
 
@@ -212,8 +212,7 @@ export class HousePage extends BasePage {
             </div>
         `;
         
-        // Load initial data
-        this.loadHouseData();
+        // Remove redundant loadHouseData call since it's handled by onInitialized and updateWalletStatus
     }
 
     mount(container) {
