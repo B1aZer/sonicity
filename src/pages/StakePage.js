@@ -44,8 +44,13 @@ export class StakePage extends BasePage {
 
     showStatus(type, message, title = '') {
         const statusElement = this.statusComponent.show(message, type);
-        const walletSection = this.container.querySelector('.wallet-section');
-        walletSection.after(statusElement);
+        const actionsSection = this.container.querySelector('.page-section');
+        if (actionsSection) {
+            actionsSection.after(statusElement);
+        } else {
+            // Fallback - append to the container
+            this.container.appendChild(statusElement);
+        }
     }
 
     async onInitialized(walletResult) {
