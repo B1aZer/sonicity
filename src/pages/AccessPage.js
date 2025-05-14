@@ -1,5 +1,5 @@
 import { appState } from '../js/core/state.js';
-import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
+import { formatAddress } from '../js/utils/wallet.js';
 import '../styles/access-page.css';
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
@@ -12,51 +12,47 @@ export class AccessPage {
         this.modal = new Modal();
         this.render();
         this.setupEventListeners();
-        this.initializeConnection();
+        this.checkWalletStatus();
     }
 
     setupEventListeners() {
-        const connectWalletBtn = this.element.querySelector('#connect-wallet');
-        connectWalletBtn.addEventListener('click', () => this.handleConnectWallet());
-    }
-
-    async initializeConnection() {
-        const { connected, address } = await checkExistingConnection();
-        if (connected) {
-            this.updateWalletStatus(address);
-            // For demo purposes, automatically verify NFT
-            setTimeout(() => {
-                appState.setNFTVerified(true);
-                this.updateNFTStatus('Verified');
-                // Redirect to root (map) after verification
-                window.history.pushState({}, '', '/');
+        const mintPageLink = this.element.querySelector('.mint-link');
+        if (mintPageLink) {
+            mintPageLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.history.pushState({}, '', '/mint');
                 window.dispatchEvent(new PopStateEvent('popstate'));
-            }, 1000);
+            });
         }
+        
+        // Listen for wallet connection state changes
+        window.addEventListener('walletConnected', (e) => {
+            this.handleWalletConnected(e.detail.address);
+        });
     }
 
-    async handleConnectWallet() {
-        try {
-            Logger.info('Attempting to connect wallet');
-            const result = await connectWallet();
-            if (result.success) {
-                this.updateWalletStatus(result.address);
-                // For demo purposes, automatically verify NFT
-                setTimeout(() => {
-                    appState.setNFTVerified(true);
-                    this.updateNFTStatus('Verified');
-                    // Redirect to root (map) after verification
-                    window.history.pushState({}, '', '/');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
-                }, 1000);
-            } else {
-                Logger.error('Wallet connection error:', result.error);
-                this.modal.error(result.error || 'Failed to connect wallet. Please try again.');
-            }
-        } catch (error) {
-            Logger.error('Error connecting wallet:', error);
-            this.modal.error('Failed to connect wallet. Please try again.');
+    checkWalletStatus() {
+        const state = appState.getState();
+        if (state.walletConnected && state.currentWallet) {
+            this.updateWalletStatus(state.currentWallet);
+            // For demo purposes, automatically verify NFT
+            this.simulateNFTVerification();
         }
+    }
+    
+    simulateNFTVerification() {
+        setTimeout(() => {
+            appState.setNFTVerified(true);
+            this.updateNFTStatus('Verified');
+            // Redirect to root (map) after verification
+            window.history.pushState({}, '', '/');
+            window.dispatchEvent(new PopStateEvent('popstate'));
+        }, 1000);
+    }
+
+    handleWalletConnected(address) {
+        this.updateWalletStatus(address);
+        this.simulateNFTVerification();
     }
 
     updateWalletStatus(address) {
@@ -74,15 +70,18 @@ export class AccessPage {
     }
 
     render() {
+        const state = appState.getState();
+        const isConnected = state.walletConnected && state.currentWallet;
+        
         this.element.innerHTML = `
             <div class="access-container">
                 <h1>Welcome to Sonicity</h1>
-                <p class="access-message">Please connect your wallet and verify your NFT to access the game</p>
+                <p class="access-message">Please connect your wallet using the button in the navbar and verify your NFT to access the game</p>
                 
                 <div class="access-status">
                     <div class="status-item">
                         <span class="status-label">Wallet:</span>
-                        <span id="wallet-status" class="status-value">Not Connected</span>
+                        <span id="wallet-status" class="status-value">${isConnected ? formatAddress(state.currentWallet) : 'Not Connected'}</span>
                     </div>
                     <div class="status-item">
                         <span class="status-label">NFT Status:</span>
@@ -91,7 +90,6 @@ export class AccessPage {
                 </div>
                 
                 <div class="access-actions">
-                    <button id="connect-wallet" class="connect-button">Connect Wallet</button>
                     <a href="/mint" class="mint-link">Go to Mint Page</a>
                 </div>
             </div>
@@ -101,7 +99,6 @@ export class AccessPage {
     mount(container) {
         container.appendChild(this.element);
     }
-    
 
     unmount() {
         this.element.remove();

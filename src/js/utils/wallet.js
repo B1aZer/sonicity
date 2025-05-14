@@ -2,7 +2,6 @@ import { ethers } from 'ethers';
 import { appState } from '../core/state.js';
 import { Modal } from './modal.js';
 import Logger from './logger.js';
-import { GameStateContract } from '../contracts/GameStateContract.js';
 
 export class WalletManager {
     static modal = new Modal();
@@ -56,20 +55,13 @@ export class WalletManager {
         try {
             appState.setWalletConnected(true, walletAddress);
             
-            // Verify NFT ownership
-            const hasNFT = await this.verifyNFTOwnership(walletAddress);
-            appState.setNFTVerified(hasNFT);
-            
-            // Load player's city if they have one
-            const gameState = new GameStateContract();
-            await gameState.initialize();
-            const cityId = await gameState.getPlayerCity();
+            // For demo: automatically verify NFT status
+            // This avoids needing to call contracts
+            this.simulateNFTVerification();
             
             return {
                 success: true,
-                address: walletAddress,
-                hasNFT,
-                cityId
+                address: walletAddress
             };
         } catch (error) {
             Logger.error('Wallet connection error:', error);
@@ -81,16 +73,57 @@ export class WalletManager {
             };
         }
     }
-
-    static async verifyNFTOwnership(address) {
-        // Implementation of NFT verification logic
-        // This should be moved from the current implementation
-        return true; // Placeholder
+    
+    static async simulateNFTVerification() {
+        // For demonstration purposes only - in production, this would check actual NFT ownership
+        setTimeout(() => {
+            appState.setNFTVerified(true);
+            Logger.info('NFT automatically verified for demo purposes');
+        }, 1000);
     }
 
     static formatAddress(address) {
         if (!address) return 'Not Connected';
         return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    }
+    
+    // Disconnect wallet
+    static disconnectWallet() {
+        appState.clearState();
+        Logger.info('Wallet disconnected');
+        
+        // Dispatch wallet disconnected event
+        window.dispatchEvent(new CustomEvent('walletDisconnected'));
+        
+        return {
+            success: true
+        };
+    }
+    
+    // Listen for account changes
+    static setupAccountChangeListener() {
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length === 0) {
+                    // User disconnected their wallet
+                    appState.clearState();
+                    window.location.reload();
+                } else {
+                    // User switched accounts
+                    appState.setWalletConnected(true, accounts[0]);
+                    
+                    // For demo: automatically verify NFT for new account too
+                    this.simulateNFTVerification();
+                    
+                    // Dispatch wallet connected event
+                    window.dispatchEvent(new CustomEvent('walletConnected', {
+                        detail: {
+                            address: accounts[0]
+                        }
+                    }));
+                }
+            });
+        }
     }
 }
 

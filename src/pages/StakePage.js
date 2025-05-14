@@ -1,4 +1,4 @@
-import { checkExistingConnection, connectWallet, formatAddress } from '../js/utils/wallet.js';
+import { formatAddress } from '../js/utils/wallet.js';
 import Logger from '../js/utils/logger.js';
 import { NFTCard } from '../components/NFTCard.js';
 import { BasePage } from './BasePage.js';
@@ -17,9 +17,10 @@ export class StakePage extends BasePage {
                 <h1>Stake Your NFTs</h1>
 
                 <div class="page-section wallet-section">
-                    <button class="connect-button">
-                        <span class="button-text">Connect Wallet</span>
-                    </button>
+                    <div class="wallet-status">
+                        <span class="wallet-label">Wallet Status:</span>
+                        <span class="wallet-address">Not Connected</span>
+                    </div>
                 </div>
 
                 <div class="page-section nft-sections">
@@ -46,20 +47,8 @@ export class StakePage extends BasePage {
             onUnstake: (tokenId) => this.unstakeNFT(tokenId)
         });
         
-        this.setupEventListeners();
-        this.initializeConnection();
-    }
-
-    setupEventListeners() {
-        const connectWalletBtn = this.container.querySelector('.connect-button');
-        connectWalletBtn.addEventListener('click', () => this.handleConnectWallet());
-    }
-
-    async initializeConnection() {
-        const { connected, address } = await checkExistingConnection();
-        if (connected) {
-            await this.initializeWallet(address);
-        }
+        // Initialize base page
+        this.initialize();
     }
 
     showStatus(type, message, title = '') {
@@ -68,39 +57,19 @@ export class StakePage extends BasePage {
         walletSection.after(statusElement);
     }
 
-    async handleConnectWallet() {
-        try {
-            this.showStatus('loading', 'Connecting...');
-            
-            const result = await connectWallet();
-            if (result.success) {
-                await this.initializeWallet(result.address);
-                this.showStatus('success', 'Connected!', 'Connected!');
-            } else {
-                this.showStatus('error', result.error || "MetaMask not detected! Please install MetaMask.", 'Connection Failed');
-            }
-        } catch (error) {
-            console.error("Connection error:", error);
-            this.showStatus('error', error.message || "Unknown error", 'Connection Error');
+    async onWalletConnected(walletResult) {
+        if (walletResult.success) {
+            this.updateWalletStatus(walletResult.address);
+            await this.loadUserNFTs();
+            this.showStatus('success', 'Connected!', 'Connected!');
         }
     }
 
-    async initializeWallet(walletAddress) {
-        const connectButton = this.container.querySelector('.connect-button');
-        
-        // Initialize contracts using BasePage's method
-        await this.initialize();
-        
-        // Format the account display
-        connectButton.textContent = formatAddress(walletAddress);
-
-        // Load and display user's NFTs
-        await this.loadUserNFTs();
-    }
-
     updateWalletStatus(address) {
-        const connectButton = this.container.querySelector('.connect-button');
-        connectButton.textContent = formatAddress(address);
+        const walletAddressEl = this.container.querySelector('.wallet-address');
+        if (walletAddressEl) {
+            walletAddressEl.textContent = formatAddress(address);
+        }
     }
 
     async loadUserNFTs() {

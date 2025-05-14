@@ -4,6 +4,7 @@ import { AltarContract } from '../js/contracts/AltarContract.js';
 import { NFTContract } from '../js/contracts/NFTContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
+import { appState } from '../js/core/state.js';
 import '../styles/base-page.css';
 
 export class BasePage {
@@ -16,52 +17,70 @@ export class BasePage {
             altar: new AltarContract(),
             nft: new NFTContract()
         };
+        
+        // Setup wallet event listener
+        this.setupWalletListener();
+    }
+    
+    setupWalletListener() {
+        // Listen for wallet connection from the navbar
+        window.addEventListener('walletConnected', (e) => {
+            this.handleWalletConnected(e.detail.address);
+        });
     }
 
     async initialize() {
         try {
-            // Initialize wallet connection
-            const walletResult = await WalletManager.initializeConnection();
-            if (walletResult.success) {
-                // Initialize contracts
-                await Promise.all([
-                    this.contracts.gameState.initialize(),
-                    this.contracts.altar.initialize(),
-                    this.contracts.nft.initialize()
-                ]);
-                
-                // Update UI with wallet address
-                this.updateWalletStatus(walletResult.address);
-                
-                // Additional initialization specific to the page
-                await this.onInitialized(walletResult);
+            // Check if wallet is already connected from appState
+            const state = appState.getState();
+            if (state.walletConnected && state.currentWallet) {
+                await this.initializeContracts();
+                this.updateWalletStatus(state.currentWallet);
+                await this.onInitialized({ 
+                    success: true, 
+                    address: state.currentWallet 
+                });
             }
         } catch (error) {
             Logger.error('Page initialization error:', error);
             this.modal.error('Failed to initialize page. Please try again.');
         }
     }
-
-    async handleConnectWallet() {
+    
+    async initializeContracts() {
         try {
-            const result = await WalletManager.connectWallet();
-            if (result.success) {
-                // Initialize contracts
-                await Promise.all([
-                    this.contracts.gameState.initialize(),
-                    this.contracts.altar.initialize(),
-                    this.contracts.nft.initialize()
-                ]);
-                
-                // Update UI with wallet address
-                this.updateWalletStatus(result.address);
-                
-                // Additional initialization specific to the page
-                await this.onWalletConnected(result);
-            }
+            // Initialize contracts but handle errors gracefully
+            const promises = [
+                this.contracts.gameState.initialize().catch(e => {
+                    Logger.warn('GameState contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.altar.initialize().catch(e => {
+                    Logger.warn('Altar contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.nft.initialize().catch(e => {
+                    Logger.warn('NFT contract initialization failed:', e);
+                    return null;
+                })
+            ];
+            
+            await Promise.all(promises);
+            return true;
         } catch (error) {
-            Logger.error('Wallet connection error:', error);
-            this.modal.error('Failed to connect wallet. Please try again.');
+            Logger.error('Contract initialization error:', error);
+            return false;
+        }
+    }
+
+    async handleWalletConnected(address) {
+        try {
+            await this.initializeContracts();
+            this.updateWalletStatus(address);
+            await this.onWalletConnected({ success: true, address });
+        } catch (error) {
+            Logger.error('Wallet connection handler error:', error);
+            this.modal.error('Failed to initialize after wallet connection. Please try again.');
         }
     }
 

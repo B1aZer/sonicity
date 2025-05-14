@@ -14,6 +14,7 @@ import { appState } from './state.js';
 import { AccessControl } from '../utils/accessControl.js';
 import { Modal } from '../utils/modal.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
+import { WalletManager } from '../utils/wallet.js';
 
 class App {
     constructor() {
@@ -28,6 +29,9 @@ class App {
     async init() {
         // Mount layout
         this.layout.mount(this.container);
+
+        // Initialize wallet account change listener
+        WalletManager.setupAccountChangeListener();
 
         // Handle initial route
         this.handleRoute();

@@ -7,6 +7,7 @@ import { ethers } from 'ethers';
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
 import { StatusComponent } from '../components/StatusComponent.js';
+import { appState } from '../js/core/state.js';
 
 import '../styles/mint-page.css';
 import '../styles/nft-collection.css';
@@ -28,12 +29,10 @@ export class MintPage extends BasePage {
         this.statusComponent = new StatusComponent();
         this.render();
         this.setupEventListeners();
+        this.initialize();
     }
 
     setupEventListeners() {
-        const connectWalletBtn = this.element.querySelector('#connect-wallet');
-        connectWalletBtn.addEventListener('click', () => this.handleConnectWallet());
-
         const mintButton = this.element.querySelector('#mint-button');
         mintButton.addEventListener('click', () => this.handleMint());
 
@@ -70,7 +69,7 @@ export class MintPage extends BasePage {
     }
 
     updateWalletStatus(address) {
-        const connectButton = this.element.querySelector('#connect-wallet');
+        const connectButton = this.element.querySelector('#wallet-status');
         const mintButton = this.element.querySelector('#mint-button');
         
         connectButton.textContent = WalletManager.formatAddress(address);
@@ -88,8 +87,14 @@ export class MintPage extends BasePage {
 
     async onWalletConnected(walletResult) {
         try {
+            this.updateWalletStatus(walletResult.address);
             await this.getMintCount();
             await this.loadUserNFTs();
+            this.showStatus(`
+                <div class="success">
+                    <div class="title">Connected!</div>
+                </div>
+            `, 'success');
         } catch (error) {
             Logger.error("Error in onWalletConnected:", error);
         }
@@ -103,45 +108,6 @@ export class MintPage extends BasePage {
         const totalPrice = (parseFloat(this.mintPrice) * amount).toFixed(3);
         
         totalPriceElement.textContent = totalPrice;
-    }
-
-    async handleConnectWallet() {
-        const statusElement = this.element.querySelector('#mint-status');
-        const connectButton = this.element.querySelector('#connect-wallet');
-        const mintButton = this.element.querySelector('#mint-button');
-        
-        try {
-            this.showStatus(`
-                <div class="loading">
-                    <div class="step">Connecting...</div>
-                </div>
-            `, 'loading');
-            
-            const result = await WalletManager.connectWallet();
-            if (result.success) {
-                await this.onWalletConnected(result);
-                this.showStatus(`
-                    <div class="success">
-                        <div class="title">Connected!</div>
-                    </div>
-                `, 'success');
-            } else {
-                this.showStatus(`
-                    <div class="error">
-                        <div class="title">Connection Failed</div>
-                        <div class="description">${result.error || "MetaMask not detected! Please install MetaMask."}</div>
-                    </div>
-                `, 'error');
-            }
-        } catch (error) {
-            console.error("Connection error:", error);
-            this.showStatus(`
-                <div class="error">
-                    <div class="title">Connection Error</div>
-                    <div class="description">${error.message || "Unknown error"}</div>
-                </div>
-            `, 'error');
-        }
     }
 
     showStatus(message, type = 'info') {
@@ -159,6 +125,9 @@ export class MintPage extends BasePage {
     }
 
     render() {
+        const state = appState.getState();
+        const isConnected = state.walletConnected && state.currentWallet;
+        
         this.element.innerHTML = `
             <div class="page-container">
                 <h1>Mint Your Sonicity NFT</h1>
@@ -208,10 +177,11 @@ export class MintPage extends BasePage {
                 <div class="page-section actions-section">
                     <h2>Actions</h2>
                     <div class="mint-actions">
-                        <button id="connect-wallet" class="connect-button">
-                            <span class="button-text">Connect Wallet</span>
-                        </button>
-                        <button id="mint-button" class="mint-button" disabled>
+                        <div class="wallet-status">
+                            <span class="wallet-label">Wallet:</span>
+                            <span id="wallet-status">${isConnected ? WalletManager.formatAddress(state.currentWallet) : 'Not Connected'}</span>
+                        </div>
+                        <button id="mint-button" class="mint-button" ${isConnected ? '' : 'disabled'}>
                             <span class="button-text">Mint NFT</span>
                         </button>
                     </div>
