@@ -40,8 +40,6 @@ export class StakePage extends BasePage {
             onUnstake: (tokenId) => this.unstakeNFT(tokenId)
         });
         
-        // Initialize base page
-        this.initialize();
     }
 
     showStatus(type, message, title = '') {
@@ -55,13 +53,6 @@ export class StakePage extends BasePage {
             await this.loadUserNFTs();
         }
     }
-    
-    async onWalletConnected(walletResult) {
-        if (walletResult.success) {
-            await this.loadUserNFTs();
-        }
-    }
-
     async loadUserNFTs() {
         Logger.info('Loading user NFTs in StakePage...');
         try {

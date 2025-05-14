@@ -25,6 +25,7 @@ export class BasePage {
     setupWalletListener() {
         // Listen for wallet connection from the navbar
         window.addEventListener('walletConnected', (e) => {
+            Logger.debug('BasePage setupWalletListener called with address:', e.detail.address);
             this.handleWalletConnected(e.detail.address);
         });
     }
@@ -76,6 +77,7 @@ export class BasePage {
     async handleWalletConnected(address) {
         try {
             await this.initializeContracts();
+            Logger.debug('BasePage handleWalletConnected called with address:', address);
             this.updateWalletStatus(address);
             await this.onWalletConnected({ success: true, address });
         } catch (error) {
