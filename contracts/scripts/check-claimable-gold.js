@@ -9,7 +9,7 @@ async function main() {
   const deployedAddresses = JSON.parse(fs.readFileSync(addressesPath, "utf8"));
   
   // Address to check claimable gold for
-  const addressToCheck = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+  const addressToCheck = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
   
   // Connect to GameState contract
   const gameStateAddress = deployedAddresses.gameStateProxy;
