@@ -50,6 +50,12 @@ export class StakePage extends BasePage {
         walletSection.after(statusElement);
     }
 
+    async onInitialized(walletResult) {
+        if (walletResult.success) {
+            await this.loadUserNFTs();
+        }
+    }
+    
     async onWalletConnected(walletResult) {
         if (walletResult.success) {
             await this.loadUserNFTs();
@@ -57,6 +63,7 @@ export class StakePage extends BasePage {
     }
 
     async loadUserNFTs() {
+        Logger.info('Loading user NFTs in StakePage...');
         try {
             const ownedNFTsContainer = this.container.querySelector('.nft-list');
             const stakedNFTsContainer = this.container.querySelector('.staked-nft-list');
@@ -334,6 +341,7 @@ export class StakePage extends BasePage {
     }
 
     unmount() {
+        Logger.info('Unmounting stake page...');
         this.container.remove();
     }
 } 
