@@ -10,6 +10,11 @@ export class WalletButton {
         this.render();
         this.setupEventListeners();
         this.checkInitialConnection();
+
+        // Subscribe to appState changes to re-render the button
+        appState.subscribe(() => {
+            this.render();
+        });
     }
     
     async checkInitialConnection() {
@@ -168,4 +173,4 @@ export class WalletButton {
             tooltip.remove();
         }, 2000);
     }
-} 
+}
