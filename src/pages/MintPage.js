@@ -68,14 +68,6 @@ export class MintPage extends BasePage {
         this.updateTotalPrice();
     }
 
-    updateWalletStatus(address) {
-        const connectButton = this.element.querySelector('#wallet-status');
-        const mintButton = this.element.querySelector('#mint-button');
-        
-        connectButton.textContent = WalletManager.formatAddress(address);
-        mintButton.disabled = false;
-    }
-
     async onInitialized(walletResult) {
         try {
             await this.getMintCount();
@@ -87,14 +79,8 @@ export class MintPage extends BasePage {
 
     async onWalletConnected(walletResult) {
         try {
-            this.updateWalletStatus(walletResult.address);
             await this.getMintCount();
             await this.loadUserNFTs();
-            this.showStatus(`
-                <div class="success">
-                    <div class="title">Connected!</div>
-                </div>
-            `, 'success');
         } catch (error) {
             Logger.error("Error in onWalletConnected:", error);
         }
@@ -177,10 +163,6 @@ export class MintPage extends BasePage {
                 <div class="page-section actions-section">
                     <h2>Actions</h2>
                     <div class="mint-actions">
-                        <div class="wallet-status">
-                            <span class="wallet-label">Wallet:</span>
-                            <span id="wallet-status">${isConnected ? WalletManager.formatAddress(state.currentWallet) : 'Not Connected'}</span>
-                        </div>
                         <button id="mint-button" class="mint-button" ${isConnected ? '' : 'disabled'}>
                             <span class="button-text">Mint NFT</span>
                         </button>

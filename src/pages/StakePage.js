@@ -16,13 +16,6 @@ export class StakePage extends BasePage {
             <div class="page-container container-min-width-1000">
                 <h1>Stake Your NFTs</h1>
 
-                <div class="page-section wallet-section">
-                    <div class="wallet-status">
-                        <span class="wallet-label">Wallet Status:</span>
-                        <span class="wallet-address">Not Connected</span>
-                    </div>
-                </div>
-
                 <div class="page-section nft-sections">
                     <div class="nft-section">
                         <h2>Your NFTs</h2>
@@ -59,16 +52,7 @@ export class StakePage extends BasePage {
 
     async onWalletConnected(walletResult) {
         if (walletResult.success) {
-            this.updateWalletStatus(walletResult.address);
             await this.loadUserNFTs();
-            this.showStatus('success', 'Connected!', 'Connected!');
-        }
-    }
-
-    updateWalletStatus(address) {
-        const walletAddressEl = this.container.querySelector('.wallet-address');
-        if (walletAddressEl) {
-            walletAddressEl.textContent = formatAddress(address);
         }
     }
 
