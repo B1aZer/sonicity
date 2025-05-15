@@ -22,29 +22,35 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint8 buildingSlots; // Number of building slots (1-5)
     }
 
+    // Standalone player state
+    struct PlayerState {
+        uint256 gold;
+        uint256 rep;
+        uint256 buildingSlots;
+        uint8 tier;
+        uint256 treasury;
+    }
+
     // Mapping from NFT contract address to token ID to metadata
     mapping(address => mapping(uint256 => NFTMetadata)) public nftMetadata;
     
     // List of approved NFT collections
     mapping(address => bool) public approvedCollections;
     
-    // City state
+    // City state (modified)
     struct City {
         uint256 treasury;
         uint8 tier;
         uint256 lastTierUpgrade;
         bool peaceShield;
-        mapping(address => uint256) playerGold;
-        mapping(address => uint256) playerRep;
-        mapping(address => uint256) playerBuildingSlots;
-        mapping(address => uint256) playerMaxBuildingSlots;
+        address founder;        // Track city founder
+        mapping(address => bool) members;  // Track city members
     }
 
-    // Mapping from city ID to city data
-    mapping(uint256 => City) public cities;
-    
-    // Mapping from player to their current city
-    mapping(address => uint256) public playerCity;
+    // State mappings
+    mapping(address => PlayerState) public playerState;  // Standalone player state
+    mapping(uint256 => City) public cities;             // City state
+    mapping(address => uint256) public playerCity;      // Keep this for when players join cities
     
     // City tier requirements
     mapping(uint8 => uint256) public tierRequirements;
@@ -136,6 +142,21 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         buildingRequirements[3]["Bank"] = 2000;
     }
 
+    /**
+     * @dev Initialize a new player
+     */
+    function initializePlayer() external {
+        require(playerState[msg.sender].buildingSlots == 0, "Player already initialized");
+        
+        playerState[msg.sender] = PlayerState({
+            gold: 0,
+            rep: 0,
+            buildingSlots: 9,
+            tier: 0,
+            treasury: 0
+        });
+    }
+
     // Required by UUPS pattern
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
@@ -215,41 +236,35 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @param cityId The ID of the city to join
      */
     function joinCity(uint256 cityId) external nonReentrant {
-        require(playerCity[msg.sender] == 0, "Already in a city");
-        require(cityId > 0, "Invalid city ID");
+        // This is a placeholder for future city formation logic
+        // For now, we'll just set a default city ID of 1 for all players
+        // This maintains compatibility with existing code while removing city joining requirements
+        playerCity[msg.sender] = 1;
         
-        playerCity[msg.sender] = cityId;
-        cities[cityId].peaceShield = true; // New cities start with peace shield
-
-        // Set initial building slots for Tier 0
-        cities[cityId].playerBuildingSlots[msg.sender] = 9;
-        cities[cityId].playerMaxBuildingSlots[msg.sender] = 9;
-        
-        // Grant initial gold to new players
+        // Set initial city state
+        cities[cityId].members[msg.sender] = true;
         cities[cityId].tier = 0; // Start at tier 0
         
-        emit CityJoined(msg.sender, cityId);
+        emit CityJoined(msg.sender, 1);
     }
 
     /**
-     * @dev Donate Gold to city treasury
+     * @dev Donate Gold to treasury
      * @param amount The amount of Gold to donate
      */
     function donateGold(uint256 amount) external nonReentrant {
-        uint256 cityId = playerCity[msg.sender];
-        require(cityId > 0, "Not in a city");
-        require(cities[cityId].playerGold[msg.sender] >= amount, "Insufficient Gold");
+        PlayerState storage state = playerState[msg.sender];
+        require(state.gold >= amount, "Insufficient Gold");
         
-        cities[cityId].playerGold[msg.sender] -= amount;
-        cities[cityId].treasury += amount;
+        state.gold -= amount;
+        state.treasury += amount;
         
         // Check for tier upgrade
-        uint8 currentTier = cities[cityId].tier;
+        uint8 currentTier = state.tier;
         uint8 nextTier = currentTier + 1;
-        if (nextTier <= 4 && cities[cityId].treasury >= tierRequirements[nextTier]) {
-            cities[cityId].tier = nextTier;
-            cities[cityId].lastTierUpgrade = block.timestamp;
-            emit CityTierUpgraded(cityId, nextTier);
+        if (nextTier <= 4 && state.treasury >= tierRequirements[nextTier]) {
+            state.tier = nextTier;
+            emit CityTierUpgraded(0, nextTier); // Using 0 as cityId for standalone players
         }
         
         // Calculate rep points (1% of donated amount, with tier multiplier)
@@ -261,7 +276,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         }
         
         // Award rep points
-        cities[cityId].playerRep[msg.sender] += repPoints;
+        state.rep += repPoints;
         
         emit GoldDonated(msg.sender, amount);
         emit RepEarned(msg.sender, repPoints);
@@ -272,11 +287,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @param amount The amount of Gold to earn
      */
     function earnGold(uint256 amount) external nonReentrant {
-        uint256 cityId = playerCity[msg.sender];
-        require(cityId > 0, "Not in a city");
-        
-        cities[cityId].playerGold[msg.sender] += amount;
-        
+        playerState[msg.sender].gold += amount;
         emit GoldEarned(msg.sender, amount);
     }
 
@@ -285,11 +296,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @param amount The amount of Rep to earn
      */
     function earnRep(uint256 amount) external nonReentrant {
-        uint256 cityId = playerCity[msg.sender];
-        require(cityId > 0, "Not in a city");
-        
-        cities[cityId].playerRep[msg.sender] += amount;
-        
+        playerState[msg.sender].rep += amount;
         emit RepEarned(msg.sender, amount);
     }
 
@@ -300,26 +307,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function updateBuildingSlots(address player, uint256 newSlots) external {
         require(msg.sender == altarAddress, "Only Altar can update slots");
-        uint256 cityId = playerCity[player];
-        require(cityId > 0, "Player not in a city");
-        
-        cities[cityId].playerBuildingSlots[player] = newSlots;
-        cities[cityId].playerMaxBuildingSlots[player] = newSlots;
-        
+        playerState[player].buildingSlots = newSlots;
         emit BuildingSlotsUpdated(player, newSlots);
-    }
-
-    /**
-     * @dev Check if a building can be unlocked
-     * @param buildingName The name of the building
-     * @return bool Whether the building can be unlocked
-     */
-    function canUnlockBuilding(string memory buildingName) external view returns (bool) {
-        uint256 cityId = playerCity[msg.sender];
-        require(cityId > 0, "Not in a city");
-        
-        uint8 currentTier = cities[cityId].tier;
-        return cities[cityId].treasury >= buildingRequirements[currentTier][buildingName];
     }
 
     /**
@@ -328,20 +317,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @return uint256 Number of available building slots
      */
     function getBuildingSlots(address player) external view returns (uint256) {
-        uint256 cityId = playerCity[player];
-        require(cityId > 0, "Player not in a city");
-        return cities[cityId].playerBuildingSlots[player];
-    }
-
-    /**
-     * @dev Get player's maximum building slots
-     * @param player The address of the player
-     * @return uint256 Maximum number of building slots
-     */
-    function getMaxBuildingSlots(address player) external view returns (uint256) {
-        uint256 cityId = playerCity[player];
-        require(cityId > 0, "Player not in a city");
-        return cities[cityId].playerMaxBuildingSlots[player];
+        return playerState[player].buildingSlots;
     }
 
     /**
@@ -350,9 +326,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @return uint256 Player's gold balance
      */
     function getPlayerGold(address player) external view returns (uint256) {
-        uint256 cityId = playerCity[player];
-        require(cityId > 0, "Player not in a city");
-        return cities[cityId].playerGold[player];
+        return playerState[player].gold;
     }
 
     /**
@@ -363,7 +337,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function getPlayerRep(address player) external view returns (uint256) {
         uint256 cityId = playerCity[player];
         require(cityId > 0, "Player not in a city");
-        return cities[cityId].playerRep[player];
+        return playerState[player].rep;
     }
 
     /**
@@ -409,28 +383,27 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @return uint256 The ID of the created building
      */
     function createBuilding(string memory buildingType) external nonReentrant returns (uint256) {
-        uint256 cityId = playerCity[msg.sender];
-        require(cityId > 0, "Not in a city");
+        PlayerState storage state = playerState[msg.sender];
         
         // Check building cost
         uint256 cost = buildingCosts[buildingType];
         require(cost > 0, "Invalid building type");
-        require(cities[cityId].playerGold[msg.sender] >= cost, "Insufficient Gold");
+        require(state.gold >= cost, "Insufficient Gold");
         
         // For Tier 0, only allow houses and enforce 3x3 grid
-        if (cities[cityId].tier == 0) {
+        if (state.tier == 0) {
             require(keccak256(bytes(buildingType)) == keccak256(bytes("house")), "Only houses allowed in Tier 0");
             require(playerBuildingCounts[msg.sender].total < 9, "Tier 0 grid is full (3x3)");
         }
         
         // Check available slots
         require(
-            playerBuildingCounts[msg.sender].total < cities[cityId].playerBuildingSlots[msg.sender],
+            playerBuildingCounts[msg.sender].total < state.buildingSlots,
             "No building slots available"
         );
         
         // Deduct gold
-        cities[cityId].playerGold[msg.sender] -= cost;
+        state.gold -= cost;
         
         // Create building
         uint256 buildingId = nextBuildingId[msg.sender]++;
@@ -579,24 +552,21 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         // Check if building has exceeded its 24-hour production period
         uint256 totalTimeSinceCreation = currentTime - building.lastUpgradeTime;
         if (totalTimeSinceCreation > MAX_PRODUCTION_TIME) {
-            // If we've already collected all possible gold, return 0
             if (building.lastCollectionTime >= building.lastUpgradeTime + MAX_PRODUCTION_TIME) {
                 return;
             }
-            // Otherwise, only collect remaining time up to 24 hours
             timePassed = (building.lastUpgradeTime + MAX_PRODUCTION_TIME) - building.lastCollectionTime;
         }
         
-        // Calculate gold to collect based on production rate and time passed
+        // Calculate gold to collect
         uint256 productionRate = buildingProductionRates[building.buildingType];
-        uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600; // Convert to per-second rate
+        uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600;
         
         // Update last collection time
         building.lastCollectionTime = currentTime;
         
         // Add gold to player's balance
-        uint256 cityId = playerCity[msg.sender];
-        cities[cityId].playerGold[msg.sender] += goldToCollect;
+        playerState[msg.sender].gold += goldToCollect;
         
         emit GoldCollected(msg.sender, buildingId, goldToCollect);
     }
@@ -608,7 +578,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function collectAllGold() external nonReentrant returns (uint256) {
         uint256 totalGold = 0;
         uint256 currentTime = block.timestamp;
-        uint256 cityId = playerCity[msg.sender];
         
         // Get all building IDs
         uint256[] memory buildingIds = getBuildingIds(msg.sender);
@@ -624,17 +593,15 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
                 // Check if building has exceeded its 24-hour production period
                 uint256 totalTimeSinceCreation = currentTime - building.lastUpgradeTime;
                 if (totalTimeSinceCreation > MAX_PRODUCTION_TIME) {
-                    // If we've already collected all possible gold, skip this building
                     if (building.lastCollectionTime >= building.lastUpgradeTime + MAX_PRODUCTION_TIME) {
                         continue;
                     }
-                    // Otherwise, only collect remaining time up to 24 hours
                     timePassed = (building.lastUpgradeTime + MAX_PRODUCTION_TIME) - building.lastCollectionTime;
                 }
                 
-                // Calculate gold to collect based on production rate and time passed
+                // Calculate gold to collect
                 uint256 productionRate = buildingProductionRates[building.buildingType];
-                uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600; // Convert to per-second rate
+                uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600;
                 
                 // Update last collection time
                 building.lastCollectionTime = currentTime;
@@ -647,7 +614,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         }
         
         // Add total gold to player's balance
-        cities[cityId].playerGold[msg.sender] += totalGold;
+        playerState[msg.sender].gold += totalGold;
         
         return totalGold;
     }
@@ -763,9 +730,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @return totalCollected The total amount of gold collected
      */
     function collectAllGoldByType(string memory buildingType) external nonReentrant returns (uint256 totalCollected) {
-        uint256 cityId = playerCity[msg.sender];
-        require(cityId > 0, "Not in a city");
-        
         // Get all building IDs of the specified type
         uint256[] memory buildingIds = getBuildingIdsOfType(msg.sender, buildingType);
         
@@ -792,7 +756,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
                 building.lastCollectionTime = block.timestamp;
                 
                 // Add gold to player's balance
-                cities[cityId].playerGold[msg.sender] += goldToCollect;
+                playerState[msg.sender].gold += goldToCollect;
                 totalCollected += goldToCollect;
                 
                 emit GoldCollected(msg.sender, buildingId, goldToCollect);
@@ -800,5 +764,14 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         }
         
         return totalCollected;
+    }
+
+    /**
+     * @dev Get player's treasury
+     * @param player The address of the player
+     * @return uint256 Player's treasury balance
+     */
+    function getPlayerTreasury(address player) external view returns (uint256) {
+        return playerState[player].treasury;
     }
 } 
