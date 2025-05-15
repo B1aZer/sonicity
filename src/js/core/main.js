@@ -3,7 +3,7 @@ import { Game } from './game.js';
 import { Layout } from '../../components/Layout.js';
 import { GamePage } from '../../pages/GamePage.js';
 import { DashboardPage } from '../../pages/DashboardPage.js';
-import { MapPage } from '../../pages/MapPage.js';
+import { StartPage } from '../../pages/StartPage.js';
 import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
 import { StakePage } from '../../pages/StakePage.js';
@@ -26,28 +26,18 @@ class App {
         this.init();
     }
 
-    async init() {
+    init() {
         // Mount layout
         this.layout.mount(this.container);
 
-        // Initialize wallet account change listener
-        WalletManager.setupAccountChangeListener();
-
-        // Handle initial route
+        // Setup navigation
+        window.addEventListener('popstate', () => this.handleRoute());
         this.handleRoute();
 
-        // Handle browser back/forward
-        window.addEventListener('popstate', () => this.handleRoute());
-
-        // Handle state changes
-        appState.subscribe(() => this.handleStateChange());
-    }
-
-    handleStateChange() {
-        const state = appState.getState();
-        if (state.hasVerifiedNFT && window.location.pathname === '/access') {
-            this.handleRoute('dashboard');
-        }
+        // Setup wallet connection listener
+        window.addEventListener('walletConnected', (event) => {
+            this.handleRoute();
+        });
     }
 
     async handleRoute(page = window.location.pathname.slice(1) || '') {
@@ -72,7 +62,7 @@ class App {
         // Create and mount new page
         switch (page) {
             case '':
-                this.currentPage = new MapPage();
+                this.currentPage = new StartPage();
                 this.currentPage.mount(this.layout.content);
                 break;
             case 'dashboard':
@@ -115,4 +105,4 @@ class App {
 }
 
 // Initialize app
-const app = new App();
+new App();
