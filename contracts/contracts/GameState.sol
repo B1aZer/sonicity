@@ -78,9 +78,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
     mapping(address => BuildingCount) public playerBuildingCounts;
 
-    // Building costs
-    mapping(string => uint256) public buildingCosts;
-
     // Building production rates (gold per hour)
     mapping(string => uint256) public buildingProductionRates;
 
@@ -118,11 +115,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         tierRequirements[2] = 5000;   // 5000 Gold for Tier 2
         tierRequirements[3] = 10000;  // 10000 Gold for Tier 3
         tierRequirements[4] = 50000;  // 50000 Gold for Tier 4
-        
-        // Initialize building costs
-        buildingCosts["house"] = 100;  // 100 Gold for a house
-        buildingCosts["water-supply"] = 200;
-        buildingCosts["workshop"] = 300;
 
         // Initialize building production rates (gold per hour)
         buildingProductionRates["house"] = 10;  // 10 gold per hour
@@ -335,8 +327,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @return uint256 Player's reputation balance
      */
     function getPlayerRep(address player) external view returns (uint256) {
-        uint256 cityId = playerCity[player];
-        require(cityId > 0, "Player not in a city");
         return playerState[player].rep;
     }
 
@@ -385,10 +375,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function createBuilding(string memory buildingType) external nonReentrant returns (uint256) {
         PlayerState storage state = playerState[msg.sender];
         
-        // Check building cost
-        uint256 cost = buildingCosts[buildingType];
-        require(cost > 0, "Invalid building type");
-        require(state.gold >= cost, "Insufficient Gold");
+        // Check if building type is valid
+        require(buildingProductionRates[buildingType] > 0, "Invalid building type");
         
         // For Tier 0, only allow houses and enforce 3x3 grid
         if (state.tier == 0) {
@@ -401,9 +389,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             playerBuildingCounts[msg.sender].total < state.buildingSlots,
             "No building slots available"
         );
-        
-        // Deduct gold
-        state.gold -= cost;
         
         // Create building
         uint256 buildingId = nextBuildingId[msg.sender]++;
