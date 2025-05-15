@@ -249,6 +249,63 @@ describe("GameState", function () {
       const player1Address = await player1.getAddress();
       await expect(gameState.getBuilding(player1Address, 0)).to.be.revertedWith("Building doesn't exist or is inactive");
     });
+
+    it("Should only allow houses in Tier 0", async function () {
+      // Try to create a water-supply in Tier 0
+      await expect(gameState.connect(player1).createBuilding("water-supply"))
+        .to.be.revertedWith("Only houses allowed in Tier 0");
+      
+      // Create a house (should succeed)
+      await gameState.connect(player1).createBuilding("house");
+      const houseCount = await gameState.getBuildingsByType(await player1.getAddress(), "house");
+      expect(houseCount).to.equal(1);
+    });
+
+    it("Should enforce 3x3 grid limit in Tier 0", async function () {
+      // Create 9 houses (should succeed)
+      for (let i = 0; i < 9; i++) {
+        await gameState.connect(player1).createBuilding("house");
+      }
+      
+      // Try to create one more house
+      await expect(gameState.connect(player1).createBuilding("house"))
+        .to.be.revertedWith("Tier 0 grid is full (3x3)");
+    });
+
+    it("Should track building counts correctly", async function () {
+      // Create multiple buildings
+      await gameState.connect(player1).createBuilding("house");
+      await gameState.connect(player1).createBuilding("water-supply");
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Check total buildings
+      const totalBuildings = await gameState.getTotalBuildings(await player1.getAddress());
+      expect(totalBuildings).to.equal(3);
+      
+      // Check building counts by type
+      const houseCount = await gameState.getBuildingsByType(await player1.getAddress(), "house");
+      const waterSupplyCount = await gameState.getBuildingsByType(await player1.getAddress(), "water-supply");
+      expect(houseCount).to.equal(2);
+      expect(waterSupplyCount).to.equal(1);
+    });
+
+    it("Should allow removing buildings", async function () {
+      // Create a building
+      await gameState.connect(player1).createBuilding("house");
+      
+      // Remove the building
+      await gameState.connect(player1).removeBuilding(0);
+      
+      // Check building counts
+      const totalBuildings = await gameState.getTotalBuildings(await player1.getAddress());
+      const houseCount = await gameState.getBuildingsByType(await player1.getAddress(), "house");
+      expect(totalBuildings).to.equal(0);
+      expect(houseCount).to.equal(0);
+      
+      // Try to get removed building
+      await expect(gameState.getBuilding(await player1.getAddress(), 0))
+        .to.be.revertedWith("Building doesn't exist or is inactive");
+    });
   });
 
   describe("Gold Production", function () {
