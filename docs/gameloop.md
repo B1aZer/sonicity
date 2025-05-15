@@ -1,171 +1,156 @@
-🎮 Sonicity: Full Single Player Gameplay Loop
+🏛 Sonicity – Gameplay Loop to Tier 2 (April 2025)
 
-🌍 0. World Map (Opening Scene)
+🏗 1. City Tier 0: Foundation
 
-    Connect wallet
+Starter City Buildings
 
-    See World Map with multiple cities
+Building
 
-    Highlighted cities = where you own NFTs
+Purpose
 
-    Choose your city → enter, Can't enter to unknown cities
+🏛 City Hall
 
-🏛 1. Enter the City
+Central hub: manage local buildings, treasury donations
 
-    View personal stats:
+🛍 Shop (TBD)
 
-        Gold: 0
+Optional — could be unlocked later via city upgrades
 
-        Reputation Points: 0
+Player Grid (3x3 Slots at Start)
 
-    View city stats:
+Player Building
 
-        City Tier: Bronze
+Function
 
-    Access tabs:
+Unlock Tier
 
-        Dashboard (progress bars)
+Requires NFT
 
-        3D City View (visual buildings), miner and staker always visible
+🏠 House
 
-⚙️ 2. Stake NFT → Start Earning Gold
+Generates Gold per hour
 
-    Stake a Genesis NFT or participating NFT
+Tier 0
 
-    Gold production begins (ex: 10 Gold/hour)
+✅ Yes
 
-    Gold accumulation visible in dashboard
+🔁 House stops producing after 24h until repaired (maintenance sink)
 
-🏗 3. Build Personal Mini-Economy
+✅ Players can’t infinitely farm — must engage with game
 
-    Use Gold to build structures:
+🛡 2. City Tier 1: Military Expansion
 
-        House → +1 Gold/hour
+Unlocks via City Treasury Donations
 
-        Unlock Water Pump for second house
+New City Buildings
 
-        Unlock Electricity Station for third house
+Function
 
-        Unlock Factory after fifth house
+🧱 Defense Tower
 
-    Personal Gold income grows
+Passive defense against raids
 
-    Buildings appear in 3D district view
+🪖 Barracks
 
-⚡ 4. Contribute to the City
+Train Troops using Food
 
-    Options:
+🕵️ Scout Guild
 
-        Bribe Treasury → help level up city tiers (Bronze → Silver → Gold)
+Finds new cities to raid
 
-        Contribute to Super Buildings → build Great Bank, Citadel, etc.
+🐪 Caravan
 
-    (Gold burn % on every action to maintain healthy economy)
+Sends troops for raids
 
-    Earn:
+📊 War Ledger (Stats)
 
-        Reputation Points
+Displays raid logs, PvP rankings
 
-    Goal:
+New Player Building
 
-        Build Banks and exchange to erc 20, then upgrade banks + limit - burn
+Player Building
 
-🏛 5. Unlock Citywide Systems
+Function
 
-    Silver Tier reached → Build Treasury Hall (accept external bribes)
+Unlock Tier
 
-    Gold Tier reached → Build City Bank (enable Gold-to-ERC20 swaps)
+Requires NFT
 
-    Treasury Hall and Bank are permanent, but require reactivation/upgrades each season
+🌾 Farm
 
-Possible rewards from 
+Produces Food for troops
 
-⚔️ 6. Midweek Events (Optional Fun Layer)
+Tier 1
 
-    Random events:
+✅ Yes
 
-        Economic Boom
+Troop Mechanics
 
-        Bandit Raids
+🪖 Infantry: Core strength unit (cheap)
 
-        Special Festivals
+🐎 Cavalry: Chance to disable enemy buildings
 
-    Players contribute Gold to:
+🛠 Siege: Burns Treasury Gold, weakens enemy city
 
-        Defend city
+Troops are destroyed proportionally during raids.
+Defense is city-wide (via Defense Tower).
 
-        Boost city-wide buffs
+✅ PvP is a resource battle — not just click-and-win
 
-        Win midweek rewards
+💰 3. City Tier 2: Wealth & Reputation
 
-⚡ 7. Final Sprint Before Week End
+New City Buildings
 
-    Cities push to:
+Building
 
-        Complete Super Buildings
+Function
 
-        Level up tiers
+🪪 Ministry of Merit
 
-        Maximize Respect Points
+Mints REP from Gold donations and raid wins
 
-    Players rush contributions
+🏛 Council Chamber
 
-    Leaderboards update live
+Enables REP staking → players claim $S revenue
 
-🎁 8. Weekly Snapshot and Rewards
+📊 Audit Shrine
 
-    Snapshot:
+Shows REP leaderboard, city-wide stats (optional)
 
-        City rankings
+New Player Building
 
-        Player standings
+Player Building
 
-        Reputation tallies
+Function
 
-    Rewards:
+Unlock Tier
 
-        Bonus Gold
+Requires NFT
 
-        Respect Points
+📜 Rep Station
 
-        Rare Artifact NFTs
+Stake REP → Claim $S rewards
 
-    Winners announced on World Map
+Tier 2
 
-♻️ 9. New Week or New Season Starts
+✅ Yes
 
-    Buff buildings reset
+REP Flow:
 
-    Treasury Hall and Bank require small reactivation or upgrades
+Players donate Gold / win raids → earn REP (silently tracked)
 
-    New Super Buildings rotate in
+Once 🪪 Ministry is built → REP is minted retroactively
 
-    Fresh events and goals unlocked
+Players place 📜 Rep Station on grid and stake REP
 
-🧩 Final Gameplay Loop (Simple Visual)
+Once 🏛 Council Chamber is built → Claim button appears
 
-Connect Wallet →
-Choose City →
-Stake NFT →
-Earn Gold →
-Build Personal Economy →
-Contribute to City Treasury or Buildings →
-Unlock Infrastructure (Treasury, Bank) →
-Midweek Events →
-Final Sprint →
-Snapshot and Rewards →
-Reset and Evolve Next Week
+Player earns revenue from Shop / game events
 
-🧡 Player Emotional Arc Over a Season
-Phase	Feeling
-Start	Hope, excitement
-Mid	Pride, strategy, teamwork
-End	Tension, legacy building
-Reward	Satisfaction, loyalty
-🎯 Summary
+🔁 Grid Pressure: Players must choose between Gold (🏠), Food (🌾), and Rewards (📜)
 
-    Sonicity is a living civilization, built by players, shaped by seasons, and ruled by the legends who rise within it.
+✅ Grid = strategy. Revenue = earned by action, not idle staking
+✅ Gold loop remains internal. $S rewards = external, finite, and fair
 
-Would you also like me to create a "Short Version" (condensed to maybe 10-15 lines for website one-pager)?
-🎨🚀 (Could be very good for marketing!)
-Just say "Short Version please!"
+Next: Tier 3 — Governance, Senate, and City Alliances
+
