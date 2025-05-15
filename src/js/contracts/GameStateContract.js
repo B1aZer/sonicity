@@ -130,11 +130,6 @@ export class GameStateContract extends BaseContract {
         return await this.transact('donateGold', amount);
     }
 
-    // Building Requirements
-    async canUnlockBuilding(buildingName) {
-        return await this.call('canUnlockBuilding', buildingName);
-    }
-
     async getTierRequirements(tier) {
         return await this.call('tierRequirements', tier);
     }
