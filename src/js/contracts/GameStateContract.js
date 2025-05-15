@@ -8,6 +8,15 @@ export class GameStateContract extends BaseContract {
         super(CONTRACT_ADDRESSES.GAME_STATE, GameStateABI.abi);
     }
 
+    async initializePlayer() {
+        try {
+            return await this.transact('initializePlayer');
+        } catch (error) {
+            console.error('Error in initializePlayer:', error);
+            throw error;
+        }
+    }
+
     // City Management
     async getCityInfo(cityId) {
         try {

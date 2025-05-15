@@ -2,7 +2,6 @@ import '../styles/start-page.css';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { appState } from '../js/core/state.js';
-import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { BasePage } from './BasePage.js';
 
 export class StartPage extends BasePage {
@@ -12,7 +11,6 @@ export class StartPage extends BasePage {
         this.element = document.createElement('div');
         this.element.className = 'start-page';
         this.modal = new Modal();
-        this.gameStateContract = new GameStateContract();
         this.render();
         this.setupEventListeners();
     }
@@ -52,7 +50,10 @@ export class StartPage extends BasePage {
                     startButton.textContent = '';
 
                     // Initialize contract with user's wallet
-                    await this.gameStateContract.initialize();
+                    await this.contracts.gameState.initialize();
+                    
+                    // Initialize player
+                    await this.contracts.gameState.initializePlayer();
 
                     // Show loading message
                     this.modal.loading('Initializing game...');
