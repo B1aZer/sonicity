@@ -45,6 +45,21 @@ export class AccessControl {
     }
 
     /**
+     * Check if player is initialized
+     */
+    static async isPlayerInitialized() {
+        await this.initialize();
+        try {
+            const address = await this.gameState.getAddress();
+            const playerState = await this.gameState.call('playerState', address);
+            return playerState.buildingSlots > 0;
+        } catch (error) {
+            console.error('Error checking player initialization:', error);
+            return false;
+        }
+    }
+
+    /**
      * Check if wallet is connected
      */
     static isWalletConnected() {
@@ -62,11 +77,13 @@ export class AccessControl {
         if (!this.isWalletConnected() || !this.hasVerifiedNFT()) {
             return false;
         }
-        const inCity = await this.isInCity();
-        if (!inCity) {
-            this.modal.error('Please join a city first to access the dashboard.');
+
+        const isInitialized = await this.isPlayerInitialized();
+        if (!isInitialized) {
+            this.modal.error('Please start the game first to access the dashboard.');
             return false;
         }
+
         return true;
     }
 } 
