@@ -1,3 +1,8 @@
+- stkae houses 
+- do you pay dor city buildings?
+- other options for shop?
+
+
 + decouple mint status page from staking page and reuse
 + shit with main wrapper, becuse of columns on stake page
 - decouple connect wallet and other button styles. Organize in single place like buttons
