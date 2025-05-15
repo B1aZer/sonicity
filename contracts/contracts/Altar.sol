@@ -70,7 +70,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /**
-     * @dev Stake an NFT to receive building slots
+     * @dev Stake an NFT to automatically place a house
      * @param tokenId The ID of the NFT to stake
      */
     function stake(uint256 tokenId) external nonReentrant {
@@ -82,7 +82,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         
         // Check building slots
         require(metadata.buildingSlots > 0, "NFT must have at least 1 building slot");
-        
+             
         // Transfer NFT to this contract
         sonicityNFT.transferFrom(msg.sender, address(this), tokenId);
         
@@ -97,12 +97,13 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         // Add to user's staked tokens
         userStakes[msg.sender].push(tokenId);
         
-        // Calculate and update building slots in GameState
-        uint256 newSlots = slotsPerBuildingSlot[metadata.buildingSlots];
-        uint256 currentSlots = gameState.getBuildingSlots(msg.sender);
-        gameState.updateBuildingSlots(msg.sender, currentSlots + newSlots);
-        
-        emit NFTStaked(msg.sender, tokenId, block.timestamp);
+        // Automatically create a house for the staked NFT
+        try gameState.createBuilding("house") {
+            emit NFTStaked(msg.sender, tokenId, block.timestamp);
+        } catch Error(string memory reason) {
+            // If house creation fails, revert the entire stake operation
+            revert(string(abi.encodePacked("Failed to create house: ", reason)));
+        }
     }
 
     /**

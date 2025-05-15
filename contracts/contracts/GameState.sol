@@ -214,15 +214,18 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @dev Join a city
      * @param cityId The ID of the city to join
      */
-    function joinCity(uint256 cityId) external {
+    function joinCity(uint256 cityId) external nonReentrant {
         require(playerCity[msg.sender] == 0, "Already in a city");
         require(cityId > 0, "Invalid city ID");
         
         playerCity[msg.sender] = cityId;
         cities[cityId].peaceShield = true; // New cities start with peace shield
+
+        // Set initial building slots for Tier 0
+        cities[cityId].playerBuildingSlots[msg.sender] = 9;
+        cities[cityId].playerMaxBuildingSlots[msg.sender] = 9;
         
         // Grant initial gold to new players
-        cities[cityId].playerGold[msg.sender] = 500; // Starting gold amount
         cities[cityId].tier = 0; // Start at tier 0
         
         emit CityJoined(msg.sender, cityId);
@@ -403,8 +406,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     /**
      * @dev Create a new building
      * @param buildingType The type of building to create
+     * @return uint256 The ID of the created building
      */
-    function createBuilding(string memory buildingType) external nonReentrant {
+    function createBuilding(string memory buildingType) external nonReentrant returns (uint256) {
         uint256 cityId = playerCity[msg.sender];
         require(cityId > 0, "Not in a city");
         
@@ -412,6 +416,12 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint256 cost = buildingCosts[buildingType];
         require(cost > 0, "Invalid building type");
         require(cities[cityId].playerGold[msg.sender] >= cost, "Insufficient Gold");
+        
+        // For Tier 0, only allow houses and enforce 3x3 grid
+        if (cities[cityId].tier == 0) {
+            require(keccak256(bytes(buildingType)) == keccak256(bytes("house")), "Only houses allowed in Tier 0");
+            require(playerBuildingCounts[msg.sender].total < 9, "Tier 0 grid is full (3x3)");
+        }
         
         // Check available slots
         require(
@@ -437,6 +447,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         playerBuildingCounts[msg.sender].byType[buildingType]++;
         
         emit BuildingCreated(msg.sender, buildingType, buildingId);
+        
+        return buildingId;
     }
 
     /**
