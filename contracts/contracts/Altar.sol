@@ -10,7 +10,7 @@ import "./GameState.sol";
 
 /**
  * @title Altar
- * @dev Contract for staking Sonicity NFTs to receive building slots
+ * @dev Contract for staking Sonicity NFTs
  * Uses UUPS upgradeable pattern for future upgrades
  */
 contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
@@ -36,9 +36,9 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     
     // Minimum staking duration in seconds (e.g., 7 days)
     uint256 public minStakingDuration;
-    
-    // Slots per NFT based on building slots
-    mapping(uint8 => uint256) public slotsPerBuildingSlot;
+
+    // Add mapping to track staked NFT to buildingId
+    mapping(address => mapping(uint256 => uint256)) public stakedBuilding;
 
     // Events
     event NFTStaked(address indexed user, uint256 indexed tokenId, uint256 timestamp);
@@ -57,20 +57,13 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         sonicityNFT = IERC721(_sonicityNFT);
         gameState = GameState(_gameState);
         minStakingDuration = 7 days;
-        
-        // Initialize slots per building slot
-        slotsPerBuildingSlot[1] = 1;  // 1 building slot
-        slotsPerBuildingSlot[2] = 2;  // 2 building slots
-        slotsPerBuildingSlot[3] = 3;  // 3 building slots
-        slotsPerBuildingSlot[4] = 4;  // 4 building slots
-        slotsPerBuildingSlot[5] = 5;  // 5 building slots
     }
 
     // Required by UUPS pattern
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /**
-     * @dev Stake an NFT to automatically place a house
+     * @dev Stake an NFT
      * @param tokenId The ID of the NFT to stake
      */
     function stake(uint256 tokenId) external nonReentrant {
@@ -97,13 +90,11 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         // Add to user's staked tokens
         userStakes[msg.sender].push(tokenId);
         
-        // Automatically create a house for the staked NFT
-        try gameState.createBuilding("house") {
-            emit NFTStaked(msg.sender, tokenId, block.timestamp);
-        } catch Error(string memory reason) {
-            // If house creation fails, revert the entire stake operation
-            revert(string(abi.encodePacked("Failed to create house: ", reason)));
-        }
+        // Create a house for the player
+        uint256 buildingId = gameState.createBuildingForPlayer(msg.sender, "house");
+        stakedBuilding[address(sonicityNFT)][tokenId] = buildingId;
+        
+        emit NFTStaked(msg.sender, tokenId, block.timestamp);
     }
 
     /**
@@ -119,9 +110,6 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
             "Staking period not completed"
         );
         
-        // Get NFT metadata from GameState
-        GameState.NFTMetadata memory metadata = gameState.getNFTMetadata(address(sonicityNFT), tokenId);
-        
         // Update stake status
         stakes[tokenId].isActive = false;
         
@@ -135,14 +123,13 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
             }
         }
         
-        // Calculate and update building slots in GameState
-        uint256 slotsToRemove = slotsPerBuildingSlot[metadata.buildingSlots];
-        uint256 currentSlots = gameState.getBuildingSlots(msg.sender);
-        require(currentSlots >= slotsToRemove, "Insufficient building slots");
-        gameState.updateBuildingSlots(msg.sender, currentSlots - slotsToRemove);
-        
         // Transfer NFT back to owner
         sonicityNFT.transferFrom(address(this), msg.sender, tokenId);
+        
+        // In the unstake function, after updating stake status, remove the building and delete the mapping entry
+        uint256 buildingId = stakedBuilding[address(sonicityNFT)][tokenId];
+        gameState.removeBuildingForPlayer(msg.sender, buildingId);
+        delete stakedBuilding[address(sonicityNFT)][tokenId];
         
         emit NFTUnstaked(msg.sender, tokenId, block.timestamp);
     }
@@ -171,15 +158,5 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
      */
     function setMinStakingDuration(uint256 _duration) external onlyOwner {
         minStakingDuration = _duration;
-    }
-
-    /**
-     * @dev Update slots per building slot (only owner)
-     * @param size The building slot size (1-5)
-     * @param slots Number of slots for that size
-     */
-    function setSlotsPerBuildingSlot(uint8 size, uint256 slots) external onlyOwner {
-        require(size >= 1 && size <= 5, "Invalid building slot size");
-        slotsPerBuildingSlot[size] = slots;
     }
 } 

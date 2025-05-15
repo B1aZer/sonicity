@@ -42,12 +42,13 @@ describe("Altar", function () {
     // Approve the NFT collection in GameState
     await gameState.connect(owner).approveCollection(sonicityNFTAddress);
 
-    // Join city for testing
-    await gameState.connect(player1).joinCity(1);
+    // Initialize players
+    await gameState.connect(player1).initializePlayer();
+    await gameState.connect(player2).initializePlayer();
   });
 
   describe("NFT Staking", function () {
-    it("Should allow players to stake NFTs", async function () {
+    it("Should allow players to stake NFTs and create buildings", async function () {
       // Mint an NFT to player1
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
@@ -59,6 +60,9 @@ describe("Altar", function () {
       };
       await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
+      // Get initial building count
+      const initialBuildingCount = await gameState.getTotalBuildings(await player1.getAddress());
+
       // Stake the NFT
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
@@ -68,6 +72,17 @@ describe("Altar", function () {
       const stake = await altar.getStakeData(tokenId);
       expect(stake.isActive).to.be.true;
       expect(stake.owner).to.equal(await player1.getAddress());
+      expect(stake.tokenId).to.equal(tokenId);
+
+      // Check that a building was created
+      const newBuildingCount = await gameState.getTotalBuildings(await player1.getAddress());
+      expect(newBuildingCount).to.equal(initialBuildingCount + BigInt(1));
+
+      // Check the building details
+      const buildingId = await altar.stakedBuilding(await sonicityNFT.getAddress(), tokenId);
+      const building = await gameState.getBuilding(await player1.getAddress(), buildingId);
+      expect(building.active).to.be.true;
+      expect(building.buildingType).to.equal("house");
     });
 
     it("Should not allow staking already staked NFTs", async function () {
@@ -110,7 +125,7 @@ describe("Altar", function () {
       await expect(altar.connect(player1).unstake(tokenId)).to.be.revertedWith("Staking period not completed");
     });
 
-    it("Should allow unstaking after minimum duration", async function () {
+    it("Should allow unstaking after minimum duration and remove building", async function () {
       // Mint and stake an NFT
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
@@ -126,6 +141,10 @@ describe("Altar", function () {
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
       await altar.connect(player1).stake(tokenId);
 
+      // Get building count before unstaking
+      const buildingCountBefore = await gameState.getTotalBuildings(await player1.getAddress());
+      const buildingId = await altar.stakedBuilding(await sonicityNFT.getAddress(), tokenId);
+
       // Fast forward time
       await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
       await ethers.provider.send("evm_mine");
@@ -136,6 +155,15 @@ describe("Altar", function () {
       // Check stake data
       const stake = await altar.getStakeData(tokenId);
       expect(stake.isActive).to.be.false;
+
+      // Check that the building was removed
+      await expect(
+        gameState.getBuilding(await player1.getAddress(), buildingId)
+      ).to.be.revertedWith("Building doesn't exist or is inactive");
+
+      // Check building count decreased
+      const buildingCountAfter = await gameState.getTotalBuildings(await player1.getAddress());
+      expect(buildingCountAfter).to.equal(buildingCountBefore - BigInt(1));
     });
 
     it("Should not allow staking an NFT with 0 building slots", async function () {
@@ -154,94 +182,21 @@ describe("Altar", function () {
       await expect(altar.connect(player1).stake(tokenId))
         .to.be.revertedWith("NFT must have at least 1 building slot");
     });
-  });
 
-  describe("Building Slots", function () {
-    it("Should update building slots based on land size from metadata", async function () {
-      // Mint an NFT to player1
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-      const tokenId = 1;
-
-      // Set metadata with size 5
-      const metadata = {
-        district: 1,
-        buildingSlots: 5
-      };
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
-
-      // Stake the NFT
-      const altarAddress = await altar.getAddress();
-      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      await altar.connect(player1).stake(tokenId);
-
-      // Check building slots
-      const slots = await gameState.getBuildingSlots(await player1.getAddress());
-      expect(slots).to.equal(metadata.buildingSlots);
-    });
-
-    it("Should accumulate building slots when staking multiple NFTs", async function () {
-      // Mint two NFTs to player1
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.02") });
-      await sonicityNFT.connect(player1).mint(2, { value: ethers.parseEther("0.02") });
-      
-      // Set metadata for both NFTs
-      const metadata1 = { district: 1, buildingSlots: 5 }; // Will map to 5 slots
-      const metadata2 = { district: 1, buildingSlots: 3 }; // Will map to 3 slots
-      
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 1, metadata1);
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 2, metadata2);
-
-      // Stake both NFTs
-      const altarAddress = await altar.getAddress();
-      await sonicityNFT.connect(player1).approve(altarAddress, 1);
-      await sonicityNFT.connect(player1).approve(altarAddress, 2);
-      
-      await altar.connect(player1).stake(1);
-      await altar.connect(player1).stake(2);
-
-      // Check total building slots (5 + 3 = 8)
-      const totalSlots = await gameState.getBuildingSlots(await player1.getAddress());
-      expect(totalSlots).to.equal(8);
-    });
-
-    it("Should reduce building slots when unstaking NFTs", async function () {
-      // Mint and stake an NFT
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-      const tokenId = 1;
-
-      const metadata = { district: 1, buildingSlots: 5 };
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
-
-      const altarAddress = await altar.getAddress();
-      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      await altar.connect(player1).stake(tokenId);
-
-      // Fast forward time
-      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
-      await ethers.provider.send("evm_mine");
-
-      // Unstake the NFT
-      await altar.connect(player1).unstake(tokenId);
-
-      // Check building slots are reduced to 0
-      const slots = await gameState.getBuildingSlots(await player1.getAddress());
-      expect(slots).to.equal(0);
-    });
-
-    it("Should handle building slots correctly when staking and unstaking multiple NFTs", async function () {
+    it("Should track multiple staked NFTs and their buildings", async function () {
       // Mint three NFTs to player1
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.03") });
       await sonicityNFT.connect(player1).mint(2, { value: ethers.parseEther("0.03") });
       await sonicityNFT.connect(player1).mint(3, { value: ethers.parseEther("0.03") });
       
       // Set metadata for all NFTs
-      const metadata1 = { district: 1, buildingSlots: 5 }; // Will map to 5 slots
-      const metadata2 = { district: 1, buildingSlots: 3 }; // Will map to 3 slots
-      const metadata3 = { district: 1, buildingSlots: 4 }; // Will map to 4 slots
-      
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 1, metadata1);
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 2, metadata2);
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 3, metadata3);
+      const metadata = { district: 1, buildingSlots: 5 };
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 1, metadata);
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 2, metadata);
+      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 3, metadata);
+
+      // Get initial building count
+      const initialBuildingCount = await gameState.getTotalBuildings(await player1.getAddress());
 
       // Stake all NFTs
       const altarAddress = await altar.getAddress();
@@ -253,20 +208,24 @@ describe("Altar", function () {
       await altar.connect(player1).stake(2);
       await altar.connect(player1).stake(3);
 
-      // Check total building slots (5 + 3 + 4 = 12)
-      let totalSlots = await gameState.getBuildingSlots(await player1.getAddress());
-      expect(totalSlots).to.equal(12);
+      // Check user's staked NFTs
+      const stakedNFTs = await altar.getUserStakes(await player1.getAddress());
+      expect(stakedNFTs.length).to.equal(3);
+      expect(stakedNFTs).to.include(BigInt(1));
+      expect(stakedNFTs).to.include(BigInt(2));
+      expect(stakedNFTs).to.include(BigInt(3));
 
-      // Fast forward time
-      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
-      await ethers.provider.send("evm_mine");
+      // Check that buildings were created
+      const newBuildingCount = await gameState.getTotalBuildings(await player1.getAddress());
+      expect(newBuildingCount).to.equal(initialBuildingCount + BigInt(3));
 
-      // Unstake one NFT (remove 3 slots)
-      await altar.connect(player1).unstake(2);
-
-      // Check building slots are reduced correctly (5 + 4 = 9)
-      totalSlots = await gameState.getBuildingSlots(await player1.getAddress());
-      expect(totalSlots).to.equal(9);
+      // Check each building
+      for (let i = 1; i <= 3; i++) {
+        const buildingId = await altar.stakedBuilding(await sonicityNFT.getAddress(), i);
+        const building = await gameState.getBuilding(await player1.getAddress(), buildingId);
+        expect(building.active).to.be.true;
+        expect(building.buildingType).to.equal("house");
+      }
     });
   });
 }); 

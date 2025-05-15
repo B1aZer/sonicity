@@ -759,4 +759,67 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function getPlayerTreasury(address player) external view returns (uint256) {
         return playerState[player].treasury;
     }
+
+    /**
+     * @dev Create a new building on behalf of a player (only callable by Altar)
+     * @param player The address of the player
+     * @param buildingType The type of building to create
+     * @return uint256 The ID of the created building
+     */
+    function createBuildingForPlayer(address player, string memory buildingType) external nonReentrant returns (uint256) {
+        require(msg.sender == altarAddress, "Only Altar can create buildings for players");
+        
+        PlayerState storage state = playerState[player];
+        
+        // Check if building type is valid
+        require(buildingProductionRates[buildingType] > 0, "Invalid building type");
+        
+        // For Tier 0, only allow houses and enforce 3x3 grid
+        if (state.tier == 0) {
+            require(keccak256(bytes(buildingType)) == keccak256(bytes("house")), "Only houses allowed in Tier 0");
+            require(playerBuildingCounts[player].total < 9, "Tier 0 grid is full (3x3)");
+        }
+        
+        // Check available slots
+        require(
+            playerBuildingCounts[player].total < state.buildingSlots,
+            "No building slots available"
+        );
+        
+        // Create building
+        uint256 buildingId = nextBuildingId[player]++;
+        buildings[player][buildingId] = Building({
+            buildingType: buildingType,
+            level: 1,
+            lastUpgradeTime: block.timestamp,
+            lastCollectionTime: block.timestamp,
+            active: true
+        });
+        
+        // Update counts
+        playerBuildingCounts[player].total++;
+        playerBuildingCounts[player].byType[buildingType]++;
+        
+        emit BuildingCreated(player, buildingType, buildingId);
+        
+        return buildingId;
+    }
+
+    /**
+     * @dev Remove a building on behalf of a player (only callable by Altar)
+     * @param player The address of the player
+     * @param buildingId The ID of the building to remove
+     */
+    function removeBuildingForPlayer(address player, uint256 buildingId) external nonReentrant {
+        require(msg.sender == altarAddress, "Only Altar can remove buildings for players");
+        require(buildings[player][buildingId].active, "Building already removed or doesn't exist");
+
+        string memory buildingType = buildings[player][buildingId].buildingType;
+
+        buildings[player][buildingId].active = false;
+        playerBuildingCounts[player].total--;
+        playerBuildingCounts[player].byType[buildingType]--;
+
+        emit BuildingRemoved(player, buildingType, buildingId);
+    }
 } 
