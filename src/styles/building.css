@@ -10,6 +10,8 @@
     padding: var(--spacing-md);
     border: 1px solid var(--bg-lighter);
     transition: transform var(--transition-normal);
+    position: relative;
+    overflow: hidden;
 }
 
 .building-card:hover {
@@ -19,12 +21,39 @@
 .building-card h3 {
     margin-bottom: var(--spacing-sm);
     color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
 }
 
 .building-card p {
     color: var(--text-muted);
     margin-bottom: var(--spacing-sm);
     font-size: var(--font-size-sm);
+}
+
+.building-details {
+    background: var(--bg-lighter);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    margin: var(--spacing-sm) 0;
+}
+
+.build-cost, .unlock-cost {
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.build-cost::before {
+    content: '💰';
+}
+
+.unlock-cost::before {
+    content: '🔓';
 }
 
 .building-actions {
@@ -34,15 +63,8 @@
 }
 
 .building-card.locked {
-    opacity: 0.7;
+    opacity: 0.9;
     background: var(--bg-lighter);
-    position: relative;
-}
-
-.building-card.locked {
-    opacity: 0.7;
-    background: var(--bg-lighter);
-    position: relative;
 }
 
 .lock-overlay {
@@ -51,12 +73,14 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-md);
     z-index: 1;
+    padding: var(--spacing-md);
 }
 
 .lock-icon {
@@ -64,6 +88,33 @@
     color: var(--color-primary);
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     animation: pulse 2s infinite;
+    margin-bottom: var(--spacing-md);
+}
+
+.unlock-info {
+    text-align: center;
+    color: white;
+}
+
+.unlock-requirement {
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-primary);
+}
+
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: var(--spacing-sm);
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--color-primary);
+    transition: width 0.3s ease;
 }
 
 @keyframes pulse {
@@ -83,9 +134,12 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-
     .buildings-grid {
         grid-template-columns: 1fr;
+    }
+
+    .building-details {
+        padding: var(--spacing-xs);
     }
 
     .building-actions {

@@ -6,8 +6,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Repair buildings (e.g., Houses after 24h)",
         unlockCost: 200,
         buildCost: 100,
-        tier: 0,
-        emoji: "🧰"
+        tier: 0
     },
     SHOP: {
         name: "shop",
@@ -15,8 +14,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Sells items (e.g., emergency Gold aid)",
         unlockCost: 400,
         buildCost: 150,
-        tier: 0,
-        emoji: "🛍"
+        tier: 0
     },
 
     // Tier 1 Buildings
@@ -26,8 +24,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Passive defense against raids",
         unlockCost: 1000,
         buildCost: 200,
-        tier: 1,
-        emoji: "🧱"
+        tier: 1
     },
     BARRACKS: {
         name: "barracks",
@@ -35,8 +32,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Train Troops using Food",
         unlockCost: 1250,
         buildCost: 250,
-        tier: 1,
-        emoji: "🪖"
+        tier: 1
     },
     SCOUT_GUILD: {
         name: "scout_guild",
@@ -44,8 +40,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Finds new cities to raid",
         unlockCost: 1500,
         buildCost: 200,
-        tier: 1,
-        emoji: "🕵️"
+        tier: 1
     },
     CARAVAN: {
         name: "caravan",
@@ -53,8 +48,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Sends troops for raids",
         unlockCost: 1750,
         buildCost: 250,
-        tier: 1,
-        emoji: "🐪"
+        tier: 1
     },
 
     // Tier 2 Buildings
@@ -64,8 +58,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Stake REP → Claim $S rewards",
         unlockCost: 3000,
         buildCost: 200,
-        tier: 2,
-        emoji: "📜"
+        tier: 2
     },
     COUNCIL_CHAMBER: {
         name: "council_chamber",
@@ -73,8 +66,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Enables REP staking → players claim $S revenue",
         unlockCost: 3500,
         buildCost: 300,
-        tier: 2,
-        emoji: "🏛"
+        tier: 2
     },
     AUDIT_SHRINE: {
         name: "audit_shrine",
@@ -82,8 +74,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Shows REP leaderboard, city-wide stats",
         unlockCost: 4000,
         buildCost: 250,
-        tier: 2,
-        emoji: "📊"
+        tier: 2
     },
 
     // Tier 3 Buildings
@@ -93,8 +84,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Form or join a City",
         unlockCost: 5000,
         buildCost: 400,
-        tier: 3,
-        emoji: "🏛"
+        tier: 3
     },
     MINISTRY_OF_MERIT: {
         name: "ministry_of_merit",
@@ -102,8 +92,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Mints and tracks REP from raids/donations",
         unlockCost: 6000,
         buildCost: 350,
-        tier: 3,
-        emoji: "🪪"
+        tier: 3
     },
 
     // Tier 4 Buildings
@@ -113,8 +102,7 @@ export const DISTRICT_BUILDINGS = {
         description: "PvP/cooldown buffs",
         unlockCost: 10000,
         buildCost: 500,
-        tier: 4,
-        emoji: "🏰"
+        tier: 4
     },
     FORTRESS_WALLS: {
         name: "fortress_walls",
@@ -122,8 +110,7 @@ export const DISTRICT_BUILDINGS = {
         description: "City-wide defense bonus",
         unlockCost: 12000,
         buildCost: 500,
-        tier: 4,
-        emoji: "🏰"
+        tier: 4
     },
     BANK: {
         name: "bank",
@@ -131,8 +118,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Lending or staking Gold for towns",
         unlockCost: 15000,
         buildCost: 600,
-        tier: 4,
-        emoji: "🏦"
+        tier: 4
     },
     ALTAR: {
         name: "altar",
@@ -140,8 +126,7 @@ export const DISTRICT_BUILDINGS = {
         description: "Whitelist external NFT collections",
         unlockCost: 20000,
         buildCost: 300,
-        tier: 4,
-        emoji: "⛪"
+        tier: 4
     }
 };
 

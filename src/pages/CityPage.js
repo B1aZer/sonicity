@@ -71,27 +71,24 @@ export class CityPage extends BasePage {
                 repValue.textContent = playerRep.toString();
             }
 
-            // Update next tier cost display
-            const nextTierValue = this.element.querySelector('.next-tier-cost');
-            if (nextTierValue) {
-                nextTierValue.textContent = nextTierCost.toString();
-            }
-
-            // Update progress bar
-            const progressBar = this.element.querySelector('.tier-progress-bar');
-            if (progressBar) {
-                const treasury = Number(playerState.treasury);
-                const cost = Number(nextTierCost);
-                const progress = (treasury / cost) * 100;
-                progressBar.style.width = `${Math.min(progress, 100)}%`;
-            }
-
-            // Update building locks based on treasury
+            // Update building locks and progress based on treasury
             const buildingCards = this.element.querySelectorAll('.building-card[data-required-donation]');
             buildingCards.forEach(card => {
                 const requiredDonation = Number(card.dataset.requiredDonation);
-                if (Number(playerState.treasury) >= requiredDonation) {
+                const treasury = Number(playerState.treasury);
+                const progress = Math.min((treasury / requiredDonation) * 100, 100);
+                
+                // Update progress bar
+                const progressBar = card.querySelector('.progress-bar');
+                if (progressBar) {
+                    progressBar.style.width = `${progress}%`;
+                }
+
+                // Update lock status
+                if (treasury >= requiredDonation) {
                     card.classList.remove('locked');
+                } else {
+                    card.classList.add('locked');
                 }
             });
 
@@ -228,8 +225,8 @@ export class CityPage extends BasePage {
                             <span class="status-value city-tier">Loading...</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Next Tier Cost:</span>
-                            <span class="status-value next-tier-cost">Loading...</span>
+                            <span class="status-label">Treasury:</span>
+                            <span class="status-value treasury-amount">Loading...</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Rep Points:</span>
@@ -266,27 +263,43 @@ export class CityPage extends BasePage {
                             <div class="building-card locked" data-required-donation="200">
                                 <div class="lock-overlay">
                                     <i class="fas fa-lock lock-icon"></i>
-                                    <p>Requires 200 Gold Donation</p>
+                                    <div class="unlock-info">
+                                        <p class="unlock-requirement">Requires 200 Gold in Treasury</p>
+                                        <div class="progress-container">
+                                            <div class="progress-bar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <h3>🧰 Workshop</h3>
-                                <p>Used to repair buildings (e.g., Houses after 24h)</p>
-                                <p>Cost: 100 gold</p>
+                                <h3>Workshop</h3>
+                                <p>Repair buildings (e.g., Houses after 24h)</p>
+                                <div class="building-details">
+                                    <p class="build-cost">Build Cost: 100 gold</p>
+                                    <p class="unlock-cost">Unlock Cost: 200 gold</p>
+                                </div>
                                 <button class="building-button" data-building="workshop" type="button">Build Workshop</button>
                             </div>
-                            <div class="building-card locked" data-required-donation="600">
+                            <div class="building-card locked" data-required-donation="400">
                                 <div class="lock-overlay">
                                     <i class="fas fa-lock lock-icon"></i>
-                                    <p>Requires 600 Gold Donation</p>
+                                    <div class="unlock-info">
+                                        <p class="unlock-requirement">Requires 400 Gold in Treasury</p>
+                                        <div class="progress-container">
+                                            <div class="progress-bar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <h3>🛍 Shop</h3>
+                                <h3>Shop</h3>
                                 <p>Sells items (e.g., emergency Gold aid)</p>
-                                <p>Cost: 200 gold</p>
+                                <div class="building-details">
+                                    <p class="build-cost">Build Cost: 150 gold</p>
+                                    <p class="unlock-cost">Unlock Cost: 400 gold</p>
+                                </div>
                                 <button class="building-button" data-building="shop" type="button">Build Shop</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Other tier contents will be added later -->
+                    <!-- Other tier contents will be added dynamically -->
                     <div class="tier-content" data-tier="1"></div>
                     <div class="tier-content" data-tier="2"></div>
                     <div class="tier-content" data-tier="3"></div>
