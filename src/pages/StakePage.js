@@ -214,7 +214,7 @@ export class StakePage extends BasePage {
                 Logger.info('Stake transaction confirmed:', stakeReceipt.hash);
                 
                 // Success message
-                this.showStatus('success', 'Your NFT is now staked and you\'ve received building slots', 'NFT Staked Successfully!');
+                this.showStatus('success', 'Your NFT has been staked and a new building has been constructed in your district!', 'NFT Staked Successfully!');
                 
                 // Reload the user's NFTs to update the list
                 await this.loadUserNFTs();
