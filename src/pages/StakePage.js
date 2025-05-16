@@ -230,13 +230,6 @@ export class StakePage extends BasePage {
 
     async unstakeNFT(tokenId) {
         try {
-            // Check if user has joined a city
-            const playerCity = await this.contracts.gameState.getPlayerCity();
-            if (!playerCity) {
-                this.modal.error("You must join a city before unstaking NFTs");
-                return;
-            }
-            
             // Check if NFT is actually staked
             let stakeData;
             try {
