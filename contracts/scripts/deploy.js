@@ -21,6 +21,15 @@ async function main() {
   const gameStateImplAddress = await gameStateImpl.getAddress();
   console.log("GameState implementation deployed to:", gameStateImplAddress);
 
+  // Deploy DistrictBuildings implementation
+  console.log("Deploying DistrictBuildings implementation...");
+  const DistrictBuildings = await ethers.getContractFactory("DistrictBuildings");
+  const districtBuildingsImpl = await DistrictBuildings.deploy();
+  console.log("Waiting for DistrictBuildings implementation deployment...");
+  await districtBuildingsImpl.waitForDeployment();
+  const districtBuildingsImplAddress = await districtBuildingsImpl.getAddress();
+  console.log("DistrictBuildings implementation deployed to:", districtBuildingsImplAddress);
+
   // Deploy Altar implementation
   console.log("Deploying Altar implementation...");
   const Altar = await ethers.getContractFactory("Altar");
@@ -41,6 +50,17 @@ async function main() {
   const gameStateProxyAddress = await gameStateProxy.getAddress();
   console.log("GameState proxy deployed to:", gameStateProxyAddress);
 
+  // Deploy DistrictBuildings proxy
+  console.log("Deploying DistrictBuildings proxy...");
+  const districtBuildingsProxy = await upgrades.deployProxy(DistrictBuildings, [], {
+    kind: 'uups',
+    initializer: 'initialize',
+  });
+  console.log("Waiting for DistrictBuildings proxy deployment...");
+  await districtBuildingsProxy.waitForDeployment();
+  const districtBuildingsProxyAddress = await districtBuildingsProxy.getAddress();
+  console.log("DistrictBuildings proxy deployed to:", districtBuildingsProxyAddress);
+
   // Deploy Altar proxy with initialization parameters
   console.log("Deploying Altar proxy...");
   const altarProxy = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateProxyAddress], {
@@ -52,10 +72,20 @@ async function main() {
   const altarProxyAddress = await altarProxy.getAddress();
   console.log("Altar proxy deployed to:", altarProxyAddress);
 
-  // Update GameState proxy with Altar address
+  // Set up contract interactions
+  console.log("Setting up contract interactions...");
+  
+  // Set Altar address in GameState
   console.log("Setting Altar address in GameState...");
   await gameStateProxy.setAltarAddress(altarProxyAddress);
-  console.log("GameState proxy updated with Altar address");
+  
+  // Set GameState address in DistrictBuildings
+  console.log("Setting GameState address in DistrictBuildings...");
+  await districtBuildingsProxy.setGameStateAddress(gameStateProxyAddress);
+  
+  // Set DistrictBuildings address in GameState
+  console.log("Setting DistrictBuildings address in GameState...");
+  await gameStateProxy.setDistrictBuildingsAddress(districtBuildingsProxyAddress);
 
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
@@ -63,6 +93,8 @@ async function main() {
   console.log("SonicityNFT:", sonicityNFTAddress);
   console.log("GameState implementation:", gameStateImplAddress);
   console.log("GameState proxy:", gameStateProxyAddress);
+  console.log("DistrictBuildings implementation:", districtBuildingsImplAddress);
+  console.log("DistrictBuildings proxy:", districtBuildingsProxyAddress);
   console.log("Altar implementation:", altarImplAddress);
   console.log("Altar proxy:", altarProxyAddress);
 
@@ -71,6 +103,8 @@ async function main() {
     sonicityNFT: sonicityNFTAddress,
     gameStateImpl: gameStateImplAddress,
     gameStateProxy: gameStateProxyAddress,
+    districtBuildingsImpl: districtBuildingsImplAddress,
+    districtBuildingsProxy: districtBuildingsProxyAddress,
     altarImpl: altarImplAddress,
     altarProxy: altarProxyAddress,
   };
