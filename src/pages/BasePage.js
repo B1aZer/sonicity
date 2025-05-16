@@ -2,6 +2,7 @@ import { WalletManager } from '../js/utils/wallet.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { AltarContract } from '../js/contracts/AltarContract.js';
 import { NFTContract } from '../js/contracts/NFTContract.js';
+import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { appState } from '../js/core/state.js';
@@ -15,7 +16,8 @@ export class BasePage {
         this.contracts = {
             gameState: new GameStateContract(),
             altar: new AltarContract(),
-            nft: new NFTContract()
+            nft: new NFTContract(),
+            districtBuildings: new DistrictBuildingsContract()
         };
         
         // Setup wallet event listener
@@ -62,6 +64,10 @@ export class BasePage {
                 }),
                 this.contracts.nft.initialize().catch(e => {
                     Logger.warn('NFT contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.districtBuildings.initialize().catch(e => {
+                    Logger.warn('DistrictBuildings contract initialization failed:', e);
                     return null;
                 })
             ];

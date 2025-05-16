@@ -1,5 +1,6 @@
 import Logger from '../js/utils/logger.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
+import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import { BasePage } from './BasePage.js';
 
@@ -19,7 +20,6 @@ export class CityPage extends BasePage {
 
     async initialize() {
         await super.initialize();
-        await this.contracts.gameState.initializeBuildingConfigs();
         await this.loadCityData();
         this.setupEventListeners();
     }
@@ -48,13 +48,14 @@ export class CityPage extends BasePage {
             const playerState = await this.contracts.gameState.call('playerState', address);
             
             // Then get other data
-            const [playerRep, nextTierCost] = await Promise.all([
+            const [playerRep, nextTierCost, playerGold] = await Promise.all([
                 this.contracts.gameState.getPlayerRep(),
-                this.contracts.gameState.getTierRequirements(Number(playerState.tier) + 1)
+                this.contracts.gameState.getTierRequirements(Number(playerState.tier) + 1),
+                this.contracts.gameState.getPlayerGold()
             ]);
 
             // Update UI elements
-            this.updateStatusSection(playerState, playerRep, nextTierCost);
+            this.updateStatusSection(playerState, playerRep, nextTierCost, playerGold);
             await this.updateBuildingCards(playerState.tier, playerState.treasury);
             this.updateTierTabs(playerState.tier);
         } catch (error) {
@@ -63,7 +64,7 @@ export class CityPage extends BasePage {
         }
     }
 
-    updateStatusSection(playerState, playerRep, nextTierCost) {
+    updateStatusSection(playerState, playerRep, nextTierCost, playerGold) {
         // Update district tier display
         const tierValue = this.element.querySelector('.city-tier');
         if (tierValue) {
@@ -82,6 +83,12 @@ export class CityPage extends BasePage {
             repValue.textContent = playerRep.toString();
         }
 
+        // Update gold display
+        const goldValue = this.element.querySelector('.gold-amount');
+        if (goldValue) {
+            goldValue.textContent = playerGold.toString();
+        }
+
         // Update tier progress bar
         const progressBar = this.element.querySelector('.tier-progress-bar');
         const progressContainer = this.element.querySelector('.tier-progress');
@@ -91,6 +98,12 @@ export class CityPage extends BasePage {
             const progress = (treasury / cost) * 100;
             progressBar.style.width = `${Math.min(progress, 100)}%`;
             progressContainer.title = `${treasury} / ${cost} Gold`;
+            
+            // Update tier progress text
+            const progressText = this.element.querySelector('.tier-progress-text');
+            if (progressText) {
+                progressText.textContent = `Progress to Tier ${Number(playerState.tier) + 1}: ${Math.min(progress, 100).toFixed(1)}%`;
+            }
         }
     }
 
@@ -100,22 +113,32 @@ export class CityPage extends BasePage {
             const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
             if (!tierContent) continue;
 
-            const buildings = await this.contracts.gameState.getBuildingsByTier(tier);
+            const [buildingTypes, configs] = await this.contracts.districtBuildings.getDistrictBuildingsByTier(tier);
             const buildingsGrid = tierContent.querySelector('.buildings-grid');
             
             if (buildingsGrid) {
-                buildingsGrid.innerHTML = Object.entries(buildings).map(([type, config]) => {
-                    const isLocked = Number(treasury) < config.unlockCost;
+                buildingsGrid.innerHTML = buildingTypes.map((type, index) => {
+                    const config = configs[index];
+                    const treasuryBigInt = BigInt(treasury);
+                    const unlockCostBigInt = BigInt(config.unlockCost);
+                    const isLocked = treasuryBigInt < unlockCostBigInt;
+                    const isTierLocked = tier > currentTier;
+                    
                     return `
-                        <div class="building-card ${isLocked ? 'locked' : ''}" data-required-donation="${config.unlockCost}">
-                            ${isLocked ? `
+                        <div class="building-card ${isLocked || isTierLocked ? 'locked' : ''}" 
+                             data-required-donation="${config.unlockCost}"
+                             data-building-type="${type}">
+                            ${(isLocked || isTierLocked) ? `
                                 <div class="lock-overlay">
                                     <i class="fas fa-lock lock-icon"></i>
                                     <div class="unlock-info">
-                                        <p class="unlock-requirement">Requires ${config.unlockCost} Gold in Treasury</p>
-                                        <div class="progress-container">
-                                            <div class="progress-bar" style="width: ${Math.min((Number(treasury) / config.unlockCost) * 100, 100)}%"></div>
-                                        </div>
+                                        ${isTierLocked ? 
+                                            `<p class="unlock-requirement">Requires Tier ${tier}</p>` :
+                                            `<p class="unlock-requirement">Requires ${config.unlockCost} Gold in Treasury</p>
+                                             <div class="progress-container">
+                                                <div class="progress-bar" style="width: ${Math.min((Number(treasuryBigInt) / Number(unlockCostBigInt)) * 100, 100)}%"></div>
+                                             </div>`
+                                        }
                                     </div>
                                 </div>
                             ` : ''}
@@ -125,7 +148,9 @@ export class CityPage extends BasePage {
                                 <p class="build-cost">Build Cost: ${config.buildCost} gold</p>
                                 <p class="unlock-cost">Unlock Cost: ${config.unlockCost} gold</p>
                             </div>
-                            <button class="building-button" data-building="${type.toLowerCase()}" type="button">Build ${config.name}</button>
+                            <button class="building-button" data-building="${type}" type="button">
+                                Build ${config.name}
+                            </button>
                         </div>
                     `;
                 }).join('');
@@ -181,6 +206,62 @@ export class CityPage extends BasePage {
         } catch (error) {
             Logger.error('Error in handleDonation:', error);
             this.modal.error(`Error donating gold: ${error.message}`);
+        }
+    }
+
+    async handleBuildingAction(buildingType) {
+        try {
+            Logger.info(`Starting handleBuildingAction for: ${buildingType}`);
+
+            // Check if building is unlocked
+            const isUnlocked = await this.contracts.districtBuildings.isDistrictBuildingUnlocked(buildingType);
+            if (!isUnlocked) {
+                this.modal.error('This building is not unlocked yet!');
+                return;
+            }
+
+            // Get building config
+            const [buildingTypes, configs] = await this.contracts.districtBuildings.getAllDistrictBuildingConfigs();
+            const buildingIndex = buildingTypes.findIndex(type => type === buildingType);
+            if (buildingIndex === -1) {
+                this.modal.error('Invalid building type');
+                return;
+            }
+            const config = configs[buildingIndex];
+
+            // Check gold balance
+            const gold = await this.contracts.gameState.getPlayerGold();
+            if (Number(gold) < Number(config.buildCost)) {
+                this.modal.error(
+                    `Insufficient gold!<br>
+                    Required: ${config.buildCost} Gold<br>
+                    Current balance: ${gold} Gold`
+                );
+                return;
+            }
+
+            // Show confirmation dialog
+            const result = await this.modal.confirm(
+                `Build ${config.name} for ${config.buildCost} Gold?`,
+                { title: 'Confirm Building' }
+            );
+
+            if (result.isConfirmed) {
+                const loadingModal = this.modal.loading('Transaction submitted! Waiting for confirmation...');
+                
+                try {
+                    await this.contracts.districtBuildings.buildDistrictBuilding(buildingType);
+                    loadingModal.close();
+                    await this.loadCityData();
+                    this.modal.success(`Successfully built ${config.name}!`);
+                } catch (error) {
+                    loadingModal.close();
+                    this.modal.error(`Failed to build: ${error.message}`);
+                }
+            }
+        } catch (error) {
+            Logger.error('Error in handleBuildingAction:', error);
+            this.modal.error(`Failed to build: ${error.message}`);
         }
     }
 
@@ -270,6 +351,7 @@ export class CityPage extends BasePage {
                     </div>
                     <div class="tier-progress">
                         <div class="tier-progress-bar"></div>
+                        <div class="tier-progress-text"></div>
                     </div>
                 </div>
 
@@ -325,4 +407,4 @@ export class CityPage extends BasePage {
     unmount() {
         this.element.remove();
     }
-} 
+}
