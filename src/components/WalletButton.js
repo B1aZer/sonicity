@@ -21,7 +21,8 @@ export class WalletButton {
         const { connected, address } = await WalletManager.checkExistingConnection();
         if (connected) {
             this.updateWalletStatus(address);
-            this.dispatchWalletConnected(address);
+            // Don't dispatch walletConnected event during initial load
+            // The page will handle initialization through BasePage.initialize()
         }
     }
     
@@ -33,6 +34,11 @@ export class WalletButton {
         
         // Setup account change listener
         WalletManager.setupAccountChangeListener();
+        
+        // Listen for wallet disconnection
+        window.addEventListener('walletDisconnected', () => {
+            this.render();
+        });
         
         // Set up wallet dropdown toggle
         document.addEventListener('click', (e) => {

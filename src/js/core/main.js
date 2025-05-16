@@ -32,7 +32,8 @@ class App {
 
         // Setup navigation
         window.addEventListener('popstate', () => this.handleRoute());
-        this.handleRoute();
+        // Initial route will be handled by popstate event
+        window.dispatchEvent(new PopStateEvent('popstate'));
 
         // Setup wallet connection listener
         window.addEventListener('walletConnected', (event) => {

@@ -107,7 +107,7 @@ export class WalletManager {
                 if (accounts.length === 0) {
                     // User disconnected their wallet
                     appState.clearState();
-                    window.location.reload();
+                    window.dispatchEvent(new CustomEvent('walletDisconnected'));
                 } else {
                     // User switched accounts
                     appState.setWalletConnected(true, accounts[0]);
