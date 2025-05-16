@@ -34,38 +34,31 @@ export class CityPage extends BasePage {
 
     async loadCityData() {
         try {
-            Logger.info('Starting to load city data...');
+            Logger.info('Starting to load district data...');
             
-            const cityId = await this.contracts.gameState.getPlayerCity();
-            if (!cityId) {
-                this.modal.error('You are not in a city! Please join a city first.');
-                return;
-            }
-
-            const [cityInfo, playerRep, nextTierCost] = await Promise.all([
-                this.contracts.gameState.getCityInfo(cityId),
+            const [playerState, playerRep, nextTierCost] = await Promise.all([
+                this.contracts.gameState.call('playerState', await this.contracts.gameState.getAddress()),
                 this.contracts.gameState.getPlayerRep(),
-                this.contracts.gameState.getNextTierCost(cityId)
+                this.contracts.gameState.getTierRequirements(Number(playerState.tier) + 1)
             ]);
 
             Logger.info('Received data from contract:', {
-                cityId: cityId.toString(),
-                tier: cityInfo.tier.toString(),
-                treasury: cityInfo.treasury.toString(),
+                tier: playerState.tier.toString(),
+                treasury: playerState.treasury.toString(),
                 playerRep: playerRep.toString(),
                 nextTierCost: nextTierCost.toString()
             });
 
-            // Update city tier display
+            // Update district tier display
             const tierValue = this.element.querySelector('.city-tier');
             if (tierValue) {
-                tierValue.textContent = cityInfo.tier.toString();
+                tierValue.textContent = playerState.tier.toString();
             }
 
             // Update treasury display
             const treasuryValue = this.element.querySelector('.treasury-amount');
             if (treasuryValue) {
-                treasuryValue.textContent = cityInfo.treasury.toString();
+                treasuryValue.textContent = playerState.treasury.toString();
             }
 
             // Update rep points display
@@ -83,27 +76,12 @@ export class CityPage extends BasePage {
             // Update progress bar
             const progressBar = this.element.querySelector('.tier-progress-bar');
             if (progressBar) {
-                const treasury = Number(cityInfo.treasury);
-                const cost = Number(nextTierCost);
-                const progress = (treasury / cost) * 100;
+                const progress = (playerState.treasury / nextTierCost) * 100;
                 progressBar.style.width = `${Math.min(progress, 100)}%`;
-                
-                // Add a title to show exact progress
-                progressBar.title = `${Math.min(progress, 100).toFixed(2)}% (${treasury}/${cost})`;
             }
-
-            // Update building levels
-            const buildingCards = this.element.querySelectorAll('.building-card');
-            buildingCards.forEach(card => {
-                const levelValue = card.querySelector('.level-value');
-                if (levelValue) {
-                    levelValue.textContent = '1'; // Default level for now
-                }
-            });
-
         } catch (error) {
-            Logger.error('Error loading city data:', error);
-            this.modal.error('Failed to load city data. Please try refreshing the page.');
+            Logger.error('Error loading district data:', error);
+            this.modal.error('Failed to load district data. Please try again.');
         }
     }
 
@@ -177,14 +155,14 @@ export class CityPage extends BasePage {
     }
 
     render() {
-        Logger.info('Rendering city page');
+        Logger.info('Rendering district page');
         this.element.innerHTML = `
             <div class="page-container">
-                <h1>City Hall</h1>
+                <h1>District Hall</h1>
                 
-                <!-- City Status Section -->
+                <!-- District Status Section -->
                 <div class="page-section status-section">
-                    <h2>City Status</h2>
+                    <h2>District Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Current Tier:</span>
@@ -206,16 +184,16 @@ export class CityPage extends BasePage {
 
                 <!-- Donation Section -->
                 <div class="page-section donation-section">
-                    <h2>Donate to City</h2>
+                    <h2>Donate to District</h2>
                     <div class="donation-form">
                         <input type="number" class="donation-amount" placeholder="Amount to donate">
                         <button class="btn btn-primary">Donate Gold</button>
                     </div>
                 </div>
 
-                <!-- City Buildings Section -->
+                <!-- District Buildings Section -->
                 <div class="page-section city-buildings-section">
-                    <h2>City Buildings</h2>
+                    <h2>District Buildings</h2>
                     <div class="buildings-grid">
                         <div class="building-card">
                             <h3>Town Hall</h3>

@@ -15,16 +15,14 @@ export class AccessControl {
 
     /**
      * Check if the user can access the dashboard
-     * Requires wallet connection, NFT verification, and being in a city
+     * Requires wallet connection and NFT verification
      */
     static async canAccessDashboard() {
         const state = appState.getState();
         if (!state.walletConnected || !state.hasVerifiedNFT) {
             return false;
         }
-        await this.initialize();
-        const cityId = await this.gameState.getPlayerCity();
-        return cityId !== null;
+        return true;
     }
 
     /**
@@ -37,11 +35,10 @@ export class AccessControl {
 
     /**
      * Check if the user is in a city
+     * All players are in city 1 by default
      */
     static async isInCity() {
-        await this.initialize();
-        const cityId = await this.gameState.getPlayerCity();
-        return cityId !== null;
+        return true;
     }
 
     /**
