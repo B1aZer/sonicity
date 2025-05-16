@@ -39,7 +39,6 @@ export class GameStateContract extends BaseContract {
             return {
                 treasury: city.treasury,
                 tier: city.tier,
-                peaceShield: city.peaceShield,
                 founder: city.founder
             };
         } catch (error) {
@@ -153,10 +152,6 @@ export class GameStateContract extends BaseContract {
         return await this.call('tierRequirements', tier);
     }
 
-    async getBuildingRequirements(tier, buildingName) {
-        return await this.call('buildingRequirements', tier, buildingName);
-    }
-
     // NFT Collection Management
     async approveCollection(collectionAddress) {
         return await this.transact('approveCollection', collectionAddress);
@@ -184,11 +179,7 @@ export class GameStateContract extends BaseContract {
 
     // Building Costs
     async getBuildingCost(buildingType) {
-        return await this.call('buildingCosts', buildingType);
-    }
-
-    async getUpgradeCost(buildingType) {
-        return await this.call('upgradeCosts', buildingType);
+        return await this.call('getBuildingCost', buildingType);
     }
 
     // Building Production
