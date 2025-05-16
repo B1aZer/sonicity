@@ -22,6 +22,16 @@ export class GameStateContract extends BaseContract {
         return await this.call('playerState', address);
     }
 
+    async isPlayerInitialized() {
+        try {
+            const state = await this.getPlayerState();
+            return state.buildingSlots > 0;
+        } catch (error) {
+            console.error('Error checking player initialization:', error);
+            return false;
+        }
+    }
+
     // City Management
     async getCityInfo(cityId) {
         try {

@@ -49,11 +49,15 @@ export class StartPage extends BasePage {
                     startButton.classList.add('loading');
                     startButton.textContent = '';
 
-                    // Initialize contract with user's wallet
-                    await this.contracts.gameState.initialize();
-                    
-                    // Initialize player
-                    await this.contracts.gameState.initializePlayer();
+                    // Check if player is already initialized
+                    const isInitialized = await this.contracts.gameState.isPlayerInitialized();
+                    if (!isInitialized) {
+                        // Initialize contract with user's wallet
+                        await this.contracts.gameState.initialize();
+                        
+                        // Initialize player
+                        await this.contracts.gameState.initializePlayer();
+                    }
 
                     // Show loading message
                     this.modal.loading('Initializing game...');
