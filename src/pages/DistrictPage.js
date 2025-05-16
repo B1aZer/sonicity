@@ -14,14 +14,14 @@ export class DistrictPage extends BasePage {
         this.element.className = 'base-page';
         this.modal = new Modal();
         this.render();
-        this.setupEventListeners();
     }
 
     async onInitialized(walletResult) {
         Logger.info('DistrictPage onInitialized called with wallet:', walletResult.address);
         try {
             await this.loadDistrictData();
-            Logger.info('District data loaded successfully');
+            this.setupEventListeners();
+            Logger.info('District page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing district page:', error);
             this.modal.error('Failed to initialize district page. Please try refreshing the page.');

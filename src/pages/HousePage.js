@@ -12,7 +12,6 @@ export class HousePage extends BasePage {
         this.element.className = 'base-page house-page';
         this.modal = new Modal();
         this.render();
-        this.setupEventListeners();
     }
 
     async onInitialized(walletResult) {
@@ -24,7 +23,8 @@ export class HousePage extends BasePage {
         }
         try {
             await this.loadHouseData();
-            Logger.info('House data loaded successfully');
+            this.setupEventListeners();
+            Logger.info('House page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing house page:', error);
             this.modal.error('Failed to initialize house page. Please try refreshing the page.');
@@ -34,9 +34,9 @@ export class HousePage extends BasePage {
     updateWalletStatus(address) {
         Logger.info('Updating wallet status with address:', address);
         if (address) {
-                this.loadHouseData().catch(error => {
-                    Logger.error('Error loading house data after wallet update:', error);
-                });
+            this.loadHouseData().catch(error => {
+                Logger.error('Error loading house data after wallet update:', error);
+            });
         }
     }
 

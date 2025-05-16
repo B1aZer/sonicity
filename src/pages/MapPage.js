@@ -14,13 +14,13 @@ export class MapPage extends BasePage {
         this.modal = new Modal();
         this.gameStateContract = new GameStateContract();
         this.render();
-        this.setupEventListeners();
     }
 
     async onInitialized(walletResult) {
         Logger.info('MapPage onInitialized called with wallet:', walletResult.address);
         try {
-            // Any map-specific initialization
+            this.setupEventListeners();
+            Logger.info('Map page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing map page:', error);
             this.modal.error('Failed to initialize map page. Please try refreshing the page.');

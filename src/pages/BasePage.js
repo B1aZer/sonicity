@@ -85,7 +85,7 @@ export class BasePage {
             await this.initializeContracts();
             Logger.debug('BasePage handleWalletConnected called with address:', address);
             this.updateWalletStatus(address);
-            await this.onWalletConnected({ success: true, address });
+            await this.onInitialized({ success: true, address });
         } catch (error) {
             Logger.error('Wallet connection handler error:', error);
             this.modal.error('Failed to initialize after wallet connection. Please try again.');
@@ -99,6 +99,7 @@ export class BasePage {
 
     async onInitialized(walletResult) {
         // To be implemented by child classes
+        // This is where child classes should load their data and setup event listeners
     }
 
     async onWalletConnected(walletResult) {

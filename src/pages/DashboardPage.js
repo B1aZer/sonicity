@@ -14,14 +14,14 @@ export class DashboardPage extends BasePage {
         this.element.className = 'base-page';
         this.modal = new Modal();
         this.render();
-        this.setupEventListeners();
     }
 
     async onInitialized(walletResult) {
         Logger.info('Dashboard onInitialized called with wallet:', walletResult.address);
         try {
             await this.loadPlayerData();
-            Logger.info('Player data loaded successfully');
+            this.setupEventListeners();
+            Logger.info('Dashboard page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing dashboard:', error);
             this.modal.error('Failed to initialize dashboard. Please try refreshing the page.');

@@ -12,7 +12,6 @@ export class StartPage extends BasePage {
         this.element.className = 'start-page';
         this.modal = new Modal();
         this.render();
-        this.setupEventListeners();
     }
 
     async onInitialized(walletResult) {
@@ -24,6 +23,8 @@ export class StartPage extends BasePage {
                 startButton.disabled = false;
                 startButton.textContent = 'Start Game';
             }
+            this.setupEventListeners();
+            Logger.info('Start page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing start page:', error);
             this.modal.error('Failed to initialize start page. Please try refreshing the page.');
