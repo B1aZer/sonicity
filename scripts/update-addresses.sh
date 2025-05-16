@@ -14,9 +14,10 @@ fi
 SONICITY_NFT=$(jq -r '.sonicityNFT' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 ALTAR=$(jq -r '.altarProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 GAME_STATE=$(jq -r '.gameStateProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+DISTRICT_BUILDINGS=$(jq -r '.districtBuildingsProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 
 # Check if jq was successful
-if [ -z "$SONICITY_NFT" ] || [ -z "$ALTAR" ] || [ -z "$GAME_STATE" ]; then
+if [ -z "$SONICITY_NFT" ] || [ -z "$ALTAR" ] || [ -z "$GAME_STATE" ] || [ -z "$DISTRICT_BUILDINGS" ]; then
     echo "Error: Failed to read addresses from deployed-addresses.json"
     exit 1
 fi
@@ -25,8 +26,10 @@ fi
 sed -i '' "s/SONICITY_NFT: \".*\"/SONICITY_NFT: \"$SONICITY_NFT\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/ALTAR: \".*\"/ALTAR: \"$ALTAR\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/GAME_STATE: \".*\"/GAME_STATE: \"$GAME_STATE\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+sed -i '' "s/DISTRICT_BUILDINGS: \".*\"/DISTRICT_BUILDINGS: \"$DISTRICT_BUILDINGS\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 
 echo "Contract addresses updated successfully!"
 echo "SonicityNFT: $SONICITY_NFT"
 echo "Altar: $ALTAR"
-echo "GameState: $GAME_STATE" 
+echo "GameState: $GAME_STATE"
+echo "DistrictBuildings: $DISTRICT_BUILDINGS" 
