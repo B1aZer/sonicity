@@ -105,7 +105,7 @@ export class GameStateContract extends BaseContract {
 
     async getBuilding(buildingId) {
         const address = await this.getAddress();
-        return await this.call('buildings', address, buildingId);
+        return await this.call('getBuilding', address, buildingId);
     }
 
     async getTotalBuildings() {
@@ -188,7 +188,7 @@ export class GameStateContract extends BaseContract {
 
     // Building Production
     async getBuildingProductionRate(buildingType) {
-        return await this.call('buildingProductionRates', buildingType);
+        return await this.call('getBuildingProductionRate', buildingType);
     }
 
     async setBuildingProductionRate(buildingType, rate) {
