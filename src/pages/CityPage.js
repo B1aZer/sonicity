@@ -17,6 +17,13 @@ export class CityPage extends BasePage {
         this.setupEventListeners();
     }
 
+    async initialize() {
+        await super.initialize();
+        await this.contracts.gameState.initializeBuildingConfigs();
+        await this.loadCityData();
+        this.setupEventListeners();
+    }
+
     async onInitialized(walletResult) {
         Logger.info('CityPage onInitialized called with wallet:', walletResult.address);
         try {
@@ -46,83 +53,98 @@ export class CityPage extends BasePage {
                 this.contracts.gameState.getTierRequirements(Number(playerState.tier) + 1)
             ]);
 
-            Logger.info('Received data from contract:', {
-                tier: playerState.tier.toString(),
-                treasury: playerState.treasury.toString(),
-                playerRep: playerRep.toString(),
-                nextTierCost: nextTierCost.toString()
-            });
-
-            // Update district tier display
-            const tierValue = this.element.querySelector('.city-tier');
-            if (tierValue) {
-                tierValue.textContent = playerState.tier.toString();
-            }
-
-            // Update treasury display
-            const treasuryValue = this.element.querySelector('.treasury-amount');
-            if (treasuryValue) {
-                treasuryValue.textContent = playerState.treasury.toString();
-            }
-
-            // Update rep points display
-            const repValue = this.element.querySelector('.rep-points');
-            if (repValue) {
-                repValue.textContent = playerRep.toString();
-            }
-
-            // Update tier progress bar
-            const progressBar = this.element.querySelector('.tier-progress-bar');
-            const progressContainer = this.element.querySelector('.tier-progress');
-            if (progressBar && progressContainer) {
-                const treasury = Number(playerState.treasury);
-                const cost = Number(nextTierCost);
-                const progress = (treasury / cost) * 100;
-                progressBar.style.width = `${Math.min(progress, 100)}%`;
-                
-                // Update progress tooltip
-                progressContainer.title = `${treasury} / ${cost} Gold`;
-            }
-
-            // Update building locks and progress based on treasury
-            const buildingCards = this.element.querySelectorAll('.building-card[data-required-donation]');
-            buildingCards.forEach(card => {
-                const requiredDonation = Number(card.dataset.requiredDonation);
-                const treasury = Number(playerState.treasury);
-                const progress = Math.min((treasury / requiredDonation) * 100, 100);
-                
-                // Update progress bar
-                const progressBar = card.querySelector('.progress-bar');
-                if (progressBar) {
-                    progressBar.style.width = `${progress}%`;
-                }
-
-                // Update lock status
-                if (treasury >= requiredDonation) {
-                    card.classList.remove('locked');
-                } else {
-                    card.classList.add('locked');
-                }
-            });
-
-            // Update tab locks based on current tier
-            const tierTabs = this.element.querySelectorAll('.tier-tab');
-            tierTabs.forEach(tab => {
-                const tabTier = Number(tab.dataset.tier);
-                const currentTier = Number(playerState.tier);
-                
-                if (tabTier > currentTier) {
-                    tab.classList.add('locked');
-                    tab.title = `Requires Tier ${tabTier}`;
-                } else {
-                    tab.classList.remove('locked');
-                    tab.title = '';
-                }
-            });
+            // Update UI elements
+            this.updateStatusSection(playerState, playerRep, nextTierCost);
+            await this.updateBuildingCards(playerState.tier, playerState.treasury);
+            this.updateTierTabs(playerState.tier);
         } catch (error) {
-            Logger.error('Error loading district data:', error);
-            this.modal.error('Failed to load district data. Please try again.');
+            Logger.error('Error loading city data:', error);
+            this.modal.error('Error loading city data: ' + error.message);
         }
+    }
+
+    updateStatusSection(playerState, playerRep, nextTierCost) {
+        // Update district tier display
+        const tierValue = this.element.querySelector('.city-tier');
+        if (tierValue) {
+            tierValue.textContent = playerState.tier.toString();
+        }
+
+        // Update treasury display
+        const treasuryValue = this.element.querySelector('.treasury-amount');
+        if (treasuryValue) {
+            treasuryValue.textContent = playerState.treasury.toString();
+        }
+
+        // Update rep points display
+        const repValue = this.element.querySelector('.rep-points');
+        if (repValue) {
+            repValue.textContent = playerRep.toString();
+        }
+
+        // Update tier progress bar
+        const progressBar = this.element.querySelector('.tier-progress-bar');
+        const progressContainer = this.element.querySelector('.tier-progress');
+        if (progressBar && progressContainer) {
+            const treasury = Number(playerState.treasury);
+            const cost = Number(nextTierCost);
+            const progress = (treasury / cost) * 100;
+            progressBar.style.width = `${Math.min(progress, 100)}%`;
+            progressContainer.title = `${treasury} / ${cost} Gold`;
+        }
+    }
+
+    async updateBuildingCards(currentTier, treasury) {
+        // Get buildings for each tier
+        for (let tier = 0; tier <= 4; tier++) {
+            const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
+            if (!tierContent) continue;
+
+            const buildings = await this.contracts.gameState.getBuildingsByTier(tier);
+            const buildingsGrid = tierContent.querySelector('.buildings-grid');
+            
+            if (buildingsGrid) {
+                buildingsGrid.innerHTML = Object.entries(buildings).map(([type, config]) => {
+                    const isLocked = Number(treasury) < config.unlockCost;
+                    return `
+                        <div class="building-card ${isLocked ? 'locked' : ''}" data-required-donation="${config.unlockCost}">
+                            ${isLocked ? `
+                                <div class="lock-overlay">
+                                    <i class="fas fa-lock lock-icon"></i>
+                                    <div class="unlock-info">
+                                        <p class="unlock-requirement">Requires ${config.unlockCost} Gold in Treasury</p>
+                                        <div class="progress-container">
+                                            <div class="progress-bar" style="width: ${Math.min((Number(treasury) / config.unlockCost) * 100, 100)}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                            <h3>${config.name}</h3>
+                            <p>${config.description}</p>
+                            <div class="building-details">
+                                <p class="build-cost">Build Cost: ${config.buildCost} gold</p>
+                                <p class="unlock-cost">Unlock Cost: ${config.unlockCost} gold</p>
+                            </div>
+                            <button class="building-button" data-building="${type.toLowerCase()}" type="button">Build ${config.name}</button>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+    }
+
+    updateTierTabs(currentTier) {
+        const tierTabs = this.element.querySelectorAll('.tier-tab');
+        tierTabs.forEach(tab => {
+            const tabTier = Number(tab.dataset.tier);
+            if (tabTier > currentTier) {
+                tab.classList.add('locked');
+                tab.title = `Requires Tier ${tabTier}`;
+            } else {
+                tab.classList.remove('locked');
+                tab.title = '';
+            }
+        });
     }
 
     async handleDonation(amount) {
@@ -270,53 +292,22 @@ export class CityPage extends BasePage {
                         <button class="tier-tab" data-tier="4">Tier 4</button>
                     </div>
 
-                    <!-- Tier 0 Buildings -->
+                    <!-- Tier Contents -->
                     <div class="tier-content active" data-tier="0">
-                        <div class="buildings-grid">
-                            <div class="building-card locked" data-required-donation="200">
-                                <div class="lock-overlay">
-                                    <i class="fas fa-lock lock-icon"></i>
-                                    <div class="unlock-info">
-                                        <p class="unlock-requirement">Requires 200 Gold in Treasury</p>
-                                        <div class="progress-container">
-                                            <div class="progress-bar" style="width: 0%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <h3>Workshop</h3>
-                                <p>Repair buildings (e.g., Houses after 24h)</p>
-                                <div class="building-details">
-                                    <p class="build-cost">Build Cost: 100 gold</p>
-                                    <p class="unlock-cost">Unlock Cost: 200 gold</p>
-                                </div>
-                                <button class="building-button" data-building="workshop" type="button">Build Workshop</button>
-                            </div>
-                            <div class="building-card locked" data-required-donation="400">
-                                <div class="lock-overlay">
-                                    <i class="fas fa-lock lock-icon"></i>
-                                    <div class="unlock-info">
-                                        <p class="unlock-requirement">Requires 400 Gold in Treasury</p>
-                                        <div class="progress-container">
-                                            <div class="progress-bar" style="width: 0%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <h3>Shop</h3>
-                                <p>Sells items (e.g., emergency Gold aid)</p>
-                                <div class="building-details">
-                                    <p class="build-cost">Build Cost: 150 gold</p>
-                                    <p class="unlock-cost">Unlock Cost: 400 gold</p>
-                                </div>
-                                <button class="building-button" data-building="shop" type="button">Build Shop</button>
-                            </div>
-                        </div>
+                        <div class="buildings-grid"></div>
                     </div>
-
-                    <!-- Other tier contents will be added dynamically -->
-                    <div class="tier-content" data-tier="1"></div>
-                    <div class="tier-content" data-tier="2"></div>
-                    <div class="tier-content" data-tier="3"></div>
-                    <div class="tier-content" data-tier="4"></div>
+                    <div class="tier-content" data-tier="1">
+                        <div class="buildings-grid"></div>
+                    </div>
+                    <div class="tier-content" data-tier="2">
+                        <div class="buildings-grid"></div>
+                    </div>
+                    <div class="tier-content" data-tier="3">
+                        <div class="buildings-grid"></div>
+                    </div>
+                    <div class="tier-content" data-tier="4">
+                        <div class="buildings-grid"></div>
+                    </div>
                 </div>
             </div>
         `;
