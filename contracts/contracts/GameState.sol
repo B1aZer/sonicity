@@ -15,6 +15,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // Reference to the Altar contract that's authorized to update building slots
     address public altarAddress;
+    // Reference to the DistrictBuildings contract
+    address public districtBuildingsAddress;
 
     // Structure to store NFT metadata
     struct NFTMetadata {
@@ -41,8 +43,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     struct City {
         uint256 treasury;
         uint8 tier;
-        uint256 lastTierUpgrade;
-        bool peaceShield;
         address founder;        // Track city founder
         mapping(address => bool) members;  // Track city members
     }
@@ -82,39 +82,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Maximum production time (24 hours in seconds)
     uint256 public constant MAX_PRODUCTION_TIME = 24 hours;
 
-    // District Building Types
-    enum DistrictBuildingType {
-        SHOP,
-        WORKSHOP,
-        DEFENSE_TOWER,
-        BARRACKS,
-        SCOUT_GUILD,
-        CARAVAN,
-        REP_STATION,
-        COUNCIL_CHAMBER,
-        AUDIT_SHRINE,
-        FOUNDERS_HALL,
-        MINISTRY_OF_MERIT,
-        ARCANE_TOWER,
-        FORTRESS_WALLS,
-        BANK,
-        ALTAR
-    }
-
-    // District Building configuration
-    struct DistrictBuildingConfig {
-        string name;
-        uint256 unlockCost;   // Treasury required to unlock
-        uint256 buildCost;    // Gold cost to build
-        string description;
-        uint8 tier;          // Added tier to the config
-    }
-
-    // Mappings for district buildings
-    mapping(address => mapping(DistrictBuildingType => bool)) public builtDistrictBuildings;  // Tracks which district buildings are built
-    mapping(address => mapping(DistrictBuildingType => bool)) public unlockedDistrictBuildings; // Tracks which are unlocked
-    mapping(DistrictBuildingType => DistrictBuildingConfig) public districtBuildingConfigs;
-
     // Events
     event CityJoined(address indexed player, uint256 indexed cityId);
     event CityTierUpgraded(uint256 indexed cityId, uint8 newTier);
@@ -127,10 +94,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event NFTMetadataUpdated(address indexed collection, uint256 indexed tokenId);
     event BuildingCreated(address indexed player, string buildingType, uint256 buildingId);
     event BuildingRemoved(address indexed player, string buildingType, uint256 buildingId);
-    event BuildingUpgraded(address indexed player, string buildingType, uint256 buildingId, uint256 newLevel);
     event GoldCollected(address indexed player, uint256 buildingId, uint256 amount);
-    event DistrictBuildingUnlocked(address indexed player, DistrictBuildingType buildingType);
-    event DistrictBuildingBuilt(address indexed player, DistrictBuildingType buildingType);
+    event DistrictBuildingsAddressUpdated(address indexed newAddress);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -153,151 +118,30 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         buildingProductionRates["house"] = 10;  // 10 gold per hour
         buildingProductionRates["water-supply"] = 15;
         buildingProductionRates["workshop"] = 20;
-        
-        // Initialize district building configurations
-        // Tier 0 Buildings
-        districtBuildingConfigs[DistrictBuildingType.SHOP] = DistrictBuildingConfig({
-            name: "Shop",
-            unlockCost: 200,
-            buildCost: 100,
-            description: "Buy items (REP-gated premium later)",
-            tier: 0
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.WORKSHOP] = DistrictBuildingConfig({
-            name: "Workshop",
-            unlockCost: 400,
-            buildCost: 150,
-            description: "Repair buildings",
-            tier: 0
-        });
-
-        // Tier 1 Buildings
-        districtBuildingConfigs[DistrictBuildingType.DEFENSE_TOWER] = DistrictBuildingConfig({
-            name: "Defense Tower",
-            unlockCost: 1000,
-            buildCost: 200,
-            description: "PvP defense buffs",
-            tier: 1
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.BARRACKS] = DistrictBuildingConfig({
-            name: "Barracks",
-            unlockCost: 1250,
-            buildCost: 250,
-            description: "Train troops (requires food)",
-            tier: 1
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.SCOUT_GUILD] = DistrictBuildingConfig({
-            name: "Scout Guild",
-            unlockCost: 1500,
-            buildCost: 200,
-            description: "Explore PvP targets",
-            tier: 1
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.CARAVAN] = DistrictBuildingConfig({
-            name: "Caravan",
-            unlockCost: 1750,
-            buildCost: 250,
-            description: "Deploy troops for raids",
-            tier: 1
-        });
-
-        // Tier 2 Buildings
-        districtBuildingConfigs[DistrictBuildingType.REP_STATION] = DistrictBuildingConfig({
-            name: "Rep Station",
-            unlockCost: 3000,
-            buildCost: 200,
-            description: "Stake REP to earn revenue",
-            tier: 2
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.COUNCIL_CHAMBER] = DistrictBuildingConfig({
-            name: "Council Chamber",
-            unlockCost: 3500,
-            buildCost: 300,
-            description: "Unlocks REP claim button",
-            tier: 2
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.AUDIT_SHRINE] = DistrictBuildingConfig({
-            name: "Audit Shrine",
-            unlockCost: 4000,
-            buildCost: 250,
-            description: "Displays REP leaderboard and stats",
-            tier: 2
-        });
-
-        // Tier 3 Buildings
-        districtBuildingConfigs[DistrictBuildingType.FOUNDERS_HALL] = DistrictBuildingConfig({
-            name: "Founders' Hall",
-            unlockCost: 5000,
-            buildCost: 400,
-            description: "Form or join a City",
-            tier: 3
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.MINISTRY_OF_MERIT] = DistrictBuildingConfig({
-            name: "Ministry of Merit",
-            unlockCost: 6000,
-            buildCost: 350,
-            description: "Mints and tracks REP from raids/donations",
-            tier: 3
-        });
-
-        // Tier 4 Buildings
-        districtBuildingConfigs[DistrictBuildingType.ARCANE_TOWER] = DistrictBuildingConfig({
-            name: "Arcane Tower",
-            unlockCost: 10000,
-            buildCost: 500,
-            description: "PvP/cooldown buffs",
-            tier: 4
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.FORTRESS_WALLS] = DistrictBuildingConfig({
-            name: "Fortress Walls",
-            unlockCost: 12000,
-            buildCost: 500,
-            description: "City-wide defense bonus",
-            tier: 4
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.BANK] = DistrictBuildingConfig({
-            name: "Bank",
-            unlockCost: 15000,
-            buildCost: 600,
-            description: "Lending or staking Gold for towns",
-            tier: 4
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.ALTAR] = DistrictBuildingConfig({
-            name: "Altar",
-            unlockCost: 20000,
-            buildCost: 300,
-            description: "Whitelist external NFT collections",
-            tier: 4
-        });
-    }
-
-    /**
-     * @dev Initialize a new player
-     */
-    function initializePlayer() external {
-        require(playerState[msg.sender].buildingSlots == 0, "Player already initialized");
-        
-        playerState[msg.sender] = PlayerState({
-            gold: 0,
-            rep: 0,
-            buildingSlots: 9,
-            tier: 0,
-            treasury: 0
-        });
     }
 
     // Required by UUPS pattern
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    /**
+     * @dev Set the DistrictBuildings contract address
+     * @param _districtBuildingsAddress The address of the DistrictBuildings contract
+     */
+    function setDistrictBuildingsAddress(address _districtBuildingsAddress) external onlyOwner {
+        districtBuildingsAddress = _districtBuildingsAddress;
+        emit DistrictBuildingsAddressUpdated(_districtBuildingsAddress);
+    }
+
+    /**
+     * @dev Deduct gold for district building construction
+     * @param player The address of the player
+     * @param amount The amount of gold to deduct
+     */
+    function deductGoldForDistrictBuilding(address player, uint256 amount) external {
+        require(msg.sender == districtBuildingsAddress, "Only DistrictBuildings can call this function");
+        require(playerState[player].gold >= amount, "Insufficient gold");
+        playerState[player].gold -= amount;
+    }
 
     /**
      * @dev Approve a new NFT collection
@@ -417,8 +261,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         // Award rep points
         state.rep += repPoints;
         
-        // Check for building unlocks
-        checkAndUnlockDistrictBuildings(msg.sender);
+        // Check for building unlocks in DistrictBuildings contract
+        (bool success, ) = districtBuildingsAddress.call(
+            abi.encodeWithSignature("checkAndUnlockDistrictBuildings(address,uint256)", msg.sender, state.treasury)
+        );
+        require(success, "Failed to check district building unlocks");
         
         emit GoldDonated(msg.sender, amount);
         emit RepEarned(msg.sender, repPoints);
@@ -588,50 +435,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Get all buildings for a player
-     * @param player The address of the player
-     * @return Building[] Array of all buildings
-     */
-    function getAllBuildings(address player) external view returns (Building[] memory) {
-        uint256 totalBuildings = playerBuildingCounts[player].total;
-        Building[] memory result = new Building[](totalBuildings);
-        uint256 resultIndex = 0;
-        
-        // Iterate through all possible building IDs
-        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            if (buildings[player][i].active) {
-                result[resultIndex] = buildings[player][i];
-                resultIndex++;
-            }
-        }
-        
-        return result;
-    }
-
-    /**
-     * @dev Get all buildings of a specific type for a player
-     * @param player The address of the player
-     * @param buildingType The type of building
-     * @return Building[] Array of buildings of the specified type
-     */
-    function getBuildingsOfType(address player, string memory buildingType) external view returns (Building[] memory) {
-        uint256 count = playerBuildingCounts[player].byType[buildingType];
-        Building[] memory result = new Building[](count);
-        uint256 resultIndex = 0;
-        
-        // Iterate through all possible building IDs
-        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            if (buildings[player][i].active && 
-                keccak256(bytes(buildings[player][i].buildingType)) == keccak256(bytes(buildingType))) {
-                result[resultIndex] = buildings[player][i];
-                resultIndex++;
-            }
-        }
-        
-        return result;
-    }
-
-    /**
      * @dev Get all building IDs for a player (internal)
      * @param player The address of the player
      * @return uint256[] Array of active building IDs
@@ -659,89 +462,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function getPlayerBuildingIds(address player) external view returns (uint256[] memory) {
         return getBuildingIds(player);
-    }
-
-    /**
-     * @dev Collect gold from a building
-     * @param buildingId The ID of the building to collect from
-     */
-    function collectGold(uint256 buildingId) external nonReentrant {
-        require(buildings[msg.sender][buildingId].active, "Building not active");
-        
-        Building storage building = buildings[msg.sender][buildingId];
-        uint256 currentTime = block.timestamp;
-        
-        // Calculate time passed since last collection
-        uint256 timePassed = currentTime - building.lastCollectionTime;
-        
-        // Check if building has exceeded its 24-hour production period
-        uint256 totalTimeSinceCreation = currentTime - building.lastUpgradeTime;
-        if (totalTimeSinceCreation > MAX_PRODUCTION_TIME) {
-            if (building.lastCollectionTime >= building.lastUpgradeTime + MAX_PRODUCTION_TIME) {
-                return;
-            }
-            timePassed = (building.lastUpgradeTime + MAX_PRODUCTION_TIME) - building.lastCollectionTime;
-        }
-        
-        // Calculate gold to collect
-        uint256 productionRate = buildingProductionRates[building.buildingType];
-        uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600;
-        
-        // Update last collection time
-        building.lastCollectionTime = currentTime;
-        
-        // Add gold to player's balance
-        playerState[msg.sender].gold += goldToCollect;
-        
-        emit GoldCollected(msg.sender, buildingId, goldToCollect);
-    }
-
-    /**
-     * @dev Collect gold from all buildings
-     * @return uint256 Total gold collected
-     */
-    function collectAllGold() external nonReentrant returns (uint256) {
-        uint256 totalGold = 0;
-        uint256 currentTime = block.timestamp;
-        
-        // Get all building IDs
-        uint256[] memory buildingIds = getBuildingIds(msg.sender);
-        
-        for (uint256 i = 0; i < buildingIds.length; i++) {
-            uint256 buildingId = buildingIds[i];
-            Building storage building = buildings[msg.sender][buildingId];
-            
-            if (building.active) {
-                // Calculate time passed since last collection
-                uint256 timePassed = currentTime - building.lastCollectionTime;
-                
-                // Check if building has exceeded its 24-hour production period
-                uint256 totalTimeSinceCreation = currentTime - building.lastUpgradeTime;
-                if (totalTimeSinceCreation > MAX_PRODUCTION_TIME) {
-                    if (building.lastCollectionTime >= building.lastUpgradeTime + MAX_PRODUCTION_TIME) {
-                        continue;
-                    }
-                    timePassed = (building.lastUpgradeTime + MAX_PRODUCTION_TIME) - building.lastCollectionTime;
-                }
-                
-                // Calculate gold to collect
-                uint256 productionRate = buildingProductionRates[building.buildingType];
-                uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600;
-                
-                // Update last collection time
-                building.lastCollectionTime = currentTime;
-                
-                // Add to total gold
-                totalGold += goldToCollect;
-                
-                emit GoldCollected(msg.sender, buildingId, goldToCollect);
-            }
-        }
-        
-        // Add total gold to player's balance
-        playerState[msg.sender].gold += totalGold;
-        
-        return totalGold;
     }
 
     /**
@@ -832,22 +552,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function setBuildingProductionRate(string memory buildingType, uint256 rate) external onlyOwner {
         buildingProductionRates[buildingType] = rate;
     }
-
-    /**
-     * @dev Execute multiple function calls in a single transaction
-     * @param data Array of encoded function calls
-     * @return results Array of results from each function call
-     
-    function multicall(bytes[] calldata data) external nonReentrant returns (bytes[] memory results) {
-        results = new bytes[](data.length);
-        for (uint256 i = 0; i < data.length; i++) {
-            (bool success, bytes memory result) = address(this).delegatecall(data[i]);
-            require(success, "Multicall failed");
-            results[i] = result;
-        }
-        return results;
-    }
-    */
 
     /**
      * @dev Collect gold from all buildings of a specific type
@@ -961,117 +665,5 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         playerBuildingCounts[player].byType[buildingType]--;
 
         emit BuildingRemoved(player, buildingType, buildingId);
-    }
-
-    /**
-     * @dev Check and unlock district buildings based on treasury
-     * @param player The address of the player
-     */
-    function checkAndUnlockDistrictBuildings(address player) internal {
-        uint256 treasury = playerState[player].treasury;
-        
-        // Check each building's unlock cost
-        for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
-            DistrictBuildingType buildingType = DistrictBuildingType(i);
-            DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
-            if (treasury >= config.unlockCost && !unlockedDistrictBuildings[player][buildingType]) {
-                unlockedDistrictBuildings[player][buildingType] = true;
-                emit DistrictBuildingUnlocked(player, buildingType);
-            }
-        }
-    }
-
-    /**
-     * @dev Check if a district building is unlocked for a player
-     * @param player The address of the player
-     * @param buildingType The type of the building
-     * @return bool Whether the building is unlocked
-     */
-    function isDistrictBuildingUnlocked(address player, DistrictBuildingType buildingType) public view returns (bool) {
-        return unlockedDistrictBuildings[player][buildingType];
-    }
-
-    /**
-     * @dev Check if a district building is built for a player
-     * @param player The address of the player
-     * @param buildingType The type of the building
-     * @return bool Whether the building is built
-     */
-    function isDistrictBuildingBuilt(address player, DistrictBuildingType buildingType) public view returns (bool) {
-        return builtDistrictBuildings[player][buildingType];
-    }
-
-    /**
-     * @dev Build a district building
-     * @param buildingType The type of building to build
-     */
-    function buildDistrictBuilding(DistrictBuildingType buildingType) external nonReentrant {
-        require(!builtDistrictBuildings[msg.sender][buildingType], "Building already built");
-        require(unlockedDistrictBuildings[msg.sender][buildingType], "Building not unlocked");
-        
-        DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
-        require(config.buildCost > 0, "Invalid building");
-        require(playerState[msg.sender].gold >= config.buildCost, "Insufficient gold");
-        
-        // Deduct gold
-        playerState[msg.sender].gold -= config.buildCost;
-        
-        // Mark as built
-        builtDistrictBuildings[msg.sender][buildingType] = true;
-        
-        emit DistrictBuildingBuilt(msg.sender, buildingType);
-    }
-
-    /**
-     * @dev Get all district building configurations
-     * @return DistrictBuildingType[] Array of building types
-     * @return DistrictBuildingConfig[] Array of building configurations
-     */
-    function getAllDistrictBuildingConfigs() external view returns (DistrictBuildingType[] memory, DistrictBuildingConfig[] memory) {
-        uint8 totalBuildings = uint8(DistrictBuildingType.ALTAR) + 1;
-        DistrictBuildingType[] memory buildingTypes = new DistrictBuildingType[](totalBuildings);
-        DistrictBuildingConfig[] memory configs = new DistrictBuildingConfig[](totalBuildings);
-        
-        for (uint8 i = 0; i < totalBuildings; i++) {
-            buildingTypes[i] = DistrictBuildingType(i);
-            configs[i] = districtBuildingConfigs[DistrictBuildingType(i)];
-        }
-
-        return (buildingTypes, configs);
-    }
-
-    /**
-     * @dev Get buildings by tier
-     * @param tier The tier to get buildings for
-     * @return DistrictBuildingType[] Array of building types
-     * @return DistrictBuildingConfig[] Array of building configurations
-     */
-    function getBuildingsByTier(uint8 tier) external view returns (DistrictBuildingType[] memory, DistrictBuildingConfig[] memory) {
-        uint8 totalBuildings = uint8(DistrictBuildingType.ALTAR) + 1;
-        uint8 count = 0;
-        
-        // First count how many buildings are in this tier
-        for (uint8 i = 0; i < totalBuildings; i++) {
-            if (districtBuildingConfigs[DistrictBuildingType(i)].tier == tier) {
-                count++;
-            }
-        }
-        
-        // Then create arrays of the right size
-        DistrictBuildingType[] memory buildingTypes = new DistrictBuildingType[](count);
-        DistrictBuildingConfig[] memory configs = new DistrictBuildingConfig[](count);
-        
-        // Fill the arrays
-        uint8 index = 0;
-        for (uint8 i = 0; i < totalBuildings; i++) {
-            DistrictBuildingType buildingType = DistrictBuildingType(i);
-            if (districtBuildingConfigs[buildingType].tier == tier) {
-                buildingTypes[index] = buildingType;
-                configs[index] = districtBuildingConfigs[buildingType];
-                index++;
-            }
-        }
-        
-        return (buildingTypes, configs);
     }
 }
