@@ -540,7 +540,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
                 
                 // Calculate gold to collect based on production rate and time passed
                 uint256 productionRate = buildingProductionRates[building.buildingType];
-                uint256 goldToCollect = (productionRate * timePassed * building.level) / 3600; // Convert to per-second rate
+                uint256 goldToCollect = (productionRate * timePassed * building.level) / 1 hours; // Use same time unit as collectAllGoldByType
                 
                 // Add to total gold
                 totalGold += goldToCollect;
@@ -594,7 +594,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             }
             
             // Calculate gold to collect
-            uint256 goldToCollect = (buildingProductionRates[buildingType] * timeSinceLastCollection) / 1 hours;
+            uint256 goldToCollect = (buildingProductionRates[buildingType] * timeSinceLastCollection * building.level) / 1 hours;
             if (goldToCollect > 0) {
                 // Update building state
                 building.lastCollectionTime = block.timestamp;
