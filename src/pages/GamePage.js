@@ -76,12 +76,6 @@ export class GamePage extends BasePage {
             
             // Initialize the game and wait for it to complete
             await this.game.init();
-            
-            // Check if player is in a city
-            if (!await AccessControl.checkCityAccess()) {
-                LoadingScreen.hide(renderDiv);
-                return;
-            }
 
             // Update resource display initially
             await this.updateResourceDisplay();

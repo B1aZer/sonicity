@@ -55,8 +55,8 @@ class App {
 
         // Handle protected routes
         if (page === 'dashboard' || page === 'overview' || page === 'house' || page === 'city' || page === 'district') {
-            if (!await AccessControl.checkCityAccess()) {
-                page = AccessControl.hasVerifiedNFT() ? '' : 'access';
+            if (!AccessControl.hasVerifiedNFT()) {
+                page = 'access';
             }
         }
 
