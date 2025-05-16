@@ -953,6 +953,40 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Check and unlock district buildings based on treasury
+     * @param player The address of the player
+     */
+    function checkAndUnlockDistrictBuildings(address player) internal {
+        uint256 treasury = playerState[player].treasury;
+        
+        // Check each building's unlock cost
+        string[] memory buildingNames = new string[](14);
+        buildingNames[0] = "workshop";
+        buildingNames[1] = "shop";
+        buildingNames[2] = "defense_tower";
+        buildingNames[3] = "barracks";
+        buildingNames[4] = "scout_guild";
+        buildingNames[5] = "caravan";
+        buildingNames[6] = "rep_station";
+        buildingNames[7] = "council_chamber";
+        buildingNames[8] = "audit_shrine";
+        buildingNames[9] = "founders_hall";
+        buildingNames[10] = "ministry_of_merit";
+        buildingNames[11] = "arcane_tower";
+        buildingNames[12] = "fortress_walls";
+        buildingNames[13] = "bank";
+        buildingNames[14] = "altar";
+
+        for (uint256 i = 0; i < buildingNames.length; i++) {
+            DistrictBuildingConfig memory config = districtBuildingConfigs[buildingNames[i]];
+            if (treasury >= config.unlockCost && !unlockedDistrictBuildings[player][config.name]) {
+                unlockedDistrictBuildings[player][config.name] = true;
+                emit DistrictBuildingUnlocked(player, config.name);
+            }
+        }
+    }
+
+    /**
      * @dev Check if a district building is unlocked for a player
      * @param player The address of the player
      * @param buildingName The name of the building
@@ -992,3 +1026,4 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         
         emit DistrictBuildingBuilt(msg.sender, buildingName);
     }
+}
