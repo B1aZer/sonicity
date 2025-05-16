@@ -24,4 +24,9 @@ export class DistrictBuildingsContract extends BaseContract {
     async buildDistrictBuilding(buildingType) {
         return await this.transact('buildDistrictBuilding', buildingType);
     }
+
+    async isDistrictBuildingBuilt(buildingType) {
+        const address = await this.getAddress();
+        return await this.call('isDistrictBuildingBuilt', address, buildingType);
+    }
 } 
