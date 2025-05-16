@@ -1,33 +1,93 @@
 /* City-specific styles */
 .tier-progress {
     width: 100%;
-    height: 20px;
+    height: 8px;
     background: var(--bg-lighter);
-    border-radius: var(--radius-md);
+    border-radius: 4px;
     overflow: hidden;
+    margin-top: var(--spacing-md);
+    position: relative;
+    cursor: help;
 }
 
 .tier-progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-dark));
-    width: 0;
-    transition: width var(--transition-normal);
+    background: var(--color-primary);
+    transition: width 0.3s ease;
+}
+
+.tier-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.1) 100%
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Status Grid */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.status-item {
+    background: var(--bg-light);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--bg-lighter);
+}
+
+.status-label {
+    display: block;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-xs);
+}
+
+.status-value {
+    display: block;
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+}
+
+/* Donation Section */
+.donation-section {
+    margin-top: var(--spacing-lg);
 }
 
 .donation-form {
     display: flex;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
 }
 
 .donation-amount {
-    padding: var(--spacing-sm) var(--spacing-md);
+    flex: 1;
+    padding: var(--spacing-sm);
     border: 1px solid var(--bg-lighter);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: var(--bg-light);
     color: var(--text-primary);
-    width: 200px;
-    font-size: var(--font-size-sm);
-    transition: border-color var(--transition-normal);
 }
 
 .donation-amount:focus {
@@ -78,7 +138,7 @@
     display: flex;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
-    border-bottom: 2px solid var(--bg-lighter);
+    border-bottom: 1px solid var(--bg-lighter);
     padding-bottom: var(--spacing-sm);
 }
 

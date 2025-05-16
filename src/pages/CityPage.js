@@ -71,6 +71,19 @@ export class CityPage extends BasePage {
                 repValue.textContent = playerRep.toString();
             }
 
+            // Update tier progress bar
+            const progressBar = this.element.querySelector('.tier-progress-bar');
+            const progressContainer = this.element.querySelector('.tier-progress');
+            if (progressBar && progressContainer) {
+                const treasury = Number(playerState.treasury);
+                const cost = Number(nextTierCost);
+                const progress = (treasury / cost) * 100;
+                progressBar.style.width = `${Math.min(progress, 100)}%`;
+                
+                // Update progress tooltip
+                progressContainer.title = `${treasury} / ${cost} Gold`;
+            }
+
             // Update building locks and progress based on treasury
             const buildingCards = this.element.querySelectorAll('.building-card[data-required-donation]');
             buildingCards.forEach(card => {
