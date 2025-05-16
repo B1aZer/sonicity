@@ -1,8 +1,17 @@
-const hre = require("hardhat");
+const { ethers } = require("hardhat");
+const fs = require("fs");
+const path = require("path");
 
 async function main() {
-    const GameState = await hre.ethers.getContractFactory("GameState");
-    const gameState = await GameState.attach("0xf5059a5D33d5853360D16C683c16e67980206f36"); // GameState proxy address
+    // Read deployed addresses from JSON file
+    const addressesPath = path.join(__dirname, "..", "deployed-addresses.json");
+    const deployedAddresses = JSON.parse(fs.readFileSync(addressesPath, "utf8"));
+    
+    // Connect to GameState contract
+    const gameStateAddress = deployedAddresses.gameStateProxy;
+    console.log(`GameState contract address: ${gameStateAddress}`);
+    const GameState = await ethers.getContractFactory("GameState");
+    const gameState = GameState.attach(gameStateAddress);
 
     const address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
     const amount = 100;

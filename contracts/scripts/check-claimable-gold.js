@@ -13,6 +13,7 @@ async function main() {
   
   // Connect to GameState contract
   const gameStateAddress = deployedAddresses.gameStateProxy;
+  console.log(`GameState contract address: ${gameStateAddress}`);
   const GameState = await ethers.getContractFactory("GameState");
   const gameState = GameState.attach(gameStateAddress);
   
@@ -26,23 +27,6 @@ async function main() {
   console.log(`Time difference: ${Math.floor(Date.now() / 1000) - blockchainTime} seconds`);
   
   try {
-    // Check if the address is in a city
-    const cityId = await gameState.playerCity(addressToCheck);
-    console.log(`Player city ID: ${cityId}`);
-    
-    if (cityId.toString() === "0") {
-      console.log("Address is not in a city yet, so they don't have any claimable gold.");
-      return;
-    }
-    
-    // Check claimable gold
-    const claimableGold = await gameState.calculateTotalClaimableGold(addressToCheck);
-    console.log(`Total claimable gold: ${claimableGold.toString()} (${Number(claimableGold).toFixed(2)})`);
-    
-    // Check player's gold balance in their city
-    const goldBalance = await gameState.getPlayerGold(addressToCheck);
-    console.log(`Current gold balance: ${goldBalance.toString()} (${Number(goldBalance).toFixed(2)})`);
-    
     // Get building types with production rates
     const buildingTypes = ["house", "water-supply", "workshop"];
     console.log("\nBuilding production rates:");
@@ -56,8 +40,9 @@ async function main() {
       }
     }
     
-    // Try to get building IDs by type for each building type
+    // Get building IDs by type for each building type
     console.log("\nPlayer buildings by type:");
+    let totalClaimableGold = 0;
     
     for (const type of buildingTypes) {
       try {
@@ -73,14 +58,20 @@ async function main() {
             console.log(`    Last upgrade time: ${building.lastUpgradeTime}`);
             
             // Calculate time passed and potential gold generation
-            const timePassed = blockchainTime - Number(building.lastCollectionTime);
+            const timePassed = Number(blockchainTime) - Number(building.lastCollectionTime);
             const maxProductionTime = 24 * 3600; // 24 hours in seconds
             const cappedTimePassed = Math.min(timePassed, maxProductionTime);
-            const productionRate = await gameState.getBuildingProductionRate(type);
-            const potentialGold = (Number(productionRate) * cappedTimePassed * Number(building.level)) / 3600;
+            const productionRate = Number(await gameState.getBuildingProductionRate(type));
+            const buildingLevel = Number(building.level);
+            const potentialGold = (productionRate * cappedTimePassed * buildingLevel) / 3600; // Match contract's collection method
             
             console.log(`    Time since last collection: ${timePassed} seconds (${Math.floor(timePassed/3600)} hours)`);
+            console.log(`    Production rate: ${productionRate} gold/hour`);
+            console.log(`    Building level: ${buildingLevel}`);
+            console.log(`    Raw calculation: (${productionRate} * ${cappedTimePassed} * ${buildingLevel}) / 3600`);
             console.log(`    Potential uncollected gold: ${potentialGold.toFixed(2)}`);
+            
+            totalClaimableGold += potentialGold;
           } catch (error) {
             console.log(`  Building #${buildingId} is inactive or doesn't exist: ${error.message}`);
           }
@@ -89,6 +80,11 @@ async function main() {
         console.log(`Could not get ${type} buildings: ${error.message}`);
       }
     }
+    
+    // Check player's gold balance
+    const goldBalance = await gameState.getPlayerGold(addressToCheck);
+    console.log(`\nCurrent gold balance: ${goldBalance.toString()} (${Number(goldBalance).toFixed(2)})`);
+    console.log(`Total claimable gold: ${totalClaimableGold.toFixed(2)}`);
     
   } catch (error) {
     console.error(`Error checking claimable gold: ${error.message}`);
