@@ -120,6 +120,21 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         buildingProductionRates["workshop"] = 20;
     }
 
+    /**
+     * @dev Initialize a new player
+     */
+    function initializePlayer() external {
+        require(playerState[msg.sender].buildingSlots == 0, "Player already initialized");
+        
+        playerState[msg.sender] = PlayerState({
+            gold: 0,
+            rep: 0,
+            buildingSlots: 9,
+            tier: 0,
+            treasury: 0
+        });
+    }
+
     // Required by UUPS pattern
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
