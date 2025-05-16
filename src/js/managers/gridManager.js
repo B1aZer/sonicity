@@ -9,7 +9,7 @@ export class GridManager {
 
     async initialize(gameStateContract) {
         try {
-            const maxSlots = await gameStateContract.getMaxBuildingSlots();
+            const maxSlots = await gameStateContract.getBuildingSlots();
             // Convert BigInt to Number for calculations
             const maxSlotsNumber = Number(maxSlots);
             // Calculate grid dimensions to be as square as possible

@@ -30,17 +30,17 @@ export class GamePage extends BasePage {
 
     async updateResourceDisplay() {
         try {
-            const [gold, totalBuildings, maxBuildingSlots, repPoints] = await Promise.all([
+            const [gold, totalBuildings, buildingSlots, repPoints] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
                 this.contracts.gameState.getTotalBuildings(),
-                this.contracts.gameState.getMaxBuildingSlots(),
+                this.contracts.gameState.getBuildingSlots(),
                 this.contracts.gameState.getPlayerRep()
             ]);
             
             Logger.info('Resource values:', {
                 gold: gold.toString(),
                 buildingsBuilt: totalBuildings,
-                maxBuildingSlots: maxBuildingSlots.toString(),
+                buildingSlots: buildingSlots.toString(),
                 repPoints: repPoints.toString()
             });
             
@@ -56,7 +56,7 @@ export class GamePage extends BasePage {
                 buildingSlotsElement.textContent = totalBuildings.toString();
             }
             if (maxBuildingSlotsElement) {
-                maxBuildingSlotsElement.textContent = maxBuildingSlots.toString();
+                maxBuildingSlotsElement.textContent = buildingSlots.toString();
             }
             if (repPointsElement) {
                 repPointsElement.textContent = repPoints.toString();

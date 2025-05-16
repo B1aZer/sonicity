@@ -72,11 +72,6 @@ export class GameStateContract extends BaseContract {
         return await this.call('getBuildingSlots', address);
     }
 
-    async getMaxBuildingSlots() {
-        const address = await this.getAddress();
-        return await this.call('getMaxBuildingSlots', address);
-    }
-
     async createBuilding(buildingType) {
         try {
             const formattedType = String(buildingType).toLowerCase();
