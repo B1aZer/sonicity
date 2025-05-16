@@ -42,11 +42,6 @@ export class Game {
         
         // Initialize grid manager first with gameStateContract
         await this.gridManager.initialize(this.gameStateContract);
-        Logger.info("Grid initialized:", {
-            gridSize: this.gridManager.getGridSize(),
-            cellSize: this.gridManager.getCellSize(),
-            totalSize: this.gridManager.getTotalSize()
-        });
         
         // Set up scene with dynamic grid
         const { scene, camera, renderer, controls, groundPlane, gridHelper } = 
@@ -59,9 +54,6 @@ export class Game {
         this.controls = controls;
         this.groundPlane = groundPlane;
         this.gridHelper = gridHelper;
-        
-        // Initialize the logical grid
-        this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
         
         // Load assets first
         await this.assetLoader.loadAssets();
