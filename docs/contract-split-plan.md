@@ -20,7 +20,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint256 treasury;
         uint8 tier;
         uint256 lastTierUpgrade;
-        bool peaceShield;
     }
     mapping(uint256 => City) public cities;
     mapping(address => uint256) public playerCity;
@@ -140,8 +139,7 @@ interface IGameState {
     function cities(uint256) external view returns (
         uint256 treasury,
         uint8 tier,
-        uint256 lastTierUpgrade,
-        bool peaceShield
+        uint256 lastTierUpgrade
     );
     function playerCity(address) external view returns (uint256);
 }
