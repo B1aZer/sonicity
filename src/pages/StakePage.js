@@ -162,13 +162,6 @@ export class StakePage extends BasePage {
         try {
             Logger.info('Starting stakeNFT process for token:', tokenId);
             
-            // Check if user has joined a city
-            const playerCity = await this.contracts.gameState.getPlayerCity();
-            Logger.info('Player city:', playerCity);
-            if (!playerCity) {
-                throw new Error("You must join a city before staking NFTs");
-            }
-            
             // Check if NFT collection is approved
             const nftAddress = await this.contracts.nft.getContractAddress();
             Logger.info('Checking approval for NFT collection:', nftAddress);
