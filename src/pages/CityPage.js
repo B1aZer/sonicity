@@ -36,8 +36,12 @@ export class CityPage extends BasePage {
         try {
             Logger.info('Starting to load district data...');
             
-            const [playerState, playerRep, nextTierCost] = await Promise.all([
-                this.contracts.gameState.call('playerState', await this.contracts.gameState.getAddress()),
+            // First get player state
+            const address = await this.contracts.gameState.getAddress();
+            const playerState = await this.contracts.gameState.call('playerState', address);
+            
+            // Then get other data
+            const [playerRep, nextTierCost] = await Promise.all([
                 this.contracts.gameState.getPlayerRep(),
                 this.contracts.gameState.getTierRequirements(Number(playerState.tier) + 1)
             ]);
@@ -76,7 +80,10 @@ export class CityPage extends BasePage {
             // Update progress bar
             const progressBar = this.element.querySelector('.tier-progress-bar');
             if (progressBar) {
-                const progress = (playerState.treasury / nextTierCost) * 100;
+                // Convert BigInt values to Number for calculation
+                const treasury = Number(playerState.treasury);
+                const cost = Number(nextTierCost);
+                const progress = (treasury / cost) * 100;
                 progressBar.style.width = `${Math.min(progress, 100)}%`;
             }
         } catch (error) {
