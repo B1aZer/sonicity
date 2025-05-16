@@ -15,20 +15,14 @@ export class CityPage extends BasePage {
         this.element.className = 'base-page';
         this.modal = new Modal();
         this.render();
-        this.setupEventListeners();
-    }
-
-    async initialize() {
-        await super.initialize();
-        await this.loadCityData();
-        this.setupEventListeners();
     }
 
     async onInitialized(walletResult) {
         Logger.info('CityPage onInitialized called with wallet:', walletResult.address);
         try {
             await this.loadCityData();
-            Logger.info('City data loaded successfully');
+            this.setupEventListeners();
+            Logger.info('City page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing city page:', error);
             this.modal.error('Failed to initialize city page. Please try refreshing the page.');
