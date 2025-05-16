@@ -17,6 +17,11 @@ export class GameStateContract extends BaseContract {
         }
     }
 
+    async getPlayerState() {
+        const address = await this.getAddress();
+        return await this.call('playerState', address);
+    }
+
     // City Management
     async getCityInfo(cityId) {
         try {
@@ -24,7 +29,8 @@ export class GameStateContract extends BaseContract {
             return {
                 treasury: city.treasury,
                 tier: city.tier,
-                peaceShield: city.peaceShield
+                peaceShield: city.peaceShield,
+                founder: city.founder
             };
         } catch (error) {
             console.error('Error getting city info:', error);
@@ -64,18 +70,12 @@ export class GameStateContract extends BaseContract {
     async createBuilding(buildingType) {
         try {
             const formattedType = String(buildingType).toLowerCase();
-            const cost = await this.call('buildingCosts', formattedType);
             const address = await this.getAddress();
-            const gold = await this.call('getPlayerGold', address);
-            const slots = await this.call('getBuildingSlots', address);
+            const state = await this.call('playerState', address);
             const totalBuildings = await this.call('getTotalBuildings', address);
 
-            if (gold < cost) {
-                throw new Error(`Insufficient gold. Required: ${cost}, Available: ${gold}`);
-            }
-
-            if (totalBuildings >= slots) {
-                throw new Error(`No building slots available. Total buildings: ${totalBuildings}, Available slots: ${slots}`);
+            if (totalBuildings >= state.buildingSlots) {
+                throw new Error(`No building slots available. Total buildings: ${totalBuildings}, Available slots: ${state.buildingSlots}`);
             }
 
             return await this.transact('createBuilding', formattedType);
@@ -95,7 +95,7 @@ export class GameStateContract extends BaseContract {
 
     async getBuildingIds() {
         const address = await this.getAddress();
-        return await this.call('getBuildingIds', address);
+        return await this.call('getPlayerBuildingIds', address);
     }
 
     async getBuildingIdsOfType(buildingType) {
@@ -105,7 +105,7 @@ export class GameStateContract extends BaseContract {
 
     async getBuilding(buildingId) {
         const address = await this.getAddress();
-        return await this.call('getBuilding', address, buildingId);
+        return await this.call('buildings', address, buildingId);
     }
 
     async getTotalBuildings() {
@@ -122,6 +122,11 @@ export class GameStateContract extends BaseContract {
     async getPlayerRep() {
         const address = await this.getAddress();
         return await this.call('getPlayerRep', address);
+    }
+
+    async getPlayerTreasury() {
+        const address = await this.getAddress();
+        return await this.call('getPlayerTreasury', address);
     }
 
     async getNextTierCost(cityId) {
@@ -181,8 +186,9 @@ export class GameStateContract extends BaseContract {
         return await this.call('upgradeCosts', buildingType);
     }
 
+    // Building Production
     async getBuildingProductionRate(buildingType) {
-        return await this.call('getBuildingProductionRate', buildingType);
+        return await this.call('buildingProductionRates', buildingType);
     }
 
     async setBuildingProductionRate(buildingType, rate) {
