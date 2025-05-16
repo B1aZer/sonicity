@@ -207,27 +207,52 @@ export class CityPage extends BasePage {
         try {
             Logger.info(`Starting handleBuildingAction for: ${buildingType}`);
 
-            // Check if building is unlocked
-            const isUnlocked = await this.contracts.districtBuildings.isDistrictBuildingUnlocked(buildingType);
-            if (!isUnlocked) {
-                this.modal.error('This building is not unlocked yet!');
-                return;
-            }
-
-            // Get building config
+            // Get building config first to show proper name in error messages
+            Logger.info('Fetching building configurations...');
             const [buildingTypes, configs] = await this.contracts.districtBuildings.getAllDistrictBuildingConfigs();
-            const buildingIndex = buildingTypes.findIndex(type => type === buildingType);
+            Logger.info('Received building types:', buildingTypes);
+            
+            // Find the building config by numeric type
+            const buildingIndex = buildingTypes.findIndex(type => Number(type) === Number(buildingType));
             if (buildingIndex === -1) {
+                Logger.error('Building type not found in configs:', buildingType);
                 this.modal.error('Invalid building type');
                 return;
             }
             const config = configs[buildingIndex];
+            Logger.info(`Building config found: ${config.name} (Type: ${buildingType})`);
+
+            // Check if building is unlocked
+            Logger.info('Checking if building is unlocked...');
+            const isUnlocked = await this.contracts.districtBuildings.isDistrictBuildingUnlocked(buildingType);
+            Logger.info(`Building unlock status: ${isUnlocked}`);
+            if (!isUnlocked) {
+                Logger.warn(`Building ${config.name} is not unlocked. Required treasury: ${config.unlockCost} Gold`);
+                this.modal.error(
+                    `${config.name} is not unlocked yet!<br>
+                    Required treasury: ${config.unlockCost} Gold`
+                );
+                return;
+            }
+
+            // Check if building is already built
+            Logger.info('Checking if building is already built...');
+            const isBuilt = await this.contracts.districtBuildings.isDistrictBuildingBuilt(buildingType);
+            Logger.info(`Building built status: ${isBuilt}`);
+            if (isBuilt) {
+                Logger.warn(`Building ${config.name} is already built`);
+                this.modal.error(`${config.name} is already built!`);
+                return;
+            }
 
             // Check gold balance
+            Logger.info('Checking player gold balance...');
             const gold = await this.contracts.gameState.getPlayerGold();
+            Logger.info(`Player gold balance: ${gold}, Required: ${config.buildCost}`);
             if (Number(gold) < Number(config.buildCost)) {
+                Logger.warn(`Insufficient gold to build ${config.name}. Required: ${config.buildCost}, Available: ${gold}`);
                 this.modal.error(
-                    `Insufficient gold!<br>
+                    `Insufficient gold to build ${config.name}!<br>
                     Required: ${config.buildCost} Gold<br>
                     Current balance: ${gold} Gold`
                 );
@@ -235,27 +260,35 @@ export class CityPage extends BasePage {
             }
 
             // Show confirmation dialog
+            Logger.info('Showing build confirmation dialog...');
             const result = await this.modal.confirm(
                 `Build ${config.name} for ${config.buildCost} Gold?`,
                 { title: 'Confirm Building' }
             );
 
             if (result.isConfirmed) {
+                Logger.info('User confirmed building construction');
                 const loadingModal = this.modal.loading('Transaction submitted! Waiting for confirmation...');
                 
                 try {
+                    Logger.info('Initiating building construction transaction...');
                     await this.contracts.districtBuildings.buildDistrictBuilding(buildingType);
+                    Logger.info('Building construction transaction successful');
                     loadingModal.close();
+                    Logger.info('Reloading city data after successful build...');
                     await this.loadCityData();
                     this.modal.success(`Successfully built ${config.name}!`);
                 } catch (error) {
                     loadingModal.close();
-                    this.modal.error(`Failed to build: ${error.message}`);
+                    Logger.error('Error building district building:', error);
+                    this.modal.error(`Failed to build ${config.name}: ${error.message}`);
                 }
+            } else {
+                Logger.info('User cancelled building construction');
             }
         } catch (error) {
             Logger.error('Error in handleBuildingAction:', error);
-            this.modal.error(`Failed to build: ${error.message}`);
+            this.modal.error(`Error building district building: ${error.message}`);
         }
     }
 
