@@ -55,9 +55,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // City tier requirements
     mapping(uint8 => uint256) public tierRequirements;
     
-    // Building unlock requirements
-    mapping(uint8 => mapping(string => uint256)) public buildingRequirements;
-    
+
     // Building state
     struct Building {
         string buildingType;
@@ -84,18 +82,38 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Maximum production time (24 hours in seconds)
     uint256 public constant MAX_PRODUCTION_TIME = 24 hours;
 
+    // District Building Types
+    enum DistrictBuildingType {
+        SHOP,
+        WORKSHOP,
+        DEFENSE_TOWER,
+        BARRACKS,
+        SCOUT_GUILD,
+        CARAVAN,
+        REP_STATION,
+        COUNCIL_CHAMBER,
+        AUDIT_SHRINE,
+        FOUNDERS_HALL,
+        MINISTRY_OF_MERIT,
+        ARCANE_TOWER,
+        FORTRESS_WALLS,
+        BANK,
+        ALTAR
+    }
+
     // District Building configuration
     struct DistrictBuildingConfig {
         string name;
         uint256 unlockCost;   // Treasury required to unlock
         uint256 buildCost;    // Gold cost to build
         string description;
+        uint8 tier;          // Added tier to the config
     }
 
     // Mappings for district buildings
-    mapping(address => mapping(string => bool)) public builtDistrictBuildings;  // Tracks which district buildings are built
-    mapping(address => mapping(string => bool)) public unlockedDistrictBuildings; // Tracks which are unlocked
-    mapping(string => DistrictBuildingConfig) public districtBuildingConfigs;
+    mapping(address => mapping(DistrictBuildingType => bool)) public builtDistrictBuildings;  // Tracks which district buildings are built
+    mapping(address => mapping(DistrictBuildingType => bool)) public unlockedDistrictBuildings; // Tracks which are unlocked
+    mapping(DistrictBuildingType => DistrictBuildingConfig) public districtBuildingConfigs;
 
     // Events
     event CityJoined(address indexed player, uint256 indexed cityId);
@@ -111,8 +129,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event BuildingRemoved(address indexed player, string buildingType, uint256 buildingId);
     event BuildingUpgraded(address indexed player, string buildingType, uint256 buildingId, uint256 newLevel);
     event GoldCollected(address indexed player, uint256 buildingId, uint256 amount);
-    event DistrictBuildingUnlocked(address indexed player, string buildingName);
-    event DistrictBuildingBuilt(address indexed player, string buildingName);
+    event DistrictBuildingUnlocked(address indexed player, DistrictBuildingType buildingType);
+    event DistrictBuildingBuilt(address indexed player, DistrictBuildingType buildingType);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -127,136 +145,139 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         // Initialize tier requirements
         tierRequirements[0] = 0;      // Tier 0 is the starting tier, no requirement
         tierRequirements[1] = 1000;   // 1000 Gold for Tier 1
-        tierRequirements[2] = 2500;   // 5000 Gold for Tier 2
-        tierRequirements[3] = 5000;  // 10000 Gold for Tier 3
-        tierRequirements[4] = 10000;  // 50000 Gold for Tier 4
+        tierRequirements[2] = 2500;   // 2500 Gold for Tier 2
+        tierRequirements[3] = 5000;   // 5000 Gold for Tier 3
+        tierRequirements[4] = 10000;  // 10000 Gold for Tier 4
 
         // Initialize building production rates (gold per hour)
         buildingProductionRates["house"] = 10;  // 10 gold per hour
         buildingProductionRates["water-supply"] = 15;
         buildingProductionRates["workshop"] = 20;
         
-        // Initialize building requirements
-        // Format: buildingRequirements[tier]["buildingName"] = goldCost
-        buildingRequirements[1]["Library"] = 500;
-        buildingRequirements[1]["Marketplace"] = 500;
-        buildingRequirements[1]["DefenseTower"] = 500;
-        buildingRequirements[2]["Barracks"] = 1000;
-        buildingRequirements[2]["Church"] = 1000;
-        buildingRequirements[2]["MageTower"] = 1000;
-        buildingRequirements[2]["LotteryHall"] = 1000;
-        buildingRequirements[3]["DiplomacyCenter"] = 2000;
-        buildingRequirements[3]["Bank"] = 2000;
-
         // Initialize district building configurations
         // Tier 0 Buildings
-        districtBuildingConfigs["workshop"] = DistrictBuildingConfig({
-            name: "Workshop",
+        districtBuildingConfigs[DistrictBuildingType.SHOP] = DistrictBuildingConfig({
+            name: "Shop",
             unlockCost: 200,
             buildCost: 100,
-            description: "Repair buildings"
+            description: "Buy items (REP-gated premium later)",
+            tier: 0
         });
 
-        districtBuildingConfigs["shop"] = DistrictBuildingConfig({
-            name: "Shop",
+        districtBuildingConfigs[DistrictBuildingType.WORKSHOP] = DistrictBuildingConfig({
+            name: "Workshop",
             unlockCost: 400,
             buildCost: 150,
-            description: "Buy items (REP-gated premium later)"
+            description: "Repair buildings",
+            tier: 0
         });
 
         // Tier 1 Buildings
-        districtBuildingConfigs["defense_tower"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.DEFENSE_TOWER] = DistrictBuildingConfig({
             name: "Defense Tower",
             unlockCost: 1000,
             buildCost: 200,
-            description: "PvP defense buffs"
+            description: "PvP defense buffs",
+            tier: 1
         });
 
-        districtBuildingConfigs["barracks"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.BARRACKS] = DistrictBuildingConfig({
             name: "Barracks",
             unlockCost: 1250,
             buildCost: 250,
-            description: "Train troops (requires food)"
+            description: "Train troops (requires food)",
+            tier: 1
         });
 
-        districtBuildingConfigs["scout_guild"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.SCOUT_GUILD] = DistrictBuildingConfig({
             name: "Scout Guild",
             unlockCost: 1500,
             buildCost: 200,
-            description: "Explore PvP targets"
+            description: "Explore PvP targets",
+            tier: 1
         });
 
-        districtBuildingConfigs["caravan"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.CARAVAN] = DistrictBuildingConfig({
             name: "Caravan",
             unlockCost: 1750,
             buildCost: 250,
-            description: "Deploy troops for raids"
+            description: "Deploy troops for raids",
+            tier: 1
         });
 
         // Tier 2 Buildings
-        districtBuildingConfigs["rep_station"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.REP_STATION] = DistrictBuildingConfig({
             name: "Rep Station",
             unlockCost: 3000,
             buildCost: 200,
-            description: "Stake REP to earn revenue"
+            description: "Stake REP to earn revenue",
+            tier: 2
         });
 
-        districtBuildingConfigs["council_chamber"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.COUNCIL_CHAMBER] = DistrictBuildingConfig({
             name: "Council Chamber",
             unlockCost: 3500,
             buildCost: 300,
-            description: "Unlocks REP claim button"
+            description: "Unlocks REP claim button",
+            tier: 2
         });
 
-        districtBuildingConfigs["audit_shrine"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.AUDIT_SHRINE] = DistrictBuildingConfig({
             name: "Audit Shrine",
             unlockCost: 4000,
             buildCost: 250,
-            description: "Displays REP leaderboard and stats"
+            description: "Displays REP leaderboard and stats",
+            tier: 2
         });
 
         // Tier 3 Buildings
-        districtBuildingConfigs["founders_hall"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.FOUNDERS_HALL] = DistrictBuildingConfig({
             name: "Founders' Hall",
             unlockCost: 5000,
             buildCost: 400,
-            description: "Form or join a City"
+            description: "Form or join a City",
+            tier: 3
         });
 
-        districtBuildingConfigs["ministry_of_merit"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.MINISTRY_OF_MERIT] = DistrictBuildingConfig({
             name: "Ministry of Merit",
             unlockCost: 6000,
             buildCost: 350,
-            description: "Mints and tracks REP from raids/donations"
+            description: "Mints and tracks REP from raids/donations",
+            tier: 3
         });
 
         // Tier 4 Buildings
-        districtBuildingConfigs["arcane_tower"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.ARCANE_TOWER] = DistrictBuildingConfig({
             name: "Arcane Tower",
             unlockCost: 10000,
             buildCost: 500,
-            description: "PvP/cooldown buffs"
+            description: "PvP/cooldown buffs",
+            tier: 4
         });
 
-        districtBuildingConfigs["fortress_walls"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.FORTRESS_WALLS] = DistrictBuildingConfig({
             name: "Fortress Walls",
             unlockCost: 12000,
             buildCost: 500,
-            description: "City-wide defense bonus"
+            description: "City-wide defense bonus",
+            tier: 4
         });
 
-        districtBuildingConfigs["bank"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.BANK] = DistrictBuildingConfig({
             name: "Bank",
             unlockCost: 15000,
             buildCost: 600,
-            description: "Lending or staking Gold for towns"
+            description: "Lending or staking Gold for towns",
+            tier: 4
         });
 
-        districtBuildingConfigs["altar"] = DistrictBuildingConfig({
+        districtBuildingConfigs[DistrictBuildingType.ALTAR] = DistrictBuildingConfig({
             name: "Altar",
             unlockCost: 20000,
             buildCost: 300,
-            description: "Whitelist external NFT collections"
+            description: "Whitelist external NFT collections",
+            tier: 4
         });
     }
 
@@ -476,16 +497,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function setTierRequirement(uint8 tier, uint256 requirement) external onlyOwner {
         tierRequirements[tier] = requirement;
-    }
-
-    /**
-     * @dev Update building requirements (only owner)
-     * @param tier The tier number
-     * @param buildingName The name of the building
-     * @param requirement The new requirement in Gold
-     */
-    function setBuildingRequirement(uint8 tier, string memory buildingName, uint256 requirement) external onlyOwner {
-        buildingRequirements[tier][buildingName] = requirement;
     }
 
     /**
@@ -960,28 +971,12 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint256 treasury = playerState[player].treasury;
         
         // Check each building's unlock cost
-        string[] memory buildingNames = new string[](14);
-        buildingNames[0] = "workshop";
-        buildingNames[1] = "shop";
-        buildingNames[2] = "defense_tower";
-        buildingNames[3] = "barracks";
-        buildingNames[4] = "scout_guild";
-        buildingNames[5] = "caravan";
-        buildingNames[6] = "rep_station";
-        buildingNames[7] = "council_chamber";
-        buildingNames[8] = "audit_shrine";
-        buildingNames[9] = "founders_hall";
-        buildingNames[10] = "ministry_of_merit";
-        buildingNames[11] = "arcane_tower";
-        buildingNames[12] = "fortress_walls";
-        buildingNames[13] = "bank";
-        buildingNames[14] = "altar";
-
-        for (uint256 i = 0; i < buildingNames.length; i++) {
-            DistrictBuildingConfig memory config = districtBuildingConfigs[buildingNames[i]];
-            if (treasury >= config.unlockCost && !unlockedDistrictBuildings[player][config.name]) {
-                unlockedDistrictBuildings[player][config.name] = true;
-                emit DistrictBuildingUnlocked(player, config.name);
+        for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
+            DistrictBuildingType buildingType = DistrictBuildingType(i);
+            DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
+            if (treasury >= config.unlockCost && !unlockedDistrictBuildings[player][buildingType]) {
+                unlockedDistrictBuildings[player][buildingType] = true;
+                emit DistrictBuildingUnlocked(player, buildingType);
             }
         }
     }
@@ -989,32 +984,32 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     /**
      * @dev Check if a district building is unlocked for a player
      * @param player The address of the player
-     * @param buildingName The name of the building
+     * @param buildingType The type of the building
      * @return bool Whether the building is unlocked
      */
-    function isDistrictBuildingUnlocked(address player, string memory buildingName) public view returns (bool) {
-        return unlockedDistrictBuildings[player][buildingName];
+    function isDistrictBuildingUnlocked(address player, DistrictBuildingType buildingType) public view returns (bool) {
+        return unlockedDistrictBuildings[player][buildingType];
     }
 
     /**
      * @dev Check if a district building is built for a player
      * @param player The address of the player
-     * @param buildingName The name of the building
+     * @param buildingType The type of the building
      * @return bool Whether the building is built
      */
-    function isDistrictBuildingBuilt(address player, string memory buildingName) public view returns (bool) {
-        return builtDistrictBuildings[player][buildingName];
+    function isDistrictBuildingBuilt(address player, DistrictBuildingType buildingType) public view returns (bool) {
+        return builtDistrictBuildings[player][buildingType];
     }
 
     /**
      * @dev Build a district building
-     * @param buildingName The name of the building to build
+     * @param buildingType The type of building to build
      */
-    function buildDistrictBuilding(string memory buildingName) external nonReentrant {
-        require(!builtDistrictBuildings[msg.sender][buildingName], "Building already built");
-        require(unlockedDistrictBuildings[msg.sender][buildingName], "Building not unlocked");
+    function buildDistrictBuilding(DistrictBuildingType buildingType) external nonReentrant {
+        require(!builtDistrictBuildings[msg.sender][buildingType], "Building already built");
+        require(unlockedDistrictBuildings[msg.sender][buildingType], "Building not unlocked");
         
-        DistrictBuildingConfig memory config = districtBuildingConfigs[buildingName];
+        DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
         require(config.buildCost > 0, "Invalid building");
         require(playerState[msg.sender].gold >= config.buildCost, "Insufficient gold");
         
@@ -1022,8 +1017,61 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         playerState[msg.sender].gold -= config.buildCost;
         
         // Mark as built
-        builtDistrictBuildings[msg.sender][buildingName] = true;
+        builtDistrictBuildings[msg.sender][buildingType] = true;
         
-        emit DistrictBuildingBuilt(msg.sender, buildingName);
+        emit DistrictBuildingBuilt(msg.sender, buildingType);
+    }
+
+    /**
+     * @dev Get all district building configurations
+     * @return DistrictBuildingType[] Array of building types
+     * @return DistrictBuildingConfig[] Array of building configurations
+     */
+    function getAllDistrictBuildingConfigs() external view returns (DistrictBuildingType[] memory, DistrictBuildingConfig[] memory) {
+        uint8 totalBuildings = uint8(DistrictBuildingType.ALTAR) + 1;
+        DistrictBuildingType[] memory buildingTypes = new DistrictBuildingType[](totalBuildings);
+        DistrictBuildingConfig[] memory configs = new DistrictBuildingConfig[](totalBuildings);
+        
+        for (uint8 i = 0; i < totalBuildings; i++) {
+            buildingTypes[i] = DistrictBuildingType(i);
+            configs[i] = districtBuildingConfigs[DistrictBuildingType(i)];
+        }
+
+        return (buildingTypes, configs);
+    }
+
+    /**
+     * @dev Get buildings by tier
+     * @param tier The tier to get buildings for
+     * @return DistrictBuildingType[] Array of building types
+     * @return DistrictBuildingConfig[] Array of building configurations
+     */
+    function getBuildingsByTier(uint8 tier) external view returns (DistrictBuildingType[] memory, DistrictBuildingConfig[] memory) {
+        uint8 totalBuildings = uint8(DistrictBuildingType.ALTAR) + 1;
+        uint8 count = 0;
+        
+        // First count how many buildings are in this tier
+        for (uint8 i = 0; i < totalBuildings; i++) {
+            if (districtBuildingConfigs[DistrictBuildingType(i)].tier == tier) {
+                count++;
+            }
+        }
+        
+        // Then create arrays of the right size
+        DistrictBuildingType[] memory buildingTypes = new DistrictBuildingType[](count);
+        DistrictBuildingConfig[] memory configs = new DistrictBuildingConfig[](count);
+        
+        // Fill the arrays
+        uint8 index = 0;
+        for (uint8 i = 0; i < totalBuildings; i++) {
+            DistrictBuildingType buildingType = DistrictBuildingType(i);
+            if (districtBuildingConfigs[buildingType].tier == tier) {
+                buildingTypes[index] = buildingType;
+                configs[index] = districtBuildingConfigs[buildingType];
+                index++;
+            }
+        }
+        
+        return (buildingTypes, configs);
     }
 }
