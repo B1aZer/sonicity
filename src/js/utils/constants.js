@@ -62,3 +62,72 @@ export const BUILDING_TYPES = {
 
 // Ordered list of keys for easy access via index
 export const BUILDING_TYPES_KEYS = Object.keys(BUILDING_TYPES); // ['HOUSE', 'SHOP', 'ALTAR', 'MINE', 'CITY_HALL']
+
+// District building positions for camera-friendly layout
+export const DISTRICT_BUILDING_POSITIONS = {
+    // Tier 0 - Closest to camera, slightly spread out
+    0: { // SHOP
+        position: { x: -20, y: 5, z: -35 },
+        rotation: 0
+    },
+    1: { // WORKSHOP
+        position: { x: 10, y: 0, z: 25 },
+        rotation: 0
+    },
+
+    // Tier 1 - Slightly further back, more spread out
+    2: { // DEFENSE_TOWER
+        position: { x: -20, y: 0, z: 35 },
+        rotation: 0
+    },
+    3: { // BARRACKS
+        position: { x: 20, y: 0, z: 35 },
+        rotation: 0
+    },
+    4: { // SCOUT_GUILD
+        position: { x: -15, y: 0, z: 40 },
+        rotation: 0
+    },
+    5: { // CARAVAN
+        position: { x: 15, y: 0, z: 40 },
+        rotation: 0
+    },
+
+    // Tier 2 - Further back, wider spread
+    6: { // REP_STATION
+        position: { x: -25, y: 0, z: 45 },
+        rotation: 0
+    },
+    7: { // COUNCIL_CHAMBER
+        position: { x: 25, y: 0, z: 45 },
+        rotation: 0
+    },
+    8: { // AUDIT_SHRINE
+        position: { x: 0, y: 0, z: 50 },
+        rotation: 0
+    },
+
+    // Tier 3 - Even further back
+    9: { // FOUNDERS_HALL
+        position: { x: -30, y: 0, z: 55 },
+        rotation: 0
+    },
+    10: { // MINISTRY_OF_MERIT
+        position: { x: 30, y: 0, z: 55 },
+        rotation: 0
+    },
+
+    // Tier 4 - Furthest back
+    11: { // ARCANE_TOWER
+        position: { x: -35, y: 0, z: 65 },
+        rotation: 0
+    },
+    12: { // FORTRESS_WALLS
+        position: { x: 35, y: 0, z: 65 },
+        rotation: 0
+    },
+    13: { // BANK
+        position: { x: 0, y: 0, z: 70 },
+        rotation: 0
+    }
+};

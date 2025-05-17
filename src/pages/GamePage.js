@@ -7,6 +7,7 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { AccessControl } from '../js/utils/accessControl.js';
 import { BasePage } from './BasePage.js';
+import { DISTRICT_BUILDING_POSITIONS } from '../js/utils/constants.js';
 
 export class GamePage extends BasePage {
     constructor() {
@@ -140,24 +141,15 @@ export class GamePage extends BasePage {
                 const builtDistrictBuildings = await this.contracts.districtBuildings.getBuiltBuildings();
                 Logger.info('Retrieved district buildings:', builtDistrictBuildings);
 
-                // Define positions for district buildings
-                const districtBuildingPositions = {
-                    0: { // SHOP enum value
-                        position: new THREE.Vector3(-15, 0, 30),
-                        rotation: 0
-                    }
-                    // Add more positions for other district buildings as needed
-                };
-
                 // Place each built district building
                 for (const building of builtDistrictBuildings) {
-                    const position = districtBuildingPositions[Number(building.type)];
+                    const position = DISTRICT_BUILDING_POSITIONS[Number(building.type)];
                     if (position) {
                         // Convert enum type to string for the building manager
                         const buildingType = 'SHOP'; // For now, we only have SHOP
                         const placedBuilding = this.game.buildingManager.placeFixedBuilding(
                             buildingType,
-                            position.position,
+                            new THREE.Vector3(position.position.x, position.position.y, position.position.z),
                             position.rotation
                         );
                         
