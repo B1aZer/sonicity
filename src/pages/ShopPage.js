@@ -17,7 +17,7 @@ export class ShopPage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="page-container">
+            <div class="page-container shop-container">
                 <h1 class="page-title">Shop</h1>
                 <div class="buildings-grid">
                     ${SHOP_ITEMS.map(item => `

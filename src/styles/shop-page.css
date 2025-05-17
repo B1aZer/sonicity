@@ -9,7 +9,7 @@
   margin-bottom: 2rem;
 }
 
-.buildings-grid {
+.shop-container .buildings-grid {
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -99,8 +99,6 @@
 .shop-item-cost {
   font-size: 1.1rem;
   font-weight: bold;
-}
-.shop-item-cost.free {
 }
 .shop-buy-btn {
   min-width: 140px;
