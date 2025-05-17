@@ -10,6 +10,7 @@ import { StakePage } from '../../pages/StakePage.js';
 import { HousePage } from '../../pages/HousePage.js';
 import { CityPage } from '../../pages/CityPage.js';
 import { DistrictPage } from '../../pages/DistrictPage.js';
+import { ShopPage } from '../../pages/ShopPage.js';
 import { appState } from './state.js';
 import { AccessControl } from '../utils/accessControl.js';
 import { Modal } from '../utils/modal.js';
@@ -97,6 +98,10 @@ class App {
                 break;
             case 'district':
                 this.currentPage = new DistrictPage();
+                this.currentPage.mount(this.layout.content);
+                break;
+            case 'shop':
+                this.currentPage = new ShopPage();
                 this.currentPage.mount(this.layout.content);
                 break;
             default:

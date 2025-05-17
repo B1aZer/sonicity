@@ -1,0 +1,108 @@
+.shop-page {
+  max-width: 480px;
+  margin: 40px auto;
+  background: var(--bg-light, #f5e6c5);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+  padding: 0 0 24px 0;
+  font-family: var(--font-family, serif);
+}
+
+.shop-header {
+  background: #6b4a23;
+  border-radius: 16px 16px 0 0;
+  padding: 24px 0 12px 0;
+  text-align: center;
+}
+.shop-header h1 {
+  color: #ffd700;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  margin: 0;
+  font-family: var(--font-family, serif);
+}
+
+.shop-items-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+}
+
+.shop-item-card {
+  background: #f8f3e6;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  display: flex;
+  align-items: center;
+  padding: 18px 20px;
+  gap: 18px;
+  border: 2px solid #e2c48d;
+}
+.shop-item-image img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fffbe6;
+  border: 1px solid #e2c48d;
+}
+.shop-item-info {
+  flex: 1;
+}
+.shop-item-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.shop-item-title-row h2 {
+  font-size: 1.2rem;
+  color: #6b4a23;
+  margin: 0;
+  font-family: var(--font-family, serif);
+}
+.shop-item-stock {
+  font-size: 0.95rem;
+  color: #b08d36;
+  font-weight: bold;
+}
+.shop-item-desc {
+  color: #5a4a2a;
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+.shop-item-action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.shop-item-cost {
+  font-size: 1.1rem;
+  color: #b08d36;
+  font-weight: bold;
+}
+.shop-item-cost.free {
+  color: #4caf50;
+}
+.shop-buy-btn {
+  background: #b08d36;
+  color: #fff;
+  font-size: 1.1rem;
+  font-family: var(--font-family, serif);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 22px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  transition: background 0.15s;
+}
+.shop-buy-btn:disabled {
+  background: #ccc;
+  color: #fff;
+  cursor: not-allowed;
+}
+.shop-buy-btn:hover:not(:disabled) {
+  background: #ffd700;
+  color: #6b4a23;
+} 

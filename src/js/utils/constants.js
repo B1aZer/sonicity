@@ -131,3 +131,36 @@ export const DISTRICT_BUILDING_POSITIONS = {
         rotation: 0
     }
 };
+
+export const SHOP_ITEMS = [
+  {
+    id: 'emergency_help',
+    name: 'Emergency Help',
+    description: 'Grants 100 gold immediately',
+    cost: 50,
+    currency: 'S',
+    effect: 'GOLD_100',
+    count: 5,
+    image: '/images/shop/help.png',
+  },
+  {
+    id: 'production_boost',
+    name: 'Production Boost',
+    description: '100% boost to production for 24h',
+    cost: 100,
+    currency: 'S',
+    effect: 'PROD_BOOST_24H',
+    count: 1,
+    image: '/images/shop/boost.png',
+  },
+  {
+    id: 'cosmetic_item',
+    name: 'Some Cosmetic Item',
+    description: 'FREE',
+    cost: 0,
+    currency: 'FREE',
+    effect: 'COSMETIC',
+    count: 1,
+    image: '/images/shop/cosmetic.png',
+  },
+];
