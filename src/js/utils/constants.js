@@ -71,7 +71,7 @@ export const DISTRICT_BUILDING_POSITIONS = {
         rotation: 0
     },
     1: { // WORKSHOP
-        position: { x: 10, y: 0, z: 25 },
+        position: { x: 10, y: 0, z: -25 },
         rotation: 0
     },
 

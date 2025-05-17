@@ -292,6 +292,10 @@ export class GamePage extends BasePage {
                     Logger.info('Shop clicked');
                     window.history.pushState({}, '', '/shop');
                     window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isWorkshop) {
+                    Logger.info('Workshop clicked');
+                    window.history.pushState({}, '', '/workshop');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                 }
             }
         });
