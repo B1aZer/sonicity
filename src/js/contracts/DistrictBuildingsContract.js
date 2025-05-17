@@ -29,4 +29,22 @@ export class DistrictBuildingsContract extends BaseContract {
         const address = await this.getAddress();
         return await this.call('isDistrictBuildingBuilt', address, buildingType);
     }
+
+    async getBuiltBuildings() {
+        const address = await this.getAddress();
+        const [buildingTypes, configs] = await this.call('getAllDistrictBuildingConfigs');
+        const builtBuildings = [];
+
+        for (let i = 0; i < buildingTypes.length; i++) {
+            const isBuilt = await this.call('isDistrictBuildingBuilt', address, buildingTypes[i]);
+            if (isBuilt) {
+                builtBuildings.push({
+                    type: buildingTypes[i],
+                    config: configs[i]
+                });
+            }
+        }
+
+        return builtBuildings;
+    }
 } 

@@ -28,6 +28,13 @@ export const BUILDING_TYPES = {
         cost: 100,
         income: 10 // Generates $10 per cycle
     },
+    SHOP: {
+        name: 'Shop',
+        size: new THREE.Vector3(10, 10, 10),
+        color: 0xFFD700, // Gold color
+        cost: 200,
+        income: 20 // Generates $20 per cycle
+    },
     ALTAR: {
         name: 'Altar',
         size: new THREE.Vector3(12, 12, 12), // Size for visual representation
@@ -54,4 +61,4 @@ export const BUILDING_TYPES = {
 };
 
 // Ordered list of keys for easy access via index
-export const BUILDING_TYPES_KEYS = Object.keys(BUILDING_TYPES); // ['HOUSE', 'ALTAR', 'MINE', 'CITY_HALL']
+export const BUILDING_TYPES_KEYS = Object.keys(BUILDING_TYPES); // ['HOUSE', 'SHOP', 'ALTAR', 'MINE', 'CITY_HALL']

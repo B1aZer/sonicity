@@ -134,6 +134,44 @@ export class GamePage extends BasePage {
                 Logger.error('Failed to place Altar');
             }
 
+            // Place district buildings
+            try {
+                // Get built district buildings from contract
+                const builtDistrictBuildings = await this.contracts.districtBuildings.getBuiltBuildings();
+                Logger.info('Retrieved district buildings:', builtDistrictBuildings);
+
+                // Define positions for district buildings
+                const districtBuildingPositions = {
+                    0: { // SHOP enum value
+                        position: new THREE.Vector3(-15, 0, 30),
+                        rotation: 0
+                    }
+                    // Add more positions for other district buildings as needed
+                };
+
+                // Place each built district building
+                for (const building of builtDistrictBuildings) {
+                    const position = districtBuildingPositions[Number(building.type)];
+                    if (position) {
+                        // Convert enum type to string for the building manager
+                        const buildingType = 'SHOP'; // For now, we only have SHOP
+                        const placedBuilding = this.game.buildingManager.placeFixedBuilding(
+                            buildingType,
+                            position.position,
+                            position.rotation
+                        );
+                        
+                        if (!placedBuilding) {
+                            Logger.error(`Failed to place district building: ${buildingType}`);
+                        } else {
+                            Logger.info(`Successfully placed district building: ${buildingType}`);
+                        }
+                    }
+                }
+            } catch (error) {
+                Logger.error('Error placing district buildings:', error);
+            }
+
             // Get all house building IDs from contract
             const houseIds = await this.contracts.gameState.getBuildingIdsOfType('house');
             Logger.info('Retrieved house IDs:', houseIds);
@@ -257,6 +295,10 @@ export class GamePage extends BasePage {
                 } else if (clickedObject.userData.isHouse) {
                     Logger.info('House clicked');
                     window.history.pushState({}, '', '/house');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isShop) {
+                    Logger.info('Shop clicked');
+                    window.history.pushState({}, '', '/shop');
                     window.dispatchEvent(new PopStateEvent('popstate'));
                 }
             }
