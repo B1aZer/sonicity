@@ -316,4 +316,28 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         
         return (buildingTypes, configs);
     }
+
+    /**
+     * @dev Get all district building names
+     * @return string[] Array of building names in the same order as the enum
+     */
+    function getBuildingNames() public pure returns (string[] memory) {
+        string[] memory names = new string[](15);
+        names[0] = "SHOP";
+        names[1] = "WORKSHOP";
+        names[2] = "DEFENSE_TOWER";
+        names[3] = "BARRACKS";
+        names[4] = "SCOUT_GUILD";
+        names[5] = "CARAVAN";
+        names[6] = "REP_STATION";
+        names[7] = "COUNCIL_CHAMBER";
+        names[8] = "AUDIT_SHRINE";
+        names[9] = "FOUNDERS_HALL";
+        names[10] = "MINISTRY_OF_MERIT";
+        names[11] = "ARCANE_TOWER";
+        names[12] = "FORTRESS_WALLS";
+        names[13] = "BANK";
+        names[14] = "ALTAR";
+        return names;
+    }
 } 

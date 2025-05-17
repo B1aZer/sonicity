@@ -145,8 +145,8 @@ export class GamePage extends BasePage {
                 for (const building of builtDistrictBuildings) {
                     const position = DISTRICT_BUILDING_POSITIONS[Number(building.type)];
                     if (position) {
-                        // Convert enum type to string for the building manager
-                        const buildingType = 'SHOP'; // For now, we only have SHOP
+                        // Use the building name from the contract
+                        const buildingType = building.name;
                         const placedBuilding = this.game.buildingManager.placeFixedBuilding(
                             buildingType,
                             new THREE.Vector3(position.position.x, position.position.y, position.position.z),

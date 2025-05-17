@@ -33,6 +33,7 @@ export class DistrictBuildingsContract extends BaseContract {
     async getBuiltBuildings() {
         const address = await this.getAddress();
         const [buildingTypes, configs] = await this.call('getAllDistrictBuildingConfigs');
+        const buildingNames = await this.call('getBuildingNames');
         const builtBuildings = [];
 
         for (let i = 0; i < buildingTypes.length; i++) {
@@ -40,11 +41,16 @@ export class DistrictBuildingsContract extends BaseContract {
             if (isBuilt) {
                 builtBuildings.push({
                     type: buildingTypes[i],
+                    name: buildingNames[i],
                     config: configs[i]
                 });
             }
         }
 
         return builtBuildings;
+    }
+
+    async getBuildingNames() {
+        return await this.call('getBuildingNames');
     }
 } 
