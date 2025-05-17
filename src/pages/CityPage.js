@@ -111,15 +111,19 @@ export class CityPage extends BasePage {
             const buildingsGrid = tierContent.querySelector('.buildings-grid');
             
             if (buildingsGrid) {
+                // Check which buildings are already built
+                const builtStatuses = await Promise.all(buildingTypes.map(type => this.contracts.districtBuildings.isDistrictBuildingBuilt(type)));
+
                 buildingsGrid.innerHTML = buildingTypes.map((type, index) => {
                     const config = configs[index];
                     const treasuryBigInt = BigInt(treasury);
                     const unlockCostBigInt = BigInt(config.unlockCost);
                     const isLocked = treasuryBigInt < unlockCostBigInt;
                     const isTierLocked = tier > currentTier;
+                    const isBuilt = builtStatuses[index];
                     
                     return `
-                        <div class="building-card ${isLocked || isTierLocked ? 'locked' : ''}" 
+                        <div class="building-card ${isLocked || isTierLocked ? 'locked' : ''} ${isBuilt ? 'built' : ''}" 
                              data-required-donation="${config.unlockCost}"
                              data-building-type="${type}">
                             ${(isLocked || isTierLocked) ? `
@@ -142,8 +146,8 @@ export class CityPage extends BasePage {
                                 <p class="build-cost">Build Cost: ${config.buildCost} gold</p>
                                 <p class="unlock-cost">Unlock Cost: ${config.unlockCost} gold</p>
                             </div>
-                            <button class="building-button" data-building="${type}" type="button">
-                                Build ${config.name}
+                            <button class="building-button" data-building="${type}" type="button" ${isBuilt ? 'disabled' : ''}>
+                                ${isBuilt ? 'Constructed' : `Build ${config.name}`}
                             </button>
                         </div>
                     `;
