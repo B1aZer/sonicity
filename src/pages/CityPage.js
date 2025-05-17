@@ -194,6 +194,9 @@ export class CityPage extends BasePage {
                     
                     // Reload city data
                     await this.loadCityData();
+
+                    // re-setup event listeners
+                    this.setupEventListeners();
                     
                     this.modal.success(`Successfully donated ${amount} gold to city!`);
                 } catch (error) {
