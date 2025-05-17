@@ -3,40 +3,43 @@ import { SHOP_ITEMS } from '../js/utils/constants.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import '../styles/shop-page.css';
+import '../styles/building.css';
+import '../styles/buttons.css';
 
 export class ShopPage extends BasePage {
     constructor() {
         super();
         this.element = document.createElement('div');
-        this.element.className = 'shop-page';
+        this.element.className = 'base-page';
         this.modal = new Modal();
         this.render();
     }
 
     render() {
         this.element.innerHTML = `
-            <div class="shop-header">
-                <h1>SHOP</h1>
-            </div>
-            <div class="shop-items-container">
-                ${SHOP_ITEMS.map(item => `
-                    <div class="shop-item-card">
-                        <div class="shop-item-image">
-                            <img src="${item.image.replace('emergency_help', 'help').replace('production_boost', 'boost').replace('cosmetic_item', 'cosmetic')}" alt="${item.name}" />
-                        </div>
-                        <div class="shop-item-info">
-                            <div class="shop-item-title-row">
-                                <h2>${item.name}</h2>
-                                <span class="shop-item-stock">${item.count > 0 ? `IN STOCK: ${item.count}` : 'OUT OF STOCK'}</span>
+            <div class="page-container">
+                <h1 class="page-title">Shop</h1>
+                <div class="buildings-grid">
+                    ${SHOP_ITEMS.map(item => `
+                        <div class="building-card shop-item-card">
+                            <div class="shop-item-image">
+                                <img src="${item.image.replace('emergency_help', 'help').replace('production_boost', 'boost').replace('cosmetic_item', 'cosmetic')}" alt="${item.name}" />
                             </div>
-                            <div class="shop-item-desc">${item.description}</div>
+                            <div class="shop-item-info">
+                                <div class="shop-item-title-row">
+                                    <h3>${item.name}</h3>
+                                    <span class="shop-item-stock">${item.count > 0 ? `In stock: ${item.count}` : 'Out of stock'}</span>
+                                </div>
+                                <div class="shop-item-desc">${item.description}</div>
+                            </div>
+                            <div class="shop-item-action-row">
+                                <button class="btn btn-primary shop-buy-btn" data-item-id="${item.id}" ${item.count === 0 ? 'disabled' : ''}>
+                                    ${item.count === 0 ? 'Out of Stock' : (item.cost > 0 ? `Buy for ${item.cost} ${item.currency}` : 'Get for FREE')}
+                                </button>
+                            </div>
                         </div>
-                        <div class="shop-item-action-row">
-                            ${item.cost > 0 ? `<span class="shop-item-cost">${item.cost} ${item.currency}</span>` : `<span class="shop-item-cost free">FREE</span>`}
-                            <button class="shop-buy-btn" data-item-id="${item.id}" ${item.count === 0 ? 'disabled' : ''}>${item.cost > 0 ? 'BUY' : 'GET'}</button>
-                        </div>
-                    </div>
-                `).join('')}
+                    `).join('')}
+                </div>
             </div>
         `;
         this.setupBuyHandlers();
