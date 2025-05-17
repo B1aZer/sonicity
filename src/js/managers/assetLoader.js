@@ -8,7 +8,8 @@ const assetMap = {
     ALTAR: { url: 'assets/altar.glb' },
     MINE: { url: 'assets/mine.glb' },
     CITY_HALL: { url: 'assets/cityhall.glb' },
-    SHOP: { url: 'assets/shop.glb' }
+    SHOP: { url: 'assets/shop.glb' },
+    WORKSHOP: { url: 'assets/workshop.glb' }
 };
 
 // Texture paths - using PNG format instead of TGA

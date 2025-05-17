@@ -30,7 +30,14 @@ export const BUILDING_TYPES = {
     },
     SHOP: {
         name: 'Shop',
-        size: new THREE.Vector3(10, 10, 10),
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0xFFD700, // Gold color
+        cost: 200,
+        income: 20 // Generates $20 per cycle
+    },
+    WORKSHOP: {
+        name: 'Workshop',
+        size: new THREE.Vector3(15, 15, 15),
         color: 0xFFD700, // Gold color
         cost: 200,
         income: 20 // Generates $20 per cycle
@@ -71,7 +78,7 @@ export const DISTRICT_BUILDING_POSITIONS = {
         rotation: 0
     },
     1: { // WORKSHOP
-        position: { x: 10, y: 0, z: -25 },
+        position: { x: 20, y: 0, z: -35 },
         rotation: 0
     },
 
