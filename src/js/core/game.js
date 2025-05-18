@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { InputHandler } from '../utils/inputHandler.js';
 import { BuildingManager } from '../managers/buildingManager.js';
 import { AssetLoader } from '../managers/assetLoader.js';
-import { BUILDING_TYPES, BUILDING_TYPES_KEYS } from '../utils/constants.js';
 import { GridManager } from '../managers/gridManager.js';
 import { SceneManager } from '../managers/sceneManager.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';

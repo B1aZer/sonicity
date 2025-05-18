@@ -7,7 +7,7 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { AccessControl } from '../js/utils/accessControl.js';
 import { BasePage } from './BasePage.js';
-import { DISTRICT_BUILDING_POSITIONS } from '../js/utils/constants.js';
+import { BUILDINGS } from '../js/utils/constants.js';
 
 export class GamePage extends BasePage {
     constructor() {
@@ -143,20 +143,18 @@ export class GamePage extends BasePage {
 
                 // Place each built district building
                 for (const building of builtDistrictBuildings) {
-                    const position = DISTRICT_BUILDING_POSITIONS[Number(building.type)];
-                    if (position) {
-                        // Use the building name from the contract
-                        const buildingType = building.name;
+                    const buildingConfig = BUILDINGS[building.name];
+                    if (buildingConfig) {
                         const placedBuilding = this.game.buildingManager.placeFixedBuilding(
-                            buildingType,
-                            new THREE.Vector3(position.position.x, position.position.y, position.position.z),
-                            position.rotation
+                            building.name,
+                            new THREE.Vector3(buildingConfig.position.x, buildingConfig.position.y, buildingConfig.position.z),
+                            buildingConfig.rotation
                         );
                         
                         if (!placedBuilding) {
-                            Logger.error(`Failed to place district building: ${buildingType}`);
+                            Logger.error(`Failed to place district building: ${building.name}`);
                         } else {
-                            Logger.info(`Successfully placed district building: ${buildingType}`);
+                            Logger.info(`Successfully placed district building: ${building.name}`);
                         }
                     }
                 }

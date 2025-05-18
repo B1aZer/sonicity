@@ -20,124 +20,177 @@ export const CONTRACT_CONFIG = {
 // Performance monitoring
 export const SHOW_PERFORMANCE_MONITOR = true;
 
-export const BUILDING_TYPES = {
+// Building definitions combining visual and game properties
+export const BUILDINGS = {
+    // Grid-based buildings (dynamic placement)
     HOUSE: {
         name: 'House',
-        size: new THREE.Vector3(8, 8, 8), // Increased size to fill more of the cell
+        size: new THREE.Vector3(8, 8, 8),
         color: 0xADD8E6, // Light Blue
-        cost: 100,
-        income: 10 // Generates $10 per cycle
+        isGridBuilding: true
+    },
+
+    // Fixed district buildings
+    CITY_HALL: {
+        name: 'City Hall',
+        size: new THREE.Vector3(24, 24, 24),
+        color: 0xB0C4DE, // Light Steel Blue
+        position: { x: 0, y: 0, z: 0 }, // Center position
+        rotation: 0,
+        tier: 0
+    },
+    ALTAR: {
+        name: 'Altar',
+        size: new THREE.Vector3(12, 12, 12),
+        color: 0xFFB6C1, // Light Pink
+        position: { x: 0, y: 0, z: 0 }, // Center position
+        rotation: 0,
+        tier: 0
+    },
+    MINE: {
+        name: 'Mine',
+        size: new THREE.Vector3(12, 12, 12),
+        color: 0xFFFFE0, // Light Yellow
+        position: { x: 0, y: 0, z: 0 }, // Center position
+        rotation: 0,
+        tier: 0
     },
     SHOP: {
         name: 'Shop',
         size: new THREE.Vector3(15, 15, 15),
         color: 0xFFD700, // Gold color
-        cost: 200,
-        income: 20 // Generates $20 per cycle
+        position: { x: -20, y: 5, z: -35 },
+        rotation: 0,
+        tier: 0
     },
     WORKSHOP: {
         name: 'Workshop',
         size: new THREE.Vector3(15, 15, 15),
         color: 0xFFD700, // Gold color
-        cost: 200,
-        income: 20 // Generates $20 per cycle
-    },
-    ALTAR: {
-        name: 'Altar',
-        size: new THREE.Vector3(12, 12, 12), // Size for visual representation
-        color: 0xFFB6C1, // Light Pink
-        cost: 300
-        // No longer tracks resource consumption (simplified)
-    },
-    MINE: {
-        name: 'Mine',
-        size: new THREE.Vector3(12, 12, 12), // Size for visual representation
-        color: 0xFFFFE0, // Light Yellow
-        cost: 1000
-        // No longer generates resources or has range (simplified)
-    },
-    CITY_HALL: {
-        name: 'City Hall',
-        size: new THREE.Vector3(24, 24, 24), // Size for visual representation
-        color: 0xB0C4DE, // Light Steel Blue
-        cost: 800
-        // No longer generates resources or has range (simplified)
-    }
-    // Add STADIUM later if budget allows
-    // STADIUM: { ... }
-};
-
-// Ordered list of keys for easy access via index
-export const BUILDING_TYPES_KEYS = Object.keys(BUILDING_TYPES); // ['HOUSE', 'SHOP', 'ALTAR', 'MINE', 'CITY_HALL']
-
-// District building positions for camera-friendly layout
-export const DISTRICT_BUILDING_POSITIONS = {
-    // Tier 0 - Closest to camera, slightly spread out
-    0: { // SHOP
-        position: { x: -20, y: 5, z: -35 },
-        rotation: 0
-    },
-    1: { // WORKSHOP
         position: { x: 20, y: 0, z: -35 },
-        rotation: 0
+        rotation: 0,
+        tier: 0
     },
-
-    // Tier 1 - Slightly further back, more spread out
-    2: { // DEFENSE_TOWER
+    DEFENSE_TOWER: {
+        name: 'Defense Tower',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0xCD5C5C, // Indian Red
         position: { x: -20, y: 0, z: 35 },
-        rotation: 0
+        rotation: 0,
+        tier: 1
     },
-    3: { // BARRACKS
+    BARRACKS: {
+        name: 'Barracks',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x8B4513, // Saddle Brown
         position: { x: 20, y: 0, z: 35 },
-        rotation: 0
+        rotation: 0,
+        tier: 1
     },
-    4: { // SCOUT_GUILD
+    SCOUT_GUILD: {
+        name: 'Scout Guild',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x4682B4, // Steel Blue
         position: { x: -15, y: 0, z: 40 },
-        rotation: 0
+        rotation: 0,
+        tier: 1
     },
-    5: { // CARAVAN
+    CARAVAN: {
+        name: 'Caravan',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0xDAA520, // Goldenrod
         position: { x: 15, y: 0, z: 40 },
-        rotation: 0
+        rotation: 0,
+        tier: 1
     },
-
-    // Tier 2 - Further back, wider spread
-    6: { // REP_STATION
+    REP_STATION: {
+        name: 'Rep Station',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x20B2AA, // Light Sea Green
         position: { x: -25, y: 0, z: 45 },
-        rotation: 0
+        rotation: 0,
+        tier: 2
     },
-    7: { // COUNCIL_CHAMBER
+    COUNCIL_CHAMBER: {
+        name: 'Council Chamber',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x800080, // Purple
         position: { x: 25, y: 0, z: 45 },
-        rotation: 0
+        rotation: 0,
+        tier: 2
     },
-    8: { // AUDIT_SHRINE
+    AUDIT_SHRINE: {
+        name: 'Audit Shrine',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0xFF69B4, // Hot Pink
         position: { x: 0, y: 0, z: 50 },
-        rotation: 0
+        rotation: 0,
+        tier: 2
     },
-
-    // Tier 3 - Even further back
-    9: { // FOUNDERS_HALL
+    FOUNDERS_HALL: {
+        name: "Founders' Hall",
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x4B0082, // Indigo
         position: { x: -30, y: 0, z: 55 },
-        rotation: 0
+        rotation: 0,
+        tier: 3
     },
-    10: { // MINISTRY_OF_MERIT
+    MINISTRY_OF_MERIT: {
+        name: 'Ministry of Merit',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x006400, // Dark Green
         position: { x: 30, y: 0, z: 55 },
-        rotation: 0
+        rotation: 0,
+        tier: 3
     },
-
-    // Tier 4 - Furthest back
-    11: { // ARCANE_TOWER
+    ARCANE_TOWER: {
+        name: 'Arcane Tower',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x00FFFF, // Cyan
         position: { x: -35, y: 0, z: 65 },
-        rotation: 0
+        rotation: 0,
+        tier: 4
     },
-    12: { // FORTRESS_WALLS
+    FORTRESS_WALLS: {
+        name: 'Fortress Walls',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x808080, // Gray
         position: { x: 35, y: 0, z: 65 },
-        rotation: 0
+        rotation: 0,
+        tier: 4
     },
-    13: { // BANK
+    BANK: {
+        name: 'Bank',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0xFFD700, // Gold
         position: { x: 0, y: 0, z: 70 },
-        rotation: 0
+        rotation: 0,
+        tier: 4
     }
 };
+
+// Helper to get all building types
+export const BUILDING_TYPES = Object.keys(BUILDINGS);
+
+// Helper to get grid buildings only
+export const GRID_BUILDINGS = Object.entries(BUILDINGS)
+    .filter(([_, building]) => building.isGridBuilding)
+    .map(([type]) => type);
+
+// Helper to get district buildings only
+export const DISTRICT_BUILDINGS = Object.entries(BUILDINGS)
+    .filter(([_, building]) => !building.isGridBuilding)
+    .map(([type]) => type);
+
+// Helper to get buildings by tier
+export const BUILDINGS_BY_TIER = Object.entries(BUILDINGS)
+    .filter(([_, building]) => !building.isGridBuilding)
+    .reduce((acc, [type, building]) => {
+        const tier = building.tier;
+        if (!acc[tier]) acc[tier] = [];
+        acc[tier].push(type);
+        return acc;
+    }, {});
 
 export const SHOP_ITEMS = [
   {

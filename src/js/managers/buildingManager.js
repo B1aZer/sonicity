@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { BUILDING_TYPES } from '../utils/constants.js';
-import { AssetLoader } from './assetLoader.js';
+import { BUILDINGS } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
 
 export class BuildingManager {
@@ -64,7 +63,7 @@ export class BuildingManager {
             this.scene.add(building);
             
             // Create building object with all necessary data
-            const buildingData = BUILDING_TYPES[type];
+            const buildingData = BUILDINGS[type];
             const buildingObj = {
                 id: THREE.MathUtils.generateUUID(),
                 type,
@@ -101,7 +100,7 @@ export class BuildingManager {
     createBuildingMesh(type) {
         try {
             Logger.debug('Creating building mesh', { type });
-            const buildingData = BUILDING_TYPES[type];
+            const buildingData = BUILDINGS[type];
             const model = this.assetLoader.getModel(type);
             
             if (model) {
