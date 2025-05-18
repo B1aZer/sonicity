@@ -294,6 +294,10 @@ export class GamePage extends BasePage {
                     Logger.info('Workshop clicked');
                     window.history.pushState({}, '', '/workshop');
                     window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isBarracks) {
+                    Logger.info('Barracks clicked');
+                    window.history.pushState({}, '', '/barracks');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                 }
             }
         });
