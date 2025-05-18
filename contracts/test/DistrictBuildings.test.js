@@ -83,6 +83,10 @@ describe("DistrictBuildings", function () {
       const isBuilt = await districtBuildings.isDistrictBuildingBuilt(player1Address, 2); // DEFENSE_TOWER
       expect(isBuilt).to.be.true;
 
+      // Check if active
+      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 2); // DEFENSE_TOWER
+      expect(isActive).to.be.true;
+
       // Check gold was deducted
       const goldBalance = await gameState.getPlayerGold(player1Address);
       expect(goldBalance).to.equal(800); // 2000 - 1000 (donation) - 200 (defense tower cost)
@@ -92,6 +96,82 @@ describe("DistrictBuildings", function () {
       await expect(
         districtBuildings.connect(player1).buildDistrictBuilding(3) // BARRACKS
       ).to.be.revertedWith("Building not unlocked");
+    });
+  });
+
+  describe("Building Damage and Repair", function () {
+    beforeEach(async function () {
+      // Give player1 enough gold and reach tier 1
+      await gameState.connect(player1).earnGold(2000);
+      await gameState.connect(player1).donateGold(1000);
+      
+      // Build the defense tower
+      await districtBuildings.connect(player1).buildDistrictBuilding(2); // DEFENSE_TOWER
+    });
+
+    it("Should allow GameState to damage a building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Damage the defense tower through GameState
+      await gameState.damageDistrictBuilding(player1Address, 2); // DEFENSE_TOWER
+
+      // Check if building is now inactive
+      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 2);
+      expect(isActive).to.be.false;
+    });
+
+    it("Should not allow non-GameState to damage a building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Try to damage the defense tower as player1
+      await expect(
+        districtBuildings.connect(player1).damageDistrictBuilding(player1Address, 2)
+      ).to.be.revertedWith("Only GameState can call this function");
+    });
+
+    it("Should not allow damaging an already damaged building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Damage the defense tower through GameState
+      await gameState.damageDistrictBuilding(player1Address, 2);
+
+      // Try to damage it again through GameState
+      await expect(
+        gameState.damageDistrictBuilding(player1Address, 2)
+      ).to.be.revertedWith("Failed to damage building");
+    });
+
+    it("Should allow repairing a damaged building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Give player1 enough gold for repair
+      await gameState.connect(player1).earnGold(1000);
+      
+      // Damage the defense tower through GameState
+      await gameState.damageDistrictBuilding(player1Address, 2);
+
+      // Repair the building
+      await districtBuildings.connect(player1).repairDistrictBuilding(2);
+
+      // Check if building is active again
+      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 2);
+      expect(isActive).to.be.true;
+
+      // Check repair cost was deducted (half of build cost)
+      const goldBalance = await gameState.getPlayerGold(player1Address);
+      expect(goldBalance).to.equal(1700); // 1000 (new gold) + 800 (remaining from initial 2000 - 1000 donation - 200 build cost) - 100 (repair cost)
+    });
+
+    it("Should not allow repairing an active building", async function () {
+      await expect(
+        districtBuildings.connect(player1).repairDistrictBuilding(2)
+      ).to.be.revertedWith("Building not damaged");
+    });
+
+    it("Should not allow repairing a non-built building", async function () {
+      await expect(
+        districtBuildings.connect(player1).repairDistrictBuilding(3) // BARRACKS
+      ).to.be.revertedWith("Building not built");
     });
   });
 }); 

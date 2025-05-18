@@ -46,8 +46,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     // Mappings for district buildings
     mapping(address => mapping(DistrictBuildingType => bool)) public builtDistrictBuildings;  // Tracks which district buildings are built
     mapping(address => mapping(DistrictBuildingType => bool)) public unlockedDistrictBuildings; // Tracks which are unlocked
-    mapping(address => mapping(DistrictBuildingType => bool)) public activeDistrictBuildings; // Tracks which buildings are active
     mapping(DistrictBuildingType => DistrictBuildingConfig) public districtBuildingConfigs;
+    mapping(address => mapping(DistrictBuildingType => bool)) public activeDistrictBuildings; // Tracks which buildings are active
 
     // Events
     event DistrictBuildingUnlocked(address indexed player, DistrictBuildingType buildingType);

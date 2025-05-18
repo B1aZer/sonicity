@@ -96,6 +96,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event BuildingRemoved(address indexed player, string buildingType, uint256 buildingId);
     event GoldCollected(address indexed player, uint256 buildingId, uint256 amount);
     event DistrictBuildingsAddressUpdated(address indexed newAddress);
+    event DistrictBuildingDamaged(address indexed player, uint8 buildingType);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -680,5 +681,22 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         playerBuildingCounts[player].byType[buildingType]--;
 
         emit BuildingRemoved(player, buildingType, buildingId);
+    }
+
+    /**
+     * @dev Damage a district building
+     * @param player The address of the player whose building is being damaged
+     * @param buildingType The type of building being damaged
+     */
+    function damageDistrictBuilding(address player, uint8 buildingType) external {
+        require(msg.sender == owner() || msg.sender == districtBuildingsAddress, "Only owner or DistrictBuildings can call this function");
+        
+        // Call DistrictBuildings contract to damage the building
+        (bool success, ) = districtBuildingsAddress.call(
+            abi.encodeWithSignature("damageDistrictBuilding(address,uint8)", player, buildingType)
+        );
+        require(success, "Failed to damage building");
+        
+        emit DistrictBuildingDamaged(player, buildingType);
     }
 }
