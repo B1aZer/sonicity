@@ -41,15 +41,21 @@ export class CityPage extends BasePage {
             const address = await this.contracts.gameState.getAddress();
             const playerState = await this.contracts.gameState.call('playerState', address);
             
+            // Get tier requirements for current and next tier
+            const currentTier = Number(playerState.tier);
+            const [currentTierRequirement, nextTierRequirement] = await Promise.all([
+                currentTier === 0 ? 0 : this.contracts.gameState.getTierRequirements(currentTier),
+                this.contracts.gameState.getTierRequirements(currentTier + 1)
+            ]);
+            
             // Then get other data
-            const [playerRep, nextTierCost, playerGold] = await Promise.all([
+            const [playerRep, playerGold] = await Promise.all([
                 this.contracts.gameState.getPlayerRep(),
-                this.contracts.gameState.getTierRequirements(Number(playerState.tier) + 1),
                 this.contracts.gameState.getPlayerGold()
             ]);
 
             // Update UI elements
-            this.updateStatusSection(playerState, playerRep, nextTierCost, playerGold);
+            this.updateStatusSection(playerState, playerRep, currentTierRequirement, nextTierRequirement, playerGold);
             await this.updateBuildingCards(playerState.tier, playerState.treasury);
             this.updateTierTabs(playerState.tier);
         } catch (error) {
@@ -58,7 +64,7 @@ export class CityPage extends BasePage {
         }
     }
 
-    updateStatusSection(playerState, playerRep, nextTierCost, playerGold) {
+    updateStatusSection(playerState, playerRep, currentTierRequirement, nextTierRequirement, playerGold) {
         // Update district tier display
         const tierValue = this.element.querySelector('.city-tier');
         if (tierValue) {
@@ -87,16 +93,20 @@ export class CityPage extends BasePage {
         const progressBar = this.element.querySelector('.tier-progress-bar');
         const progressContainer = this.element.querySelector('.tier-progress');
         if (progressBar && progressContainer) {
-            const treasury = Number(playerState.treasury);
-            const cost = Number(nextTierCost);
-            const progress = (treasury / cost) * 100;
+            const treasury = BigInt(playerState.treasury);
+            const currentTier = Number(playerState.tier);
+            const currentReq = BigInt(currentTierRequirement);
+            const nextReq = BigInt(nextTierRequirement);
+            
+            // Calculate progress using BigInt arithmetic
+            const progress = Number((treasury - currentReq) * BigInt(100) / (nextReq - currentReq));
             progressBar.style.width = `${Math.min(progress, 100)}%`;
-            progressContainer.title = `${treasury} / ${cost} Gold`;
+            progressContainer.title = `${treasury.toString()} / ${nextReq.toString()} Gold`;
             
             // Update tier progress text
             const progressText = this.element.querySelector('.tier-progress-text');
             if (progressText) {
-                progressText.textContent = `Progress to Tier ${Number(playerState.tier) + 1}: ${Math.min(progress, 100).toFixed(1)}%`;
+                progressText.textContent = `Progress to Tier ${currentTier + 1}: ${Math.min(progress, 100).toFixed(1)}%`;
             }
         }
     }
