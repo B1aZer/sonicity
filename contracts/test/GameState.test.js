@@ -205,4 +205,64 @@ describe("GameState", function () {
       await expect(gameState.getBuilding(player1Address, 0)).to.be.revertedWith("Building doesn't exist or is inactive");
     });
   });
+
+  describe("Building Slots", function () {
+    beforeEach(async function () {
+      // Player is already initialized with 9 slots in the main beforeEach
+      // No need to stake NFT or use Altar
+    });
+
+    it("Should start with 9 building slots", async function () {
+      const player1Address = await player1.getAddress();
+      const slots = await gameState.getBuildingSlots(player1Address);
+      expect(slots).to.equal(9);
+    });
+
+    it("Should increase building slots when upgrading tiers", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Give enough gold to reach tier 1
+      await gameState.connect(player1).earnGold(2000);
+      await gameState.connect(player1).donateGold(1000);
+      
+      // Check slots after tier 1
+      let slots = await gameState.getBuildingSlots(player1Address);
+      expect(slots).to.equal(12); // Set to 12 slots at tier 1
+      
+      // Give enough gold to reach tier 2
+      await gameState.connect(player1).earnGold(2000);
+      await gameState.connect(player1).donateGold(1500);
+      
+      // Check slots after tier 2
+      slots = await gameState.getBuildingSlots(player1Address);
+      expect(slots).to.equal(16); // Set to 16 slots at tier 2
+      
+      // Give enough gold to reach tier 3
+      await gameState.connect(player1).earnGold(3000);
+      await gameState.connect(player1).donateGold(2500);
+      
+      // Check slots after tier 3
+      slots = await gameState.getBuildingSlots(player1Address);
+      expect(slots).to.equal(20); // Set to 20 slots at tier 3
+      
+      // Give enough gold to reach tier 4
+      await gameState.connect(player1).earnGold(6000);
+      await gameState.connect(player1).donateGold(5000);
+      
+      // Check slots after tier 4
+      slots = await gameState.getBuildingSlots(player1Address);
+      expect(slots).to.equal(25); // Set to 25 slots at tier 4
+    });
+
+    it("Should allow players to create buildings", async function () {
+      const player1Address = await player1.getAddress();
+      // Create a house
+      await gameState.connect(player1).createBuilding("house");
+      // Check building counts
+      const totalBuildings = await gameState.getTotalBuildings(player1Address);
+      const houseCount = await gameState.getBuildingsByType(player1Address, "house");
+      expect(totalBuildings).to.equal(1);
+      expect(houseCount).to.equal(1);
+    });
+  });
 }); 

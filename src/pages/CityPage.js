@@ -379,8 +379,8 @@ export class CityPage extends BasePage {
                             <span class="status-value treasury-amount">Loading...</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Rep Points:</span>
-                            <span class="status-value rep-points">Loading...</span>
+                            <span class="status-label">Gold:</span>
+                            <span class="status-value gold-amount">Loading...</span>
                         </div>
                     </div>
                     <div class="tier-progress">
