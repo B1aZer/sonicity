@@ -46,11 +46,14 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     // Mappings for district buildings
     mapping(address => mapping(DistrictBuildingType => bool)) public builtDistrictBuildings;  // Tracks which district buildings are built
     mapping(address => mapping(DistrictBuildingType => bool)) public unlockedDistrictBuildings; // Tracks which are unlocked
+    mapping(address => mapping(DistrictBuildingType => bool)) public activeDistrictBuildings; // Tracks which buildings are active
     mapping(DistrictBuildingType => DistrictBuildingConfig) public districtBuildingConfigs;
 
     // Events
     event DistrictBuildingUnlocked(address indexed player, DistrictBuildingType buildingType);
     event DistrictBuildingBuilt(address indexed player, DistrictBuildingType buildingType);
+    event DistrictBuildingDamaged(address indexed player, DistrictBuildingType buildingType);
+    event DistrictBuildingRepaired(address indexed player, DistrictBuildingType buildingType);
     event GameStateAddressUpdated(address indexed newAddress);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -258,10 +261,56 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         );
         require(success, "Failed to deduct gold");
         
-        // Mark as built
+        // Mark as built and active
         builtDistrictBuildings[msg.sender][buildingType] = true;
+        activeDistrictBuildings[msg.sender][buildingType] = true;
         
         emit DistrictBuildingBuilt(msg.sender, buildingType);
+    }
+
+    /**
+     * @dev Damage a district building (can only be called by GameState)
+     * @param player The address of the player whose building is being damaged
+     * @param buildingType The type of building being damaged
+     */
+    function damageDistrictBuilding(address player, DistrictBuildingType buildingType) external {
+        require(msg.sender == gameStateAddress, "Only GameState can call this function");
+        require(builtDistrictBuildings[player][buildingType], "Building not built");
+        require(activeDistrictBuildings[player][buildingType], "Building already damaged");
+        
+        activeDistrictBuildings[player][buildingType] = false;
+        emit DistrictBuildingDamaged(player, buildingType);
+    }
+
+    /**
+     * @dev Repair a damaged district building
+     * @param buildingType The type of building to repair
+     */
+    function repairDistrictBuilding(DistrictBuildingType buildingType) external nonReentrant {
+        require(builtDistrictBuildings[msg.sender][buildingType], "Building not built");
+        require(!activeDistrictBuildings[msg.sender][buildingType], "Building not damaged");
+        
+        DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
+        uint256 repairCost = config.buildCost / 2; // Repair costs half of build cost
+        
+        // Call GameState to check and deduct gold
+        (bool success, ) = gameStateAddress.call(
+            abi.encodeWithSignature("deductGoldForDistrictBuilding(address,uint256)", msg.sender, repairCost)
+        );
+        require(success, "Failed to deduct gold");
+        
+        activeDistrictBuildings[msg.sender][buildingType] = true;
+        emit DistrictBuildingRepaired(msg.sender, buildingType);
+    }
+
+    /**
+     * @dev Check if a district building is active for a player
+     * @param player The address of the player
+     * @param buildingType The type of the building
+     * @return bool Whether the building is active
+     */
+    function isDistrictBuildingActive(address player, DistrictBuildingType buildingType) public view returns (bool) {
+        return activeDistrictBuildings[player][buildingType];
     }
 
     /**
