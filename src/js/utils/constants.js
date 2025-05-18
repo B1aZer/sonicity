@@ -83,8 +83,8 @@ export const BUILDINGS = {
         name: 'Barracks',
         size: new THREE.Vector3(15, 15, 15),
         color: 0x8B4513, // Saddle Brown
-        position: { x: 20, y: 0, z: 35 },
-        rotation: 0,
+        position: { x: 35, y: 0, z: -35 },
+        rotation: -Math.PI / 2,
         tier: 1
     },
     SCOUT_GUILD: {
