@@ -83,7 +83,7 @@ async function main() {
 
   // Deploy Altar proxy with initialization parameters
   console.log("Deploying Altar proxy...");
-  const altarProxy = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateProxyAddress], {
+  const altarProxy = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateProxyAddress, gridBuildingsProxyAddress], {
     kind: 'uups',
     initializer: 'initialize',
   });
@@ -114,10 +114,6 @@ async function main() {
   // Set GameState address in GridBuildings
   console.log("Setting GameState address in GridBuildings...");
   await gridBuildingsProxy.setGameStateAddress(gameStateProxyAddress);
-
-  // Initialize building configurations in GridBuildings
-  console.log("Initializing building configurations in GridBuildings...");
-  await gridBuildingsProxy.initializeBuildingConfigs();
 
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
