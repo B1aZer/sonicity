@@ -66,6 +66,9 @@ export class StakePage extends BasePage {
             showUnstakeButton: true,
             onUnstake: (tokenId) => this.unstakeNFT(tokenId)
         });
+
+        // Store all available NFTs
+        this.availableNFTs = [];
     }
 
     showStatus(type, message, title = '') {
@@ -82,8 +85,46 @@ export class StakePage extends BasePage {
     async onInitialized(walletResult) {
         if (walletResult.success) {
             await this.loadUserNFTs();
+            // Add event listener for building type selector
+            const buildingTypeSelect = this.container.querySelector('.building-type-select');
+            buildingTypeSelect.addEventListener('change', () => this.filterNFTs());
         }
     }
+
+    filterNFTs() {
+        const buildingTypeSelect = this.container.querySelector('.building-type-select');
+        const selectedType = parseInt(buildingTypeSelect.value);
+        const ownedNFTsContainer = this.container.querySelector('.nft-list');
+        
+        // Clear container
+        ownedNFTsContainer.innerHTML = '';
+
+        // Filter NFTs based on selected type
+        const filteredNFTs = this.availableNFTs.filter(nft => {
+            // For now, we'll show all NFTs for houses (type 0)
+            // For farms (type 1), we'll only show farm NFTs
+            // For rep stations (type 2), we'll only show rep station NFTs
+            if (selectedType === 0) return true;
+            if (selectedType === 1) return nft.metadata.name.toLowerCase().includes('farm');
+            if (selectedType === 2) return nft.metadata.name.toLowerCase().includes('rep');
+            return true;
+        });
+
+        if (filteredNFTs.length === 0) {
+            ownedNFTsContainer.innerHTML = '<div class="no-nfts">No NFTs available for this building type.</div>';
+            return;
+        }
+
+        // Render filtered NFTs
+        filteredNFTs.forEach(nft => {
+            const cardWrapper = document.createElement('div');
+            cardWrapper.innerHTML = this.unstakedCard.render(nft);
+            const cardElement = cardWrapper.firstElementChild;
+            ownedNFTsContainer.appendChild(cardElement);
+            this.unstakedCard.attachEventListeners(cardElement);
+        });
+    }
+
     async loadUserNFTs() {
         Logger.info('Loading user NFTs in StakePage...');
         try {
@@ -152,6 +193,7 @@ export class StakePage extends BasePage {
             // Get all owned NFTs that are not staked
             const balance = await this.contracts.nft.balanceOf(userAddress);
             let availableCount = 0;
+            this.availableNFTs = []; // Clear the array
 
             if (balance > 0n) {
                 for (let i = 0; i < balance; i++) {
@@ -175,11 +217,7 @@ export class StakePage extends BasePage {
                         gameStateMetadata
                     };
 
-                    const cardWrapper = document.createElement('div');
-                    cardWrapper.innerHTML = this.unstakedCard.render(nft);
-                    const cardElement = cardWrapper.firstElementChild;
-                    ownedNFTsContainer.appendChild(cardElement);
-                    this.unstakedCard.attachEventListeners(cardElement);
+                    this.availableNFTs.push(nft);
                 }
             }
 
@@ -192,9 +230,9 @@ export class StakePage extends BasePage {
             this.container.querySelector('.staked-nfts').textContent = stakedNFTs;
             this.container.querySelector('.available-nfts').textContent = availableNFTs;
 
-            if (ownedNFTsContainer.children.length === 0) {
-                ownedNFTsContainer.innerHTML = '<div class="no-nfts">You don\'t have any unstaked NFTs.</div>';
-            }
+            // Initial filter based on selected building type
+            this.filterNFTs();
+
             if (stakedNFTsContainer.children.length === 0) {
                 stakedNFTsContainer.innerHTML = '<div class="no-nfts">You don\'t have any staked NFTs.</div>';
             }
