@@ -18,9 +18,9 @@ async function main() {
     console.log(`Using owner address: ${owner.address}`);
 
     const address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-    const amount = ethers.parseEther("1000"); // 1000 gold
+    const amount = 1000; // 1000 gold
 
-    console.log(`Adding ${ethers.formatEther(amount)} gold to address ${address}...`);
+    console.log(`Adding ${amount} gold to address ${address}...`);
     
     // Connect gameState with owner's signer
     const gameStateWithOwner = gameState.connect(owner);
@@ -31,7 +31,7 @@ async function main() {
     
     // Verify the new balance
     const newBalance = await gameState.getPlayerGold(address);
-    console.log(`New gold balance: ${ethers.formatEther(newBalance)}`);
+    console.log(`New gold balance: ${newBalance}`);
 }
 
 main()
