@@ -16,7 +16,9 @@ export const CONTRACT_CONFIG = {
     MAX_SUPPLY: 10000,
     MIN_STAKING_DURATION: 7 * 24 * 60 * 60, // 7 days in seconds
     BUILDING_SLOTS_PER_SIZE: 5, // Static size for testing
-    DEFAULT_CITY_ID: 1 // Default city ID for testing
+    DEFAULT_CITY_ID: 1, // Default city ID for testing
+    FARM_MAX_SUPPLY: 5000,
+    FARM_MINT_PRICE: "0.015"
 };
 
 // Performance monitoring
