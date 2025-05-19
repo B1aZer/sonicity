@@ -288,32 +288,35 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
 
     /**
      * @dev Earn gold (can only be called by GridBuildings)
+     * @param player The address of the player
      * @param amount The amount of gold to earn
      */
-    function earnGold(uint256 amount) external {
+    function earnGold(address player, uint256 amount) external {
         require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
-        playerState[msg.sender].gold += amount;
-        emit GoldEarned(msg.sender, amount);
+        playerState[player].gold += amount;
+        emit GoldEarned(player, amount);
     }
 
     /**
      * @dev Earn food (can only be called by GridBuildings)
+     * @param player The address of the player
      * @param amount The amount of food to earn
      */
-    function earnFood(uint256 amount) external {
+    function earnFood(address player, uint256 amount) external {
         require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
-        playerState[msg.sender].food += amount;
-        emit FoodEarned(msg.sender, amount);
+        playerState[player].food += amount;
+        emit FoodEarned(player, amount);
     }
 
     /**
      * @dev Earn reputation (can only be called by GridBuildings)
+     * @param player The address of the player
      * @param amount The amount of reputation to earn
      */
-    function earnRep(uint256 amount) external {
+    function earnRep(address player, uint256 amount) external {
         require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
-        playerState[msg.sender].rep += amount;
-        emit RepEarned(msg.sender, amount);
+        playerState[player].rep += amount;
+        emit RepEarned(player, amount);
     }
 
     /**
