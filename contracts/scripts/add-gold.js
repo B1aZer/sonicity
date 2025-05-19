@@ -14,7 +14,7 @@ async function main() {
     const gameState = GameState.attach(gameStateAddress);
 
     const address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-    const amount = 100;
+    const amount = 1000;
 
     console.log(`Adding ${amount} gold to address ${address}...`);
     
