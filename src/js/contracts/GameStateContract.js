@@ -143,15 +143,4 @@ export class GameStateContract extends BaseContract {
         return await this.call('getPlayerBuildingSlots', address);
     }
 
-    async testEarnGold(address, amount) {
-        return await this.transact('testEarnGold', address, amount);
-    }
-
-    async testEarnRep(address, amount) {
-        return await this.transact('testEarnRep', address, amount);
-    }
-
-    async testEarnFood(address, amount) {
-        return await this.transact('testEarnFood', address, amount);
-    }
 } 
