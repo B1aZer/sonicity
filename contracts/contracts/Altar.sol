@@ -15,14 +15,14 @@ import "./GridBuildings.sol";
  * Uses UUPS upgradeable pattern for future upgrades
  */
 contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    // Reference to the Sonicity NFT contract
-    IERC721 public sonicityNFT;
-    
     // Reference to the GameState contract
     GameState public gameState;
 
     // Reference to the GridBuildings contract
     GridBuildings public gridBuildings;
+
+    // Mapping of approved NFT collections
+    mapping(address => bool) public approvedCollections;
 
     // Staking data structures
     struct Stake {
@@ -30,10 +30,11 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         uint256 stakedAt;
         address owner;
         bool isActive;
+        address collection; // Add collection address to track which NFT contract
     }
 
     // Mapping from token ID to stake data
-    mapping(uint256 => Stake) public stakes;
+    mapping(address => mapping(uint256 => Stake)) public stakes;
     
     // Mapping from user address to their staked token IDs
     mapping(address => uint256[]) public userStakes;
@@ -45,20 +46,21 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     mapping(address => mapping(uint256 => uint256)) public stakedBuilding;
 
     // Events
-    event NFTStaked(address indexed user, uint256 indexed tokenId, uint256 buildingId);
-    event NFTUnstaked(address indexed user, uint256 indexed tokenId, uint256 timestamp);
+    event NFTStaked(address indexed user, uint256 indexed tokenId, uint256 buildingId, address indexed collection);
+    event NFTUnstaked(address indexed user, uint256 indexed tokenId, uint256 timestamp, address indexed collection);
+    event CollectionApproved(address indexed collection);
+    event CollectionRemoved(address indexed collection);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
     }
 
-    function initialize(address _sonicityNFTAddress, address _gameStateAddress, address _gridBuildingsAddress) public initializer {
+    function initialize(address _gameStateAddress, address _gridBuildingsAddress) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         
-        sonicityNFT = IERC721(_sonicityNFTAddress);
         gameState = GameState(_gameStateAddress);
         gridBuildings = GridBuildings(_gridBuildingsAddress);
         minStakingDuration = 7 days;
@@ -68,49 +70,73 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /**
+     * @dev Approve a new NFT collection for staking
+     * @param collection The address of the NFT collection to approve
+     */
+    function approveCollection(address collection) external onlyOwner {
+        require(collection != address(0), "Invalid collection address");
+        approvedCollections[collection] = true;
+        emit CollectionApproved(collection);
+    }
+
+    /**
+     * @dev Remove an NFT collection from approved collections
+     * @param collection The address of the NFT collection to remove
+     */
+    function removeCollection(address collection) external onlyOwner {
+        require(approvedCollections[collection], "Collection not approved");
+        approvedCollections[collection] = false;
+        emit CollectionRemoved(collection);
+    }
+
+    /**
      * @dev Stake an NFT
      * @param tokenId The ID of the NFT to stake
      * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: REP_STATION)
+     * @param collection The address of the NFT collection
      */
-    function stake(uint256 tokenId, GridBuildings.GridBuildingType buildingType) external nonReentrant {
-        require(sonicityNFT.ownerOf(tokenId) == msg.sender, "Not the NFT owner");
-        require(!stakes[tokenId].isActive, "NFT already staked");
+    function stake(uint256 tokenId, GridBuildings.GridBuildingType buildingType, address collection) external nonReentrant {
+        require(approvedCollections[collection], "Collection not approved");
+        require(IERC721(collection).ownerOf(tokenId) == msg.sender, "Not the NFT owner");
+        require(!stakes[collection][tokenId].isActive, "NFT already staked");
         
         // Get NFT metadata from GameState
-        GameState.NFTMetadata memory metadata = gameState.getNFTMetadata(address(sonicityNFT), tokenId);
+        GameState.NFTMetadata memory metadata = gameState.getNFTMetadata(collection, tokenId);
         
         // Check building slots
         require(metadata.buildingSlots > 0, "NFT must have at least 1 building slot");
         
         // Transfer NFT to this contract
-        sonicityNFT.transferFrom(msg.sender, address(this), tokenId);
+        IERC721(collection).transferFrom(msg.sender, address(this), tokenId);
         
         // Update stake data
-        stakes[tokenId] = Stake({
+        stakes[collection][tokenId] = Stake({
             tokenId: tokenId,
             stakedAt: block.timestamp,
             owner: msg.sender,
-            isActive: true
+            isActive: true,
+            collection: collection
         });
         
         // Create building through GridBuildings contract
         uint256 buildingId = gridBuildings.createBuilding(msg.sender, buildingType);
         
         // Update staked building mapping
-        stakedBuilding[address(sonicityNFT)][tokenId] = buildingId;
+        stakedBuilding[collection][tokenId] = buildingId;
         
         // Add to user's staked tokens
         userStakes[msg.sender].push(tokenId);
         
-        emit NFTStaked(msg.sender, tokenId, buildingId);
+        emit NFTStaked(msg.sender, tokenId, buildingId, collection);
     }
 
     /**
      * @dev Unstake an NFT
+     * @param collection The address of the NFT collection
      * @param tokenId The ID of the NFT to unstake
      */
-    function unstake(uint256 tokenId) external nonReentrant {
-        Stake memory stakeData = stakes[tokenId];
+    function unstake(address collection, uint256 tokenId) external nonReentrant {
+        Stake memory stakeData = stakes[collection][tokenId];
         require(stakeData.isActive, "NFT not staked");
         require(stakeData.owner == msg.sender, "Not the staker");
         require(
@@ -119,7 +145,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         );
         
         // Update stake status
-        stakes[tokenId].isActive = false;
+        stakes[collection][tokenId].isActive = false;
         
         // Remove from user's staked tokens
         uint256[] storage userTokens = userStakes[msg.sender];
@@ -132,14 +158,14 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         }
         
         // Get building ID and remove building
-        uint256 buildingId = stakedBuilding[address(sonicityNFT)][tokenId];
+        uint256 buildingId = stakedBuilding[stakeData.collection][tokenId];
         gridBuildings.removeBuilding(msg.sender, buildingId);
-        delete stakedBuilding[address(sonicityNFT)][tokenId];
+        delete stakedBuilding[stakeData.collection][tokenId];
         
         // Transfer NFT back to owner
-        sonicityNFT.transferFrom(address(this), msg.sender, tokenId);
+        IERC721(stakeData.collection).transferFrom(address(this), msg.sender, tokenId);
         
-        emit NFTUnstaked(msg.sender, tokenId, block.timestamp);
+        emit NFTUnstaked(msg.sender, tokenId, block.timestamp, stakeData.collection);
     }
 
     /**
@@ -156,8 +182,8 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
      * @param tokenId The ID of the NFT
      * @return Stake data
      */
-    function getStakeData(uint256 tokenId) external view returns (Stake memory) {
-        return stakes[tokenId];
+    function getStakeDataWithCollection(address collection, uint256 tokenId) external view returns (Stake memory) {
+        return stakes[collection][tokenId];
     }
 
     /**
