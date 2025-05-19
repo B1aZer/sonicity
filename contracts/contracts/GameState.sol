@@ -17,6 +17,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     address public altarAddress;
     // Reference to the DistrictBuildings contract
     address public districtBuildingsAddress;
+    // Reference to the GridBuildings contract
+    address public gridBuildingsAddress;
 
     // Structure to store NFT metadata
     struct NFTMetadata {
@@ -28,6 +30,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     struct PlayerState {
         uint256 gold;
         uint256 rep;
+        uint256 food;
         uint256 buildingSlots;
         uint8 tier;
         uint256 treasury;
@@ -55,30 +58,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // City tier requirements
     mapping(uint8 => uint256) public tierRequirements;
     
-
-    // Building state
-    struct Building {
-        string buildingType;
-        uint256 level;
-        uint256 lastUpgradeTime;
-        uint256 lastCollectionTime;  // New field to track last gold collection
-        bool active;
-    }
-
-    // Mapping from player => buildingId => Building
-    mapping(address => mapping(uint256 => Building)) public buildings;
-    // Mapping from player => next available buildingId
-    mapping(address => uint256) public nextBuildingId;
-    // Building count tracking
-    struct BuildingCount {
-        uint256 total;
-        mapping(string => uint256) byType;
-    }
-    mapping(address => BuildingCount) public playerBuildingCounts;
-
-    // Building production rates (gold per hour)
-    mapping(string => uint256) public buildingProductionRates;
-
     // Maximum production time (24 hours in seconds)
     uint256 public constant MAX_PRODUCTION_TIME = 24 hours;
 
@@ -89,6 +68,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event GoldDonated(address indexed player, uint256 amount);
     event GoldEarned(address indexed player, uint256 amount);
     event RepEarned(address indexed player, uint256 amount);
+    event FoodEarned(address indexed player, uint256 amount);
     event CollectionApproved(address indexed collection);
     event CollectionRemoved(address indexed collection);
     event NFTMetadataUpdated(address indexed collection, uint256 indexed tokenId);
@@ -96,6 +76,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event BuildingRemoved(address indexed player, string buildingType, uint256 buildingId);
     event GoldCollected(address indexed player, uint256 buildingId, uint256 amount);
     event DistrictBuildingsAddressUpdated(address indexed newAddress);
+    event GridBuildingsAddressUpdated(address indexed newAddress);
     event DistrictBuildingDamaged(address indexed player, uint8 buildingType);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -130,6 +111,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         playerState[msg.sender] = PlayerState({
             gold: 0,
             rep: 0,
+            food: 0,
             buildingSlots: 9,
             tier: 0,
             treasury: 0
@@ -146,6 +128,15 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function setDistrictBuildingsAddress(address _districtBuildingsAddress) external onlyOwner {
         districtBuildingsAddress = _districtBuildingsAddress;
         emit DistrictBuildingsAddressUpdated(_districtBuildingsAddress);
+    }
+
+    /**
+     * @dev Set the GridBuildings contract address
+     * @param _gridBuildingsAddress The address of the GridBuildings contract
+     */
+    function setGridBuildingsAddress(address _gridBuildingsAddress) external onlyOwner {
+        gridBuildingsAddress = _gridBuildingsAddress;
+        emit GridBuildingsAddressUpdated(_gridBuildingsAddress);
     }
 
     /**
@@ -301,19 +292,31 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Earn Gold
-     * @param amount The amount of Gold to earn
+     * @dev Earn gold (can only be called by GridBuildings)
+     * @param amount The amount of gold to earn
      */
-    function earnGold(uint256 amount) external nonReentrant {
+    function earnGold(uint256 amount) external {
+        require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
         playerState[msg.sender].gold += amount;
         emit GoldEarned(msg.sender, amount);
     }
 
     /**
-     * @dev Earn Rep points
-     * @param amount The amount of Rep to earn
+     * @dev Earn food (can only be called by GridBuildings)
+     * @param amount The amount of food to earn
      */
-    function earnRep(uint256 amount) external nonReentrant {
+    function earnFood(uint256 amount) external {
+        require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
+        playerState[msg.sender].food += amount;
+        emit FoodEarned(msg.sender, amount);
+    }
+
+    /**
+     * @dev Earn reputation (can only be called by GridBuildings)
+     * @param amount The amount of reputation to earn
+     */
+    function earnRep(uint256 amount) external {
+        require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
         playerState[msg.sender].rep += amount;
         emit RepEarned(msg.sender, amount);
     }
@@ -384,187 +387,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Create a new building
-     * @param buildingType The type of building to create
-     * @return uint256 The ID of the created building
-     */
-    function createBuilding(string memory buildingType) external nonReentrant returns (uint256) {
-        PlayerState storage state = playerState[msg.sender];
-        
-        // Check if building type is valid
-        require(buildingProductionRates[buildingType] > 0, "Invalid building type");
-        
-        // For Tier 0, only allow houses and enforce 3x3 grid
-        if (state.tier == 0) {
-            require(keccak256(bytes(buildingType)) == keccak256(bytes("house")), "Only houses allowed in Tier 0");
-            require(playerBuildingCounts[msg.sender].total < 9, "Tier 0 grid is full (3x3)");
-        }
-        
-        // Check available slots
-        require(
-            playerBuildingCounts[msg.sender].total < state.buildingSlots,
-            "No building slots available"
-        );
-        
-        // Create building
-        uint256 buildingId = nextBuildingId[msg.sender]++;
-        buildings[msg.sender][buildingId] = Building({
-            buildingType: buildingType,
-            level: 1,
-            lastUpgradeTime: block.timestamp,
-            lastCollectionTime: block.timestamp,
-            active: true
-        });
-        
-        // Update counts
-        playerBuildingCounts[msg.sender].total++;
-        playerBuildingCounts[msg.sender].byType[buildingType]++;
-        
-        emit BuildingCreated(msg.sender, buildingType, buildingId);
-        
-        return buildingId;
-    }
-
-    /**
-     * @dev Get total buildings for a player
-     * @param player The address of the player
-     * @return uint256 Total number of buildings
-     */
-    function getTotalBuildings(address player) external view returns (uint256) {
-        return playerBuildingCounts[player].total;
-    }
-
-    /**
-     * @dev Get buildings of a specific type for a player
-     * @param player The address of the player
-     * @param buildingType The type of building
-     * @return uint256 Number of buildings of that type
-     */
-    function getBuildingsByType(address player, string memory buildingType) external view returns (uint256) {
-        return playerBuildingCounts[player].byType[buildingType];
-    }
-
-    /**
-     * @dev Remove a building
-     * @param buildingId The ID of the building to remove
-     */
-    function removeBuilding(uint256 buildingId) external nonReentrant {
-        require(buildings[msg.sender][buildingId].active, "Building already removed or doesn't exist");
-        
-        string memory buildingType = buildings[msg.sender][buildingId].buildingType;
-        
-        // Mark building as inactive
-        buildings[msg.sender][buildingId].active = false;
-        
-        // Update counts
-        playerBuildingCounts[msg.sender].total--;
-        playerBuildingCounts[msg.sender].byType[buildingType]--;
-        
-        emit BuildingRemoved(msg.sender, buildingType, buildingId);
-    }
-
-    /**
-     * @dev Get all building IDs for a player (internal)
-     * @param player The address of the player
-     * @return uint256[] Array of active building IDs
-     */
-    function getBuildingIds(address player) internal view returns (uint256[] memory) {
-        uint256 totalBuildings = playerBuildingCounts[player].total;
-        uint256[] memory result = new uint256[](totalBuildings);
-        uint256 resultIndex = 0;
-        
-        // Iterate through all possible building IDs
-        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            if (buildings[player][i].active) {
-                result[resultIndex] = i;
-                resultIndex++;
-            }
-        }
-        
-        return result;
-    }
-
-    /**
-     * @dev Get all building IDs for a player (external)
-     * @param player The address of the player
-     * @return uint256[] Array of active building IDs
-     */
-    function getPlayerBuildingIds(address player) external view returns (uint256[] memory) {
-        return getBuildingIds(player);
-    }
-
-    /**
-     * @dev Get building IDs of a specific type for a player
-     * @param player The address of the player
-     * @param buildingType The type of building
-     * @return uint256[] Array of building IDs of the specified type
-     */
-    function getBuildingIdsOfType(address player, string memory buildingType) public view returns (uint256[] memory) {
-        uint256 count = playerBuildingCounts[player].byType[buildingType];
-        uint256[] memory result = new uint256[](count);
-        uint256 resultIndex = 0;
-        
-        // Iterate through all possible building IDs
-        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            if (buildings[player][i].active && 
-                keccak256(bytes(buildings[player][i].buildingType)) == keccak256(bytes(buildingType))) {
-                result[resultIndex] = i;
-                resultIndex++;
-            }
-        }
-        
-        return result;
-    }
-
-    /**
-     * @dev Get building details by ID
-     * @param player The address of the player
-     * @param buildingId The ID of the building
-     * @return Building The building details
-     */
-    function getBuilding(address player, uint256 buildingId) external view returns (Building memory) {
-        require(buildings[player][buildingId].active, "Building doesn't exist or is inactive");
-        return buildings[player][buildingId];
-    }
-
-    /**
-     * @dev Calculate total claimable gold for a player without collecting it
-     * @param player The address of the player
-     * @return uint256 Total claimable gold
-     */
-    function calculateTotalClaimableGold(address player) public view returns (uint256) {
-        uint256 totalGold = 0;
-        uint256 currentTime = block.timestamp;
-        
-        // Get all building IDs
-        uint256[] memory buildingIds = getBuildingIds(player);
-        
-        for (uint256 i = 0; i < buildingIds.length; i++) {
-            uint256 buildingId = buildingIds[i];
-            Building storage building = buildings[player][buildingId];
-            
-            if (building.active) {
-                // Calculate time passed since last collection
-                uint256 timePassed = currentTime - building.lastCollectionTime;
-                
-                // Cap the time passed at 24 hours
-                if (timePassed > MAX_PRODUCTION_TIME) {
-                    timePassed = MAX_PRODUCTION_TIME;
-                }
-                
-                // Calculate gold to collect based on production rate and time passed
-                uint256 productionRate = buildingProductionRates[building.buildingType];
-                uint256 goldToCollect = (productionRate * timePassed * building.level) / 1 hours; // Use same time unit as collectAllGoldByType
-                
-                // Add to total gold
-                totalGold += goldToCollect;
-            }
-        }
-        
-        return totalGold;
-    }
-
-    /**
      * @dev Get building production rate
      * @param buildingType The type of building
      * @return uint256 The production rate in gold per hour
@@ -574,126 +396,12 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Set building production rate (only owner)
-     * @param buildingType The type of building
-     * @param rate The new production rate (gold per hour)
-     */
-    function setBuildingProductionRate(string memory buildingType, uint256 rate) external onlyOwner {
-        buildingProductionRates[buildingType] = rate;
-    }
-
-    /**
-     * @dev Collect gold from all buildings of a specific type
-     * @param buildingType The type of building to collect from
-     * @return totalCollected The total amount of gold collected
-     */
-    function collectAllGoldByType(string memory buildingType) external nonReentrant returns (uint256 totalCollected) {
-        // Get all building IDs of the specified type
-        uint256[] memory buildingIds = getBuildingIdsOfType(msg.sender, buildingType);
-        
-        // Collect gold from each building
-        for (uint256 i = 0; i < buildingIds.length; i++) {
-            uint256 buildingId = buildingIds[i];
-            Building storage building = buildings[msg.sender][buildingId];
-            
-            // Skip if building is not active or not of the specified type
-            if (!building.active || keccak256(bytes(building.buildingType)) != keccak256(bytes(buildingType))) {
-                continue;
-            }
-            
-            // Calculate time since last collection
-            uint256 timeSinceLastCollection = block.timestamp - building.lastCollectionTime;
-            if (timeSinceLastCollection > MAX_PRODUCTION_TIME) {
-                timeSinceLastCollection = MAX_PRODUCTION_TIME;
-            }
-            
-            // Calculate gold to collect
-            uint256 goldToCollect = (buildingProductionRates[buildingType] * timeSinceLastCollection * building.level) / 1 hours;
-            if (goldToCollect > 0) {
-                // Update building state
-                building.lastCollectionTime = block.timestamp;
-                
-                // Add gold to player's balance
-                playerState[msg.sender].gold += goldToCollect;
-                totalCollected += goldToCollect;
-                
-                emit GoldCollected(msg.sender, buildingId, goldToCollect);
-            }
-        }
-        
-        return totalCollected;
-    }
-
-    /**
      * @dev Get player's treasury
      * @param player The address of the player
      * @return uint256 Player's treasury balance
      */
     function getPlayerTreasury(address player) external view returns (uint256) {
         return playerState[player].treasury;
-    }
-
-    /**
-     * @dev Create a new building on behalf of a player (only callable by Altar)
-     * @param player The address of the player
-     * @param buildingType The type of building to create
-     * @return uint256 The ID of the created building
-     */
-    function createBuildingForPlayer(address player, string memory buildingType) external nonReentrant returns (uint256) {
-        require(msg.sender == altarAddress, "Only Altar can create buildings for players");
-        
-        PlayerState storage state = playerState[player];
-        
-        // Check if building type is valid
-        require(buildingProductionRates[buildingType] > 0, "Invalid building type");
-        
-        // For Tier 0, only allow houses and enforce 3x3 grid
-        if (state.tier == 0) {
-            require(keccak256(bytes(buildingType)) == keccak256(bytes("house")), "Only houses allowed in Tier 0");
-            require(playerBuildingCounts[player].total < 9, "Tier 0 grid is full (3x3)");
-        }
-        
-        // Check available slots
-        require(
-            playerBuildingCounts[player].total < state.buildingSlots,
-            "No building slots available"
-        );
-        
-        // Create building
-        uint256 buildingId = nextBuildingId[player]++;
-        buildings[player][buildingId] = Building({
-            buildingType: buildingType,
-            level: 1,
-            lastUpgradeTime: block.timestamp,
-            lastCollectionTime: block.timestamp,
-            active: true
-        });
-        
-        // Update counts
-        playerBuildingCounts[player].total++;
-        playerBuildingCounts[player].byType[buildingType]++;
-        
-        emit BuildingCreated(player, buildingType, buildingId);
-        
-        return buildingId;
-    }
-
-    /**
-     * @dev Remove a building on behalf of a player (only callable by Altar)
-     * @param player The address of the player
-     * @param buildingId The ID of the building to remove
-     */
-    function removeBuildingForPlayer(address player, uint256 buildingId) external nonReentrant {
-        require(msg.sender == altarAddress, "Only Altar can remove buildings for players");
-        require(buildings[player][buildingId].active, "Building already removed or doesn't exist");
-
-        string memory buildingType = buildings[player][buildingId].buildingType;
-
-        buildings[player][buildingId].active = false;
-        playerBuildingCounts[player].total--;
-        playerBuildingCounts[player].byType[buildingType]--;
-
-        emit BuildingRemoved(player, buildingType, buildingId);
     }
 
     /**
@@ -711,5 +419,14 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         require(success, "Failed to damage building");
         
         emit DistrictBuildingDamaged(player, buildingType);
+    }
+
+    /**
+     * @dev Get player's tier
+     * @param player The address of the player
+     * @return uint8 The player's tier
+     */
+    function getPlayerTier(address player) external view returns (uint8) {
+        return playerState[player].tier;
     }
 }
