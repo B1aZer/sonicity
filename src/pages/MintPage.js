@@ -21,12 +21,15 @@ export class MintPage extends BasePage {
         this.tokensMinted = 0;
         this.maxSupply = CONTRACT_CONFIG.MAX_SUPPLY;
         this.mintPrice = CONTRACT_CONFIG.MINT_PRICE;
+        this.farmMaxSupply = CONTRACT_CONFIG.FARM_MAX_SUPPLY;
+        this.farmMintPrice = CONTRACT_CONFIG.FARM_MINT_PRICE;
         this.nftCollection = new NFTCollection();
         this.lastMintedTokenId = null;
         this.modal = new Modal();
         this.userNFTs = [];
         this.nftCard = new NFTCard();
         this.statusComponent = new StatusComponent();
+        this.selectedType = 'house'; // Default to house
         this.render();
         this.setupEventListeners();
         this.initialize();
@@ -35,6 +38,13 @@ export class MintPage extends BasePage {
     setupEventListeners() {
         const mintButton = this.element.querySelector('#mint-button');
         mintButton.addEventListener('click', () => this.handleMint());
+
+        // NFT type selector
+        const typeSelector = this.element.querySelector('#nft-type-selector');
+        typeSelector.addEventListener('change', (e) => {
+            this.selectedType = e.target.value;
+            this.updateMintInfo();
+        });
 
         // Mint amount controls
         const decreaseBtn = this.element.querySelector('#decrease-amount');
@@ -51,7 +61,8 @@ export class MintPage extends BasePage {
 
         increaseBtn.addEventListener('click', () => {
             let currentAmount = parseInt(amountInput.value);
-            if (currentAmount < 10) {
+            const maxAmount = this.selectedType === 'house' ? 10 : 5;
+            if (currentAmount < maxAmount) {
                 amountInput.value = currentAmount + 1;
                 this.updateTotalPrice();
             }
@@ -59,13 +70,43 @@ export class MintPage extends BasePage {
 
         amountInput.addEventListener('change', () => {
             let currentAmount = parseInt(amountInput.value);
+            const maxAmount = this.selectedType === 'house' ? 10 : 5;
             if (currentAmount < 1) amountInput.value = 1;
-            if (currentAmount > 10) amountInput.value = 10;
+            if (currentAmount > maxAmount) amountInput.value = maxAmount;
             this.updateTotalPrice();
         });
 
         // Update price initially
         this.updateTotalPrice();
+    }
+
+    updateMintInfo() {
+        const maxSupply = this.selectedType === 'house' ? this.maxSupply : this.farmMaxSupply;
+        const mintPrice = this.selectedType === 'house' ? this.mintPrice : this.farmMintPrice;
+        const maxMintPerTx = this.selectedType === 'house' ? 10 : 5;
+
+        // Update max supply display
+        const maxSupplyElement = this.element.querySelector('#max-supply');
+        if (maxSupplyElement) {
+            maxSupplyElement.textContent = maxSupply;
+        }
+
+        // Update mint price
+        this.mintPrice = mintPrice;
+        this.updateTotalPrice();
+
+        // Update mint amount input max value
+        const amountInput = this.element.querySelector('#mint-amount');
+        if (amountInput) {
+            amountInput.max = maxMintPerTx;
+            if (parseInt(amountInput.value) > maxMintPerTx) {
+                amountInput.value = maxMintPerTx;
+                this.updateTotalPrice();
+            }
+        }
+
+        // Update progress bar
+        this.getMintCount();
     }
 
     async onInitialized(walletResult) {
@@ -118,11 +159,15 @@ export class MintPage extends BasePage {
             <div class="page-container">
                 <h1>Mint Your Sonicity NFT</h1>
                 
-                <!-- Preview Section -->
-                <div class="page-section preview-section">
-                    <h2>NFT Preview</h2>
-                    <div class="nft-preview">
-                        ${this.getPlaceholderHTML()}
+                <!-- NFT Type Selector -->
+                <div class="page-section type-selector-section">
+                    <h2>Select NFT Type</h2>
+                    <div class="type-selector">
+                        <select id="nft-type-selector" class="type-select">
+                            <option value="house">House (Tier 0)</option>
+                            <option value="farm">Farm (Tier 1)</option>
+                            <option value="rep">Rep Station (Tier 2)</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -137,7 +182,7 @@ export class MintPage extends BasePage {
                                     <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
                                 </div>
                                 <div class="progress-text">
-                                    <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span> minted
+                                    <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span>
                                 </div>
                             </div>
                         </div>
@@ -169,12 +214,20 @@ export class MintPage extends BasePage {
                     </div>
                     <div id="mint-status" class="mint-status"></div>
                 </div>
-            </div>
 
-            <!-- Owned NFTs Section -->
-            <div class="page-container owned-nfts-container">
-                <h2>Your NFTs</h2>
-                <div id="owned-nfts" class="owned-nfts"></div>
+                <!-- Preview Section -->
+                <div class="page-section preview-section">
+                    <h2>NFT Preview</h2>
+                    <div class="nft-preview">
+                        ${this.getPlaceholderHTML()}
+                    </div>
+                </div>
+
+                <!-- Your NFTs Section -->
+                <div class="page-section owned-nfts-section">
+                    <h2>Your NFTs</h2>
+                    <div id="owned-nfts" class="owned-nfts"></div>
+                </div>
             </div>
         `;
     }
@@ -309,17 +362,24 @@ export class MintPage extends BasePage {
         
         try {
             const amount = parseInt(amountInput.value);
-            if (amount < 1 || amount > 10) {
+            const maxAmount = this.selectedType === 'house' ? 10 : 5;
+            if (amount < 1 || amount > maxAmount) {
                 throw new Error("Invalid mint amount");
             }
             
+            // Get the appropriate contract based on selected type
+            const contract = this.selectedType === 'house' ? this.contracts.nft : this.contracts.farmNft;
+            const maxSupply = this.selectedType === 'house' ? this.maxSupply : this.farmMaxSupply;
+            const mintPrice = this.selectedType === 'house' ? this.mintPrice : this.farmMintPrice;
+            
             // Check if we have enough supply
-            if (this.tokensMinted + amount > this.maxSupply) {
+            const totalSupply = await contract.totalSupply();
+            if (Number(totalSupply) + amount > maxSupply) {
                 throw new Error("Not enough NFTs left to mint");
             }
             
             // Calculate total price
-            const totalPrice = ethers.parseEther((parseFloat(this.mintPrice) * amount).toString());
+            const totalPrice = ethers.parseEther((parseFloat(mintPrice) * amount).toString());
             
             // Disable mint button and show status
             mintButton.disabled = true;
@@ -330,8 +390,8 @@ export class MintPage extends BasePage {
                 </div>
             `, 'loading');
             
-            // Mint NFT - transact method already waits for confirmation
-            const receipt = await this.contracts.nft.mint(amount, { value: totalPrice });
+            // Mint NFT
+            const receipt = await contract.mint(amount, { value: totalPrice });
             
             // Get the minted token IDs
             const events = receipt.logs.filter(log => 
@@ -354,8 +414,6 @@ export class MintPage extends BasePage {
                 
                 // Update mint count and user's NFTs
                 await this.getMintCount();
-                
-                // Make sure to update the preview with the new NFT
                 await this.loadUserNFTs(true);
                 
                 // Scroll to the NFT preview section
