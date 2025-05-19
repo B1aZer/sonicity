@@ -2,21 +2,18 @@ import '../styles/game-page.css';
 import * as THREE from 'three';
 import { Game } from '../js/core/game.js';
 import { LoadingScreen } from '../js/utils/loadingScreen.js';
-import { GameStateContract } from '../js/contracts/GameStateContract.js';
-import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { AccessControl } from '../js/utils/accessControl.js';
 import { BasePage } from './BasePage.js';
 import { BUILDINGS } from '../js/utils/constants.js';
+import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 
 export class GamePage extends BasePage {
     constructor() {
         super();
         this.element = document.createElement('div');
         this.element.className = 'game-page';
-        this.gameStateContract = new GameStateContract();
-        this.gridBuildingsContract = new GridBuildingsContract();
         this.modal = new Modal();
         this.render();
         this.setupGame();
@@ -24,8 +21,8 @@ export class GamePage extends BasePage {
 
     async onInitialized(walletResult) {
         try {
-            // Initialize GridBuildings contract
-            await this.gridBuildingsContract.initialize();
+            // All contracts are already initialized by BasePage.initializeContracts()
+            // Just update the resource display
             await this.updateResourceDisplay();
         } catch (error) {
             Logger.error('Error initializing game page:', error);
@@ -35,11 +32,12 @@ export class GamePage extends BasePage {
 
     async updateResourceDisplay() {
         try {
+            const playerAddress = await this.contracts.gameState.getAddress();
             const [gold, activeBuildings, buildingSlots, repPoints] = await Promise.all([
-                this.contracts.gameState.getPlayerGold(),
-                this.contracts.gridBuildings.getActiveBuildings(),
-                this.contracts.gameState.getBuildingSlots(),
-                this.contracts.gameState.getPlayerRep()
+                this.contracts.gameState.getPlayerGold(playerAddress),
+                this.contracts.gridBuildings.getActiveBuildings(playerAddress),
+                this.contracts.gameState.getBuildingSlots(playerAddress),
+                this.contracts.gameState.getPlayerRep(playerAddress)
             ]);
             
             Logger.info('Resource values:', {
@@ -167,7 +165,8 @@ export class GamePage extends BasePage {
             }
 
             // Get all house building IDs from contract
-            const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings();
+            const playerAddress = await this.contracts.gameState.getAddress();
+            const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings(playerAddress);
             Logger.info('Retrieved active buildings:', activeBuildings);
 
             // Place houses on the grid
@@ -201,17 +200,14 @@ export class GamePage extends BasePage {
                                 break;
                             }
                         }
-
                         if (foundPosition) break;
                     }
                     if (foundPosition) break;
                 }
 
                 if (foundPosition) {
-                    // Place the house at the found position
                     const position = this.game.gridManager.gridToWorldPosition(gridX, gridZ);
                     const house = this.game.buildingManager.placeBuilding('HOUSE', position);
-                    
                     if (house) {
                         this.game.gridManager.setCellOccupied(gridX, gridZ, true);
                         Logger.info(`Successfully placed house at grid position (${gridX}, ${gridZ})`);
@@ -219,7 +215,7 @@ export class GamePage extends BasePage {
                         Logger.error(`Failed to place house at grid position (${gridX}, ${gridZ})`);
                     }
                 } else {
-                    Logger.error('No available grid positions found for house placement');
+                    Logger.error('No available grid position found for house');
                 }
             }
 
@@ -235,9 +231,8 @@ export class GamePage extends BasePage {
             
             Logger.info('Game setup complete');
         } catch (error) {
-            Logger.error('Error in game setup:', error);
-            LoadingScreen.hide(this.element.querySelector('#renderDiv'));
-            this.modal.error('Failed to initialize game. Please try refreshing the page.');
+            Logger.error('Error in setupGame:', error);
+            this.modal.error('Failed to setup game. Please try refreshing the page.');
         }
     }
 
