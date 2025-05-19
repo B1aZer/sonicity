@@ -19,26 +19,40 @@ export class ShopPage extends BasePage {
         this.element.innerHTML = `
             <div class="page-container shop-container">
                 <h1 class="page-title">Shop</h1>
-                <div class="buildings-grid">
-                    ${SHOP_ITEMS.map(item => `
-                        <div class="building-card shop-item-card">
-                            <div class="shop-item-image">
-                                <img src="${item.image.replace('emergency_help', 'help').replace('production_boost', 'boost').replace('cosmetic_item', 'cosmetic')}" alt="${item.name}" />
-                            </div>
-                            <div class="shop-item-info">
-                                <div class="shop-item-title-row">
-                                    <h3>${item.name}</h3>
-                                    <span class="shop-item-stock">${item.count > 0 ? `In stock: ${item.count}` : 'Out of stock'}</span>
+                <div class="page-section status-section">
+                    <h2>Status</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Gold:</span>
+                            <span id="gold-amount" class="status-value">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="page-section shop-items-section">
+                    <h2>Available Items</h2>
+                    <div class="buildings-grid">
+                        ${SHOP_ITEMS.map(item => `
+                            <div class="building-card shop-item-card">
+                                <div class="shop-item-image">
+                                    <img src="${item.image.replace('emergency_help', 'help').replace('production_boost', 'boost').replace('cosmetic_item', 'cosmetic')}" alt="${item.name}" />
                                 </div>
-                                <div class="shop-item-desc">${item.description}</div>
-                            </div>
-                            <div class="shop-item-action-row">
-                                <button class="btn btn-primary shop-buy-btn" data-item-id="${item.id}" ${item.count === 0 ? 'disabled' : ''}>
-                                    ${item.count === 0 ? 'Out of Stock' : (item.cost > 0 ? `Buy for ${item.cost} ${item.currency}` : 'Get for FREE')}
+                                <div class="shop-item-info">
+                                    <div class="shop-item-title-row">
+                                        <h3>${item.name}</h3>
+                                        <span class="shop-item-stock">${item.count > 0 ? `In stock: ${item.count}` : 'Out of stock'}</span>
+                                    </div>
+                                    <div class="shop-item-desc">${item.description}</div>
+                                    <div class="shop-item-cost">
+                                        <span class="cost-icon">💰</span>
+                                        <span class="cost-value">${item.cost}</span>
+                                    </div>
+                                </div>
+                                <button class="buy-btn" data-item-id="${item.id}" ${item.count > 0 ? '' : 'disabled'}>
+                                    Buy
                                 </button>
                             </div>
-                        </div>
-                    `).join('')}
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         `;
@@ -46,7 +60,7 @@ export class ShopPage extends BasePage {
     }
 
     setupBuyHandlers() {
-        const buyButtons = this.element.querySelectorAll('.shop-buy-btn');
+        const buyButtons = this.element.querySelectorAll('.buy-btn');
         buyButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const itemId = btn.getAttribute('data-item-id');

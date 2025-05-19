@@ -1,7 +1,3 @@
-.shop-container {
-  background: var(--bg-dark-secondary) !important;
-}
-
 .shop-page .page-title, .base-page .page-title {
   color: var(--text-primary, #fff);
   text-align: center;

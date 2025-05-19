@@ -1,16 +1,9 @@
-.barracks-page .page-title, .base-page .page-title {
-    color: var(--text-primary, #fff);
-    text-align: center;
-    margin-top: 0;
-    margin-bottom: 2rem;
-}
-
 .barracks-container .buildings-grid {
     display: flex;
     flex-direction: column;
     gap: 24px;
     padding: 0;
-  }
+}
 
 .troop-card {
     max-width: 540px;

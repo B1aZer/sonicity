@@ -56,6 +56,7 @@ export class BarracksPage extends BasePage {
                 <h1 class="page-title">Barracks</h1>
                 
                 <div class="page-section status-section">
+                    <h2>Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Gold:</span>
@@ -68,35 +69,38 @@ export class BarracksPage extends BasePage {
                     </div>
                 </div>
 
-                <div class="buildings-grid">
-                    ${Object.entries(TROOP_TYPES).map(([type, troop]) => `
-                        <div class="troop-card">
-                            <div class="troop-image">
-                                <img src="${troop.image}" alt="${troop.name}" />
-                            </div>
-                            <div class="troop-info">
-                                <div class="troop-title-row">
-                                    <h3>${troop.name}</h3>
+                <div class="page-section troops-section">
+                    <h2>Available Troops</h2>
+                    <div class="buildings-grid">
+                        ${Object.entries(TROOP_TYPES).map(([type, troop]) => `
+                            <div class="troop-card">
+                                <div class="troop-image">
+                                    <img src="${troop.image}" alt="${troop.name}" />
                                 </div>
-                                <div class="troop-desc">${troop.description}</div>
-                                <div class="troop-cost">
-                                    <div class="cost-item">
-                                        <span class="cost-icon">💰</span>
-                                        <span class="cost-value">${troop.cost.gold}</span>
+                                <div class="troop-info">
+                                    <div class="troop-title-row">
+                                        <h3>${troop.name}</h3>
                                     </div>
-                                    <div class="cost-item">
-                                        <span class="cost-icon">🌾</span>
-                                        <span class="cost-value">${troop.cost.food}</span>
+                                    <div class="troop-desc">${troop.description}</div>
+                                    <div class="troop-cost">
+                                        <div class="cost-item">
+                                            <span class="cost-icon">💰</span>
+                                            <span class="cost-value">${troop.cost.gold}</span>
+                                        </div>
+                                        <div class="cost-item">
+                                            <span class="cost-icon">🌾</span>
+                                            <span class="cost-value">${troop.cost.food}</span>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="troop-action-row">
+                                    <button class="train-btn" data-troop-type="${type}">
+                                        Train
+                                    </button>
+                                </div>
                             </div>
-                            <div class="troop-action-row">
-                                <button class="train-btn" data-troop-type="${type}">
-                                    Train
-                                </button>
-                            </div>
-                        </div>
-                    `).join('')}
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         `;
