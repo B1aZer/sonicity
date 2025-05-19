@@ -18,7 +18,7 @@ async function main() {
 
     console.log(`Adding ${amount} gold to address ${address}...`);
     
-    const tx = await gameState.earnGold(amount);
+    const tx = await gameState.earnGold(address, amount);
     await tx.wait();
 
     console.log("Gold added successfully!");
