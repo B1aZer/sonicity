@@ -7,6 +7,7 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./GameState.sol";
+import "./GridBuildings.sol";
 
 /**
  * @title Altar
@@ -19,6 +20,9 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     
     // Reference to the GameState contract
     GameState public gameState;
+
+    // Reference to the GridBuildings contract
+    GridBuildings public gridBuildings;
 
     // Staking data structures
     struct Stake {
@@ -41,7 +45,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     mapping(address => mapping(uint256 => uint256)) public stakedBuilding;
 
     // Events
-    event NFTStaked(address indexed user, uint256 indexed tokenId, uint256 timestamp);
+    event NFTStaked(address indexed user, uint256 indexed tokenId, uint256 buildingId);
     event NFTUnstaked(address indexed user, uint256 indexed tokenId, uint256 timestamp);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -49,13 +53,14 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         _disableInitializers();
     }
 
-    function initialize(address _sonicityNFT, address _gameState) public initializer {
+    function initialize(address _sonicityNFTAddress, address _gameStateAddress, address _gridBuildingsAddress) public initializer {
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         
-        sonicityNFT = IERC721(_sonicityNFT);
-        gameState = GameState(_gameState);
+        sonicityNFT = IERC721(_sonicityNFTAddress);
+        gameState = GameState(_gameStateAddress);
+        gridBuildings = GridBuildings(_gridBuildingsAddress);
         minStakingDuration = 7 days;
     }
 
@@ -75,11 +80,11 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         
         // Check building slots
         require(metadata.buildingSlots > 0, "NFT must have at least 1 building slot");
-             
+        
         // Transfer NFT to this contract
         sonicityNFT.transferFrom(msg.sender, address(this), tokenId);
         
-        // Create stake record
+        // Update stake data
         stakes[tokenId] = Stake({
             tokenId: tokenId,
             stakedAt: block.timestamp,
@@ -87,14 +92,16 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
             isActive: true
         });
         
+        // Create building through GridBuildings contract
+        uint256 buildingId = gridBuildings.createBuilding(GridBuildings.GridBuildingType.HOUSE);
+        
+        // Update staked building mapping
+        stakedBuilding[address(sonicityNFT)][tokenId] = buildingId;
+        
         // Add to user's staked tokens
         userStakes[msg.sender].push(tokenId);
         
-        // Create a house for the player
-        uint256 buildingId = gameState.createBuildingForPlayer(msg.sender, "house");
-        stakedBuilding[address(sonicityNFT)][tokenId] = buildingId;
-        
-        emit NFTStaked(msg.sender, tokenId, block.timestamp);
+        emit NFTStaked(msg.sender, tokenId, buildingId);
     }
 
     /**
@@ -123,13 +130,13 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
             }
         }
         
+        // Get building ID and remove building
+        uint256 buildingId = stakedBuilding[address(sonicityNFT)][tokenId];
+        gridBuildings.removeBuilding(buildingId);
+        delete stakedBuilding[address(sonicityNFT)][tokenId];
+        
         // Transfer NFT back to owner
         sonicityNFT.transferFrom(address(this), msg.sender, tokenId);
-        
-        // In the unstake function, after updating stake status, remove the building and delete the mapping entry
-        uint256 buildingId = stakedBuilding[address(sonicityNFT)][tokenId];
-        gameState.removeBuildingForPlayer(msg.sender, buildingId);
-        delete stakedBuilding[address(sonicityNFT)][tokenId];
         
         emit NFTUnstaked(msg.sender, tokenId, block.timestamp);
     }
