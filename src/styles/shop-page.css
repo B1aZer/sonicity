@@ -87,23 +87,11 @@
   font-family: var(--font-family, serif);
 }
 
-.shop-item-stock {
-  font-size: 0.95rem;
-  color: var(--text-secondary, #b0b0b0);
-  font-weight: bold;
-}
-
-.shop-item-desc {
-  color: var(--text-muted, #b0b0b0);
-  font-size: 1rem;
-  margin-bottom: 4px;
-}
-
 .shop-item-cost {
   display: flex;
-  gap: 1rem;
-  margin-top: 12px;
   align-items: center;
+  margin-top: 12px;
+  gap: 1rem;
 }
 
 .cost-item {
@@ -122,6 +110,39 @@
 .cost-value {
   font-weight: 500;
   color: var(--text-primary);
+}
+
+.shop-item-stock {
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.shop-item-stock.in-stock {
+  background: rgba(76, 175, 80, 0.15);
+  color: #4CAF50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.shop-item-stock.out-of-stock {
+  background: rgba(244, 67, 54, 0.15);
+  color: #F44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.shop-item-stock i {
+  font-size: 0.8rem;
+}
+
+.shop-item-desc {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-bottom: 4px;
 }
 
 .shop-item-action-row {
@@ -154,7 +175,5 @@
     height: 120px;
   }
   
-  .shop-item-cost {
-    justify-content: center;
-  }
+
 } 

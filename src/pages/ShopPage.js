@@ -39,7 +39,6 @@ export class ShopPage extends BasePage {
                                 <div class="shop-item-info">
                                     <div class="shop-item-title-row">
                                         <h3>${item.name}</h3>
-                                        <span class="shop-item-stock">${item.count > 0 ? `In stock: ${item.count}` : 'Out of stock'}</span>
                                     </div>
                                     <div class="shop-item-desc">${item.description}</div>
                                     <div class="shop-item-cost">
@@ -47,6 +46,10 @@ export class ShopPage extends BasePage {
                                             <i class="fas fa-coins cost-icon"></i>
                                             <span class="cost-value">${item.cost}</span>
                                         </div>
+                                        <span class="shop-item-stock ${item.count > 0 ? 'in-stock' : 'out-of-stock'}">
+                                            <i class="fas ${item.count > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                                            ${item.count > 0 ? `${item.count} in stock` : 'Out of stock'}
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="shop-item-action-row">
