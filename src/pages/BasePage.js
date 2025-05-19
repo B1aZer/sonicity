@@ -2,6 +2,7 @@ import { WalletManager } from '../js/utils/wallet.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { AltarContract } from '../js/contracts/AltarContract.js';
 import { NFTContract } from '../js/contracts/NFTContract.js';
+import { FarmNFTContract } from '../js/contracts/FarmNFTContract.js';
 import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { Modal } from '../js/utils/modal.js';
@@ -18,6 +19,7 @@ export class BasePage {
             gameState: new GameStateContract(),
             altar: new AltarContract(),
             nft: new NFTContract(),
+            farmNft: new FarmNFTContract(),
             districtBuildings: new DistrictBuildingsContract(),
             gridBuildings: new GridBuildingsContract()
         };
@@ -66,6 +68,10 @@ export class BasePage {
                 }),
                 this.contracts.nft.initialize().catch(e => {
                     Logger.warn('NFT contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.farmNft.initialize().catch(e => {
+                    Logger.warn('Farm NFT contract initialization failed:', e);
                     return null;
                 }),
                 this.contracts.districtBuildings.initialize().catch(e => {

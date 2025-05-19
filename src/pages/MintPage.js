@@ -80,7 +80,7 @@ export class MintPage extends BasePage {
         this.updateTotalPrice();
     }
 
-    updateMintInfo() {
+    async updateMintInfo() {
         const maxSupply = this.selectedType === 'house' ? this.maxSupply : this.farmMaxSupply;
         const mintPrice = this.selectedType === 'house' ? this.mintPrice : this.farmMintPrice;
         const maxMintPerTx = this.selectedType === 'house' ? 10 : 5;
@@ -105,8 +105,11 @@ export class MintPage extends BasePage {
             }
         }
 
-        // Update progress bar
-        this.getMintCount();
+        // Update progress bar with correct contract data
+        await this.getMintCount();
+        
+        // Update owned NFTs display
+        await this.loadUserNFTs();
     }
 
     async onInitialized(walletResult) {
@@ -240,13 +243,16 @@ export class MintPage extends BasePage {
             const grid = ownedNFTsContainer.querySelector('.nft-grid');
 
             const userAddress = await this.contracts.nft.getAddress();
-            const balance = await this.contracts.nft.balanceOf(userAddress);
+            
+            // Get NFTs from appropriate contract
+            const contract = this.selectedType === 'house' ? this.contracts.nft : this.contracts.farmNft;
+            const balance = await contract.balanceOf(userAddress);
             const nfts = [];
 
             for (let i = 0; i < balance; i++) {
-                const tokenId = await this.contracts.nft.tokenOfOwnerByIndex(userAddress, i);
-                const contractAddress = this.contracts.nft.getContractAddress();
-                const tokenURI = await this.contracts.nft.tokenURI(tokenId);
+                const tokenId = await contract.tokenOfOwnerByIndex(userAddress, i);
+                const contractAddress = contract.getContractAddress();
+                const tokenURI = await contract.tokenURI(tokenId);
                 
                 // Fetch and parse metadata JSON
                 const response = await fetch(tokenURI);
@@ -336,8 +342,9 @@ export class MintPage extends BasePage {
     async getMintCount() {
         try {
             Logger.info('Getting mint count');
-            // Get total supply from contract
-            const totalSupply = await this.contracts.nft.totalSupply();
+            // Get total supply from appropriate contract
+            const contract = this.selectedType === 'house' ? this.contracts.nft : this.contracts.farmNft;
+            const totalSupply = await contract.totalSupply();
             this.tokensMinted = Number(totalSupply);
             
             // Update UI
@@ -349,7 +356,8 @@ export class MintPage extends BasePage {
             // Update progress bar
             const progressFill = this.element.querySelector('.progress-fill');
             if (progressFill) {
-                progressFill.style.width = `${(this.tokensMinted / this.maxSupply) * 100}%`;
+                const maxSupply = this.selectedType === 'house' ? this.maxSupply : this.farmMaxSupply;
+                progressFill.style.width = `${(this.tokensMinted / maxSupply) * 100}%`;
             }
         } catch (error) {
             Logger.error("Error getting mint count:", error);
@@ -385,7 +393,7 @@ export class MintPage extends BasePage {
             mintButton.disabled = true;
             this.showStatus(`
                 <div class="loading">
-                    <div class="step">Minting NFT${amount > 1 ? 's' : ''}...</div>
+                    <div class="step">Minting ${this.selectedType} NFT${amount > 1 ? 's' : ''}...</div>
                     <div class="description">Please confirm the transaction in your wallet</div>
                 </div>
             `, 'loading');
@@ -403,12 +411,12 @@ export class MintPage extends BasePage {
                 // Use the last minted token for display
                 const lastEvent = events[events.length - 1];
                 this.lastMintedTokenId = lastEvent.args.tokenId;
-                Logger.info(`Successfully minted ${events.length} NFTs, last token ID: ${this.lastMintedTokenId}`);
+                Logger.info(`Successfully minted ${events.length} ${this.selectedType} NFTs, last token ID: ${this.lastMintedTokenId}`);
                 
                 this.showStatus(`
                     <div class="success">
                         <div class="title">Successfully Minted!</div>
-                        <div class="description">You've minted ${events.length} NFT${events.length > 1 ? 's' : ''}</div>
+                        <div class="description">You've minted ${events.length} ${this.selectedType} NFT${events.length > 1 ? 's' : ''}</div>
                     </div>
                 `, 'success');
                 
