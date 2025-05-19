@@ -54,7 +54,7 @@ describe("DistrictBuildings", function () {
   describe("Building Unlocking", function () {
     it("Should unlock buildings when tier requirement is met", async function () {
       // Give player1 enough gold and donate to reach tier 1
-      await gameState.connect(player1).earnGold(2000);
+      await gameState.connect(player1).earnGold(await player1.getAddress(), 2000);
       await gameState.connect(player1).donateGold(1000);
 
       // Check if defense tower is unlocked (first tier 1 building)
@@ -69,7 +69,7 @@ describe("DistrictBuildings", function () {
   describe("Building Construction", function () {
     beforeEach(async function () {
       // Give player1 enough gold and reach tier 1
-      await gameState.connect(player1).earnGold(2000);
+      await gameState.connect(player1).earnGold(await player1.getAddress(), 2000);
       await gameState.connect(player1).donateGold(1000);
     });
 
@@ -102,7 +102,7 @@ describe("DistrictBuildings", function () {
   describe("Building Damage and Repair", function () {
     beforeEach(async function () {
       // Give player1 enough gold and reach tier 1
-      await gameState.connect(player1).earnGold(2000);
+      await gameState.connect(player1).earnGold(await player1.getAddress(), 2000);
       await gameState.connect(player1).donateGold(1000);
       
       // Build the defense tower
@@ -145,7 +145,7 @@ describe("DistrictBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Give player1 enough gold for repair
-      await gameState.connect(player1).earnGold(1000);
+      await gameState.connect(player1).earnGold(await player1.getAddress(), 1000);
       
       // Damage the defense tower through GameState
       await gameState.damageDistrictBuilding(player1Address, 2);
