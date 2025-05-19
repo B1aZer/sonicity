@@ -7,8 +7,8 @@ export class AltarContract extends BaseContract {
         super(CONTRACT_ADDRESSES.ALTAR, AltarABI.abi);
     }
 
-    async stake(tokenId) {
-        return await this.transact('stake', tokenId);
+    async stake(tokenId, buildingType) {
+        return await this.transact('stake', tokenId, buildingType);
     }
 
     async unstake(tokenId) {

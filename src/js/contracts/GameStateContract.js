@@ -130,4 +130,28 @@ export class GameStateContract extends BaseContract {
     async verifyNFTOwnership(collectionAddress, tokenId, owner) {
         return await this.call('verifyNFTOwnership', collectionAddress, tokenId, owner);
     }
+
+    async getPlayerTier(address) {
+        return await this.call('getPlayerTier', address);
+    }
+
+    async getPlayerFood(address) {
+        return await this.call('getPlayerFood', address);
+    }
+
+    async getPlayerBuildingSlots(address) {
+        return await this.call('getPlayerBuildingSlots', address);
+    }
+
+    async testEarnGold(address, amount) {
+        return await this.transact('testEarnGold', address, amount);
+    }
+
+    async testEarnRep(address, amount) {
+        return await this.transact('testEarnRep', address, amount);
+    }
+
+    async testEarnFood(address, amount) {
+        return await this.transact('testEarnFood', address, amount);
+    }
 } 
