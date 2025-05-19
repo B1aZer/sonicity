@@ -70,8 +70,9 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     /**
      * @dev Stake an NFT
      * @param tokenId The ID of the NFT to stake
+     * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: REP_STATION)
      */
-    function stake(uint256 tokenId) external nonReentrant {
+    function stake(uint256 tokenId, GridBuildings.GridBuildingType buildingType) external nonReentrant {
         require(sonicityNFT.ownerOf(tokenId) == msg.sender, "Not the NFT owner");
         require(!stakes[tokenId].isActive, "NFT already staked");
         
@@ -93,7 +94,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         });
         
         // Create building through GridBuildings contract
-        uint256 buildingId = gridBuildings.createBuilding(msg.sender, GridBuildings.GridBuildingType.HOUSE);
+        uint256 buildingId = gridBuildings.createBuilding(msg.sender, buildingType);
         
         // Update staked building mapping
         stakedBuilding[address(sonicityNFT)][tokenId] = buildingId;
