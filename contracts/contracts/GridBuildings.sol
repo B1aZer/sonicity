@@ -230,17 +230,17 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Add resources to player based on building type
         if (building.buildingType == GridBuildingType.HOUSE) {
             (bool success, ) = gameStateAddress.call(
-                abi.encodeWithSignature("earnGold(uint256)", amount)
+                abi.encodeWithSignature("earnGold(address,uint256)", msg.sender, amount)
             );
             require(success, "Failed to add gold");
         } else if (building.buildingType == GridBuildingType.FARM) {
-            (bool success, ) = gameStateAddress.call(
-                abi.encodeWithSignature("earnFood(uint256)", amount)
+            (bool success2, ) = gameStateAddress.call(
+                abi.encodeWithSignature("earnFood(address,uint256)", msg.sender, amount)
             );
-            require(success, "Failed to add food");
+            require(success2, "Failed to add food");
         } else if (building.buildingType == GridBuildingType.REP_STATION) {
             (bool success, ) = gameStateAddress.call(
-                abi.encodeWithSignature("earnRep(uint256)", amount)
+                abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
             );
             require(success, "Failed to add rep");
         }
