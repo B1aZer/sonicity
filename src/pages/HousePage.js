@@ -1,6 +1,7 @@
 import '../styles/house-page.css';
 import { BasePage } from './BasePage.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
+import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 
@@ -44,26 +45,28 @@ export class HousePage extends BasePage {
         try {
             Logger.info('Starting to load house data...');
             
-            // Get all house building IDs
-            const houseIds = await this.contracts.gameState.getBuildingIdsOfType('house');
-            Logger.info('Retrieved house IDs:', houseIds);
+            // Get all active buildings
+            const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings();
+            Logger.info('Retrieved active buildings:', activeBuildings);
 
-            // Get total houses count
-            const address = await this.contracts.gameState.getAddress();
-            Logger.info('Player address:', address);
-            
-            const totalHouses = await this.contracts.gameState.getBuildingsByType(address, 'house');
-            Logger.info('Total houses from contract:', totalHouses);
+            // Filter for houses
+            const houses = activeBuildings.filter(building => 
+                building.buildingType === GridBuildingsContract.BuildingType.HOUSE && 
+                building.active
+            );
+            Logger.info('Filtered houses:', houses);
 
             // Get the current production rate from contract
-            const productionRate = await this.contracts.gameState.getBuildingProductionRate('house');
+            const productionRate = await this.contracts.gridBuildings.getBuildingProductionRate(
+                GridBuildingsContract.BuildingType.HOUSE
+            );
             Logger.info('Current house production rate:', productionRate.toString());
 
             // Update UI with house count
             const houseCountElement = this.element.querySelector('.house-count');
             if (houseCountElement) {
-                houseCountElement.textContent = totalHouses.toString();
-                Logger.info('Updated UI with house count:', totalHouses.toString());
+                houseCountElement.textContent = houses.length.toString();
+                Logger.info('Updated UI with house count:', houses.length.toString());
             } else {
                 Logger.warn('House count element not found in DOM');
             }
@@ -78,7 +81,9 @@ export class HousePage extends BasePage {
             }
 
             // Get total claimable gold directly from contract
-            const totalClaimableGold = await this.contracts.gameState.calculateTotalClaimableGold();
+            const totalClaimableGold = await this.contracts.gridBuildings.calculateTotalClaimableGold(
+                GridBuildingsContract.BuildingType.HOUSE
+            );
             Logger.info('Total claimable gold from contract:', totalClaimableGold.toString());
 
             // Update UI with claimable gold
@@ -113,7 +118,9 @@ export class HousePage extends BasePage {
             const loadingModal = this.modal.loading('Collecting gold...');
             
             // Collect gold from all houses in a single transaction
-            const tx = await this.contracts.gameState.collectAllGoldByType('house');
+            const tx = await this.contracts.gridBuildings.collectAllGoldByType(
+                GridBuildingsContract.BuildingType.HOUSE
+            );
             await tx;
             
             // Close loading modal
