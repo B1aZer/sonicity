@@ -4,6 +4,7 @@ const { ethers, upgrades } = require("hardhat");
 describe("Altar", function () {
   let sonicityNFT;
   let gameState;
+  let gridBuildings;
   let altar;
   let owner;
   let player1;
@@ -27,9 +28,21 @@ describe("Altar", function () {
     await gameState.waitForDeployment();
     const gameStateAddress = await gameState.getAddress();
 
+    // Deploy GridBuildings
+    const GridBuildings = await ethers.getContractFactory("GridBuildings");
+    gridBuildings = await upgrades.deployProxy(GridBuildings, [], {
+      kind: 'uups',
+      initializer: 'initialize',
+    });
+    await gridBuildings.waitForDeployment();
+    const gridBuildingsAddress = await gridBuildings.getAddress();
+
+    // Set GameState address in GridBuildings
+    await gridBuildings.connect(owner).setGameStateAddress(gameStateAddress);
+
     // Deploy Altar with the correct addresses
     const Altar = await ethers.getContractFactory("Altar");
-    altar = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateAddress], {
+    altar = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateAddress, gridBuildingsAddress], {
       kind: 'uups',
       initializer: 'initialize',
     });
@@ -42,7 +55,7 @@ describe("Altar", function () {
     // Approve the NFT collection in GameState
     await gameState.connect(owner).approveCollection(sonicityNFTAddress);
 
-    // Initialize players
+    // Initialize players (they start at tier 0 by default)
     await gameState.connect(player1).initializePlayer();
     await gameState.connect(player2).initializePlayer();
   });
@@ -61,7 +74,7 @@ describe("Altar", function () {
       await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
       // Get initial building count
-      const initialBuildingCount = await gameState.getTotalBuildings(await player1.getAddress());
+      const initialBuildingCount = await gridBuildings.buildingCounts(await player1.getAddress(), 0); // 0 is HOUSE type
 
       // Stake the NFT
       const altarAddress = await altar.getAddress();
@@ -75,14 +88,14 @@ describe("Altar", function () {
       expect(stake.tokenId).to.equal(tokenId);
 
       // Check that a building was created
-      const newBuildingCount = await gameState.getTotalBuildings(await player1.getAddress());
+      const newBuildingCount = await gridBuildings.buildingCounts(await player1.getAddress(), 0);
       expect(newBuildingCount).to.equal(initialBuildingCount + BigInt(1));
 
       // Check the building details
       const buildingId = await altar.stakedBuilding(await sonicityNFT.getAddress(), tokenId);
-      const building = await gameState.getBuilding(await player1.getAddress(), buildingId);
+      const building = await gridBuildings.buildings(await player1.getAddress(), buildingId);
       expect(building.active).to.be.true;
-      expect(building.buildingType).to.equal("house");
+      expect(building.buildingType).to.equal(0); // 0 is HOUSE type
     });
 
     it("Should not allow staking already staked NFTs", async function () {
@@ -142,7 +155,7 @@ describe("Altar", function () {
       await altar.connect(player1).stake(tokenId);
 
       // Get building count before unstaking
-      const buildingCountBefore = await gameState.getTotalBuildings(await player1.getAddress());
+      const buildingCountBefore = await gridBuildings.buildingCounts(await player1.getAddress(), 0);
       const buildingId = await altar.stakedBuilding(await sonicityNFT.getAddress(), tokenId);
 
       // Fast forward time
@@ -157,12 +170,11 @@ describe("Altar", function () {
       expect(stake.isActive).to.be.false;
 
       // Check that the building was removed
-      await expect(
-        gameState.getBuilding(await player1.getAddress(), buildingId)
-      ).to.be.revertedWith("Building doesn't exist or is inactive");
+      const building = await gridBuildings.buildings(await player1.getAddress(), buildingId);
+      expect(building.active).to.be.false;
 
       // Check building count decreased
-      const buildingCountAfter = await gameState.getTotalBuildings(await player1.getAddress());
+      const buildingCountAfter = await gridBuildings.buildingCounts(await player1.getAddress(), 0);
       expect(buildingCountAfter).to.equal(buildingCountBefore - BigInt(1));
     });
 
@@ -196,7 +208,7 @@ describe("Altar", function () {
       await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 3, metadata);
 
       // Get initial building count
-      const initialBuildingCount = await gameState.getTotalBuildings(await player1.getAddress());
+      const initialBuildingCount = await gridBuildings.buildingCounts(await player1.getAddress(), 0);
 
       // Stake all NFTs
       const altarAddress = await altar.getAddress();
@@ -216,15 +228,15 @@ describe("Altar", function () {
       expect(stakedNFTs).to.include(BigInt(3));
 
       // Check that buildings were created
-      const newBuildingCount = await gameState.getTotalBuildings(await player1.getAddress());
+      const newBuildingCount = await gridBuildings.buildingCounts(await player1.getAddress(), 0);
       expect(newBuildingCount).to.equal(initialBuildingCount + BigInt(3));
 
       // Check each building
       for (let i = 1; i <= 3; i++) {
         const buildingId = await altar.stakedBuilding(await sonicityNFT.getAddress(), i);
-        const building = await gameState.getBuilding(await player1.getAddress(), buildingId);
+        const building = await gridBuildings.buildings(await player1.getAddress(), buildingId);
         expect(building.active).to.be.true;
-        expect(building.buildingType).to.equal("house");
+        expect(building.buildingType).to.equal(0); // 0 is HOUSE type
       }
     });
   });
