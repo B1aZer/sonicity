@@ -2,12 +2,12 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0x33E45b187da34826aBCEDA1039231Be46f1b05Af", // Will be updated by update-addresses.sh
-    SONICITY_FARM: "0x0c626FC4A447b01554518550e30600136864640B", // Will be updated by update-addresses.sh
-    ALTAR: "0x8ac5eE52F70AE01dB914bE459D8B3d50126fd6aE", // Will be updated by update-addresses.sh
-    GAME_STATE: "0xF342E904702b1D021F03f519D6D9614916b03f37", // Will be updated by update-addresses.sh
-    DISTRICT_BUILDINGS: "0x9849832a1d8274aaeDb1112ad9686413461e7101", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0xa4E00CB342B36eC9fDc4B50b3d527c3643D4C49e" // Will be updated by update-addresses.sh
+    SONICITY_NFT: "0xd710a67624Ad831683C86a48291c597adE30F787", // Will be updated by update-addresses.sh
+    SONICITY_FARM: "0xd30bF3219A0416602bE8D482E0396eF332b0494E", // Will be updated by update-addresses.sh
+    ALTAR: "0xeC827421505972a2AE9C320302d3573B42363C26", // Will be updated by update-addresses.sh
+    GAME_STATE: "0x2e8880cAdC08E9B438c6052F5ce3869FBd6cE513", // Will be updated by update-addresses.sh
+    DISTRICT_BUILDINGS: "0xb007167714e2940013EC3bb551584130B7497E22", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0x6b39b761b1b64C8C095BF0e3Bb0c6a74705b4788" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
