@@ -124,6 +124,10 @@ async function main() {
   console.log("Setting GameState address in GridBuildings...");
   await gridBuildingsProxy.setGameStateAddress(gameStateProxyAddress);
 
+  // Set Altar address in GridBuildings
+  console.log("Setting Altar address in GridBuildings...");
+  await gridBuildingsProxy.setAltarAddress(altarProxyAddress);
+
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
   console.log("Contract addresses:");
