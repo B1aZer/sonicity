@@ -251,6 +251,58 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
+     * @dev Collect resources from all buildings of a specific type
+     * @param buildingType The type of building to collect from
+     * @return totalAmount Total amount of resources collected
+     */
+    function collectResourcesByType(GridBuildingType buildingType) external nonReentrant returns (uint256) {
+        uint256 totalAmount = 0;
+        uint256[] memory buildingIds = getActiveBuildings(msg.sender);
+        
+        for (uint256 i = 0; i < buildingIds.length; i++) {
+            Building storage building = buildings[msg.sender][buildingIds[i]];
+            if (building.active && building.buildingType == buildingType) {
+                GridBuildingConfig memory config = buildingConfigs[building.buildingType];
+                
+                // Calculate time passed since last collection
+                uint256 timePassed = block.timestamp - building.lastCollectionTime;
+                if (timePassed > 24 hours) {
+                    timePassed = 24 hours;
+                }
+                
+                // Calculate resources to collect
+                uint256 amount = (config.baseProductionRate * timePassed * building.level) / 1 hours;
+                
+                // Update last collection time
+                building.lastCollectionTime = block.timestamp;
+                
+                // Add resources to player based on building type
+                if (building.buildingType == GridBuildingType.HOUSE) {
+                    (bool success, ) = gameStateAddress.call(
+                        abi.encodeWithSignature("earnGold(address,uint256)", msg.sender, amount)
+                    );
+                    require(success, "Failed to add gold");
+                } else if (building.buildingType == GridBuildingType.FARM) {
+                    (bool success, ) = gameStateAddress.call(
+                        abi.encodeWithSignature("earnFood(address,uint256)", msg.sender, amount)
+                    );
+                    require(success, "Failed to add food");
+                } else if (building.buildingType == GridBuildingType.REP_STATION) {
+                    (bool success, ) = gameStateAddress.call(
+                        abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
+                    );
+                    require(success, "Failed to add rep");
+                }
+                
+                emit ResourcesCollected(msg.sender, buildingIds[i], amount);
+                totalAmount += amount;
+            }
+        }
+        
+        return totalAmount;
+    }
+
+    /**
      * @dev Calculate total claimable gold for a player without collecting it
      * @param player The address of the player
      * @return uint256 Total claimable gold

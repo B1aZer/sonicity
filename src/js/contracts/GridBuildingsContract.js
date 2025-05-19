@@ -103,7 +103,7 @@ export class GridBuildingsContract extends BaseContract {
 
     async getBuildingProductionRate(buildingType) {
         const config = await this.getBuildingConfig(buildingType);
-        return config.productionRate;
+        return config.baseProductionRate;
     }
 
     async calculateTotalClaimableGold(buildingType) {
@@ -125,22 +125,12 @@ export class GridBuildingsContract extends BaseContract {
     }
 
     async calculateClaimableGold(buildingId) {
-        return await this.call('calculateClaimableGold', buildingId);
+        const address = await this.getAddress();
+        return await this.call('calculateClaimableGold', address);
     }
 
     async collectAllGoldByType(buildingType) {
-        const address = await this.getAddress();
-        const activeBuildings = await this.getActiveBuildings(address);
-        
-        // Filter buildings by type if specified
-        const relevantBuildings = buildingType !== undefined 
-            ? activeBuildings.filter(b => b.buildingType === buildingType)
-            : activeBuildings;
-
-        // Collect from each building
-        for (const building of relevantBuildings) {
-            await this.collectResources(building.id);
-        }
+        return await this.transact('collectResourcesByType', buildingType);
     }
 
     async getBuildingLevel(buildingId) {
