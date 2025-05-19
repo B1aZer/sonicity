@@ -418,4 +418,10 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function getPlayerTier(address player) external view returns (uint8) {
         return playerState[player].tier;
     }
+
+    function deductGold(address player, uint256 amount) external {
+        require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
+        require(playerState[player].gold >= amount, "Insufficient gold");
+        playerState[player].gold -= amount;
+    }
 }

@@ -177,7 +177,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         // Deduct gold from player
         (bool success, ) = gameStateAddress.call(
-            abi.encodeWithSignature("deductGoldForDistrictBuilding(address,uint256)", msg.sender, upgradeCost)
+            abi.encodeWithSignature("deductGold(address,uint256)", msg.sender, upgradeCost)
         );
         require(success, "Failed to deduct gold");
         
