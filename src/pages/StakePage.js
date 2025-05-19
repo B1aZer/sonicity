@@ -88,6 +88,20 @@ export class StakePage extends BasePage {
             ownedNFTsContainer.innerHTML = '';
             stakedNFTsContainer.innerHTML = '';
 
+            // Get player's tier
+            const playerTier = await this.contracts.gameState.getPlayerTier(userAddress);
+            Logger.info('Player tier:', playerTier);
+
+            // Create building type selector
+            const buildingTypeSelect = document.createElement('select');
+            buildingTypeSelect.className = 'building-type-select';
+            buildingTypeSelect.innerHTML = `
+                <option value="0">House (Tier 0)</option>
+                <option value="1" ${playerTier < 1 ? 'disabled' : ''}>Farm (Tier 1)</option>
+                <option value="2" ${playerTier < 2 ? 'disabled' : ''}>Rep Station (Tier 2)</option>
+            `;
+            ownedNFTsContainer.appendChild(buildingTypeSelect);
+
             // Load staked NFTs
             for (const tokenId of stakedTokenIds) {
                 const tokenURI = await this.contracts.nft.tokenURI(tokenId);
@@ -162,6 +176,10 @@ export class StakePage extends BasePage {
         try {
             Logger.info('Starting stakeNFT process for token:', tokenId);
             
+            // Get selected building type
+            const buildingTypeSelect = this.container.querySelector('.building-type-select');
+            const buildingType = parseInt(buildingTypeSelect.value);
+            
             // Check if NFT collection is approved
             const nftAddress = await this.contracts.nft.getContractAddress();
             Logger.info('Checking approval for NFT collection:', nftAddress);
@@ -210,7 +228,7 @@ export class StakePage extends BasePage {
                 }
                 
                 Logger.info('Sending stake transaction...');
-                const stakeReceipt = await this.contracts.altar.stake(tokenId);
+                const stakeReceipt = await this.contracts.altar.stake(tokenId, buildingType);
                 Logger.info('Stake transaction confirmed:', stakeReceipt.hash);
                 
                 // Success message
@@ -219,12 +237,12 @@ export class StakePage extends BasePage {
                 // Reload the user's NFTs to update the list
                 await this.loadUserNFTs();
             } catch (error) {
-                Logger.error('Error in approval process:', error);
-                throw new Error(`Error checking NFT approval: ${error.message}`);
+                Logger.error('Error in stakeNFT:', error);
+                this.showStatus('error', error.message, 'Staking Failed');
             }
         } catch (error) {
             Logger.error('Error in stakeNFT:', error);
-            this.showStatus('error', error.message || "Unknown error", 'Error Staking NFT');
+            this.showStatus('error', error.message, 'Staking Failed');
         }
     }
 
