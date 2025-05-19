@@ -96,19 +96,51 @@ export class StakePage extends BasePage {
         const selectedType = parseInt(buildingTypeSelect.value);
         const ownedNFTsContainer = this.container.querySelector('.nft-list');
         
+        Logger.info('Filtering NFTs for building type:', selectedType);
+        Logger.info('Total available NFTs before filtering:', this.availableNFTs.length);
+        
         // Clear container
         ownedNFTsContainer.innerHTML = '';
 
         // Filter NFTs based on selected type
         const filteredNFTs = this.availableNFTs.filter(nft => {
+            Logger.info('Checking NFT:', {
+                tokenId: nft.tokenId.toString(),
+                name: nft.metadata.name,
+                type: selectedType
+            });
+            
             // For now, we'll show all NFTs for houses (type 0)
             // For farms (type 1), we'll only show farm NFTs
             // For rep stations (type 2), we'll only show rep station NFTs
-            if (selectedType === 0) return true;
-            if (selectedType === 1) return nft.metadata.name.toLowerCase().includes('farm');
-            if (selectedType === 2) return nft.metadata.name.toLowerCase().includes('rep');
+            if (selectedType === 0) {
+                Logger.info('Showing house NFT:', nft.tokenId.toString());
+                return true;
+            }
+            if (selectedType === 1) {
+                const isFarm = nft.metadata.name.toLowerCase().includes('farm');
+                Logger.info('Farm NFT check:', {
+                    tokenId: nft.tokenId.toString(),
+                    isFarm: isFarm
+                });
+                return isFarm;
+            }
+            if (selectedType === 2) {
+                const isRep = nft.metadata.name.toLowerCase().includes('rep');
+                Logger.info('Rep Station NFT check:', {
+                    tokenId: nft.tokenId.toString(),
+                    isRep: isRep
+                });
+                return isRep;
+            }
             return true;
         });
+
+        Logger.info('Filtered NFTs count:', filteredNFTs.length);
+        Logger.info('Filtered NFTs:', filteredNFTs.map(nft => ({
+            tokenId: nft.tokenId.toString(),
+            name: nft.metadata.name
+        })));
 
         if (filteredNFTs.length === 0) {
             ownedNFTsContainer.innerHTML = '<div class="no-nfts">No NFTs available for this building type.</div>';
@@ -148,7 +180,11 @@ export class StakePage extends BasePage {
 
             // Get all staked NFTs first
             const userAddress = await this.contracts.nft.getAddress();
+            Logger.info('Loading NFTs for user address:', userAddress);
+            
             const stakedTokenIds = await this.contracts.altar.getUserStakes();
+            Logger.info('Staked token IDs:', stakedTokenIds.map(id => id.toString()));
+            
             const stakedSet = new Set(stakedTokenIds.map(id => id.toString()));
 
             // Clear loading messages
@@ -175,6 +211,12 @@ export class StakePage extends BasePage {
                 const nftAddress = await this.contracts.nft.getContractAddress();
                 const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
                 
+                Logger.info('Loading staked NFT:', {
+                    tokenId: tokenId.toString(),
+                    name: metadata.name,
+                    address: nftAddress
+                });
+                
                 const nft = {
                     tokenId,
                     contractAddress: nftAddress,
@@ -192,13 +234,18 @@ export class StakePage extends BasePage {
 
             // Get all owned NFTs that are not staked
             const balance = await this.contracts.nft.balanceOf(userAddress);
+            Logger.info('Total NFT balance:', balance.toString());
+            
             let availableCount = 0;
             this.availableNFTs = []; // Clear the array
 
             if (balance > 0n) {
                 for (let i = 0; i < balance; i++) {
                     const tokenId = await this.contracts.nft.tokenOfOwnerByIndex(userAddress, i);
+                    Logger.info('Checking NFT at index', i, 'tokenId:', tokenId.toString());
+                    
                     if (stakedSet.has(tokenId.toString())) {
+                        Logger.info('NFT is staked, skipping:', tokenId.toString());
                         continue;
                     }
                     
@@ -208,6 +255,12 @@ export class StakePage extends BasePage {
                     const metadata = await response.json();
                     const nftAddress = await this.contracts.nft.getContractAddress();
                     const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
+                    
+                    Logger.info('Loading available NFT:', {
+                        tokenId: tokenId.toString(),
+                        name: metadata.name,
+                        address: nftAddress
+                    });
                     
                     const nft = {
                         tokenId,
@@ -220,6 +273,12 @@ export class StakePage extends BasePage {
                     this.availableNFTs.push(nft);
                 }
             }
+
+            Logger.info('Available NFTs count:', this.availableNFTs.length);
+            Logger.info('Available NFTs:', this.availableNFTs.map(nft => ({
+                tokenId: nft.tokenId.toString(),
+                name: nft.metadata.name
+            })));
 
             // Update status section
             const totalNFTs = Number(balance);
