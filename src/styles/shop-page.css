@@ -1,5 +1,5 @@
-.base-page, .shop-page, .page-container {
-  background: var(--bg-main, #232323) !important;
+.shop-container {
+  background: var(--bg-dark-secondary) !important;
 }
 
 .shop-page .page-title, .base-page .page-title {
