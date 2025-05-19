@@ -65,56 +65,10 @@ export class GameStateContract extends BaseContract {
         return await this.transact('upgradeCityTier', cityId);
     }
 
-    // Building Management
+    // Building Slots Management
     async getBuildingSlots() {
         const address = await this.getAddress();
         return await this.call('getBuildingSlots', address);
-    }
-
-    async createBuilding(buildingType) {
-        try {
-            const formattedType = String(buildingType).toLowerCase();
-            const address = await this.getAddress();
-            const state = await this.call('playerState', address);
-            const totalBuildings = await this.call('getTotalBuildings', address);
-
-            if (totalBuildings >= state.buildingSlots) {
-                throw new Error(`No building slots available. Total buildings: ${totalBuildings}, Available slots: ${state.buildingSlots}`);
-            }
-
-            return await this.transact('createBuilding', formattedType);
-        } catch (error) {
-            console.error('Error in createBuilding:', error);
-            throw error;
-        }
-    }
-
-    async removeBuilding(buildingId) {
-        return await this.transact('removeBuilding', buildingId);
-    }
-
-    async upgradeBuilding(buildingId) {
-        return await this.transact('upgradeBuilding', buildingId);
-    }
-
-    async getBuildingIds() {
-        const address = await this.getAddress();
-        return await this.call('getPlayerBuildingIds', address);
-    }
-
-    async getBuildingIdsOfType(buildingType) {
-        const address = await this.getAddress();
-        return await this.call('getBuildingIdsOfType', address, buildingType);
-    }
-
-    async getBuilding(buildingId) {
-        const address = await this.getAddress();
-        return await this.call('getBuilding', address, buildingId);
-    }
-
-    async getTotalBuildings() {
-        const address = await this.getAddress();
-        return await this.call('getTotalBuildings', address);
     }
 
     // Resource Management
@@ -140,8 +94,8 @@ export class GameStateContract extends BaseContract {
         return nextTierCost;
     }
 
-    async earnGold(amount) {
-        return await this.transact('earnGold', amount);
+    async earnGold(player, amount) {
+        return await this.transact('earnGold', player, amount);
     }
 
     async donateGold(amount) {
@@ -175,32 +129,5 @@ export class GameStateContract extends BaseContract {
 
     async verifyNFTOwnership(collectionAddress, tokenId, owner) {
         return await this.call('verifyNFTOwnership', collectionAddress, tokenId, owner);
-    }
-
-    // Building Costs
-    async getBuildingCost(buildingType) {
-        return await this.call('getBuildingCost', buildingType);
-    }
-
-    // Building Production
-    async getBuildingProductionRate(buildingType) {
-        return await this.call('getBuildingProductionRate', buildingType);
-    }
-
-    async setBuildingProductionRate(buildingType, rate) {
-        return await this.transact('setBuildingProductionRate', buildingType, rate);
-    }
-
-    async getBuildingsByType(player, buildingType) {
-        return await this.call('getBuildingsByType', player, buildingType);
-    }
-
-    async calculateTotalClaimableGold() {
-        const address = await this.getAddress();
-        return await this.call('calculateTotalClaimableGold', address);
-    }
-
-    async collectAllGoldByType(buildingType) {
-        return await this.transact('collectAllGoldByType', buildingType);
     }
 } 
