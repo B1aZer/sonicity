@@ -32,7 +32,7 @@ export class ShopPage extends BasePage {
                     <h2>Available Items</h2>
                     <div class="buildings-grid">
                         ${SHOP_ITEMS.map(item => `
-                            <div class="building-card shop-item-card">
+                            <div class="shop-item-card">
                                 <div class="shop-item-image">
                                     <img src="${item.image.replace('emergency_help', 'help').replace('production_boost', 'boost').replace('cosmetic_item', 'cosmetic')}" alt="${item.name}" />
                                 </div>
@@ -43,13 +43,18 @@ export class ShopPage extends BasePage {
                                     </div>
                                     <div class="shop-item-desc">${item.description}</div>
                                     <div class="shop-item-cost">
-                                        <span class="cost-icon">💰</span>
-                                        <span class="cost-value">${item.cost}</span>
+                                        <div class="cost-item">
+                                            <i class="fas fa-coins cost-icon"></i>
+                                            <span class="cost-value">${item.cost}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <button class="buy-btn" data-item-id="${item.id}" ${item.count > 0 ? '' : 'disabled'}>
-                                    Buy
-                                </button>
+                                <div class="shop-item-action-row">
+                                    <button class="btn btn-primary buy-btn" data-item-id="${item.id}" ${item.count === 0 ? 'disabled' : ''}>
+                                        <i class="fas fa-shopping-cart"></i>
+                                        ${item.cost > 0 ? 'Buy' : 'Claim'}
+                                    </button>
+                                </div>
                             </div>
                         `).join('')}
                     </div>
@@ -68,7 +73,7 @@ export class ShopPage extends BasePage {
                 if (!item) return;
                 Logger.info(`Shop: Attempting to buy item: ${item.name}`);
                 this.modal.confirm(
-                    item.cost > 0 ? `Buy <b>${item.name}</b> for <b>${item.cost} ${item.currency}</b>?` : `Claim <b>${item.name}</b> for FREE?`,
+                    item.cost > 0 ? `Buy <b>${item.name}</b> for <b>${item.cost} Gold</b>?` : `Claim <b>${item.name}</b> for FREE?`,
                     { title: 'Confirm Purchase' }
                 ).then(result => {
                     if (result.isConfirmed) {
