@@ -30,6 +30,15 @@ async function main() {
   const districtBuildingsImplAddress = await districtBuildingsImpl.getAddress();
   console.log("DistrictBuildings implementation deployed to:", districtBuildingsImplAddress);
 
+  // Deploy GridBuildings implementation
+  console.log("Deploying GridBuildings implementation...");
+  const GridBuildings = await ethers.getContractFactory("GridBuildings");
+  const gridBuildingsImpl = await GridBuildings.deploy();
+  console.log("Waiting for GridBuildings implementation deployment...");
+  await gridBuildingsImpl.waitForDeployment();
+  const gridBuildingsImplAddress = await gridBuildingsImpl.getAddress();
+  console.log("GridBuildings implementation deployed to:", gridBuildingsImplAddress);
+
   // Deploy Altar implementation
   console.log("Deploying Altar implementation...");
   const Altar = await ethers.getContractFactory("Altar");
@@ -61,6 +70,17 @@ async function main() {
   const districtBuildingsProxyAddress = await districtBuildingsProxy.getAddress();
   console.log("DistrictBuildings proxy deployed to:", districtBuildingsProxyAddress);
 
+  // Deploy GridBuildings proxy
+  console.log("Deploying GridBuildings proxy...");
+  const gridBuildingsProxy = await upgrades.deployProxy(GridBuildings, [], {
+    kind: 'uups',
+    initializer: 'initialize',
+  });
+  console.log("Waiting for GridBuildings proxy deployment...");
+  await gridBuildingsProxy.waitForDeployment();
+  const gridBuildingsProxyAddress = await gridBuildingsProxy.getAddress();
+  console.log("GridBuildings proxy deployed to:", gridBuildingsProxyAddress);
+
   // Deploy Altar proxy with initialization parameters
   console.log("Deploying Altar proxy...");
   const altarProxy = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateProxyAddress], {
@@ -87,6 +107,18 @@ async function main() {
   console.log("Setting DistrictBuildings address in GameState...");
   await gameStateProxy.setDistrictBuildingsAddress(districtBuildingsProxyAddress);
 
+  // Set GridBuildings address in GameState
+  console.log("Setting GridBuildings address in GameState...");
+  await gameStateProxy.setGridBuildingsAddress(gridBuildingsProxyAddress);
+
+  // Set GameState address in GridBuildings
+  console.log("Setting GameState address in GridBuildings...");
+  await gridBuildingsProxy.setGameStateAddress(gameStateProxyAddress);
+
+  // Initialize building configurations in GridBuildings
+  console.log("Initializing building configurations in GridBuildings...");
+  await gridBuildingsProxy.initializeBuildingConfigs();
+
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
   console.log("Contract addresses:");
@@ -95,6 +127,8 @@ async function main() {
   console.log("GameState proxy:", gameStateProxyAddress);
   console.log("DistrictBuildings implementation:", districtBuildingsImplAddress);
   console.log("DistrictBuildings proxy:", districtBuildingsProxyAddress);
+  console.log("GridBuildings implementation:", gridBuildingsImplAddress);
+  console.log("GridBuildings proxy:", gridBuildingsProxyAddress);
   console.log("Altar implementation:", altarImplAddress);
   console.log("Altar proxy:", altarProxyAddress);
 
@@ -105,6 +139,8 @@ async function main() {
     gameStateProxy: gameStateProxyAddress,
     districtBuildingsImpl: districtBuildingsImplAddress,
     districtBuildingsProxy: districtBuildingsProxyAddress,
+    gridBuildingsImpl: gridBuildingsImplAddress,
+    gridBuildingsProxy: gridBuildingsProxyAddress,
     altarImpl: altarImplAddress,
     altarProxy: altarProxyAddress,
   };

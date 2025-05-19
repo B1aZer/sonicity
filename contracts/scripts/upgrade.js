@@ -21,6 +21,13 @@ async function main() {
   await districtBuildingsProxy.waitForDeployment();
   console.log("DistrictBuildings upgraded to:", await districtBuildingsProxy.getAddress());
 
+  // Upgrade GridBuildings
+  console.log("Upgrading GridBuildings...");
+  const GridBuildings = await ethers.getContractFactory("GridBuildings");
+  const gridBuildingsProxy = await upgrades.upgradeProxy(addresses.gridBuildingsProxy, GridBuildings);
+  await gridBuildingsProxy.waitForDeployment();
+  console.log("GridBuildings upgraded to:", await gridBuildingsProxy.getAddress());
+
   // Upgrade Altar
   console.log("Upgrading Altar...");
   const Altar = await ethers.getContractFactory("Altar");
@@ -43,11 +50,20 @@ async function main() {
   console.log("Setting DistrictBuildings address in GameState...");
   await gameStateProxy.setDistrictBuildingsAddress(await districtBuildingsProxy.getAddress());
 
+  // Set GridBuildings address in GameState
+  console.log("Setting GridBuildings address in GameState...");
+  await gameStateProxy.setGridBuildingsAddress(await gridBuildingsProxy.getAddress());
+
+  // Set GameState address in GridBuildings
+  console.log("Setting GameState address in GridBuildings...");
+  await gridBuildingsProxy.setGameStateAddress(await gameStateProxy.getAddress());
+
   // Update addresses file
   const newAddresses = {
     ...addresses,
     gameStateProxy: await gameStateProxy.getAddress(),
     districtBuildingsProxy: await districtBuildingsProxy.getAddress(),
+    gridBuildingsProxy: await gridBuildingsProxy.getAddress(),
     altarProxy: await altarProxy.getAddress(),
   };
 
