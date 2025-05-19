@@ -10,7 +10,7 @@ export class BarracksPage extends BasePage {
     constructor() {
         super();
         this.element = document.createElement('div');
-        this.element.className = 'base-page';
+        this.element.className = 'base-page barracks-page';
         this.modal = new Modal();
         this.render();
     }
@@ -55,22 +55,22 @@ export class BarracksPage extends BasePage {
             <div class="page-container barracks-container">
                 <h1 class="page-title">Barracks</h1>
                 
-                <div class="resource-display">
-                    <div class="resource">
-                        <span class="resource-icon">💰</span>
-                        <span class="resource-label">Gold:</span>
-                        <span id="gold-amount" class="resource-value">0</span>
-                    </div>
-                    <div class="resource">
-                        <span class="resource-icon">🌾</span>
-                        <span class="resource-label">Food:</span>
-                        <span id="food-amount" class="resource-value">0</span>
+                <div class="page-section status-section">
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Gold:</span>
+                            <span id="gold-amount" class="status-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Food:</span>
+                            <span id="food-amount" class="status-value">0</span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="buildings-grid">
                     ${Object.entries(TROOP_TYPES).map(([type, troop]) => `
-                        <div class="building-card troop-card">
+                        <div class="troop-card">
                             <div class="troop-image">
                                 <img src="${troop.image}" alt="${troop.name}" />
                             </div>
@@ -91,7 +91,7 @@ export class BarracksPage extends BasePage {
                                 </div>
                             </div>
                             <div class="troop-action-row">
-                                <button class="btn btn-primary train-btn" data-troop-type="${type}">
+                                <button class="train-btn" data-troop-type="${type}">
                                     Train
                                 </button>
                             </div>
