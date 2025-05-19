@@ -93,7 +93,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         });
         
         // Create building through GridBuildings contract
-        uint256 buildingId = gridBuildings.createBuilding(GridBuildings.GridBuildingType.HOUSE);
+        uint256 buildingId = gridBuildings.createBuilding(msg.sender, GridBuildings.GridBuildingType.HOUSE);
         
         // Update staked building mapping
         stakedBuilding[address(sonicityNFT)][tokenId] = buildingId;
@@ -132,7 +132,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         
         // Get building ID and remove building
         uint256 buildingId = stakedBuilding[address(sonicityNFT)][tokenId];
-        gridBuildings.removeBuilding(buildingId);
+        gridBuildings.removeBuilding(msg.sender, buildingId);
         delete stakedBuilding[address(sonicityNFT)][tokenId];
         
         // Transfer NFT back to owner

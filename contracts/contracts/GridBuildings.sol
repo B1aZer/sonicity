@@ -14,6 +14,8 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // Reference to the GameState contract
     address public gameStateAddress;
+    // Reference to the Altar contract
+    address public altarAddress;
 
     // Grid Building Types
     enum GridBuildingType {
@@ -53,6 +55,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event BuildingRemoved(address indexed player, uint256 buildingId);
     event ResourcesCollected(address indexed player, uint256 buildingId, uint256 amount);
     event GameStateAddressUpdated(address indexed newAddress);
+    event AltarAddressUpdated(address indexed newAddress);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -106,16 +109,27 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
+     * @dev Set the Altar contract address
+     * @param _altarAddress The address of the Altar contract
+     */
+    function setAltarAddress(address _altarAddress) external onlyOwner {
+        altarAddress = _altarAddress;
+        emit AltarAddressUpdated(_altarAddress);
+    }
+
+    /**
      * @dev Create a new building
+     * @param player The address of the player for whom to create the building
      * @param buildingType The type of building to create
      * @return buildingId The ID of the created building
      */
-    function createBuilding(GridBuildingType buildingType) external nonReentrant returns (uint256) {
+    function createBuilding(address player, GridBuildingType buildingType) external nonReentrant returns (uint256) {
+        require(msg.sender == altarAddress || msg.sender == owner(), "Only Altar or owner can create buildings");
         require(buildingType <= GridBuildingType.REP_STATION, "Invalid building type");
         
         // Get player's tier from GameState
         (bool success, bytes memory data) = gameStateAddress.call(
-            abi.encodeWithSignature("getPlayerTier(address)", msg.sender)
+            abi.encodeWithSignature("getPlayerTier(address)", player)
         );
         require(success, "Failed to get player tier");
         uint8 playerTier = abi.decode(data, (uint8));
@@ -126,12 +140,12 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // For Tier 0, only allow houses and enforce 3x3 grid
         if (playerTier == 0) {
             require(buildingType == GridBuildingType.HOUSE, "Only houses allowed in Tier 0");
-            require(buildingCounts[msg.sender][GridBuildingType.HOUSE] < 9, "Tier 0 grid is full (3x3)");
+            require(buildingCounts[player][GridBuildingType.HOUSE] < 9, "Tier 0 grid is full (3x3)");
         }
         
         // Create building
-        uint256 buildingId = nextBuildingId[msg.sender]++;
-        buildings[msg.sender][buildingId] = Building({
+        uint256 buildingId = nextBuildingId[player]++;
+        buildings[player][buildingId] = Building({
             buildingType: buildingType,
             level: 1,
             lastUpgradeTime: block.timestamp,
@@ -140,9 +154,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         });
         
         // Update counts
-        buildingCounts[msg.sender][buildingType]++;
+        buildingCounts[player][buildingType]++;
         
-        emit BuildingCreated(msg.sender, buildingType, buildingId);
+        emit BuildingCreated(player, buildingType, buildingId);
         
         return buildingId;
     }
@@ -176,16 +190,18 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /**
      * @dev Remove a building
+     * @param player The address of the player for whom to remove the building
      * @param buildingId The ID of the building to remove
      */
-    function removeBuilding(uint256 buildingId) external nonReentrant {
-        Building storage building = buildings[msg.sender][buildingId];
+    function removeBuilding(address player, uint256 buildingId) external nonReentrant {
+        require(msg.sender == altarAddress || msg.sender == owner(), "Only Altar or owner can remove buildings");
+        Building storage building = buildings[player][buildingId];
         require(building.active, "Building not active");
         
         building.active = false;
-        buildingCounts[msg.sender][building.buildingType]--;
+        buildingCounts[player][building.buildingType]--;
         
-        emit BuildingRemoved(msg.sender, buildingId);
+        emit BuildingRemoved(player, buildingId);
     }
 
     /**

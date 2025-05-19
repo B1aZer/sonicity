@@ -19,7 +19,7 @@ describe("Altar", function () {
     await sonicityNFT.waitForDeployment();
     const sonicityNFTAddress = await sonicityNFT.getAddress();
 
-    // Deploy GameState first with a temporary altar address
+    // Deploy GameState
     const GameState = await ethers.getContractFactory("GameState");
     gameState = await upgrades.deployProxy(GameState, [], {
       kind: 'uups',
@@ -48,6 +48,9 @@ describe("Altar", function () {
     });
     await altar.waitForDeployment();
     const altarAddress = await altar.getAddress();
+
+    // Set Altar address in GridBuildings
+    await gridBuildings.connect(owner).setAltarAddress(altarAddress);
 
     // Update GameState's altar address
     await gameState.connect(owner).setAltarAddress(altarAddress);
