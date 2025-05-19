@@ -9,14 +9,14 @@
     max-width: 540px;
     margin: 0 auto;
     width: 100%;
-    background: var(--bg-light, #232323);
+    background: var(--bg-light);
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     display: flex;
     align-items: center;
     padding: 18px 20px;
     gap: 18px;
-    border: 1.5px solid var(--bg-lighter, #353535);
+    border: 1.5px solid var(--bg-lighter);
 }
 
 .troop-image {
@@ -24,8 +24,8 @@
     height: 64px;
     overflow: hidden;
     border-radius: 8px;
-    background: var(--bg-main, #232323);
-    border: 1px solid var(--bg-lighter, #353535);
+    background: var(--bg-dark-secondary);
+    border: 1px solid var(--bg-lighter);
 }
 
 .troop-image img {
@@ -46,23 +46,23 @@
 }
 
 .troop-title-row h3 {
-    font-size: 1.2rem;
-    color: var(--text-primary, #fff);
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
     margin: 0;
-    font-family: var(--font-family, serif);
+    font-family: var(--font-family);
 }
 
 .troop-desc {
-    color: var(--text-muted, #b0b0b0);
-    font-size: 1rem;
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
     margin-bottom: 4px;
 }
 
 .troop-cost {
     display: flex;
-    gap: 1rem;
-    margin-top: 12px;
     align-items: center;
+    margin-top: 12px;
+    gap: 1rem;
 }
 
 .cost-item {
@@ -74,7 +74,7 @@
 }
 
 .cost-icon {
-    font-size: 1rem;
+    font-size: var(--font-size-md);
     color: var(--color-accent);
 }
 
@@ -92,7 +92,6 @@
 
 /* Using the reusable button system */
 .train-btn {
-    composes: btn btn-primary from './buttons.css';
     width: 100%;
 }
 
@@ -111,9 +110,5 @@
     .troop-image {
         width: 120px;
         height: 120px;
-    }
-    
-    .troop-cost {
-        justify-content: center;
     }
 } 

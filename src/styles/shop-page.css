@@ -1,5 +1,5 @@
 .shop-page .page-title, .base-page .page-title {
-  color: var(--text-primary, #fff);
+  color: var(--text-primary);
   text-align: center;
   margin-top: 0;
   margin-bottom: 2rem;
@@ -18,7 +18,7 @@
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.12);
   padding: 0 0 24px 0;
-  font-family: var(--font-family, serif);
+  font-family: var(--font-family);
 }
 
 .shop-header {
@@ -27,10 +27,10 @@
   text-align: center;
 }
 .shop-header h1 {
-  font-size: 2.5rem;
+  font-size: var(--font-size-2xl);
   letter-spacing: 2px;
   margin: 0;
-  font-family: var(--font-family, serif);
+  font-family: var(--font-family);
 }
 
 .shop-items-container {
@@ -44,14 +44,14 @@
   max-width: 540px;
   margin: 0 auto;
   width: 100%;
-  background: var(--bg-light, #232323);
+  background: var(--bg-light);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   display: flex;
   align-items: center;
   padding: 18px 20px;
   gap: 18px;
-  border: 1.5px solid var(--bg-lighter, #353535);
+  border: 1.5px solid var(--bg-lighter);
 }
 
 .shop-item-image {
@@ -59,8 +59,8 @@
   height: 64px;
   overflow: hidden;
   border-radius: 8px;
-  background: var(--bg-main, #232323);
-  border: 1px solid var(--bg-lighter, #353535);
+  background: var(--bg-dark);
+  border: 1px solid var(--bg-lighter);
 }
 
 .shop-item-image img {
@@ -81,10 +81,10 @@
 }
 
 .shop-item-title-row h3 {
-  font-size: 1.2rem;
-  color: var(--text-primary, #fff);
+  font-size: var(--font-size-md);
+  color: var(--text-primary);
   margin: 0;
-  font-family: var(--font-family, serif);
+  font-family: var(--font-family);
 }
 
 .shop-item-cost {
@@ -103,7 +103,7 @@
 }
 
 .cost-icon {
-  font-size: 1rem;
+  font-size: var(--font-size-md);
   color: var(--color-accent);
 }
 
@@ -113,7 +113,7 @@
 }
 
 .shop-item-stock {
-  font-size: 0.85rem;
+  font-size: var(--font-size-sm);
   padding: 4px 8px;
   border-radius: 12px;
   font-weight: 500;
@@ -136,12 +136,12 @@
 }
 
 .shop-item-stock i {
-  font-size: 0.8rem;
+  font-size: var(--font-size-sm);
 }
 
 .shop-item-desc {
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: var(--font-size-sm);
   margin-bottom: 4px;
 }
 
