@@ -95,11 +95,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         tierRequirements[2] = 2500;   // 2500 Gold for Tier 2
         tierRequirements[3] = 5000;   // 5000 Gold for Tier 3
         tierRequirements[4] = 10000;  // 10000 Gold for Tier 4
-
-        // Initialize building production rates (gold per hour)
-        buildingProductionRates["house"] = 10;  // 10 gold per hour
-        buildingProductionRates["water-supply"] = 15;
-        buildingProductionRates["workshop"] = 20;
     }
 
     /**
@@ -384,15 +379,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function setAltarAddress(address _altarAddress) external onlyOwner {
         altarAddress = _altarAddress;
-    }
-
-    /**
-     * @dev Get building production rate
-     * @param buildingType The type of building
-     * @return uint256 The production rate in gold per hour
-     */
-    function getBuildingProductionRate(string memory buildingType) external view returns (uint256) {
-        return buildingProductionRates[buildingType];
     }
 
     /**
