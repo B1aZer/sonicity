@@ -1,5 +1,6 @@
 import Logger from '../js/utils/logger.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
+import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import { BasePage } from './BasePage.js';
 
@@ -19,6 +20,10 @@ export class DistrictPage extends BasePage {
     async onInitialized(walletResult) {
         Logger.info('DistrictPage onInitialized called with wallet:', walletResult.address);
         try {
+            // Initialize GridBuildings contract
+            this.contracts.gridBuildings = new GridBuildingsContract();
+            await this.contracts.gridBuildings.initialize();
+            
             await this.loadDistrictData();
             this.setupEventListeners();
             Logger.info('District page initialized successfully');
@@ -36,16 +41,16 @@ export class DistrictPage extends BasePage {
         try {
             Logger.info('Starting to load district data...');
             
-            const [gold, buildingSlots, totalBuildings] = await Promise.all([
+            const [gold, buildingSlots, activeBuildings] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
                 this.contracts.gameState.getBuildingSlots(),
-                this.contracts.gameState.getTotalBuildings()
+                this.contracts.gridBuildings.getActiveBuildings()
             ]);
 
             Logger.info('Received data from contract:', {
                 gold: gold.toString(),
                 buildingSlots: buildingSlots.toString(),
-                totalBuildings: totalBuildings.toString()
+                totalBuildings: activeBuildings.length
             });
 
             // Update gold display
@@ -57,7 +62,7 @@ export class DistrictPage extends BasePage {
             // Update total buildings display
             const buildingsValue = this.element.querySelector('.total-buildings-value');
             if (buildingsValue) {
-                buildingsValue.textContent = totalBuildings.toString();
+                buildingsValue.textContent = activeBuildings.length.toString();
             }
 
             // Update building slots display
@@ -76,9 +81,13 @@ export class DistrictPage extends BasePage {
         try {
             Logger.info(`Starting handleBuildingAction for: ${buildingType}`);
             
-            // Convert building type to lowercase to match contract expectations
-            const formattedBuildingType = buildingType.toLowerCase();
-            Logger.info(`Formatted building type: ${formattedBuildingType}`);
+            // Convert building type to enum value
+            const buildingTypeEnum = GridBuildingsContract.BuildingType[buildingType.toUpperCase()];
+            if (buildingTypeEnum === undefined) {
+                throw new Error(`Invalid building type: ${buildingType}`);
+            }
+            
+            Logger.info(`Building type enum: ${buildingTypeEnum}`);
             
             // Check if player is in a city
             const cityId = await this.contracts.gameState.getPlayerCity();
@@ -100,7 +109,8 @@ export class DistrictPage extends BasePage {
 
             // Check gold balance
             const gold = await this.contracts.gameState.getPlayerGold();
-            const requiredGold = 100; // 100 Gold for a house
+            const buildingConfig = await this.contracts.gridBuildings.getBuildingConfig(buildingTypeEnum);
+            const requiredGold = buildingConfig.buildCost;
             Logger.info(`Player gold: ${gold}, Required: ${requiredGold}`);
             if (Number(gold) < requiredGold) {
                 Logger.info('Insufficient gold, showing modal');
@@ -115,7 +125,7 @@ export class DistrictPage extends BasePage {
             // Show confirmation dialog
             Logger.info('Showing confirmation dialog');
             const result = await this.modal.confirm(
-                `Build a ${formattedBuildingType} for ${requiredGold} Gold?`,
+                `Build a ${buildingType} for ${requiredGold} Gold?`,
                 { title: 'Confirm Building' }
             );
 
@@ -127,7 +137,7 @@ export class DistrictPage extends BasePage {
                     
                     // Create the building
                     Logger.info('Calling createBuilding on contract');
-                    const tx = await this.contracts.gameState.createBuilding(formattedBuildingType);
+                    const tx = await this.contracts.gridBuildings.createBuilding(buildingTypeEnum);
                     Logger.info('Transaction sent, waiting for confirmation');
                     
                     // Wait for transaction to be mined
@@ -140,11 +150,11 @@ export class DistrictPage extends BasePage {
                     // Reload district data to update UI
                     await this.loadDistrictData();
                     
-                    this.modal.success(`Successfully built ${formattedBuildingType}!`);
-                    Logger.info(`Successfully built: ${formattedBuildingType}`);
+                    this.modal.success(`Successfully built ${buildingType}!`);
+                    Logger.info(`Successfully built: ${buildingType}`);
                 } catch (error) {
-                    Logger.error(`Error building ${formattedBuildingType}:`, error);
-                    this.modal.error(`Error building ${formattedBuildingType}: ${error.message}`);
+                    Logger.error(`Error building ${buildingType}:`, error);
+                    this.modal.error(`Error building ${buildingType}: ${error.message}`);
                 }
             } else {
                 Logger.info('User cancelled building action');
