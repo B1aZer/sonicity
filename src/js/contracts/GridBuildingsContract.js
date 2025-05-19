@@ -52,10 +52,14 @@ export class GridBuildingsContract extends BaseContract {
         const buildings = [];
         
         for (const buildingId of buildingIds) {
-            const building = await this.getBuilding(address, buildingId);
+            const building = await this.call('getBuilding', address, buildingId);
             buildings.push({
                 id: buildingId,
-                ...building
+                buildingType: Number(building[0]),
+                level: Number(building[1]),
+                lastUpgradeTime: Number(building[2]),
+                lastCollectionTime: Number(building[3]),
+                active: Boolean(building[4])
             });
         }
         
@@ -63,11 +67,26 @@ export class GridBuildingsContract extends BaseContract {
     }
 
     async getBuilding(address, buildingId) {
-        return await this.call('getBuilding', address, buildingId);
+        const building = await this.call('getBuilding', address, buildingId);
+        return {
+            buildingType: Number(building[0]),
+            level: Number(building[1]),
+            lastUpgradeTime: Number(building[2]),
+            lastCollectionTime: Number(building[3]),
+            active: building[4]
+        };
     }
 
     async getBuildingConfig(buildingType) {
-        return await this.call('getBuildingConfig', buildingType);
+        const config = await this.call('getBuildingConfig', buildingType);
+        return {
+            name: config[0],
+            baseProductionRate: Number(config[1]),
+            upgradeCost: Number(config[2]),
+            maxLevel: Number(config[3]),
+            description: config[4],
+            tier: Number(config[5])
+        };
     }
 
     async getAllBuildingConfigs() {

@@ -171,7 +171,15 @@ export class GamePage extends BasePage {
 
             // Place houses on the grid
             for (const building of activeBuildings) {
-                if (building.buildingType !== GridBuildingsContract.BuildingType.HOUSE || !building.active) continue;
+                Logger.info('Processing building:', building);
+                if (building.buildingType !== GridBuildingsContract.BuildingType.HOUSE || !building.active) {
+                    Logger.info('Skipping building - not a house or not active:', {
+                        buildingType: building.buildingType,
+                        active: building.active,
+                        expectedType: GridBuildingsContract.BuildingType.HOUSE
+                    });
+                    continue;
+                }
 
                 Logger.info('Placing house:', building);
 
@@ -181,6 +189,8 @@ export class GamePage extends BasePage {
 
                 // Start from the center and spiral outward
                 const center = Math.floor(gridSize / 2);
+                Logger.info('Starting position search from center:', { center, gridSize });
+                
                 for (let layer = 0; layer < gridSize; layer++) {
                     for (let i = -layer; i <= layer; i++) {
                         // Check all positions in the current layer
@@ -192,11 +202,13 @@ export class GamePage extends BasePage {
                         ];
 
                         for (const pos of positions) {
+                            Logger.info('Checking position:', pos);
                             if (this.game.gridManager.isValidPosition(pos.x, pos.z) && 
                                 !this.game.gridManager.isCellOccupied(pos.x, pos.z)) {
                                 gridX = pos.x;
                                 gridZ = pos.z;
                                 foundPosition = true;
+                                Logger.info('Found available position:', { gridX, gridZ });
                                 break;
                             }
                         }
@@ -206,10 +218,11 @@ export class GamePage extends BasePage {
                 }
 
                 if (foundPosition) {
-                    const position = this.game.gridManager.gridToWorldPosition(gridX, gridZ);
+                    const position = this.game.gridManager.getWorldPosition(gridX, gridZ);
+                    Logger.info('Calculated world position:', position);
                     const house = this.game.buildingManager.placeBuilding('HOUSE', position);
                     if (house) {
-                        this.game.gridManager.setCellOccupied(gridX, gridZ, true);
+                        this.game.gridManager.occupyCell(gridX, gridZ, house.mesh);
                         Logger.info(`Successfully placed house at grid position (${gridX}, ${gridZ})`);
                     } else {
                         Logger.error(`Failed to place house at grid position (${gridX}, ${gridZ})`);
