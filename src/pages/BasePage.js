@@ -3,6 +3,7 @@ import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { AltarContract } from '../js/contracts/AltarContract.js';
 import { NFTContract } from '../js/contracts/NFTContract.js';
 import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
+import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { appState } from '../js/core/state.js';
@@ -17,7 +18,8 @@ export class BasePage {
             gameState: new GameStateContract(),
             altar: new AltarContract(),
             nft: new NFTContract(),
-            districtBuildings: new DistrictBuildingsContract()
+            districtBuildings: new DistrictBuildingsContract(),
+            gridBuildings: new GridBuildingsContract()
         };
         
         // Setup wallet event listener
@@ -68,6 +70,10 @@ export class BasePage {
                 }),
                 this.contracts.districtBuildings.initialize().catch(e => {
                     Logger.warn('DistrictBuildings contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.gridBuildings.initialize().catch(e => {
+                    Logger.warn('GridBuildings contract initialization failed:', e);
                     return null;
                 })
             ];
