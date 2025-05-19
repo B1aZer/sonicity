@@ -45,8 +45,11 @@ export class HousePage extends BasePage {
         try {
             Logger.info('Starting to load house data...');
             
+            // Get the player's address
+            const playerAddress = await this.contracts.gameState.getAddress();
+            
             // Get all active buildings
-            const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings();
+            const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings(playerAddress);
             Logger.info('Retrieved active buildings:', activeBuildings);
 
             // Filter for houses
