@@ -12,6 +12,15 @@ async function main() {
   const sonicityNFTAddress = await sonicityNFT.getAddress();
   console.log("SonicityNFT deployed to:", sonicityNFTAddress);
 
+  // Deploy SonicityFarm
+  console.log("Deploying SonicityFarm...");
+  const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
+  const sonicityFarm = await SonicityFarm.deploy();
+  console.log("Waiting for SonicityFarm deployment...");
+  await sonicityFarm.waitForDeployment();
+  const sonicityFarmAddress = await sonicityFarm.getAddress();
+  console.log("SonicityFarm deployed to:", sonicityFarmAddress);
+
   // Deploy GameState implementation
   console.log("Deploying GameState implementation...");
   const GameState = await ethers.getContractFactory("GameState");
@@ -119,6 +128,7 @@ async function main() {
   console.log("\nDeployment completed!");
   console.log("Contract addresses:");
   console.log("SonicityNFT:", sonicityNFTAddress);
+  console.log("SonicityFarm:", sonicityFarmAddress);
   console.log("GameState implementation:", gameStateImplAddress);
   console.log("GameState proxy:", gameStateProxyAddress);
   console.log("DistrictBuildings implementation:", districtBuildingsImplAddress);
@@ -131,6 +141,7 @@ async function main() {
   // Save addresses to a file for frontend use
   const addresses = {
     sonicityNFT: sonicityNFTAddress,
+    sonicityFarm: sonicityFarmAddress,
     gameStateImpl: gameStateImplAddress,
     gameStateProxy: gameStateProxyAddress,
     districtBuildingsImpl: districtBuildingsImplAddress,
