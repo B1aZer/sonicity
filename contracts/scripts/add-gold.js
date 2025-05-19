@@ -13,19 +13,25 @@ async function main() {
     const GameState = await ethers.getContractFactory("GameState");
     const gameState = GameState.attach(gameStateAddress);
 
-    const address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-    const amount = 1000;
+    // Get the owner's signer
+    const [owner] = await ethers.getSigners();
+    console.log(`Using owner address: ${owner.address}`);
 
-    console.log(`Adding ${amount} gold to address ${address}...`);
+    const address = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
+    const amount = ethers.parseEther("1000"); // 1000 gold
+
+    console.log(`Adding ${ethers.formatEther(amount)} gold to address ${address}...`);
     
-    const tx = await gameState.earnGold(address, amount);
+    // Connect gameState with owner's signer
+    const gameStateWithOwner = gameState.connect(owner);
+    const tx = await gameStateWithOwner.testEarnGold(address, amount);
     await tx.wait();
 
     console.log("Gold added successfully!");
     
     // Verify the new balance
     const newBalance = await gameState.getPlayerGold(address);
-    console.log(`New gold balance: ${newBalance}`);
+    console.log(`New gold balance: ${ethers.formatEther(newBalance)}`);
 }
 
 main()

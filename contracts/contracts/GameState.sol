@@ -424,4 +424,20 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         require(playerState[player].gold >= amount, "Insufficient gold");
         playerState[player].gold -= amount;
     }
+
+    /**
+     * @dev TEST ONLY: Quickly earn gold for testing purposes
+     * @notice This function should be removed before deploying to production
+     * @param player The address of the player
+     * @param amount The amount of gold to earn
+     */
+    function testEarnGold(address player, uint256 amount) external {
+        // Only allow owner to call this function
+        require(msg.sender == owner(), "Only owner can call this function");
+        // Only allow in test environment
+        require(block.chainid == 31337 || block.chainid == 1337, "Only available in test environment");
+        
+        playerState[player].gold += amount;
+        emit GoldEarned(player, amount);
+    }
 }
