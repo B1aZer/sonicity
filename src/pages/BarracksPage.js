@@ -84,17 +84,18 @@ export class BarracksPage extends BasePage {
                                     <div class="troop-desc">${troop.description}</div>
                                     <div class="troop-cost">
                                         <div class="cost-item">
-                                            <span class="cost-icon">💰</span>
+                                            <i class="fas fa-coins cost-icon"></i>
                                             <span class="cost-value">${troop.cost.gold}</span>
                                         </div>
                                         <div class="cost-item">
-                                            <span class="cost-icon">🌾</span>
+                                            <i class="fas fa-wheat-awn cost-icon"></i>
                                             <span class="cost-value">${troop.cost.food}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="troop-action-row">
-                                    <button class="train-btn" data-troop-type="${type}">
+                                    <button class="btn btn-primary train-btn" data-troop-type="${type}">
+                                        <i class="fas fa-shield-halved"></i>
                                         Train
                                     </button>
                                 </div>
