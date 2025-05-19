@@ -13,18 +13,45 @@ export class StakePage extends BasePage {
         this.container.className = 'base-page stake-page';
         this.statusComponent = new StatusComponent();
         this.container.innerHTML = `
-            <div class="page-container container-min-width-1000">
+            <div class="page-container">
                 <h1>Stake Your NFTs</h1>
 
-                <div class="page-section nft-sections">
-                    <div class="nft-section">
-                        <h2>Your NFTs</h2>
-                        <div class="nft-list nft-grid"></div>
+                <!-- Status Section -->
+                <div class="page-section status-section">
+                    <h2>NFT Status</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Total NFTs:</span>
+                            <span class="status-value total-nfts">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Staked NFTs:</span>
+                            <span class="status-value staked-nfts">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Available NFTs:</span>
+                            <span class="status-value available-nfts">0</span>
+                        </div>
                     </div>
-                    <div class="nft-section">
-                        <h2>Staked NFTs</h2>
-                        <div class="staked-nft-list nft-grid"></div>
+                </div>
+
+                <!-- Available NFTs Section -->
+                <div class="page-section nft-section">
+                    <h2>Your NFTs</h2>
+                    <div class="building-type-selector">
+                        <select class="building-type-select">
+                            <option value="0">House (Tier 0)</option>
+                            <option value="1">Farm (Tier 1)</option>
+                            <option value="2">Rep Station (Tier 2)</option>
+                        </select>
                     </div>
+                    <div class="nft-list nft-grid"></div>
+                </div>
+
+                <!-- Staked NFTs Section -->
+                <div class="page-section nft-section">
+                    <h2>Staked NFTs</h2>
+                    <div class="staked-nft-list nft-grid"></div>
                 </div>
             </div>
         `;
@@ -39,7 +66,6 @@ export class StakePage extends BasePage {
             showUnstakeButton: true,
             onUnstake: (tokenId) => this.unstakeNFT(tokenId)
         });
-        
     }
 
     showStatus(type, message, title = '') {
@@ -92,15 +118,13 @@ export class StakePage extends BasePage {
             const playerTier = await this.contracts.gameState.getPlayerTier(userAddress);
             Logger.info('Player tier:', playerTier);
 
-            // Create building type selector
-            const buildingTypeSelect = document.createElement('select');
-            buildingTypeSelect.className = 'building-type-select';
+            // Update building type selector based on tier
+            const buildingTypeSelect = this.container.querySelector('.building-type-select');
             buildingTypeSelect.innerHTML = `
                 <option value="0">House (Tier 0)</option>
                 <option value="1" ${playerTier < 1 ? 'disabled' : ''}>Farm (Tier 1)</option>
                 <option value="2" ${playerTier < 2 ? 'disabled' : ''}>Rep Station (Tier 2)</option>
             `;
-            ownedNFTsContainer.appendChild(buildingTypeSelect);
 
             // Load staked NFTs
             for (const tokenId of stakedTokenIds) {
@@ -127,6 +151,7 @@ export class StakePage extends BasePage {
 
             // Get all owned NFTs that are not staked
             const balance = await this.contracts.nft.balanceOf(userAddress);
+            let availableCount = 0;
 
             if (balance > 0n) {
                 for (let i = 0; i < balance; i++) {
@@ -135,6 +160,7 @@ export class StakePage extends BasePage {
                         continue;
                     }
                     
+                    availableCount++;
                     const tokenURI = await this.contracts.nft.tokenURI(tokenId);
                     const response = await fetch(tokenURI);
                     const metadata = await response.json();
@@ -156,6 +182,15 @@ export class StakePage extends BasePage {
                     this.unstakedCard.attachEventListeners(cardElement);
                 }
             }
+
+            // Update status section
+            const totalNFTs = Number(balance);
+            const stakedNFTs = stakedTokenIds.length;
+            const availableNFTs = availableCount;
+
+            this.container.querySelector('.total-nfts').textContent = totalNFTs;
+            this.container.querySelector('.staked-nfts').textContent = stakedNFTs;
+            this.container.querySelector('.available-nfts').textContent = availableNFTs;
 
             if (ownedNFTsContainer.children.length === 0) {
                 ownedNFTsContainer.innerHTML = '<div class="no-nfts">You don\'t have any unstaked NFTs.</div>';
