@@ -39,7 +39,7 @@ describe("GridBuildings", function () {
 
     // Deploy Altar
     const Altar = await ethers.getContractFactory("Altar");
-    altar = await upgrades.deployProxy(Altar, [sonicityNFTAddress, gameStateAddress, gridBuildingsAddress], {
+    altar = await upgrades.deployProxy(Altar, [gameStateAddress, gridBuildingsAddress], {
       kind: 'uups',
       initializer: 'initialize',
     });
@@ -60,6 +60,9 @@ describe("GridBuildings", function () {
 
     // Approve the NFT collection in GameState
     await gameState.connect(owner).approveCollection(sonicityNFTAddress);
+
+    // Approve the NFT collection in Altar
+    await altar.connect(owner).approveCollection(sonicityNFTAddress);
 
     // Initialize players (they start at tier 0 by default)
     await gameState.connect(player1).initializePlayer();
@@ -87,7 +90,7 @@ describe("GridBuildings", function () {
       // Stake the NFT
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      await altar.connect(player1).stake(tokenId);
+      await altar.connect(player1).stake(tokenId, 0, await sonicityNFT.getAddress());
 
       // Check that a building was created
       const newBuildingCount = await gridBuildings.buildingCounts(player1Address, 0);
@@ -117,7 +120,7 @@ describe("GridBuildings", function () {
       // Stake the NFT
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      await altar.connect(player1).stake(tokenId);
+      await altar.connect(player1).stake(tokenId, 0, await sonicityNFT.getAddress());
 
       // Get building count before unstaking
       const buildingCountBefore = await gridBuildings.buildingCounts(player1Address, 0);
@@ -128,7 +131,7 @@ describe("GridBuildings", function () {
       await ethers.provider.send("evm_mine");
 
       // Unstake
-      await altar.connect(player1).unstake(tokenId);
+      await altar.connect(player1).unstake(await sonicityNFT.getAddress(), tokenId);
 
       // Check that the building was removed
       const building = await gridBuildings.buildings(player1Address, buildingId);
@@ -156,7 +159,7 @@ describe("GridBuildings", function () {
       // Stake the NFT
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      await altar.connect(player1).stake(tokenId);
+      await altar.connect(player1).stake(tokenId, 0, await sonicityNFT.getAddress());
 
       // Get building ID
       const buildingId = await altar.stakedBuilding(await sonicityNFT.getAddress(), tokenId);
@@ -203,7 +206,7 @@ describe("GridBuildings", function () {
       // Stake the NFT
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      await altar.connect(player1).stake(tokenId);
+      await altar.connect(player1).stake(tokenId, 0, await sonicityNFT.getAddress());
 
       // Get building ID
       buildingId = await altar.stakedBuilding(await sonicityNFT.getAddress(), tokenId);
@@ -251,7 +254,7 @@ describe("GridBuildings", function () {
       // Fast forward time to complete staking period
       await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
       await ethers.provider.send("evm_mine");
-      await altar.connect(player1).unstake(1);
+      await altar.connect(player1).unstake(await sonicityNFT.getAddress(), 1);
 
       // Try to collect resources
       await expect(

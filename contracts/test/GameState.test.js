@@ -66,7 +66,6 @@ describe("GameState", function () {
     // Deploy Altar
     const Altar = await ethers.getContractFactory("Altar");
     altar = await upgrades.deployProxy(Altar, [
-      sonicityNFTAddress,
       gameStateAddress,
       gridBuildingsAddress
     ], { initializer: 'initialize' });
