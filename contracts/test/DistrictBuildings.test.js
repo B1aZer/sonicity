@@ -5,6 +5,7 @@ describe("DistrictBuildings", function () {
   let districtBuildings;
   let gameState;
   let gridBuildings;
+  let battleSystem;
   let owner;
   let player1;
 
@@ -64,11 +65,21 @@ describe("DistrictBuildings", function () {
       initializer: 'initialize',
     });
 
+    // Deploy mock BattleSystem
+    const BattleSystem = await ethers.getContractFactory("BattleSystem");
+    battleSystem = await upgrades.deployProxy(BattleSystem, [], {
+      kind: 'uups',
+      initializer: 'initialize',
+    });
+
     // Set up contract interactions
     await districtBuildings.setGameStateAddress(await gameState.getAddress());
     await gameState.setDistrictBuildingsAddress(await districtBuildings.getAddress());
     await gameState.setGridBuildingsAddress(await gridBuildings.getAddress());
+    await gameState.setBattleSystemAddress(await battleSystem.getAddress());
     await gridBuildings.setGameStateAddress(await gameState.getAddress());
+    await battleSystem.setGameStateAddress(await gameState.getAddress());
+    await battleSystem.setDistrictBuildingsAddress(await districtBuildings.getAddress());
 
     // Initialize player
     await gameState.connect(player1).initializePlayer();
@@ -158,36 +169,36 @@ describe("DistrictBuildings", function () {
       await districtBuildings.connect(player1).buildDistrictBuilding(2); // DEFENSE_TOWER
     });
 
-    it("Should allow GameState to damage a building", async function () {
+    it("Should allow BattleSystem to damage a building", async function () {
       const player1Address = await player1.getAddress();
       
-      // Damage the defense tower through GameState
-      await gameState.damageDistrictBuilding(player1Address, 2); // DEFENSE_TOWER
+      // Damage the defense tower through BattleSystem
+      await battleSystem.damageDistrictBuilding(player1Address, 2); // DEFENSE_TOWER
 
       // Check if building is now inactive
       const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 2);
       expect(isActive).to.be.false;
     });
 
-    it("Should not allow non-GameState to damage a building", async function () {
+    it("Should not allow non-BattleSystem to damage a building", async function () {
       const player1Address = await player1.getAddress();
       
       // Try to damage the defense tower as player1
       await expect(
         districtBuildings.connect(player1).damageDistrictBuilding(player1Address, 2)
-      ).to.be.revertedWith("Only GameState can call this function");
+      ).to.be.revertedWith("Only BattleSystem can call this function");
     });
 
     it("Should not allow damaging an already damaged building", async function () {
       const player1Address = await player1.getAddress();
       
-      // Damage the defense tower through GameState
-      await gameState.damageDistrictBuilding(player1Address, 2);
+      // Damage the defense tower through BattleSystem
+      await battleSystem.damageDistrictBuilding(player1Address, 2);
 
-      // Try to damage it again through GameState
+      // Try to damage it again through BattleSystem
       await expect(
-        gameState.damageDistrictBuilding(player1Address, 2)
-      ).to.be.revertedWith("Failed to damage building");
+        battleSystem.damageDistrictBuilding(player1Address, 2)
+      ).to.be.revertedWith("No buildings available to damage");
     });
 
     it("Should allow repairing a damaged building", async function () {
@@ -196,8 +207,8 @@ describe("DistrictBuildings", function () {
       // Ensure player has enough gold for repair
       await ensurePlayerGold(player1, 1000);
       
-      // Damage the defense tower through GameState
-      await gameState.damageDistrictBuilding(player1Address, 2);
+      // Damage the defense tower through BattleSystem
+      await battleSystem.damageDistrictBuilding(player1Address, 2);
 
       // Repair the building
       await districtBuildings.connect(player1).repairDistrictBuilding(2);
@@ -222,6 +233,43 @@ describe("DistrictBuildings", function () {
       await expect(
         districtBuildings.connect(player1).repairDistrictBuilding(3) // BARRACKS
       ).to.be.revertedWith("Building not built");
+    });
+
+    it("Should not allow damaging tier 0 buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Build a tier 0 building (SHOP)
+      await districtBuildings.connect(player1).buildDistrictBuilding(0); // SHOP
+      
+      // Try to damage the shop through BattleSystem
+      await battleSystem.damageDistrictBuilding(player1Address, 1);
+
+      // Check if shop is still active
+      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 0);
+      expect(isActive).to.be.true;
+    });
+
+    it("Should damage buildings in reverse order (higher tier first)", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Build multiple buildings of different tiers
+      await ensurePlayerGold(player1, 5000);
+      await gameState.connect(player1).donateGold(5000); // Reach tier 2
+      
+      // Build tier 1 building
+      await districtBuildings.connect(player1).buildDistrictBuilding(2); // DEFENSE_TOWER
+      // Build tier 2 building
+      await districtBuildings.connect(player1).buildDistrictBuilding(6); // REP_STATION
+      
+      // Damage 1 building
+      await battleSystem.damageDistrictBuilding(player1Address, 1);
+      
+      // Check that the higher tier building (REP_STATION) was damaged first
+      const isRepStationActive = await districtBuildings.isDistrictBuildingActive(player1Address, 6);
+      const isDefenseTowerActive = await districtBuildings.isDistrictBuildingActive(player1Address, 2);
+      
+      expect(isRepStationActive).to.be.false;
+      expect(isDefenseTowerActive).to.be.true;
     });
   });
 }); 

@@ -343,7 +343,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return uint256 Number of buildings actually damaged
      */
     function damageDistrictBuilding(address player, uint256 amount) external returns (uint256) {
-        require(msg.sender == gameStateAddress, "Only GameState can call this function");
+        require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
         require(amount > 0, "Amount must be greater than 0");
 
         uint256 damaged = 0;
