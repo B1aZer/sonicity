@@ -176,13 +176,21 @@ export class StakePage extends BasePage {
             // Get player's tier
             const playerTier = await this.contracts.gameState.getPlayerTier(userAddress);
             
-            // Update building type selector based on tier
+            // Store current selection before updating
             const buildingTypeSelect = this.container.querySelector('.building-type-select');
+            const currentSelection = buildingTypeSelect.value;
+            
+            // Update building type selector based on tier
             buildingTypeSelect.innerHTML = `
                 <option value="0">House (Tier 0)</option>
                 <option value="1" ${playerTier < 1 ? 'disabled' : ''}>Farm (Tier 1)</option>
                 <option value="2" ${playerTier < 2 ? 'disabled' : ''}>Rep Station (Tier 2)</option>
             `;
+
+            // Restore selection if it's still valid
+            if (currentSelection && !buildingTypeSelect.querySelector(`option[value="${currentSelection}"]`).disabled) {
+                buildingTypeSelect.value = currentSelection;
+            }
 
             // Load staked NFTs
             let stakedCount = 0;
