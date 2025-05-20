@@ -124,9 +124,32 @@ export class GridBuildingsContract extends BaseContract {
         return totalClaimable;
     }
 
+    async calculateTotalClaimableFood(buildingType) {
+        const address = await this.getAddress();
+        const activeBuildings = await this.getActiveBuildings(address);
+        
+        // Filter buildings by type if specified
+        const relevantBuildings = buildingType !== undefined 
+            ? activeBuildings.filter(b => b.buildingType === buildingType)
+            : activeBuildings;
+
+        let totalClaimable = BigInt(0);
+        for (const building of relevantBuildings) {
+            const claimable = await this.calculateClaimableFood(building.id);
+            totalClaimable += claimable;
+        }
+        
+        return totalClaimable;
+    }
+
     async calculateClaimableGold(buildingId) {
         const address = await this.getAddress();
         return await this.call('calculateClaimableGold', address);
+    }
+
+    async calculateClaimableFood(buildingId) {
+        const address = await this.getAddress();
+        return await this.call('calculateClaimableFood', address);
     }
 
     async collectAllGoldByType(buildingType) {
