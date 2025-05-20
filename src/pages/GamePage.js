@@ -172,16 +172,28 @@ export class GamePage extends BasePage {
             // Place houses on the grid
             for (const building of activeBuildings) {
                 Logger.info('Processing building:', building);
-                if (building.buildingType !== GridBuildingsContract.BuildingType.HOUSE || !building.active) {
-                    Logger.info('Skipping building - not a house or not active:', {
+                if (!building.active) {
+                    Logger.info('Skipping building - not active:', {
                         buildingType: building.buildingType,
-                        active: building.active,
-                        expectedType: GridBuildingsContract.BuildingType.HOUSE
+                        active: building.active
                     });
                     continue;
                 }
 
-                Logger.info('Placing house:', building);
+                // Map building type to string
+                let buildingType;
+                if (building.buildingType === GridBuildingsContract.BuildingType.HOUSE) {
+                    buildingType = 'HOUSE';
+                } else if (building.buildingType === GridBuildingsContract.BuildingType.FARM) {
+                    buildingType = 'FARM';
+                } else {
+                    Logger.info('Skipping building - unknown type:', {
+                        buildingType: building.buildingType
+                    });
+                    continue;
+                }
+
+                Logger.info(`Placing ${buildingType.toLowerCase()}:`, building);
 
                 // Find an available grid position
                 let foundPosition = false;
@@ -220,12 +232,12 @@ export class GamePage extends BasePage {
                 if (foundPosition) {
                     const position = this.game.gridManager.getWorldPosition(gridX, gridZ);
                     Logger.info('Calculated world position:', position);
-                    const house = this.game.buildingManager.placeBuilding('HOUSE', position);
+                    const house = this.game.buildingManager.placeBuilding(buildingType, position);
                     if (house) {
                         this.game.gridManager.occupyCell(gridX, gridZ, house.mesh);
-                        Logger.info(`Successfully placed house at grid position (${gridX}, ${gridZ})`);
+                        Logger.info(`Successfully placed ${buildingType.toLowerCase()} at grid position (${gridX}, ${gridZ})`);
                     } else {
-                        Logger.error(`Failed to place house at grid position (${gridX}, ${gridZ})`);
+                        Logger.error(`Failed to place ${buildingType.toLowerCase()} at grid position (${gridX}, ${gridZ})`);
                     }
                 } else {
                     Logger.error('No available grid position found for house');
