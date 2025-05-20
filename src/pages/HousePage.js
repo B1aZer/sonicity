@@ -1,4 +1,4 @@
-import '../styles/house-page.css';
+import '../styles/grid-building-page.css';
 import { BasePage } from './BasePage.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
@@ -10,7 +10,7 @@ export class HousePage extends BasePage {
         super();
         Logger.info('HousePage constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'base-page house-page';
+        this.element.className = 'base-page building-page house-page';
         this.modal = new Modal();
         this.render();
     }
@@ -178,7 +178,7 @@ export class HousePage extends BasePage {
                 <!-- House Details Section -->
                 <div class="page-section house-details-section">
                     <h2>House Details</h2>
-                    <div class="house-info">
+                    <div class="building-info">
                         <div class="info-card">
                             <h3>Production Rate</h3>
                             <p>Current production rate per house</p>

@@ -1,4 +1,4 @@
-import '../styles/farm-page.css';
+import '../styles/grid-building-page.css';
 import { BasePage } from './BasePage.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
@@ -10,7 +10,7 @@ export class FarmPage extends BasePage {
         super();
         Logger.info('FarmPage constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'base-page farm-page';
+        this.element.className = 'base-page building-page farm-page';
         this.modal = new Modal();
         this.render();
     }
@@ -177,7 +177,7 @@ export class FarmPage extends BasePage {
                 <!-- Farm Details Section -->
                 <div class="page-section farm-details-section">
                     <h2>Farm Details</h2>
-                    <div class="farm-info">
+                    <div class="building-info">
                         <div class="info-card">
                             <h3>Production Rate</h3>
                             <p>Current production rate per farm</p>

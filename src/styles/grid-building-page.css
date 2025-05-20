@@ -1,5 +1,17 @@
-/* Farm Info Section */
-.farm-info {
+/* Building Page Styles (shared between House and Farm) */
+.building-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: var(--spacing-xl);
+    background-color: var(--bg-dark);
+    background-image: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+    color: var(--text-primary);
+}
+
+/* Building Info Section */
+.building-info {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: var(--spacing-lg);
@@ -97,7 +109,7 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .farm-info {
+    .building-info {
         grid-template-columns: 1fr;
     }
     
@@ -107,7 +119,7 @@
 }
 
 @media (max-width: 800px) {
-    .farm-page .page-container {
+    .building-page .page-container {
         min-width: unset;
         width: 100%;
     }
