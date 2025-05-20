@@ -53,6 +53,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event BuildingCreated(address indexed player, GridBuildingType buildingType, uint256 buildingId);
     event BuildingUpgraded(address indexed player, uint256 buildingId, uint256 newLevel);
     event BuildingRemoved(address indexed player, uint256 buildingId);
+    event BuildingDamaged(address indexed player, uint256 buildingId);
     event ResourcesCollected(address indexed player, uint256 buildingId, uint256 amount);
     event GameStateAddressUpdated(address indexed newAddress);
     event AltarAddressUpdated(address indexed newAddress);
@@ -390,5 +391,68 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function getBuildingConfig(GridBuildingType buildingType) external view returns (GridBuildingConfig memory) {
         return buildingConfigs[buildingType];
+    }
+
+    /**
+     * @dev Damage grid buildings for a player
+     * @param player The address of the player
+     * @param amount Number of buildings to damage
+     * @return uint256 Number of buildings actually damaged
+     */
+    function damageGridBuilding(address player, uint256 amount) external returns (uint256) {
+        require(msg.sender == gameStateAddress, "Only GameState can call this function");
+        require(amount > 0, "Amount must be greater than 0");
+
+        // Count active buildings that can be damaged
+        uint256 activeBuildings = 0;
+        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+            if (buildings[player][i].active) {
+                activeBuildings++;
+            }
+        }
+
+        require(activeBuildings > 0, "No buildings available to damage");
+        require(amount <= activeBuildings, "Cannot damage more buildings than available");
+
+        // Sort buildings by tier and level for damage priority
+        uint256[] memory buildingIds = new uint256[](activeBuildings);
+        uint256[] memory buildingScores = new uint256[](activeBuildings);
+        uint256 index = 0;
+
+        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+            if (buildings[player][i].active) {
+                buildingIds[index] = i;
+                // Score = tier * 100 + level (higher score = higher priority to damage)
+                buildingScores[index] = uint256(buildingConfigs[buildings[player][i].buildingType].tier) * 100 + buildings[player][i].level;
+                index++;
+            }
+        }
+
+        // Sort buildings by score (descending)
+        for (uint256 i = 0; i < activeBuildings - 1; i++) {
+            for (uint256 j = 0; j < activeBuildings - i - 1; j++) {
+                if (buildingScores[j] < buildingScores[j + 1]) {
+                    // Swap scores
+                    uint256 tempScore = buildingScores[j];
+                    buildingScores[j] = buildingScores[j + 1];
+                    buildingScores[j + 1] = tempScore;
+                    // Swap IDs
+                    uint256 tempId = buildingIds[j];
+                    buildingIds[j] = buildingIds[j + 1];
+                    buildingIds[j + 1] = tempId;
+                }
+            }
+        }
+
+        // Damage the highest priority buildings
+        uint256 damaged = 0;
+        for (uint256 i = 0; i < amount; i++) {
+            uint256 buildingId = buildingIds[i];
+            buildings[player][buildingId].active = false;
+            damaged++;
+            emit BuildingDamaged(player, buildingId);
+        }
+
+        return damaged;
     }
 }
