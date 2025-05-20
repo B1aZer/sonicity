@@ -1,0 +1,315 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.22;
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
+/**
+ * @title BattleSystem
+ * @dev Contract for managing PvP battles between players
+ */
+contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+    // Reference to other contracts
+    address public gameStateAddress;
+    address public districtBuildingsAddress;
+
+    // Troop types
+    enum TroopType {
+        INFANTRY,
+        CAVALRY,
+        SIEGE
+    }
+
+    // Battle state
+    struct Battle {
+        address attacker;
+        address defender;
+        uint256 startTime;
+        bool resolved;
+        uint256 attackerPower;
+        uint256 defenderPower;
+        uint256 treasuryBurned;
+        uint256 buildingSlotsDisabled;
+        uint256 repPoints;
+    }
+
+    // Troop costs and effects
+    struct TroopConfig {
+        uint256 goldCost;
+        uint256 foodCost;
+        uint256 power;
+        uint256 treasuryBurnChance;  // Percentage (0-100)
+        uint256 buildingDisableChance;  // Percentage (0-100)
+    }
+
+    // Mappings
+    mapping(address => mapping(TroopType => uint256)) public playerTroops;
+    mapping(address => Battle) public activeBattles;
+    mapping(TroopType => TroopConfig) public troopConfigs;
+
+    // Constants
+    uint256 public constant BATTLE_DURATION = 24 hours;
+    uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
+    uint256 public constant MAX_BUILDING_SLOTS_DISABLE = 3; // Max buildings that can be disabled
+
+    // Events
+    event BattleStarted(address indexed attacker, address indexed defender, uint256 startTime);
+    event BattleResolved(address indexed attacker, address indexed defender, bool attackerWon, uint256 treasuryBurned, uint256 buildingSlotsDisabled);
+    event TroopsTrained(address indexed player, TroopType troopType, uint256 amount);
+    event TroopsDeployed(address indexed player, TroopType troopType, uint256 amount);
+    event TroopsLost(address indexed player, TroopType troopType, uint256 amount);
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize() public initializer {
+        __Ownable_init(msg.sender);
+        __UUPSUpgradeable_init();
+        __ReentrancyGuard_init();
+
+        // Initialize troop configurations
+        troopConfigs[TroopType.INFANTRY] = TroopConfig({
+            goldCost: 100,
+            foodCost: 50,
+            power: 10,
+            treasuryBurnChance: 0,
+            buildingDisableChance: 0
+        });
+
+        troopConfigs[TroopType.CAVALRY] = TroopConfig({
+            goldCost: 200,
+            foodCost: 100,
+            power: 25,
+            treasuryBurnChance: 0,
+            buildingDisableChance: 30
+        });
+
+        troopConfigs[TroopType.SIEGE] = TroopConfig({
+            goldCost: 300,
+            foodCost: 150,
+            power: 40,
+            treasuryBurnChance: 15, // 15% chance to burn treasury
+            buildingDisableChance: 50 // 50% chance to disable district buildings
+        });
+    }
+
+    /**
+     * @dev Train new troops
+     * @param troopType Type of troop to train
+     * @param amount Amount of troops to train
+     */
+    function trainTroops(TroopType troopType, uint256 amount) external nonReentrant {
+        TroopConfig memory config = troopConfigs[troopType];
+        require(amount > 0, "Amount must be greater than 0");
+
+        // Check and deduct resources
+        (bool success, ) = gameStateAddress.call(
+            abi.encodeWithSignature(
+                "deductResources(address,uint256,uint256,uint256)",
+                msg.sender,
+                config.goldCost * amount,
+                config.foodCost * amount,
+                0  // No rep cost for training
+            )
+        );
+        require(success, "Failed to deduct resources");
+
+        // Add troops to player's army
+        playerTroops[msg.sender][troopType] += amount;
+
+        emit TroopsTrained(msg.sender, troopType, amount);
+    }
+
+    /**
+     * @dev Start a battle against another player
+     * @param defender Address of the player to attack
+     * @param infantryCount Number of infantry to deploy
+     * @param cavalryCount Number of cavalry to deploy
+     * @param siegeCount Number of siege units to deploy
+     */
+    function startBattle(
+        address defender,
+        uint256 infantryCount,
+        uint256 cavalryCount,
+        uint256 siegeCount
+    ) external nonReentrant {
+        require(defender != msg.sender, "Cannot attack yourself");
+        require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
+        require(activeBattles[defender].startTime == 0, "Defender already in a battle");
+
+        // Check if attacker has enough troops
+        require(playerTroops[msg.sender][TroopType.INFANTRY] >= infantryCount, "Not enough infantry");
+        require(playerTroops[msg.sender][TroopType.CAVALRY] >= cavalryCount, "Not enough cavalry");
+        require(playerTroops[msg.sender][TroopType.SIEGE] >= siegeCount, "Not enough siege units");
+
+        // Calculate total power
+        uint256 attackerPower = (
+            infantryCount * troopConfigs[TroopType.INFANTRY].power +
+            cavalryCount * troopConfigs[TroopType.CAVALRY].power +
+            siegeCount * troopConfigs[TroopType.SIEGE].power
+        );
+
+        // Get defender's power (from defense tower)
+        (bool success, uint256 defenderPower) = getDefenderPower(defender);
+        require(success, "Failed to get defender power");
+
+        // Create battle
+        Battle memory newBattle = Battle({
+            attacker: msg.sender,
+            defender: defender,
+            startTime: block.timestamp,
+            resolved: false,
+            attackerPower: attackerPower,
+            defenderPower: defenderPower,
+            treasuryBurned: 0,
+            buildingSlotsDisabled: 0,
+            repPoints: 0
+        });
+
+        activeBattles[msg.sender] = newBattle;
+        activeBattles[defender] = newBattle;
+
+        // Lock troops
+        playerTroops[msg.sender][TroopType.INFANTRY] -= infantryCount;
+        playerTroops[msg.sender][TroopType.CAVALRY] -= cavalryCount;
+        playerTroops[msg.sender][TroopType.SIEGE] -= siegeCount;
+
+        emit BattleStarted(msg.sender, defender, block.timestamp);
+    }
+
+    /**
+     * @dev Resolve a battle after the duration has passed
+     * @param battleId ID of the battle to resolve
+     */
+    function resolveBattle(address battleId) external nonReentrant {
+        Battle storage battle = activeBattles[battleId];
+        require(battle.startTime > 0, "Battle does not exist");
+        require(!battle.resolved, "Battle already resolved");
+        require(block.timestamp >= battle.startTime + BATTLE_DURATION, "Battle duration not passed");
+
+        bool attackerWon = battle.attackerPower > battle.defenderPower;
+        
+        if (attackerWon) {
+            // Calculate treasury burn
+            uint256 treasuryBurnPercent = calculateTreasuryBurn(battle.attackerPower, battle.defenderPower);
+            uint256 treasuryBurned = calculateTreasuryBurnAmount(battle.defender, treasuryBurnPercent);
+            
+            // Calculate building slots to disable
+            uint256 buildingSlotsDisabled = calculateBuildingSlotsToDisable(battle.attackerPower, battle.defenderPower);
+            
+            // Apply effects
+            applyBattleEffects(
+                battle.attacker,
+                battle.defender,
+                treasuryBurned,
+                buildingSlotsDisabled
+            );
+
+            // Update battle state
+            battle.treasuryBurned = treasuryBurned;
+            battle.buildingSlotsDisabled = buildingSlotsDisabled;
+            battle.repPoints = calculateRepPoints(battle.attackerPower, battle.defenderPower);
+        }
+
+        battle.resolved = true;
+
+        emit BattleResolved(
+            battle.attacker,
+            battle.defender,
+            attackerWon,
+            battle.treasuryBurned,
+            battle.buildingSlotsDisabled
+        );
+    }
+
+    // Internal helper functions
+
+    function getDefenderPower(address defender) internal view returns (bool, uint256) {
+        // Call DistrictBuildings to get defense tower level and calculate power
+        (bool success, bytes memory data) = districtBuildingsAddress.staticcall(
+            abi.encodeWithSignature("getDefenseTowerPower(address)", defender)
+        );
+        if (!success) return (false, 0);
+        return (true, abi.decode(data, (uint256)));
+    }
+
+    function calculateTreasuryBurn(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
+        // Calculate burn percentage based on power difference
+        uint256 powerDiff = attackerPower > defenderPower ? attackerPower - defenderPower : 0;
+        uint256 burnPercent = (powerDiff * 100) / attackerPower;
+        return burnPercent > MAX_TREASURY_BURN_PERCENT ? MAX_TREASURY_BURN_PERCENT : burnPercent;
+    }
+
+    function calculateTreasuryBurnAmount(address defender, uint256 burnPercent) internal view returns (uint256) {
+        (bool success, bytes memory data) = gameStateAddress.staticcall(
+            abi.encodeWithSignature("getPlayerTreasury(address)", defender)
+        );
+        require(success, "Failed to get treasury amount");
+        uint256 treasuryAmount = abi.decode(data, (uint256));
+        return (treasuryAmount * burnPercent) / 100;
+    }
+
+    function calculateBuildingSlotsToDisable(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
+        uint256 powerDiff = attackerPower > defenderPower ? attackerPower - defenderPower : 0;
+        uint256 slots = (powerDiff * MAX_BUILDING_SLOTS_DISABLE) / attackerPower;
+        return slots > MAX_BUILDING_SLOTS_DISABLE ? MAX_BUILDING_SLOTS_DISABLE : slots;
+    }
+
+    function calculateRepPoints(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
+        uint256 powerDiff = attackerPower > defenderPower ? attackerPower - defenderPower : 0;
+        return (powerDiff * 10) / 100; // 10 REP points per 100 power difference
+    }
+
+    function applyBattleEffects(
+        address attacker,
+        address defender,
+        uint256 treasuryBurned,
+        uint256 buildingSlotsDisabled
+    ) internal {
+        // Burn treasury (with chance for siege units)
+        if (treasuryBurned > 0) {
+            uint256 siegeCount = playerTroops[attacker][TroopType.SIEGE];
+            if (siegeCount > 0) {
+                uint256 burnChance = troopConfigs[TroopType.SIEGE].treasuryBurnChance;
+                if (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, attacker))) % 100 < burnChance) {
+                    (bool success, ) = gameStateAddress.call(
+                        abi.encodeWithSignature("burnTreasury(address,uint256)", defender, treasuryBurned)
+                    );
+                    require(success, "Failed to burn treasury");
+                }
+            }
+        }
+
+        // Damage buildings
+        if (buildingSlotsDisabled > 0) {
+            (bool success, ) = districtBuildingsAddress.call(
+                abi.encodeWithSignature("damageDistrictBuilding(address,uint256)", defender, buildingSlotsDisabled)
+            );
+            require(success, "Failed to damage buildings");
+        }
+
+        // Award REP points
+        if (treasuryBurned > 0 || buildingSlotsDisabled > 0) {
+            (bool success, ) = gameStateAddress.call(
+                abi.encodeWithSignature("earnRep(address,uint256)", attacker, calculateRepPoints(attackerPower, defenderPower))
+            );
+            require(success, "Failed to award REP points");
+        }
+    }
+
+    // Admin functions
+
+    function setGameStateAddress(address _gameStateAddress) external onlyOwner {
+        gameStateAddress = _gameStateAddress;
+    }
+
+    function setDistrictBuildingsAddress(address _districtBuildingsAddress) external onlyOwner {
+        districtBuildingsAddress = _districtBuildingsAddress;
+    }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+} 
