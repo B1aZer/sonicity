@@ -7,12 +7,20 @@ export class AltarContract extends BaseContract {
         super(CONTRACT_ADDRESSES.ALTAR, AltarABI.abi);
     }
 
-    async stake(tokenId, buildingType) {
-        return await this.transact('stake', tokenId, buildingType);
+    async stake(tokenId, buildingType, collection) {
+        return await this.transact('stake', tokenId, buildingType, collection);
     }
 
-    async unstake(tokenId) {
-        return await this.transact('unstake', tokenId);
+    async unstake(collection, tokenId) {
+        return await this.transact('unstake', collection, tokenId);
+    }
+
+    async getStakeDataWithCollection(collection, tokenId) {
+        return await this.call('getStakeDataWithCollection', collection, tokenId);
+    }
+
+    async getUserStakesByCollection(user, collection) {
+        return await this.call('getUserStakesByCollection', user, collection);
     }
 
     async getStakeData(tokenId) {
