@@ -8,6 +8,7 @@ import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
 import { StakePage } from '../../pages/StakePage.js';
 import { HousePage } from '../../pages/HousePage.js';
+import { FarmPage } from '../../pages/FarmPage.js';
 import { CityPage } from '../../pages/CityPage.js';
 import { DistrictPage } from '../../pages/DistrictPage.js';
 import { ShopPage } from '../../pages/ShopPage.js';
@@ -57,7 +58,7 @@ class App {
         }
 
         // Handle protected routes
-        if (page === 'dashboard' || page === 'overview' || page === 'house' || page === 'city' || page === 'district') {
+        if (page === 'dashboard' || page === 'overview' || page === 'house' || page === 'farm' || page === 'city' || page === 'district') {
             const hasAccess = await AccessControl.checkCityAccess();
             if (!hasAccess) {
                 page = 'access';
@@ -92,6 +93,10 @@ class App {
                 break;
             case 'house':
                 this.currentPage = new HousePage();
+                this.currentPage.mount(this.layout.content);
+                break;
+            case 'farm':
+                this.currentPage = new FarmPage();
                 this.currentPage.mount(this.layout.content);
                 break;
             case 'city':

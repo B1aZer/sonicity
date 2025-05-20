@@ -310,6 +310,10 @@ export class GamePage extends BasePage {
                     Logger.info('House clicked');
                     window.history.pushState({}, '', '/house');
                     window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isFarm) {
+                    Logger.info('Farm clicked');
+                    window.history.pushState({}, '', '/farm');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                 } else if (clickedObject.userData.isShop) {
                     Logger.info('Shop clicked');
                     window.history.pushState({}, '', '/shop');
