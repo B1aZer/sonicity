@@ -80,6 +80,7 @@ describe("DistrictBuildings", function () {
     await gridBuildings.setGameStateAddress(await gameState.getAddress());
     await battleSystem.setGameStateAddress(await gameState.getAddress());
     await battleSystem.setDistrictBuildingsAddress(await districtBuildings.getAddress());
+    await districtBuildings.setBattleSystemAddress(await battleSystem.getAddress());
 
     // Initialize player
     await gameState.connect(player1).initializePlayer();

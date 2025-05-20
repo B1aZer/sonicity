@@ -14,11 +14,14 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     // Reference to the GameState contract
     address public gameStateAddress;
+    // Reference to the BattleSystem contract
+    address public battleSystemAddress;
 
     // District Building Types
     enum DistrictBuildingType {
         SHOP,
         WORKSHOP,
+        OUTPOST,
         DEFENSE_TOWER,
         BARRACKS,
         SCOUT_GUILD,
@@ -64,6 +67,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     event DistrictBuildingDamaged(address indexed player, DistrictBuildingType buildingType);
     event DistrictBuildingRepaired(address indexed player, DistrictBuildingType buildingType);
     event GameStateAddressUpdated(address indexed newAddress);
+    event BattleSystemAddressUpdated(address indexed newAddress);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -94,6 +98,16 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Repair buildings",
+            tier: 0
+        });
+
+        districtBuildingConfigs[DistrictBuildingType.OUTPOST] = DistrictBuildingConfig({
+            name: "Outpost",
+            unlockCost: 300,
+            buildCost: 120,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
+            description: "Early warning system for potential attacks",
             tier: 0
         });
 
@@ -242,6 +256,15 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     function setGameStateAddress(address _gameStateAddress) external onlyOwner {
         gameStateAddress = _gameStateAddress;
         emit GameStateAddressUpdated(_gameStateAddress);
+    }
+
+    /**
+     * @dev Set the BattleSystem contract address
+     * @param _battleSystemAddress The address of the BattleSystem contract
+     */
+    function setBattleSystemAddress(address _battleSystemAddress) external onlyOwner {
+        battleSystemAddress = _battleSystemAddress;
+        emit BattleSystemAddressUpdated(_battleSystemAddress);
     }
 
     /**
@@ -469,22 +492,23 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return string[] Array of building names in the same order as the enum
      */
     function getBuildingNames() public pure returns (string[] memory) {
-        string[] memory names = new string[](15);
+        string[] memory names = new string[](16);
         names[0] = "SHOP";
         names[1] = "WORKSHOP";
-        names[2] = "DEFENSE_TOWER";
-        names[3] = "BARRACKS";
-        names[4] = "SCOUT_GUILD";
-        names[5] = "CARAVAN";
-        names[6] = "REP_STATION";
-        names[7] = "COUNCIL_CHAMBER";
-        names[8] = "AUDIT_SHRINE";
-        names[9] = "FOUNDERS_HALL";
-        names[10] = "MINISTRY_OF_MERIT";
-        names[11] = "ARCANE_TOWER";
-        names[12] = "FORTRESS_WALLS";
-        names[13] = "BANK";
-        names[14] = "ALTAR";
+        names[2] = "OUTPOST";
+        names[3] = "DEFENSE_TOWER";
+        names[4] = "BARRACKS";
+        names[5] = "SCOUT_GUILD";
+        names[6] = "CARAVAN";
+        names[7] = "REP_STATION";
+        names[8] = "COUNCIL_CHAMBER";
+        names[9] = "AUDIT_SHRINE";
+        names[10] = "FOUNDERS_HALL";
+        names[11] = "MINISTRY_OF_MERIT";
+        names[12] = "ARCANE_TOWER";
+        names[13] = "FORTRESS_WALLS";
+        names[14] = "BANK";
+        names[15] = "ALTAR";
         return names;
     }
 
