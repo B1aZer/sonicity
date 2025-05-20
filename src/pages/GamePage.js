@@ -33,8 +33,9 @@ export class GamePage extends BasePage {
     async updateResourceDisplay() {
         try {
             const playerAddress = await this.contracts.gameState.getAddress();
-            const [gold, activeBuildings, buildingSlots, repPoints] = await Promise.all([
+            const [gold, food, activeBuildings, buildingSlots, repPoints] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(playerAddress),
+                this.contracts.gameState.getPlayerFood(playerAddress),
                 this.contracts.gridBuildings.getActiveBuildings(playerAddress),
                 this.contracts.gameState.getBuildingSlots(playerAddress),
                 this.contracts.gameState.getPlayerRep(playerAddress)
@@ -42,18 +43,23 @@ export class GamePage extends BasePage {
             
             Logger.info('Resource values:', {
                 gold: gold.toString(),
+                food: food.toString(),
                 buildingsBuilt: activeBuildings.length,
                 buildingSlots: buildingSlots.toString(),
                 repPoints: repPoints.toString()
             });
             
             const goldElement = this.element.querySelector('#gold-amount');
+            const foodElement = this.element.querySelector('#food-amount');
             const buildingSlotsElement = this.element.querySelector('#building-slots');
             const maxBuildingSlotsElement = this.element.querySelector('#max-building-slots');
             const repPointsElement = this.element.querySelector('#rep-points');
             
             if (goldElement) {
                 goldElement.textContent = gold.toString();
+            }
+            if (foodElement) {
+                foodElement.textContent = food.toString();
             }
             if (buildingSlotsElement) {
                 buildingSlotsElement.textContent = activeBuildings.length.toString();
@@ -339,6 +345,7 @@ export class GamePage extends BasePage {
             <div id="ui-container">
                 <div id="resource-display">
                     Gold: <span id="gold-amount" style="color: #FFD700; font-weight: bold;">0</span><br>
+                    Food: <span id="food-amount" style="color: #90EE90; font-weight: bold;">0</span><br>
                     Rep Points: <span id="rep-points" style="color: #4CAF50; font-weight: bold;">0</span><br>
                     Building Slots: <span id="building-slots" style="color: #87CEEB; font-weight: bold;">0</span>/<span id="max-building-slots" style="color: #87CEEB; font-weight: bold;">0</span>
                 </div>
