@@ -346,58 +346,19 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         require(msg.sender == gameStateAddress, "Only GameState can call this function");
         require(amount > 0, "Amount must be greater than 0");
 
-        // Count active buildings that can be damaged
-        uint256 activeBuildings = 0;
-        for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
-            DistrictBuildingType buildingType = DistrictBuildingType(i);
-            if (buildings[player][buildingType].active) {
-                activeBuildings++;
-            }
-        }
-
-        require(activeBuildings > 0, "No buildings available to damage");
-        require(amount <= activeBuildings, "Cannot damage more buildings than available");
-
-        // Sort buildings by tier and level for damage priority
-        DistrictBuildingType[] memory buildingTypes = new DistrictBuildingType[](activeBuildings);
-        uint256[] memory buildingScores = new uint256[](activeBuildings);
-        uint256 index = 0;
-
-        for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
-            DistrictBuildingType buildingType = DistrictBuildingType(i);
-            if (buildings[player][buildingType].active) {
-                buildingTypes[index] = buildingType;
-                // Score = tier * 100 + level (higher score = higher priority to damage)
-                buildingScores[index] = uint256(districtBuildingConfigs[buildingType].tier) * 100 + buildings[player][buildingType].level;
-                index++;
-            }
-        }
-
-        // Sort buildings by score (descending)
-        for (uint256 i = 0; i < activeBuildings - 1; i++) {
-            for (uint256 j = 0; j < activeBuildings - i - 1; j++) {
-                if (buildingScores[j] < buildingScores[j + 1]) {
-                    // Swap scores
-                    uint256 tempScore = buildingScores[j];
-                    buildingScores[j] = buildingScores[j + 1];
-                    buildingScores[j + 1] = tempScore;
-                    // Swap types
-                    DistrictBuildingType tempType = buildingTypes[j];
-                    buildingTypes[j] = buildingTypes[j + 1];
-                    buildingTypes[j + 1] = tempType;
-                }
-            }
-        }
-
-        // Damage the highest priority buildings
         uint256 damaged = 0;
-        for (uint256 i = 0; i < amount; i++) {
-            DistrictBuildingType buildingType = buildingTypes[i];
-            buildings[player][buildingType].active = false;
-            damaged++;
-            emit DistrictBuildingDamaged(player, buildingType);
+        
+        // Go through buildings in reverse order (higher tier first), skipping tier 0
+        for (uint8 i = uint8(DistrictBuildingType.ALTAR); i > uint8(DistrictBuildingType.WORKSHOP) && damaged < amount; i--) {
+            DistrictBuildingType buildingType = DistrictBuildingType(i);
+            if (buildings[player][buildingType].active) {
+                buildings[player][buildingType].active = false;
+                damaged++;
+                emit DistrictBuildingDamaged(player, buildingType);
+            }
         }
 
+        require(damaged > 0, "No buildings available to damage");
         return damaged;
     }
 
