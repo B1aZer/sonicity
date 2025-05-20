@@ -9,6 +9,7 @@ import '../styles/buttons.css';
 export class BarracksPage extends BasePage {
     constructor() {
         super();
+        Logger.info('BarracksPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'base-page barracks-page';
         this.modal = new Modal();
@@ -16,16 +17,30 @@ export class BarracksPage extends BasePage {
     }
 
     async onInitialized(walletResult) {
+        Logger.info('BarracksPage onInitialized called with wallet:', walletResult);
         try {
-            await this.updateResourceDisplay();
+            await this.loadBarracksData();
+            this.setupTrainHandlers();
+            Logger.info('Barracks page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing barracks page:', error);
             this.modal.error('Failed to initialize barracks page. Please try refreshing the page.');
         }
     }
 
-    async updateResourceDisplay() {
+    updateWalletStatus(address) {
+        Logger.info('Updating wallet status with address:', address);
+        if (address) {
+            this.loadBarracksData().catch(error => {
+                Logger.error('Error loading barracks data after wallet update:', error);
+            });
+        }
+    }
+
+    async loadBarracksData() {
         try {
+            Logger.info('Starting to load barracks data...');
+            
             const [gold, food] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
                 this.contracts.gameState.getPlayerFood()
@@ -41,12 +56,20 @@ export class BarracksPage extends BasePage {
             
             if (goldElement) {
                 goldElement.textContent = gold.toString();
+                Logger.info('Updated UI with gold amount:', gold.toString());
+            } else {
+                Logger.warn('Gold amount element not found in DOM');
             }
+            
             if (foodElement) {
                 foodElement.textContent = food.toString();
+                Logger.info('Updated UI with food amount:', food.toString());
+            } else {
+                Logger.warn('Food amount element not found in DOM');
             }
         } catch (error) {
-            Logger.error('Error updating resource display:', error);
+            Logger.error('Error loading barracks data:', error);
+            this.modal.error('Failed to load barracks data. Please try refreshing the page.');
         }
     }
 
@@ -56,7 +79,7 @@ export class BarracksPage extends BasePage {
                 <h1 class="page-title">Barracks</h1>
                 
                 <div class="page-section status-section">
-                    <h2>Status</h2>
+                    <h2>Resources</h2>
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Gold:</span>
@@ -105,10 +128,11 @@ export class BarracksPage extends BasePage {
                 </div>
             </div>
         `;
-        this.setupTrainHandlers();
     }
 
     setupTrainHandlers() {
+        Logger.info('Setting up train handlers');
+        
         const trainButtons = this.element.querySelectorAll('.train-btn');
         trainButtons.forEach(btn => {
             btn.addEventListener('click', async (e) => {
@@ -142,10 +166,25 @@ export class BarracksPage extends BasePage {
                     );
 
                     if (result.isConfirmed) {
-                        // TODO: Call contract to train troop
-                        Logger.info(`Barracks: Training troop: ${troop.name}`);
-                        this.modal.success(`You have trained <b>${troop.name}</b>!`);
-                        await this.updateResourceDisplay();
+                        // Show loading modal
+                        const loadingModal = this.modal.loading('Training troop...');
+                        
+                        try {
+                            // TODO: Call contract to train troop
+                            // await this.contracts.barracks.trainTroop(troopType);
+                            
+                            // Close loading modal
+                            loadingModal.close();
+                            
+                            // Show success message
+                            this.modal.success(`Successfully trained <b>${troop.name}</b>!`);
+                            
+                            // Update resource display
+                            await this.loadBarracksData();
+                        } catch (error) {
+                            loadingModal.close();
+                            throw error;
+                        }
                     }
                 } catch (error) {
                     Logger.error('Error training troop:', error);
@@ -156,6 +195,7 @@ export class BarracksPage extends BasePage {
     }
 
     mount(container) {
+        Logger.info('Mounting barracks page...');
         container.appendChild(this.element);
         // Initialize using base class method
         this.initialize().catch(error => {
