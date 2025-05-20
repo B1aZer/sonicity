@@ -11,6 +11,7 @@ const assetMap = {
     SHOP: { url: 'assets/shop.glb' },
     WORKSHOP: { url: 'assets/workshop.glb' },
     BARRACKS: { url: 'assets/barracks.glb' },
+    FARM: { url: 'assets/farm.glb' },
 };
 
 // Texture paths - using PNG format instead of TGA

@@ -33,6 +33,12 @@ export const BUILDINGS = {
         color: 0xADD8E6, // Light Blue
         isGridBuilding: true
     },
+    FARM: {
+        name: 'Farm',
+        size: new THREE.Vector3(12, 12, 12),
+        color: 0x90EE90, // Light Green
+        isGridBuilding: true
+    },
 
     // Fixed district buildings
     CITY_HALL: {
