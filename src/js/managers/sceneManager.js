@@ -160,15 +160,38 @@ export class SceneManager {
 
     /**
      * Creates the grid helper
-     * @returns {THREE.GridHelper} The grid helper
+     * @returns {THREE.Group} The grid helper group
      */
     createGridHelper() {
-        const gridSize = this.gridManager.getGridSize();
         const cellSize = this.gridManager.getCellSize();
-        const totalGridSize = gridSize * cellSize;
-        const gridHelper = new THREE.GridHelper(totalGridSize, gridSize, 0x000000, 0x000000);
-        gridHelper.position.y = 0.01;
-        return gridHelper;
+        const dimensions = this.gridManager.gridDimensions[this.gridManager.tier];
+        const width = dimensions.width;
+        const height = dimensions.height;
+        const totalWidth = width * cellSize;
+        const totalHeight = height * cellSize;
+        const group = new THREE.Group();
+        const color = 0x000000;
+        const material = new THREE.LineBasicMaterial({ color });
+
+        // Draw vertical lines
+        for (let x = 0; x <= width; x++) {
+            const geometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(x * cellSize - totalWidth / 2, 0.01, -totalHeight / 2),
+                new THREE.Vector3(x * cellSize - totalWidth / 2, 0.01, totalHeight / 2)
+            ]);
+            const line = new THREE.Line(geometry, material);
+            group.add(line);
+        }
+        // Draw horizontal lines
+        for (let z = 0; z <= height; z++) {
+            const geometry = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(-totalWidth / 2, 0.01, z * cellSize - totalHeight / 2),
+                new THREE.Vector3(totalWidth / 2, 0.01, z * cellSize - totalHeight / 2)
+            ]);
+            const line = new THREE.Line(geometry, material);
+            group.add(line);
+        }
+        return group;
     }
 
     /**
