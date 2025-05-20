@@ -16,6 +16,18 @@ export class StakePage extends BasePage {
             <div class="page-container">
                 <h1>Stake Your NFTs</h1>
 
+                <!-- Building Type Selector -->
+                <div class="page-section type-selector-section">
+                    <h2>Select Building Type</h2>
+                    <div class="building-type-selector">
+                        <select class="building-type-select">
+                            <option value="0">House (Tier 0)</option>
+                            <option value="1">Farm (Tier 1)</option>
+                            <option value="2">Rep Station (Tier 2)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- Status Section -->
                 <div class="page-section status-section">
                     <h2>NFT Status</h2>
@@ -38,13 +50,6 @@ export class StakePage extends BasePage {
                 <!-- Available NFTs Section -->
                 <div class="page-section nft-section">
                     <h2>Your NFTs</h2>
-                    <div class="building-type-selector">
-                        <select class="building-type-select">
-                            <option value="0">House (Tier 0)</option>
-                            <option value="1">Farm (Tier 1)</option>
-                            <option value="2">Rep Station (Tier 2)</option>
-                        </select>
-                    </div>
                     <div class="nft-list nft-grid"></div>
                 </div>
 
@@ -59,12 +64,12 @@ export class StakePage extends BasePage {
         // Initialize NFT card components
         this.unstakedCard = new NFTCard({
             showStakeButton: true,
-            onStake: (tokenId) => this.stakeNFT(tokenId)
+            onStake: (tokenId, collection) => this.stakeNFT(tokenId, collection)
         });
         
         this.stakedCard = new NFTCard({
             showUnstakeButton: true,
-            onUnstake: (tokenId) => this.unstakeNFT(tokenId)
+            onUnstake: (tokenId, collection) => this.unstakeNFT(tokenId, collection)
         });
 
         // Store all available NFTs
@@ -91,56 +96,39 @@ export class StakePage extends BasePage {
         }
     }
 
-    filterNFTs() {
+    async filterNFTs() {
         const buildingTypeSelect = this.container.querySelector('.building-type-select');
-        const selectedType = parseInt(buildingTypeSelect.value);
+        const selectedType = buildingTypeSelect.value;
         const ownedNFTsContainer = this.container.querySelector('.nft-list');
         
         Logger.info('Filtering NFTs for building type:', selectedType);
-        Logger.info('Total available NFTs before filtering:', this.availableNFTs.length);
         
         // Clear container
         ownedNFTsContainer.innerHTML = '';
 
+        // Get contract addresses for comparison
+        const nftAddress = await this.contracts.nft.getContractAddress();
+        const farmAddress = await this.contracts.farmNft.getContractAddress();
+
         // Filter NFTs based on selected type
         const filteredNFTs = this.availableNFTs.filter(nft => {
-            Logger.info('Checking NFT:', {
-                tokenId: nft.tokenId.toString(),
-                name: nft.metadata.name,
-                type: selectedType
-            });
+            const isCorrectContract = nft.contractAddress.toLowerCase() === (selectedType === '1' ? farmAddress : nftAddress).toLowerCase();
+            const isRep = selectedType === '2' && nft.metadata.name.toLowerCase().includes('rep');
             
-            // For now, we'll show all NFTs for houses (type 0)
-            // For farms (type 1), we'll only show farm NFTs
-            // For rep stations (type 2), we'll only show rep station NFTs
-            if (selectedType === 0) {
-                Logger.info('Showing house NFT:', nft.tokenId.toString());
-                return true;
+            if (selectedType === '2') {
+                return isCorrectContract && isRep;
             }
-            if (selectedType === 1) {
-                const isFarm = nft.metadata.name.toLowerCase().includes('farm');
-                Logger.info('Farm NFT check:', {
-                    tokenId: nft.tokenId.toString(),
-                    isFarm: isFarm
-                });
-                return isFarm;
-            }
-            if (selectedType === 2) {
-                const isRep = nft.metadata.name.toLowerCase().includes('rep');
-                Logger.info('Rep Station NFT check:', {
-                    tokenId: nft.tokenId.toString(),
-                    isRep: isRep
-                });
-                return isRep;
-            }
-            return true;
+            return isCorrectContract;
         });
 
-        Logger.info('Filtered NFTs count:', filteredNFTs.length);
-        Logger.info('Filtered NFTs:', filteredNFTs.map(nft => ({
-            tokenId: nft.tokenId.toString(),
-            name: nft.metadata.name
-        })));
+        // Update status section with filtered counts
+        const stakedNFTs = this.container.querySelector('.staked-nft-list').children.length;
+        const availableNFTs = filteredNFTs.length;
+        const totalNFTs = stakedNFTs + availableNFTs;
+
+        this.container.querySelector('.total-nfts').textContent = totalNFTs;
+        this.container.querySelector('.staked-nfts').textContent = stakedNFTs;
+        this.container.querySelector('.available-nfts').textContent = availableNFTs;
 
         if (filteredNFTs.length === 0) {
             ownedNFTsContainer.innerHTML = '<div class="no-nfts">No NFTs available for this building type.</div>';
@@ -164,28 +152,16 @@ export class StakePage extends BasePage {
             const stakedNFTsContainer = this.container.querySelector('.staked-nft-list');
             
             // Clear containers first
-            ownedNFTsContainer.innerHTML = '';
-            stakedNFTsContainer.innerHTML = '';
-            
-            // Show loading messages
-            const ownedLoading = document.createElement('div');
-            ownedLoading.className = 'loading';
-            ownedLoading.textContent = 'Loading your NFTs...';
-            ownedNFTsContainer.appendChild(ownedLoading);
+            ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
+            stakedNFTsContainer.innerHTML = '<div class="loading">Loading staked NFTs...</div>';
 
-            const stakedLoading = document.createElement('div');
-            stakedLoading.className = 'loading';
-            stakedLoading.textContent = 'Loading staked NFTs...';
-            stakedNFTsContainer.appendChild(stakedLoading);
-
-            // Get all staked NFTs first
             const userAddress = await this.contracts.nft.getAddress();
-            Logger.info('Loading NFTs for user address:', userAddress);
-            
-            const stakedTokenIds = await this.contracts.altar.getUserStakes();
-            Logger.info('Staked token IDs:', stakedTokenIds.map(id => id.toString()));
-            
-            const stakedSet = new Set(stakedTokenIds.map(id => id.toString()));
+            const nftAddress = await this.contracts.nft.getContractAddress();
+            const farmAddress = await this.contracts.farmNft.getContractAddress();
+
+            // Get staked NFTs from both collections
+            const stakedNFTs = await this.contracts.altar.getUserStakesByCollection(userAddress, nftAddress);
+            const stakedFarmNFTs = await this.contracts.altar.getUserStakesByCollection(userAddress, farmAddress);
 
             // Clear loading messages
             ownedNFTsContainer.innerHTML = '';
@@ -193,8 +169,7 @@ export class StakePage extends BasePage {
 
             // Get player's tier
             const playerTier = await this.contracts.gameState.getPlayerTier(userAddress);
-            Logger.info('Player tier:', playerTier);
-
+            
             // Update building type selector based on tier
             const buildingTypeSelect = this.container.querySelector('.building-type-select');
             buildingTypeSelect.innerHTML = `
@@ -204,261 +179,142 @@ export class StakePage extends BasePage {
             `;
 
             // Load staked NFTs
-            for (const tokenId of stakedTokenIds) {
-                const tokenURI = await this.contracts.nft.tokenURI(tokenId);
-                const response = await fetch(tokenURI);
-                const metadata = await response.json();
-                const nftAddress = await this.contracts.nft.getContractAddress();
-                const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
-                
-                Logger.info('Loading staked NFT:', {
-                    tokenId: tokenId.toString(),
-                    name: metadata.name,
-                    address: nftAddress
-                });
-                
-                const nft = {
-                    tokenId,
-                    contractAddress: nftAddress,
-                    tokenURI,
-                    metadata,
-                    gameStateMetadata
-                };
-
-                const cardWrapper = document.createElement('div');
-                cardWrapper.innerHTML = this.stakedCard.render(nft);
-                const cardElement = cardWrapper.firstElementChild;
-                stakedNFTsContainer.appendChild(cardElement);
-                this.stakedCard.attachEventListeners(cardElement);
-            }
-
-            // Get all owned NFTs that are not staked
-            const balance = await this.contracts.nft.balanceOf(userAddress);
-            Logger.info('Total NFT balance:', balance.toString());
+            let stakedCount = 0;
             
-            let availableCount = 0;
-            this.availableNFTs = []; // Clear the array
+            // Process all staked NFTs
+            const processStakedNFTs = async (tokenIds, collectionAddress, nftContract) => {
+                for (const tokenId of tokenIds) {
+                    const stakeData = await this.contracts.altar.getStakeDataWithCollection(collectionAddress, tokenId);
+                    if (!stakeData.isActive) continue;
 
-            if (balance > 0n) {
-                for (let i = 0; i < balance; i++) {
-                    const tokenId = await this.contracts.nft.tokenOfOwnerByIndex(userAddress, i);
-                    Logger.info('Checking NFT at index', i, 'tokenId:', tokenId.toString());
-                    
-                    if (stakedSet.has(tokenId.toString())) {
-                        Logger.info('NFT is staked, skipping:', tokenId.toString());
-                        continue;
-                    }
-                    
-                    availableCount++;
-                    const tokenURI = await this.contracts.nft.tokenURI(tokenId);
+                    const tokenURI = await nftContract.tokenURI(tokenId);
                     const response = await fetch(tokenURI);
                     const metadata = await response.json();
-                    const nftAddress = await this.contracts.nft.getContractAddress();
-                    const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
-                    
-                    Logger.info('Loading available NFT:', {
-                        tokenId: tokenId.toString(),
-                        name: metadata.name,
-                        address: nftAddress
-                    });
+                    const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(
+                        collectionAddress,
+                        tokenId
+                    );
                     
                     const nft = {
                         tokenId,
-                        contractAddress: nftAddress,
+                        contractAddress: collectionAddress,
                         tokenURI,
                         metadata,
                         gameStateMetadata
                     };
 
-                    this.availableNFTs.push(nft);
+                    stakedCount++;
+                    const cardWrapper = document.createElement('div');
+                    cardWrapper.innerHTML = this.stakedCard.render(nft);
+                    const cardElement = cardWrapper.firstElementChild;
+                    stakedNFTsContainer.appendChild(cardElement);
+                    this.stakedCard.attachEventListeners(cardElement);
+                }
+            };
+
+            // Process staked NFTs from both collections
+            await processStakedNFTs(stakedNFTs, nftAddress, this.contracts.nft);
+            await processStakedNFTs(stakedFarmNFTs, farmAddress, this.contracts.farmNft);
+
+            // Get all owned NFTs that are not staked
+            this.availableNFTs = [];
+
+            // Get NFTs from both contracts
+            const contracts = [
+                { contract: this.contracts.nft, address: nftAddress },
+                { contract: this.contracts.farmNft, address: farmAddress }
+            ];
+            
+            for (const { contract, address } of contracts) {
+                const balance = await contract.balanceOf(userAddress);
+                
+                if (balance > 0n) {
+                    for (let i = 0; i < balance; i++) {
+                        const tokenId = await contract.tokenOfOwnerByIndex(userAddress, i);
+                        
+                        // Check if NFT is staked
+                        const stakeData = await this.contracts.altar.getStakeDataWithCollection(address, tokenId);
+                        if (stakeData.isActive) continue;
+
+                        const tokenURI = await contract.tokenURI(tokenId);
+                        const response = await fetch(tokenURI);
+                        const metadata = await response.json();
+                        const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(
+                            address,
+                            tokenId
+                        );
+                        
+                        this.availableNFTs.push({
+                            tokenId,
+                            contractAddress: address,
+                            tokenURI,
+                            metadata,
+                            gameStateMetadata
+                        });
+                    }
                 }
             }
 
-            Logger.info('Available NFTs count:', this.availableNFTs.length);
-            Logger.info('Available NFTs:', this.availableNFTs.map(nft => ({
-                tokenId: nft.tokenId.toString(),
-                name: nft.metadata.name
-            })));
+            // Initial filter of NFTs
+            await this.filterNFTs();
 
-            // Update status section
-            const totalNFTs = Number(balance);
-            const stakedNFTs = stakedTokenIds.length;
-            const availableNFTs = availableCount;
-
-            this.container.querySelector('.total-nfts').textContent = totalNFTs;
-            this.container.querySelector('.staked-nfts').textContent = stakedNFTs;
-            this.container.querySelector('.available-nfts').textContent = availableNFTs;
-
-            // Initial filter based on selected building type
-            this.filterNFTs();
-
-            if (stakedNFTsContainer.children.length === 0) {
-                stakedNFTsContainer.innerHTML = '<div class="no-nfts">You don\'t have any staked NFTs.</div>';
-            }
         } catch (error) {
-            Logger.error("Error loading user's NFTs:", error);
-            const ownedNFTsContainer = this.container.querySelector('.nft-list');
-            const stakedNFTsContainer = this.container.querySelector('.staked-nft-list');
-            ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
-            stakedNFTsContainer.innerHTML = '<p class="error">Error loading staked NFTs. Please try again.</p>';
+            Logger.error('Error loading user NFTs:', error);
+            this.showStatus('error', 'Failed to load NFTs. Please try again.');
         }
     }
 
-    async stakeNFT(tokenId) {
+    async stakeNFT(tokenId, collection) {
         try {
-            Logger.info('Starting stakeNFT process for token:', tokenId);
-            
-            // Get selected building type
             const buildingTypeSelect = this.container.querySelector('.building-type-select');
             const buildingType = parseInt(buildingTypeSelect.value);
             
-            // Check if NFT collection is approved
-            const nftAddress = await this.contracts.nft.getContractAddress();
-            Logger.info('Checking approval for NFT collection:', nftAddress);
-            const isApproved = await this.contracts.gameState.isCollectionApproved(nftAddress);
-            Logger.info('NFT collection approved:', isApproved);
-            if (!isApproved) {
-                throw new Error("This NFT collection is not approved for staking");
-            }
+            // Show loading status
+            this.showStatus('info', 'Staking NFT...');
             
-            // Check if NFT is already staked
-            try {
-                const stakeData = await this.contracts.altar.getStakeData(tokenId);
-                Logger.info('Stake data:', stakeData);
-                if (stakeData.isActive) {
-                    throw new Error("This NFT is already staked");
-                }
-            } catch (error) {
-                Logger.info('No existing stake data found, proceeding with staking');
-                // Continue if the error is just that the NFT isn't staked yet
-            }
+            // Get contract addresses for comparison
+            const farmAddress = await this.contracts.farmNft.getContractAddress();
+            const altarAddress = await this.contracts.altar.getContractAddress();
             
-            // Check if NFT is already approved
-            try {
-                const userAddress = await this.contracts.nft.getAddress();
-                const altarAddress = await this.contracts.altar.getContractAddress();
-                const isOwner = await this.contracts.gameState.verifyNFTOwnership(nftAddress, tokenId, userAddress);
-                Logger.info('NFT ownership verified:', isOwner);
-                if (!isOwner) {
-                    throw new Error("You don't own this NFT");
-                }
-                
-                // Step 1: Approve NFT transfer
-                this.showStatus('loading', 'Step 1/2: Approving NFT transfer...', 'Approving NFT transfer');
-                Logger.info('Approving NFT transfer...');
-                const approveReceipt = await this.contracts.nft.approve(altarAddress, tokenId);
-                Logger.info('Approval transaction confirmed:', approveReceipt.hash);
-                
-                // Step 2: Stake NFT
-                this.showStatus('loading', 'Step 2/2: Staking NFT...', 'Staking NFT');
-                
-                // Get NFT metadata to check building slots
-                const metadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
-                Logger.info('NFT metadata:', metadata);
-                if (metadata.buildingSlots === 0) {
-                    throw new Error("NFT must have at least 1 building slot");
-                }
-                
-                Logger.info('Sending stake transaction...');
-                const stakeReceipt = await this.contracts.altar.stake(tokenId, buildingType);
-                Logger.info('Stake transaction confirmed:', stakeReceipt.hash);
-                
-                // Success message
-                this.showStatus('success', 'Your NFT has been staked and a new building has been constructed in your district!', 'NFT Staked Successfully!');
-                
-                // Reload the user's NFTs to update the list
-                await this.loadUserNFTs();
-            } catch (error) {
-                Logger.error('Error in stakeNFT:', error);
-                this.showStatus('error', error.message, 'Staking Failed');
-            }
+            // Approve NFT transfer
+            const nftContract = collection.toLowerCase() === farmAddress.toLowerCase()
+                ? this.contracts.farmNft
+                : this.contracts.nft;
+            
+            await nftContract.approve(altarAddress, tokenId);
+            
+            // Stake NFT
+            const tx = await this.contracts.altar.stake(tokenId, buildingType, collection);
+            await tx.wait();
+            
+            // Reload NFTs
+            await this.loadUserNFTs();
+            
+            // Show success status
+            this.showStatus('success', 'NFT staked successfully!');
         } catch (error) {
-            Logger.error('Error in stakeNFT:', error);
-            this.showStatus('error', error.message, 'Staking Failed');
+            Logger.error('Error staking NFT:', error);
+            this.showStatus('error', 'Failed to stake NFT. Please try again.');
         }
     }
 
-    async unstakeNFT(tokenId) {
+    async unstakeNFT(tokenId, collection) {
         try {
-            // Check if NFT is actually staked
-            let stakeData;
-            try {
-                stakeData = await this.contracts.altar.getStakeData(tokenId);
-                Logger.debug("Stake data:", stakeData);
-                
-                if (!stakeData.isActive) {
-                    this.modal.error("This NFT is not staked");
-                    return;
-                }
-                
-                // Check if caller is the staker
-                const userAddress = await this.contracts.nft.getAddress();
-                if (stakeData.owner.toLowerCase() !== userAddress.toLowerCase()) {
-                    this.modal.error("You are not the staker of this NFT");
-                    return;
-                }
-            } catch (error) {
-                Logger.error("Error getting stake data:", error);
-                this.modal.error("Failed to get stake data. The NFT may not be staked.");
-                return;
-            }
+            // Show loading status
+            this.showStatus('info', 'Unstaking NFT...');
             
-            // Check if minimum staking period has passed
-            const currentTime = BigInt(Math.floor(Date.now() / 1000));
-            const minimumStakeTime = stakeData.stakedAt + BigInt(7 * 24 * 60 * 60); // 7 days
-            Logger.debug("Current time:", currentTime);
-            Logger.debug("Minimum stake time:", minimumStakeTime);
+            // Unstake NFT
+            const tx = await this.contracts.altar.unstake(collection, tokenId);
+            await tx.wait();
             
-            if (currentTime < minimumStakeTime) {
-                const remainingTime = minimumStakeTime - currentTime;
-                const remainingDays = Math.ceil(Number(remainingTime) / (24 * 60 * 60));
-                this.modal.show(`You need to wait ${remainingDays} more days before you can unstake this NFT. The minimum staking period is 7 days.`, {
-                    title: 'Cannot Unstake Yet',
-                    icon: 'info'
-                });
-                return;
-            }
+            // Reload NFTs
+            await this.loadUserNFTs();
             
-            // Check if NFT has building slots
-            const nftAddress = await this.contracts.nft.getContractAddress();
-            const metadata = await this.contracts.gameState.getNFTMetadata(nftAddress, tokenId);
-            Logger.debug("NFT metadata:", metadata);
-            
-            if (metadata.buildingSlots === 0) {
-                this.modal.error("NFT must have at least 1 building slot");
-                return;
-            }
-            
-            // Show loading message
-            this.modal.loading("Unstaking NFT... Your NFT is being returned to your wallet");
-            
-            try {
-                Logger.debug("Attempting to unstake NFT:", tokenId);
-                const unstakeTx = await this.contracts.altar.unstake(tokenId);
-                Logger.debug("Unstake transaction sent:", unstakeTx.hash);
-                
-                await unstakeTx.wait();
-                Logger.debug("Unstake transaction confirmed");
-                
-                this.modal.success("NFT Unstaked Successfully! Your NFT has been returned to your wallet");
-                
-                // Reload the user's NFTs to update the list
-                await this.loadUserNFTs();
-            } catch (txError) {
-                Logger.error("Transaction error:", txError);
-                let errorMessage = "Failed to execute unstake transaction";
-                if (txError.code === 'CALL_EXCEPTION') {
-                    errorMessage = "Contract call failed. Please check if the NFT is properly staked.";
-                } else if (txError.code === 'INSUFFICIENT_FUNDS') {
-                    errorMessage = "Insufficient funds for gas. Please add more ETH to your wallet.";
-                } else {
-                    errorMessage = txError.message;
-                }
-                this.modal.error(errorMessage);
-            }
+            // Show success status
+            this.showStatus('success', 'NFT unstaked successfully!');
         } catch (error) {
-            Logger.error("Error unstaking NFT:", error);
-            this.modal.error(error.message || "Unknown error occurred while unstaking NFT");
+            Logger.error('Error unstaking NFT:', error);
+            this.showStatus('error', 'Failed to unstake NFT. Please try again.');
         }
     }
 
