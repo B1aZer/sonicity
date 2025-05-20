@@ -234,10 +234,10 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             );
             require(success, "Failed to add gold");
         } else if (building.buildingType == GridBuildingType.FARM) {
-            (bool success2, ) = gameStateAddress.call(
+            (bool success, ) = gameStateAddress.call(
                 abi.encodeWithSignature("earnFood(address,uint256)", msg.sender, amount)
             );
-            require(success2, "Failed to add food");
+            require(success, "Failed to add food");
         } else if (building.buildingType == GridBuildingType.REP_STATION) {
             (bool success, ) = gameStateAddress.call(
                 abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
@@ -337,6 +337,43 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         }
         
         return totalGold;
+    }
+
+    /**
+     * @dev Calculate total claimable food for a player without collecting it
+     * @param player The address of the player
+     * @return uint256 Total claimable food
+     */
+    function calculateClaimableFood(address player) external view returns (uint256) {
+        uint256 totalFood = 0;
+        uint256 currentTime = block.timestamp;
+        
+        // Get all building IDs
+        uint256[] memory buildingIds = getActiveBuildings(player);
+        
+        for (uint256 i = 0; i < buildingIds.length; i++) {
+            uint256 buildingId = buildingIds[i];
+            Building storage building = buildings[player][buildingId];
+            
+            if (building.active && building.buildingType == GridBuildingType.FARM) {
+                // Calculate time passed since last collection
+                uint256 timePassed = currentTime - building.lastCollectionTime;
+                
+                // Cap the time passed at 24 hours
+                if (timePassed > 24 hours) {
+                    timePassed = 24 hours;
+                }
+                
+                // Calculate food to collect based on production rate and time passed
+                GridBuildingConfig memory config = buildingConfigs[GridBuildingType.FARM];
+                uint256 foodToCollect = (config.baseProductionRate * timePassed * building.level) / 1 hours;
+                
+                // Add to total food
+                totalFood += foodToCollect;
+            }
+        }
+        
+        return totalFood;
     }
 
     /**

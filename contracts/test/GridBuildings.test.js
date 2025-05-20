@@ -10,6 +10,38 @@ describe("GridBuildings", function () {
   let player1;
   let player2;
 
+  // Helper to ensure player has at least the specified amount of gold
+  async function ensurePlayerGold(player, amount) {
+    const playerAddress = await player.getAddress();
+    let gold = await gameState.getPlayerGold(playerAddress);
+    
+    // If we already have enough gold, return early
+    if (gold >= amount) return;
+    
+    // Get current houses
+    const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
+    
+    // Create houses up to the limit of 9 if needed
+    if (currentHouses < 9) {
+        for (let i = currentHouses; i < 9; i++) {
+            await gridBuildings.connect(owner).createBuilding(playerAddress, 0);
+        }
+    }
+    
+    // Fast forward time and collect until we have enough gold
+    while (gold < amount) {
+        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
+        await ethers.provider.send("evm_mine");
+        
+        // Collect from all houses
+        for (let i = 0; i < 9; i++) {
+            await gridBuildings.connect(player).collectResources(i);
+        }
+        
+        gold = await gameState.getPlayerGold(playerAddress);
+    }
+  }
+
   beforeEach(async function () {
     [owner, player1, player2] = await ethers.getSigners();
 
@@ -283,6 +315,143 @@ describe("GridBuildings", function () {
       await expect(gridBuildings.connect(player1).collectResources(buildingId))
         .to.emit(gridBuildings, "ResourcesCollected")
         .withArgs(await player1.getAddress(), buildingId, BigInt(10)); // 10 gold per hour
+    });
+
+    describe("Farm Management", function () {
+      let farmId;
+
+      beforeEach(async function () {
+        // Ensure player has enough gold for tier upgrade
+        await ensurePlayerGold(player1, 1000);
+
+        // Donate gold to reach tier 1
+        await gameState.connect(player1).donateGold(1000);
+
+        // Verify player is now tier 1
+        const playerState = await gameState.playerState(await player1.getAddress());
+        expect(playerState.tier).to.equal(1);
+
+        // Create a farm
+        await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), 1); // 1 is FARM type
+        
+        // Get the farm building ID from the nextBuildingId
+        const nextId = await gridBuildings.nextBuildingId(await player1.getAddress());
+        farmId = Number(nextId) - 1;
+        
+        // Verify the farm was created correctly
+        const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
+        expect(farm.active).to.be.true;
+        expect(farm.buildingType).to.equal(1); // 1 is FARM type
+      });
+
+      it("Should collect food from a farm building", async function () {
+        const player1Address = await player1.getAddress();
+        
+        // Fast forward 1 hour
+        await ethers.provider.send("evm_increaseTime", [3600]);
+        await ethers.provider.send("evm_mine");
+
+        // Get initial food balance
+        const initialFood = await gameState.getPlayerFood(player1Address);
+
+        // Collect resources
+        await gridBuildings.connect(player1).collectResources(farmId);
+
+        // Check food balance increased
+        const finalFood = await gameState.getPlayerFood(player1Address);
+        expect(finalFood).to.be.gt(initialFood);
+      });
+
+      it("Should cap farm food collection at 24 hours", async function () {
+        const player1Address = await player1.getAddress();
+        
+        // Fast forward 48 hours
+        await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+        await ethers.provider.send("evm_mine");
+
+        // Get initial food balance
+        const initialFood = await gameState.getPlayerFood(player1Address);
+
+        // Collect resources
+        await gridBuildings.connect(player1).collectResources(farmId);
+
+        // Check food balance increased (should be capped at 24 hours worth)
+        const finalFood = await gameState.getPlayerFood(player1Address);
+        const expectedFood = initialFood + BigInt(5 * 24); // 5 food per hour * 24 hours
+        expect(finalFood).to.equal(expectedFood);
+      });
+
+      it("Should calculate correct claimable food", async function () {
+        const player1Address = await player1.getAddress();
+        
+        // Fast forward 12 hours
+        await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+        await ethers.provider.send("evm_mine");
+
+        // Calculate claimable food
+        const claimableFood = await gridBuildings.calculateClaimableFood(player1Address);
+        expect(claimableFood).to.equal(BigInt(5 * 12)); // 5 food per hour * 12 hours
+      });
+
+      it("Should collect food from all farms at once", async function () {
+        const player1Address = await player1.getAddress();
+        
+        // Create a second farm
+        await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), 1);
+        
+        // Fast forward 1 hour
+        await ethers.provider.send("evm_increaseTime", [3600]);
+        await ethers.provider.send("evm_mine");
+
+        // Get initial food balance
+        const initialFood = await gameState.getPlayerFood(player1Address);
+
+        // Collect from all farms
+        await gridBuildings.connect(player1).collectResourcesByType(1); // 1 is FARM type
+
+        // Check food balance increased (should be 10 food total - 5 per farm)
+        const finalFood = await gameState.getPlayerFood(player1Address);
+        expect(finalFood).to.equal(initialFood + BigInt(10));
+      });
+
+      it("Should upgrade farm production rate", async function () {
+        const player1Address = await player1.getAddress();
+        
+        // Fast forward time to collect enough gold for upgrade
+        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
+        await ethers.provider.send("evm_mine");
+
+        // Collect resources to get gold for upgrade
+        await gridBuildings.connect(player1).collectResources(buildingId); // Collect from house
+
+        // Get building config to check upgrade cost
+        const config = await gridBuildings.buildingConfigs(1); // 1 is FARM type
+        const upgradeCost = config.upgradeCost;
+
+        // Verify player has enough gold
+        const playerGold = await gameState.getPlayerGold(player1Address);
+        expect(playerGold).to.be.gte(upgradeCost);
+
+        // Upgrade the farm
+        await gridBuildings.connect(player1).upgradeBuilding(farmId);
+
+        // Collect resources immediately after upgrade to reset lastCollectionTime
+        await gridBuildings.connect(player1).collectResources(farmId);
+
+        // Fast forward 1 hour
+        await ethers.provider.send("evm_increaseTime", [3600]);
+        await ethers.provider.send("evm_mine");
+
+        // Get initial food balance
+        const initialFood = await gameState.getPlayerFood(player1Address);
+
+        // Collect resources
+        await gridBuildings.connect(player1).collectResources(farmId);
+
+        // Check food balance increased (should be 10 food - doubled production rate)
+        const finalFood = await gameState.getPlayerFood(player1Address);
+        expect(finalFood).to.equal(initialFood + BigInt(10));
+      });
     });
   });
 }); 

@@ -349,6 +349,15 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Get player's food balance
+     * @param player The address of the player
+     * @return uint256 Player's food balance
+     */
+    function getPlayerFood(address player) external view returns (uint256) {
+        return playerState[player].food;
+    }
+
+    /**
      * @dev Get player's reputation balance
      * @param player The address of the player
      * @return uint256 Player's reputation balance
