@@ -84,7 +84,7 @@ export class HousePage extends BasePage {
             }
 
             // Get total claimable gold directly from contract
-            const totalClaimableGold = await this.contracts.gridBuildings.calculateTotalClaimableGold(
+            const totalClaimableGold = await this.contracts.gridBuildings.calculateTotalClaimableResources(
                 GridBuildingsContract.BuildingType.HOUSE
             );
             Logger.info('Total claimable gold from contract:', totalClaimableGold.toString());
