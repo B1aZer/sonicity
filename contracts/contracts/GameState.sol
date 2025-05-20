@@ -19,6 +19,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     address public districtBuildingsAddress;
     // Reference to the GridBuildings contract
     address public gridBuildingsAddress;
+    // Reference to the BattleSystem contract
+    address public battleSystemAddress;
 
     // Structure to store NFT metadata
     struct NFTMetadata {
@@ -69,6 +71,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event GoldEarned(address indexed player, uint256 amount);
     event RepEarned(address indexed player, uint256 amount);
     event FoodEarned(address indexed player, uint256 amount);
+    event ResourcesDeducted(address indexed player, uint256 gold, uint256 food, uint256 rep);
     event CollectionApproved(address indexed collection);
     event CollectionRemoved(address indexed collection);
     event NFTMetadataUpdated(address indexed collection, uint256 indexed tokenId);
@@ -78,6 +81,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event DistrictBuildingsAddressUpdated(address indexed newAddress);
     event GridBuildingsAddressUpdated(address indexed newAddress);
     event DistrictBuildingDamaged(address indexed player, uint8 buildingType);
+    event TreasuryBurned(address indexed player, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -132,6 +136,14 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function setGridBuildingsAddress(address _gridBuildingsAddress) external onlyOwner {
         gridBuildingsAddress = _gridBuildingsAddress;
         emit GridBuildingsAddressUpdated(_gridBuildingsAddress);
+    }
+
+    /**
+     * @dev Set the BattleSystem contract address
+     * @param _battleSystemAddress The address of the BattleSystem contract
+     */
+    function setBattleSystemAddress(address _battleSystemAddress) external onlyOwner {
+        battleSystemAddress = _battleSystemAddress;
     }
 
     /**
@@ -309,12 +321,16 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Earn reputation (can only be called by GridBuildings)
+     * @dev Earn reputation (can only be called by GridBuildings or BattleSystem)
      * @param player The address of the player
      * @param amount The amount of reputation to earn
      */
     function earnRep(address player, uint256 amount) external {
-        require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
+        require(
+            msg.sender == gridBuildingsAddress || 
+            msg.sender == battleSystemAddress, 
+            "Only GridBuildings or BattleSystem can call this function"
+        );
         playerState[player].rep += amount;
         emit RepEarned(player, amount);
     }
@@ -428,6 +444,51 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         return playerState[player].tier;
     }
 
+    /**
+     * @dev Deduct multiple resources from a player
+     * @param player The address of the player
+     * @param goldAmount The amount of gold to deduct (0 if not needed)
+     * @param foodAmount The amount of food to deduct (0 if not needed)
+     * @param repAmount The amount of rep to deduct (0 if not needed)
+     */
+    function deductResources(
+        address player,
+        uint256 goldAmount,
+        uint256 foodAmount,
+        uint256 repAmount
+    ) external {
+        require(
+            msg.sender == districtBuildingsAddress || 
+            msg.sender == gridBuildingsAddress || 
+            msg.sender == battleSystemAddress, 
+            "Unauthorized caller"
+        );
+        PlayerState storage state = playerState[player];
+        
+        // Check if player has enough resources
+        if (goldAmount > 0) {
+            require(state.gold >= goldAmount, "Insufficient gold");
+            state.gold -= goldAmount;
+        }
+        
+        if (foodAmount > 0) {
+            require(state.food >= foodAmount, "Insufficient food");
+            state.food -= foodAmount;
+        }
+        
+        if (repAmount > 0) {
+            require(state.rep >= repAmount, "Insufficient rep");
+            state.rep -= repAmount;
+        }
+        
+        emit ResourcesDeducted(player, goldAmount, foodAmount, repAmount);
+    }
+
+    /**
+     * @dev Deduct gold (can only be called by GridBuildings)
+     * @param player The address of the player
+     * @param amount The amount of gold to deduct
+     */
     function deductGold(address player, uint256 amount) external {
         require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
         require(playerState[player].gold >= amount, "Insufficient gold");
@@ -448,5 +509,19 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         
         playerState[player].gold += amount;
         emit GoldEarned(player, amount);
+    }
+
+    /**
+     * @dev Burn treasury during battles
+     * @param player The address of the player whose treasury is being burned
+     * @param amount The amount of treasury to burn
+     */
+    function burnTreasury(address player, uint256 amount) external {
+        require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
+        PlayerState storage state = playerState[player];
+        require(state.treasury >= amount, "Insufficient treasury");
+        
+        state.treasury -= amount;
+        emit TreasuryBurned(player, amount);
     }
 }
