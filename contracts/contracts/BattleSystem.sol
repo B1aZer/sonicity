@@ -14,6 +14,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     // Reference to other contracts
     address public gameStateAddress;
     address public districtBuildingsAddress;
+    address public gridBuildingsAddress;
 
     // Troop types
     enum TroopType {
@@ -31,7 +32,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 attackerPower;
         uint256 defenderPower;
         uint256 treasuryBurned;
-        uint256 buildingSlotsDisabled;
+        uint256 gridBuildingsDamaged;
+        uint256 districtBuildingsDamaged;
         uint256 repPoints;
     }
 
@@ -40,8 +42,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 goldCost;
         uint256 foodCost;
         uint256 power;
-        uint256 treasuryBurnChance;  // Percentage (0-100)
-        uint256 buildingDisableChance;  // Percentage (0-100)
+        uint256 gridDamageChance;    // Chance to damage grid buildings (0-100)
+        uint256 districtDamageChance; // Chance to damage district buildings (0-100)
+        uint256 treasuryBurnChance;   // Chance to burn treasury (0-100)
     }
 
     // Mappings
@@ -52,14 +55,19 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     // Constants
     uint256 public constant BATTLE_DURATION = 24 hours;
     uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
-    uint256 public constant MAX_BUILDING_SLOTS_DISABLE = 3; // Max buildings that can be disabled
 
     // Events
     event BattleStarted(address indexed attacker, address indexed defender, uint256 startTime);
-    event BattleResolved(address indexed attacker, address indexed defender, bool attackerWon, uint256 treasuryBurned, uint256 buildingSlotsDisabled);
+    event BattleResolved(
+        address indexed attacker, 
+        address indexed defender, 
+        bool attackerWon, 
+        uint256 treasuryBurned,
+        uint256 gridBuildingsDamaged,
+        uint256 districtBuildingsDamaged
+    );
     event TroopsTrained(address indexed player, TroopType troopType, uint256 amount);
     event TroopsDeployed(address indexed player, TroopType troopType, uint256 amount);
-    event TroopsLost(address indexed player, TroopType troopType, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -75,25 +83,28 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         troopConfigs[TroopType.INFANTRY] = TroopConfig({
             goldCost: 100,
             foodCost: 50,
-            power: 10,
-            treasuryBurnChance: 0,
-            buildingDisableChance: 0
+            power: 10,           // Increased from 10 to 15 (10 resources per power)
+            gridDamageChance: 0,
+            districtDamageChance: 0,
+            treasuryBurnChance: 0
         });
 
         troopConfigs[TroopType.CAVALRY] = TroopConfig({
             goldCost: 200,
             foodCost: 100,
-            power: 25,
-            treasuryBurnChance: 0,
-            buildingDisableChance: 30
+            power: 15,           // Increased from 25 to 30 (10 resources per power)
+            gridDamageChance: 30,    // 30% chance to damage grid buildings
+            districtDamageChance: 0,
+            treasuryBurnChance: 0
         });
 
         troopConfigs[TroopType.SIEGE] = TroopConfig({
             goldCost: 300,
             foodCost: 150,
-            power: 40,
-            treasuryBurnChance: 15, // 15% chance to burn treasury
-            buildingDisableChance: 50 // 50% chance to disable district buildings
+            power: 20,           // Increased from 40 to 45 (10 resources per power)
+            gridDamageChance: 0,
+            districtDamageChance: 50, // 50% chance to damage district buildings
+            treasuryBurnChance: 10    // 10% chance to burn treasury
         });
     }
 
@@ -166,7 +177,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             attackerPower: attackerPower,
             defenderPower: defenderPower,
             treasuryBurned: 0,
-            buildingSlotsDisabled: 0,
+            gridBuildingsDamaged: 0,
+            districtBuildingsDamaged: 0,
             repPoints: 0
         });
 
@@ -189,7 +201,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         Battle storage battle = activeBattles[battleId];
         require(battle.startTime > 0, "Battle does not exist");
         require(!battle.resolved, "Battle already resolved");
-        require(block.timestamp >= battle.startTime + BATTLE_DURATION, "Battle duration not passed");
+        require(block.timestamp >= battle.startTime + BATTLE_DURATION, "Battle duration not elapsed");
 
         bool attackerWon = battle.attackerPower > battle.defenderPower;
         
@@ -198,20 +210,15 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             uint256 treasuryBurnPercent = calculateTreasuryBurn(battle.attackerPower, battle.defenderPower);
             uint256 treasuryBurned = calculateTreasuryBurnAmount(battle.defender, treasuryBurnPercent);
             
-            // Calculate building slots to disable
-            uint256 buildingSlotsDisabled = calculateBuildingSlotsToDisable(battle.attackerPower, battle.defenderPower);
-            
             // Apply effects
             applyBattleEffects(
                 battle.attacker,
                 battle.defender,
-                treasuryBurned,
-                buildingSlotsDisabled
+                treasuryBurned
             );
 
             // Update battle state
             battle.treasuryBurned = treasuryBurned;
-            battle.buildingSlotsDisabled = buildingSlotsDisabled;
             battle.repPoints = calculateRepPoints(battle.attackerPower, battle.defenderPower);
         }
 
@@ -222,7 +229,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             battle.defender,
             attackerWon,
             battle.treasuryBurned,
-            battle.buildingSlotsDisabled
+            battle.gridBuildingsDamaged,
+            battle.districtBuildingsDamaged
         );
     }
 
@@ -253,12 +261,6 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         return (treasuryAmount * burnPercent) / 100;
     }
 
-    function calculateBuildingSlotsToDisable(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
-        uint256 powerDiff = attackerPower > defenderPower ? attackerPower - defenderPower : 0;
-        uint256 slots = (powerDiff * MAX_BUILDING_SLOTS_DISABLE) / attackerPower;
-        return slots > MAX_BUILDING_SLOTS_DISABLE ? MAX_BUILDING_SLOTS_DISABLE : slots;
-    }
-
     function calculateRepPoints(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
         uint256 powerDiff = attackerPower > defenderPower ? attackerPower - defenderPower : 0;
         return (powerDiff * 10) / 100; // 10 REP points per 100 power difference
@@ -267,13 +269,36 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     function applyBattleEffects(
         address attacker,
         address defender,
-        uint256 treasuryBurned,
-        uint256 buildingSlotsDisabled
+        uint256 treasuryBurned
     ) internal {
-        // Burn treasury (with chance for siege units)
-        if (treasuryBurned > 0) {
-            uint256 siegeCount = playerTroops[attacker][TroopType.SIEGE];
-            if (siegeCount > 0) {
+        // Check cavalry for grid building damage
+        uint256 cavalryCount = playerTroops[attacker][TroopType.CAVALRY];
+        if (cavalryCount > 0) {
+            uint256 damageChance = troopConfigs[TroopType.CAVALRY].gridDamageChance;
+            if (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, attacker))) % 100 < damageChance) {
+                (bool success, ) = gridBuildingsAddress.call(
+                    abi.encodeWithSignature("damageGridBuilding(address)", defender)
+                );
+                require(success, "Failed to damage grid building");
+                activeBattles[attacker].gridBuildingsDamaged++;
+            }
+        }
+
+        // Check siege for district building damage and treasury burn
+        uint256 siegeCount = playerTroops[attacker][TroopType.SIEGE];
+        if (siegeCount > 0) {
+            // Try to damage district building
+            uint256 damageChance = troopConfigs[TroopType.SIEGE].districtDamageChance;
+            if (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, attacker))) % 100 < damageChance) {
+                (bool success, ) = districtBuildingsAddress.call(
+                    abi.encodeWithSignature("damageDistrictBuilding(address,uint8)", defender, 1)
+                );
+                require(success, "Failed to damage district building");
+                activeBattles[attacker].districtBuildingsDamaged++;
+            }
+
+            // Try to burn treasury
+            if (treasuryBurned > 0) {
                 uint256 burnChance = troopConfigs[TroopType.SIEGE].treasuryBurnChance;
                 if (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, attacker))) % 100 < burnChance) {
                     (bool success, ) = gameStateAddress.call(
@@ -284,18 +309,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             }
         }
 
-        // Damage buildings
-        if (buildingSlotsDisabled > 0) {
-            (bool success, ) = districtBuildingsAddress.call(
-                abi.encodeWithSignature("damageDistrictBuilding(address,uint256)", defender, buildingSlotsDisabled)
-            );
-            require(success, "Failed to damage buildings");
-        }
-
         // Award REP points
-        if (treasuryBurned > 0 || buildingSlotsDisabled > 0) {
+        if (treasuryBurned > 0 || activeBattles[attacker].gridBuildingsDamaged > 0 || activeBattles[attacker].districtBuildingsDamaged > 0) {
             (bool success, ) = gameStateAddress.call(
-                abi.encodeWithSignature("earnRep(address,uint256)", attacker, calculateRepPoints(attackerPower, defenderPower))
+                abi.encodeWithSignature("earnRep(address,uint256)", attacker, calculateRepPoints(activeBattles[attacker].attackerPower, activeBattles[attacker].defenderPower))
             );
             require(success, "Failed to award REP points");
         }
@@ -309,6 +326,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function setDistrictBuildingsAddress(address _districtBuildingsAddress) external onlyOwner {
         districtBuildingsAddress = _districtBuildingsAddress;
+    }
+
+    function setGridBuildingsAddress(address _gridBuildingsAddress) external onlyOwner {
+        gridBuildingsAddress = _gridBuildingsAddress;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
