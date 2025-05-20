@@ -36,8 +36,8 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     // Mapping from token ID to stake data
     mapping(address => mapping(uint256 => Stake)) public stakes;
     
-    // Mapping from user address to their staked token IDs
-    mapping(address => uint256[]) public userStakes;
+    // Mapping from user address to collection address to array of staked token IDs
+    mapping(address => mapping(address => uint256[])) public userStakesByCollection;
     
     // Minimum staking duration in seconds (e.g., 7 days)
     uint256 public minStakingDuration;
@@ -124,8 +124,8 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         // Update staked building mapping
         stakedBuilding[collection][tokenId] = buildingId;
         
-        // Add to user's staked tokens
-        userStakes[msg.sender].push(tokenId);
+        // Add to user's collection-specific staked tokens
+        userStakesByCollection[msg.sender][collection].push(tokenId);
         
         emit NFTStaked(msg.sender, tokenId, buildingId, collection);
     }
@@ -147,12 +147,12 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         // Update stake status
         stakes[collection][tokenId].isActive = false;
         
-        // Remove from user's staked tokens
-        uint256[] storage userTokens = userStakes[msg.sender];
-        for (uint256 i = 0; i < userTokens.length; i++) {
-            if (userTokens[i] == tokenId) {
-                userTokens[i] = userTokens[userTokens.length - 1];
-                userTokens.pop();
+        // Remove from user's collection-specific staked tokens
+        uint256[] storage userCollectionTokens = userStakesByCollection[msg.sender][stakeData.collection];
+        for (uint256 i = 0; i < userCollectionTokens.length; i++) {
+            if (userCollectionTokens[i] == tokenId) {
+                userCollectionTokens[i] = userCollectionTokens[userCollectionTokens.length - 1];
+                userCollectionTokens.pop();
                 break;
             }
         }
@@ -169,21 +169,22 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     }
 
     /**
-     * @dev Get all staked NFTs for a user
-     * @param user The address of the user
-     * @return Array of staked token IDs
-     */
-    function getUserStakes(address user) external view returns (uint256[] memory) {
-        return userStakes[user];
-    }
-
-    /**
      * @dev Get stake data for a specific NFT
      * @param tokenId The ID of the NFT
      * @return Stake data
      */
     function getStakeDataWithCollection(address collection, uint256 tokenId) external view returns (Stake memory) {
         return stakes[collection][tokenId];
+    }
+
+    /**
+     * @dev Get all staked NFTs for a user from a specific collection
+     * @param user The address of the user
+     * @param collection The address of the NFT collection
+     * @return Array of staked token IDs from the specified collection
+     */
+    function getUserStakesByCollection(address user, address collection) external view returns (uint256[] memory) {
+        return userStakesByCollection[user][collection];
     }
 
     /**
