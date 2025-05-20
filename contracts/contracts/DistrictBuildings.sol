@@ -39,12 +39,20 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         string name;
         uint256 unlockCost;   // Treasury required to unlock
         uint256 buildCost;    // Gold cost to build
+        uint256 upgradeCost;  // Gold cost to upgrade
+        uint8 maxLevel;       // Maximum level for the building
         string description;
         uint8 tier;          // Added tier to the config
     }
 
+    // Building state
+    struct Building {
+        uint256 level;
+        bool active;
+    }
+
     // Mappings for district buildings
-    mapping(address => mapping(DistrictBuildingType => bool)) public builtDistrictBuildings;  // Tracks which district buildings are built
+    mapping(address => mapping(DistrictBuildingType => Building)) public buildings;  // Tracks building state and level
     mapping(address => mapping(DistrictBuildingType => bool)) public unlockedDistrictBuildings; // Tracks which are unlocked
     mapping(DistrictBuildingType => DistrictBuildingConfig) public districtBuildingConfigs;
     mapping(address => mapping(DistrictBuildingType => bool)) public activeDistrictBuildings; // Tracks which buildings are active
@@ -52,6 +60,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     // Events
     event DistrictBuildingUnlocked(address indexed player, DistrictBuildingType buildingType);
     event DistrictBuildingBuilt(address indexed player, DistrictBuildingType buildingType);
+    event DistrictBuildingUpgraded(address indexed player, DistrictBuildingType buildingType, uint8 newLevel);
     event DistrictBuildingDamaged(address indexed player, DistrictBuildingType buildingType);
     event DistrictBuildingRepaired(address indexed player, DistrictBuildingType buildingType);
     event GameStateAddressUpdated(address indexed newAddress);
@@ -72,6 +81,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Shop",
             unlockCost: 200,
             buildCost: 100,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Buy items (REP-gated premium later)",
             tier: 0
         });
@@ -80,6 +91,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Workshop",
             unlockCost: 400,
             buildCost: 150,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Repair buildings",
             tier: 0
         });
@@ -89,6 +102,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Defense Tower",
             unlockCost: 1000,
             buildCost: 200,
+            upgradeCost: 300,  // 300 gold per level
+            maxLevel: 5,       // Can be upgraded to level 5
             description: "PvP defense buffs",
             tier: 1
         });
@@ -241,7 +256,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return bool Whether the building is built
      */
     function isDistrictBuildingBuilt(address player, DistrictBuildingType buildingType) public view returns (bool) {
-        return builtDistrictBuildings[player][buildingType];
+        return buildings[player][buildingType].active;
     }
 
     /**
@@ -249,7 +264,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @param buildingType The type of building to build
      */
     function buildDistrictBuilding(DistrictBuildingType buildingType) external nonReentrant {
-        require(!builtDistrictBuildings[msg.sender][buildingType], "Building already built");
+        require(!buildings[msg.sender][buildingType].active, "Building already built");
         require(unlockedDistrictBuildings[msg.sender][buildingType], "Building not unlocked");
         
         DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
@@ -261,25 +276,117 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         );
         require(success, "Failed to deduct gold");
         
-        // Mark as built and active
-        builtDistrictBuildings[msg.sender][buildingType] = true;
-        activeDistrictBuildings[msg.sender][buildingType] = true;
+        // Mark as built and set initial level to 1
+        buildings[msg.sender][buildingType] = Building({
+            level: 1,
+            active: true
+        });
         
         emit DistrictBuildingBuilt(msg.sender, buildingType);
     }
 
     /**
-     * @dev Damage a district building (can only be called by GameState)
-     * @param player The address of the player whose building is being damaged
-     * @param buildingType The type of building being damaged
+     * @dev Upgrade a district building
+     * @param buildingType The type of building to upgrade
      */
-    function damageDistrictBuilding(address player, DistrictBuildingType buildingType) external {
-        require(msg.sender == gameStateAddress, "Only GameState can call this function");
-        require(builtDistrictBuildings[player][buildingType], "Building not built");
-        require(activeDistrictBuildings[player][buildingType], "Building already damaged");
+    function upgradeDistrictBuilding(DistrictBuildingType buildingType) external nonReentrant {
+        Building storage building = buildings[msg.sender][buildingType];
+        require(building.active, "Building not built");
         
-        activeDistrictBuildings[player][buildingType] = false;
-        emit DistrictBuildingDamaged(player, buildingType);
+        DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
+        require(building.level < config.maxLevel, "Building at max level");
+        require(config.upgradeCost > 0, "Building cannot be upgraded");
+        
+        // Calculate upgrade cost (base cost * current level)
+        uint256 upgradeCost = config.upgradeCost * building.level;
+        
+        // Call GameState to check and deduct gold
+        (bool success, ) = gameStateAddress.call(
+            abi.encodeWithSignature("deductGoldForDistrictBuilding(address,uint256)", msg.sender, upgradeCost)
+        );
+        require(success, "Failed to deduct gold");
+        
+        // Upgrade building
+        building.level++;
+        
+        emit DistrictBuildingUpgraded(msg.sender, buildingType, uint8(building.level));
+    }
+
+    /**
+     * @dev Damage district buildings for a player
+     * @param player The address of the player
+     * @param amount Number of buildings to damage
+     * @return uint256 Number of buildings actually damaged
+     */
+    function damageDistrictBuilding(address player, uint256 amount) external returns (uint256) {
+        require(msg.sender == gameStateAddress, "Only GameState can call this function");
+        require(amount > 0, "Amount must be greater than 0");
+
+        // Count active buildings that can be damaged
+        uint256 activeBuildings = 0;
+        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+            if (buildings[player][i].active) {
+                activeBuildings++;
+            }
+        }
+
+        require(activeBuildings > 0, "No buildings available to damage");
+        require(amount <= activeBuildings, "Cannot damage more buildings than available");
+
+        // Sort buildings by tier and level for damage priority
+        uint256[] memory buildingIds = new uint256[](activeBuildings);
+        uint256[] memory buildingScores = new uint256[](activeBuildings);
+        uint256 index = 0;
+
+        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+            if (buildings[player][i].active) {
+                buildingIds[index] = i;
+                // Score = tier * 100 + level (higher score = higher priority to damage)
+                buildingScores[index] = uint256(buildingConfigs[buildings[player][i].buildingType].tier) * 100 + buildings[player][i].level;
+                index++;
+            }
+        }
+
+        // Sort buildings by score (descending)
+        for (uint256 i = 0; i < activeBuildings - 1; i++) {
+            for (uint256 j = 0; j < activeBuildings - i - 1; j++) {
+                if (buildingScores[j] < buildingScores[j + 1]) {
+                    // Swap scores
+                    uint256 tempScore = buildingScores[j];
+                    buildingScores[j] = buildingScores[j + 1];
+                    buildingScores[j + 1] = tempScore;
+                    // Swap IDs
+                    uint256 tempId = buildingIds[j];
+                    buildingIds[j] = buildingIds[j + 1];
+                    buildingIds[j + 1] = tempId;
+                }
+            }
+        }
+
+        // Damage the highest priority buildings
+        uint256 damaged = 0;
+        for (uint256 i = 0; i < amount; i++) {
+            uint256 buildingId = buildingIds[i];
+            buildings[player][buildingId].active = false;
+            damaged++;
+            emit BuildingDamaged(player, buildingId);
+        }
+
+        return damaged;
+    }
+
+    /**
+     * @dev Check if a building can be repaired
+     * @param player The address of the player
+     * @param buildingType The type of building
+     * @return bool Whether the building can be repaired
+     */
+    function canRepairBuilding(address player, DistrictBuildingType buildingType) public view returns (bool) {
+        Building memory building = buildings[player][buildingType];
+        if (!building.active) return false;
+        
+        // Only need to have built Workshop, no need to check if damaged
+        return buildings[player][DistrictBuildingType.WORKSHOP].active;
     }
 
     /**
@@ -287,8 +394,10 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @param buildingType The type of building to repair
      */
     function repairDistrictBuilding(DistrictBuildingType buildingType) external nonReentrant {
-        require(builtDistrictBuildings[msg.sender][buildingType], "Building not built");
-        require(!activeDistrictBuildings[msg.sender][buildingType], "Building not damaged");
+        Building storage building = buildings[msg.sender][buildingType];
+        require(building.active, "Building not built");
+        require(!building.active, "Building not damaged");
+        require(canRepairBuilding(msg.sender, buildingType), "Cannot repair: Need Workshop");
         
         DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
         uint256 repairCost = config.buildCost / 2; // Repair costs half of build cost
@@ -299,7 +408,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         );
         require(success, "Failed to deduct gold");
         
-        activeDistrictBuildings[msg.sender][buildingType] = true;
+        building.active = true;
+        
         emit DistrictBuildingRepaired(msg.sender, buildingType);
     }
 
@@ -307,10 +417,11 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @dev Check if a district building is active for a player
      * @param player The address of the player
      * @param buildingType The type of the building
-     * @return bool Whether the building is active
+     * @return bool Whether the building is active (built and not damaged)
      */
     function isDistrictBuildingActive(address player, DistrictBuildingType buildingType) public view returns (bool) {
-        return activeDistrictBuildings[player][buildingType];
+        Building memory building = buildings[player][buildingType];
+        return building.active;
     }
 
     /**
@@ -388,5 +499,28 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         names[13] = "BANK";
         names[14] = "ALTAR";
         return names;
+    }
+
+    /**
+     * @dev Get defense tower power for a player
+     * @param player The address of the player
+     * @return uint256 The defense power (base power * level)
+     */
+    function getDefenseTowerPower(address player) external view returns (uint256) {
+        Building memory defenseTower = buildings[player][DistrictBuildingType.DEFENSE_TOWER];
+        if (!defenseTower.active) return 0;
+        
+        // Base power of 100 per level
+        return defenseTower.level * 100;
+    }
+
+    /**
+     * @dev Get building level
+     * @param player The address of the player
+     * @param buildingType The type of the building
+     * @return uint8 The building level
+     */
+    function getBuildingLevel(address player, DistrictBuildingType buildingType) public view returns (uint8) {
+        return buildings[player][buildingType].level;
     }
 } 
