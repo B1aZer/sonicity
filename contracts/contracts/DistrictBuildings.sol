@@ -112,6 +112,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Barracks",
             unlockCost: 1250,
             buildCost: 250,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Train troops (requires food)",
             tier: 1
         });
@@ -120,6 +122,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Scout Guild",
             unlockCost: 1500,
             buildCost: 200,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Explore PvP targets",
             tier: 1
         });
@@ -128,6 +132,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Caravan",
             unlockCost: 1750,
             buildCost: 250,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Deploy troops for raids",
             tier: 1
         });
@@ -137,6 +143,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Rep Station",
             unlockCost: 3000,
             buildCost: 200,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Stake REP to earn revenue",
             tier: 2
         });
@@ -145,6 +153,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Council Chamber",
             unlockCost: 3500,
             buildCost: 300,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Unlocks REP claim button",
             tier: 2
         });
@@ -153,6 +163,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Audit Shrine",
             unlockCost: 4000,
             buildCost: 250,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Displays REP leaderboard and stats",
             tier: 2
         });
@@ -162,6 +174,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Founders' Hall",
             unlockCost: 5000,
             buildCost: 400,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Form or join a City",
             tier: 3
         });
@@ -170,6 +184,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Ministry of Merit",
             unlockCost: 6000,
             buildCost: 350,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Mints and tracks REP from raids/donations",
             tier: 3
         });
@@ -179,6 +195,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Arcane Tower",
             unlockCost: 10000,
             buildCost: 500,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "PvP/cooldown buffs",
             tier: 4
         });
@@ -187,6 +205,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Fortress Walls",
             unlockCost: 12000,
             buildCost: 500,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "City-wide defense bonus",
             tier: 4
         });
@@ -195,6 +215,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Bank",
             unlockCost: 15000,
             buildCost: 600,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Lending or staking Gold for towns",
             tier: 4
         });
@@ -203,6 +225,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Altar",
             unlockCost: 20000,
             buildCost: 300,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
             description: "Whitelist external NFT collections",
             tier: 4
         });
@@ -324,8 +348,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
 
         // Count active buildings that can be damaged
         uint256 activeBuildings = 0;
-        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            if (buildings[player][i].active) {
+        for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
+            DistrictBuildingType buildingType = DistrictBuildingType(i);
+            if (buildings[player][buildingType].active) {
                 activeBuildings++;
             }
         }
@@ -334,15 +359,16 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         require(amount <= activeBuildings, "Cannot damage more buildings than available");
 
         // Sort buildings by tier and level for damage priority
-        uint256[] memory buildingIds = new uint256[](activeBuildings);
+        DistrictBuildingType[] memory buildingTypes = new DistrictBuildingType[](activeBuildings);
         uint256[] memory buildingScores = new uint256[](activeBuildings);
         uint256 index = 0;
 
-        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            if (buildings[player][i].active) {
-                buildingIds[index] = i;
+        for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
+            DistrictBuildingType buildingType = DistrictBuildingType(i);
+            if (buildings[player][buildingType].active) {
+                buildingTypes[index] = buildingType;
                 // Score = tier * 100 + level (higher score = higher priority to damage)
-                buildingScores[index] = uint256(buildingConfigs[buildings[player][i].buildingType].tier) * 100 + buildings[player][i].level;
+                buildingScores[index] = uint256(districtBuildingConfigs[buildingType].tier) * 100 + buildings[player][buildingType].level;
                 index++;
             }
         }
@@ -355,10 +381,10 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
                     uint256 tempScore = buildingScores[j];
                     buildingScores[j] = buildingScores[j + 1];
                     buildingScores[j + 1] = tempScore;
-                    // Swap IDs
-                    uint256 tempId = buildingIds[j];
-                    buildingIds[j] = buildingIds[j + 1];
-                    buildingIds[j + 1] = tempId;
+                    // Swap types
+                    DistrictBuildingType tempType = buildingTypes[j];
+                    buildingTypes[j] = buildingTypes[j + 1];
+                    buildingTypes[j + 1] = tempType;
                 }
             }
         }
@@ -366,10 +392,10 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         // Damage the highest priority buildings
         uint256 damaged = 0;
         for (uint256 i = 0; i < amount; i++) {
-            uint256 buildingId = buildingIds[i];
-            buildings[player][buildingId].active = false;
+            DistrictBuildingType buildingType = buildingTypes[i];
+            buildings[player][buildingType].active = false;
             damaged++;
-            emit BuildingDamaged(player, buildingId);
+            emit DistrictBuildingDamaged(player, buildingType);
         }
 
         return damaged;
@@ -521,6 +547,6 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return uint8 The building level
      */
     function getBuildingLevel(address player, DistrictBuildingType buildingType) public view returns (uint8) {
-        return buildings[player][buildingType].level;
+        return uint8(buildings[player][buildingType].level);
     }
 } 
