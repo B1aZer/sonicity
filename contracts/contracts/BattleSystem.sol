@@ -276,11 +276,16 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         if (cavalryCount > 0) {
             uint256 damageChance = troopConfigs[TroopType.CAVALRY].gridDamageChance;
             if (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, attacker))) % 100 < damageChance) {
+                // Calculate number of buildings to damage based on cavalry count
+                // 1 building per 5 cavalry, max 3 buildings
+                uint256 buildingsToDamage = (cavalryCount / 5) + 1;
+                if (buildingsToDamage > 3) buildingsToDamage = 3;
+                
                 (bool success, ) = gridBuildingsAddress.call(
-                    abi.encodeWithSignature("damageGridBuilding(address)", defender)
+                    abi.encodeWithSignature("damageGridBuilding(address,uint256)", defender, buildingsToDamage)
                 );
                 require(success, "Failed to damage grid building");
-                activeBattles[attacker].gridBuildingsDamaged++;
+                activeBattles[attacker].gridBuildingsDamaged += buildingsToDamage;
             }
         }
 
@@ -290,11 +295,16 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             // Try to damage district building
             uint256 damageChance = troopConfigs[TroopType.SIEGE].districtDamageChance;
             if (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, attacker))) % 100 < damageChance) {
+                // Calculate number of buildings to damage based on siege count
+                // 1 building per 3 siege, max 2 buildings
+                uint256 buildingsToDamage = (siegeCount / 3) + 1;
+                if (buildingsToDamage > 2) buildingsToDamage = 2;
+                
                 (bool success, ) = districtBuildingsAddress.call(
-                    abi.encodeWithSignature("damageDistrictBuilding(address,uint8)", defender, 1)
+                    abi.encodeWithSignature("damageDistrictBuilding(address,uint256)", defender, buildingsToDamage)
                 );
                 require(success, "Failed to damage district building");
-                activeBattles[attacker].districtBuildingsDamaged++;
+                activeBattles[attacker].districtBuildingsDamaged += buildingsToDamage;
             }
 
             // Try to burn treasury
