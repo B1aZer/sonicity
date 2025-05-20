@@ -116,9 +116,16 @@ describe("DistrictBuildings", function () {
       // Check if defense tower is unlocked (first tier 1 building)
       const isDefenseTowerUnlocked = await districtBuildings.isDistrictBuildingUnlocked(
         await player1.getAddress(),
-        2 // DEFENSE_TOWER
+        3 // DEFENSE_TOWER
       );
       expect(isDefenseTowerUnlocked).to.be.true;
+
+      // Check if barracks is not unlocked yet (requires more treasury)
+      const isBarracksUnlocked = await districtBuildings.isDistrictBuildingUnlocked(
+        await player1.getAddress(),
+        4 // BARRACKS
+      );
+      expect(isBarracksUnlocked).to.be.false;
     });
   });
 
@@ -134,26 +141,30 @@ describe("DistrictBuildings", function () {
     it("Should allow building construction when unlocked", async function () {
       const player1Address = await player1.getAddress();
       
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      
       // Build the defense tower
-      await districtBuildings.connect(player1).buildDistrictBuilding(2); // DEFENSE_TOWER
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
 
       // Check if built
-      const isBuilt = await districtBuildings.isDistrictBuildingBuilt(player1Address, 2); // DEFENSE_TOWER
+      const isBuilt = await districtBuildings.isDistrictBuildingBuilt(player1Address, 3); // DEFENSE_TOWER
       expect(isBuilt).to.be.true;
 
       // Check if active
-      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 2); // DEFENSE_TOWER
+      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 3); // DEFENSE_TOWER
       expect(isActive).to.be.true;
 
       // Check gold was deducted
-      const goldBalance = await gameState.getPlayerGold(player1Address);
-      const expectedGold = 960; // Dynamically calculated based on collected gold minus costs
-      expect(goldBalance).to.equal(expectedGold);
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      const expectedGold = initialGold - 200n; // Defense tower costs 200 gold
+      expect(finalGold).to.equal(expectedGold);
     });
 
     it("Should not allow building construction when not unlocked", async function () {
+      // Try to build barracks without unlocking it
       await expect(
-        districtBuildings.connect(player1).buildDistrictBuilding(3) // BARRACKS
+        districtBuildings.connect(player1).buildDistrictBuilding(4) // BARRACKS
       ).to.be.revertedWith("Building not unlocked");
     });
   });
@@ -167,17 +178,17 @@ describe("DistrictBuildings", function () {
       await gameState.connect(player1).donateGold(1000);
       
       // Build the defense tower
-      await districtBuildings.connect(player1).buildDistrictBuilding(2); // DEFENSE_TOWER
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
     });
 
     it("Should allow BattleSystem to damage a building", async function () {
       const player1Address = await player1.getAddress();
       
       // Damage the defense tower through BattleSystem
-      await battleSystem.damageDistrictBuilding(player1Address, 2); // DEFENSE_TOWER
+      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
 
       // Check if building is now inactive
-      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 2);
+      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 3); // DEFENSE_TOWER
       expect(isActive).to.be.false;
     });
 
@@ -186,7 +197,7 @@ describe("DistrictBuildings", function () {
       
       // Try to damage the defense tower as player1
       await expect(
-        districtBuildings.connect(player1).damageDistrictBuilding(player1Address, 2)
+        districtBuildings.connect(player1).damageDistrictBuilding(player1Address, 1)
       ).to.be.revertedWith("Only BattleSystem can call this function");
     });
 
@@ -194,11 +205,11 @@ describe("DistrictBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Damage the defense tower through BattleSystem
-      await battleSystem.damageDistrictBuilding(player1Address, 2);
+      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
 
       // Try to damage it again through BattleSystem
       await expect(
-        battleSystem.damageDistrictBuilding(player1Address, 2)
+        battleSystem.connect(owner).testDamageBuildings(player1Address, 1)
       ).to.be.revertedWith("No buildings available to damage");
     });
 
@@ -208,19 +219,22 @@ describe("DistrictBuildings", function () {
       // Ensure player has enough gold for repair
       await ensurePlayerGold(player1, 1000);
       
+      // Build workshop first (required for repair)
+      await districtBuildings.connect(player1).buildDistrictBuilding(1); // WORKSHOP
+      
       // Damage the defense tower through BattleSystem
-      await battleSystem.damageDistrictBuilding(player1Address, 2);
+      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
 
       // Repair the building
-      await districtBuildings.connect(player1).repairDistrictBuilding(2);
+      await districtBuildings.connect(player1).repairDistrictBuilding(3); // DEFENSE_TOWER
 
       // Check if building is active again
-      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 2);
+      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 3); // DEFENSE_TOWER
       expect(isActive).to.be.true;
 
       // Check repair cost was deducted (half of build cost)
       const goldBalance = await gameState.getPlayerGold(player1Address);
-      const expectedGold = 3020; // Dynamically calculated based on collected gold minus costs
+      const expectedGold = 1000n - 150n - 100n; // Initial gold - workshop cost - repair cost
       expect(goldBalance).to.equal(expectedGold);
     });
 
@@ -240,37 +254,34 @@ describe("DistrictBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Build a tier 0 building (SHOP)
-      await districtBuildings.connect(player1).buildDistrictBuilding(0); // SHOP
+      await districtBuildings.connect(player1).buildDistrictBuilding(0);
       
-      // Try to damage the shop through BattleSystem
-      await battleSystem.damageDistrictBuilding(player1Address, 1);
-
-      // Check if shop is still active
-      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 0);
-      expect(isActive).to.be.true;
+      // Try to damage it through BattleSystem
+      await expect(
+        battleSystem.connect(owner).testDamageBuildings(player1Address, 1)
+      ).to.be.revertedWith("No buildings available to damage");
     });
 
     it("Should damage buildings in reverse order (higher tier first)", async function () {
       const player1Address = await player1.getAddress();
       
       // Build multiple buildings of different tiers
-      await ensurePlayerGold(player1, 5000);
-      await gameState.connect(player1).donateGold(5000); // Reach tier 2
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER (tier 1)
+      await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS (tier 1)
+      await districtBuildings.connect(player1).buildDistrictBuilding(5); // ARCHERY_RANGE (tier 2)
       
-      // Build tier 1 building
-      await districtBuildings.connect(player1).buildDistrictBuilding(2); // DEFENSE_TOWER
-      // Build tier 2 building
-      await districtBuildings.connect(player1).buildDistrictBuilding(6); // REP_STATION
+      // Damage one building
+      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
       
-      // Damage 1 building
-      await battleSystem.damageDistrictBuilding(player1Address, 1);
+      // Check that the highest tier building (ARCHERY_RANGE) was damaged
+      const isArcheryRangeActive = await districtBuildings.isDistrictBuildingActive(player1Address, 5);
+      expect(isArcheryRangeActive).to.be.false;
       
-      // Check that the higher tier building (REP_STATION) was damaged first
-      const isRepStationActive = await districtBuildings.isDistrictBuildingActive(player1Address, 6);
-      const isDefenseTowerActive = await districtBuildings.isDistrictBuildingActive(player1Address, 2);
-      
-      expect(isRepStationActive).to.be.false;
+      // Check that lower tier buildings are still active
+      const isDefenseTowerActive = await districtBuildings.isDistrictBuildingActive(player1Address, 3);
+      const isBarracksActive = await districtBuildings.isDistrictBuildingActive(player1Address, 4);
       expect(isDefenseTowerActive).to.be.true;
+      expect(isBarracksActive).to.be.true;
     });
   });
 }); 

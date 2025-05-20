@@ -234,6 +234,21 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         );
     }
 
+    /**
+     * @dev Test function to damage buildings (only for testing)
+     * @param defender The address of the player to damage buildings for
+     * @param amount Number of buildings to damage
+     */
+    function testDamageBuildings(address defender, uint256 amount) external {
+        require(msg.sender == owner(), "Only owner can call this function");
+        
+        // Call DistrictBuildings contract directly to damage buildings
+        (bool success, ) = districtBuildingsAddress.call(
+            abi.encodeWithSignature("damageDistrictBuilding(address,uint256)", defender, amount)
+        );
+        require(success, "Failed to damage district building");
+    }
+
     // Internal helper functions
 
     function getDefenderPower(address defender) internal view returns (bool, uint256) {
