@@ -78,9 +78,15 @@ export class StakePage extends BasePage {
 
     showStatus(type, message, title = '') {
         const statusElement = this.statusComponent.show(message, type);
-        const actionsSection = this.container.querySelector('.page-section');
-        if (actionsSection) {
-            actionsSection.after(statusElement);
+        const pageContainer = this.container.querySelector('.page-container');
+        if (pageContainer) {
+            // Insert after the first section
+            const firstSection = pageContainer.querySelector('.page-section');
+            if (firstSection) {
+                firstSection.after(statusElement);
+            } else {
+                pageContainer.appendChild(statusElement);
+            }
         } else {
             // Fallback - append to the container
             this.container.appendChild(statusElement);
@@ -266,55 +272,66 @@ export class StakePage extends BasePage {
 
     async stakeNFT(tokenId, collection) {
         try {
+            Logger.info('StakeNFT called with:', { tokenId, collection });
+            
             const buildingTypeSelect = this.container.querySelector('.building-type-select');
             const buildingType = parseInt(buildingTypeSelect.value);
             
-            // Show loading status
-            this.showStatus('info', 'Staking NFT...');
+            // Step 1: Initial checks
+            this.showStatus('loading', 'Step 1/3: Preparing to stake NFT...', 'Preparing');
             
             // Get contract addresses for comparison
             const farmAddress = await this.contracts.farmNft.getContractAddress();
+            Logger.info('Contract addresses:', { farmAddress, collection });
+            
             const altarAddress = await this.contracts.altar.getContractAddress();
+            
+            // Step 2: Approve NFT transfer
+            this.showStatus('loading', 'Step 2/3: Approving NFT transfer...', 'Approving');
             
             // Approve NFT transfer
             const nftContract = collection.toLowerCase() === farmAddress.toLowerCase()
                 ? this.contracts.farmNft
                 : this.contracts.nft;
             
-            await nftContract.approve(altarAddress, tokenId);
+            await nftContract.transact('approve', altarAddress, tokenId);
+            this.showStatus('loading', 'Approval confirmed, proceeding with staking...', 'Approving');
+            
+            // Step 3: Stake NFT
+            this.showStatus('loading', 'Step 3/3: Staking NFT...', 'Staking');
             
             // Stake NFT
-            const tx = await this.contracts.altar.stake(tokenId, buildingType, collection);
-            await tx.wait();
+            await this.contracts.altar.transact('stake', tokenId, buildingType, collection);
             
             // Reload NFTs
+            this.showStatus('loading', 'Updating NFT list...', 'Updating');
             await this.loadUserNFTs();
             
             // Show success status
-            this.showStatus('success', 'NFT staked successfully!');
+            this.showStatus('success', 'Your NFT has been staked and a new building has been constructed in your district!', 'NFT Staked Successfully!');
         } catch (error) {
             Logger.error('Error staking NFT:', error);
-            this.showStatus('error', 'Failed to stake NFT. Please try again.');
+            this.showStatus('error', `Failed to stake NFT: ${error.message}`, 'Staking Failed');
         }
     }
 
     async unstakeNFT(tokenId, collection) {
         try {
             // Show loading status
-            this.showStatus('info', 'Unstaking NFT...');
+            this.showStatus('loading', 'Unstaking NFT...', 'Unstaking');
             
             // Unstake NFT
-            const tx = await this.contracts.altar.unstake(collection, tokenId);
-            await tx.wait();
+            await this.contracts.altar.transact('unstake', collection, tokenId);
             
             // Reload NFTs
+            this.showStatus('loading', 'Updating NFT list...', 'Updating');
             await this.loadUserNFTs();
             
             // Show success status
-            this.showStatus('success', 'NFT unstaked successfully!');
+            this.showStatus('success', 'NFT unstaked successfully!', 'Unstaking Complete');
         } catch (error) {
             Logger.error('Error unstaking NFT:', error);
-            this.showStatus('error', 'Failed to unstake NFT. Please try again.');
+            this.showStatus('error', `Failed to unstake NFT: ${error.message}`, 'Unstaking Failed');
         }
     }
 

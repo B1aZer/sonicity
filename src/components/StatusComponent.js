@@ -37,6 +37,12 @@ export class StatusComponent {
                     <div class="description">${message}</div>
                 </div>
             `;
+        } else if (type === 'info') {
+            this.element.innerHTML = `
+                <div class="status-content">
+                    <div class="step">${message}</div>
+                </div>
+            `;
         }
 
         // Auto-remove success/error messages after 5 seconds

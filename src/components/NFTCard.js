@@ -12,11 +12,11 @@ export class NFTCard {
     }
 
     render(nft) {
-        const { tokenId, metadata, gameStateMetadata } = nft;
+        const { tokenId, metadata, gameStateMetadata, contractAddress } = nft;
         const districts = ['Central', 'North', 'East', 'South'];
 
         return `
-            <div class="nft-card">
+            <div class="nft-card" data-collection="${contractAddress}">
                 <div class="nft-image">
                     <img src="${metadata.image}" onerror="this.src='/images/placeholder.jpg'" alt="Land Plot #${tokenId}" />
                 </div>
@@ -74,7 +74,8 @@ export class NFTCard {
             if (stakeButton) {
                 stakeButton.addEventListener('click', () => {
                     const tokenId = stakeButton.dataset.tokenId;
-                    this.options.onStake(tokenId);
+                    const collection = element.dataset.collection;
+                    this.options.onStake(tokenId, collection);
                 });
             }
         }
@@ -84,7 +85,8 @@ export class NFTCard {
             if (unstakeButton) {
                 unstakeButton.addEventListener('click', () => {
                     const tokenId = unstakeButton.dataset.tokenId;
-                    this.options.onUnstake(tokenId);
+                    const collection = element.dataset.collection;
+                    this.options.onUnstake(tokenId, collection);
                 });
             }
         }
