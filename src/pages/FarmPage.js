@@ -77,31 +77,31 @@ export class FarmPage extends BasePage {
             // Update UI with production rate
             const productionRateElements = this.element.querySelectorAll('.detail-value');
             if (productionRateElements && productionRateElements.length > 0) {
-                productionRateElements[0].textContent = `${productionRate.toString()} gold/hour`;
+                productionRateElements[0].textContent = `${productionRate.toString()} food/hour`;
                 Logger.info('Updated UI with production rate:', productionRate.toString());
             } else {
                 Logger.warn('Production rate element not found in DOM');
             }
 
-            // Get total claimable gold directly from contract
-            const totalClaimableGold = await this.contracts.gridBuildings.calculateTotalClaimableGold(
+            // Get total claimable food directly from contract
+            const totalClaimableFood = await this.contracts.gridBuildings.calculateTotalClaimableResources(
                 GridBuildingsContract.BuildingType.FARM
             );
-            Logger.info('Total claimable gold from contract:', totalClaimableGold.toString());
+            Logger.info('Total claimable food from contract:', totalClaimableFood.toString());
 
-            // Update UI with claimable gold
-            const claimableGoldElement = this.element.querySelector('.claimable-gold');
-            if (claimableGoldElement) {
-                claimableGoldElement.textContent = totalClaimableGold.toString();
-                Logger.info('Updated UI with claimable gold:', totalClaimableGold.toString());
+            // Update UI with claimable food
+            const claimableFoodElement = this.element.querySelector('.claimable-food');
+            if (claimableFoodElement) {
+                claimableFoodElement.textContent = totalClaimableFood.toString();
+                Logger.info('Updated UI with claimable food:', totalClaimableFood.toString());
             } else {
-                Logger.warn('Claimable gold element not found in DOM');
+                Logger.warn('Claimable food element not found in DOM');
             }
 
-            // Enable/disable claim button based on claimable gold
+            // Enable/disable claim button based on claimable food
             const claimButton = this.element.querySelector('.claim-button');
             if (claimButton) {
-                claimButton.disabled = totalClaimableGold <= BigInt(0);
+                claimButton.disabled = totalClaimableFood <= BigInt(0);
                 Logger.info('Updated claim button state:', !claimButton.disabled);
             } else {
                 Logger.warn('Claim button not found in DOM');
@@ -113,18 +113,17 @@ export class FarmPage extends BasePage {
         }
     }
 
-    async handleClaimGold() {
+    async handleClaimFood() {
         try {
-            Logger.info('Starting gold collection...');
+            Logger.info('Starting food collection...');
             
             // Show loading modal
-            const loadingModal = this.modal.loading('Collecting gold...');
+            const loadingModal = this.modal.loading('Collecting food...');
             
-            // Collect gold from all farms in a single transaction
-            const tx = await this.contracts.gridBuildings.collectAllGoldByType(
+            // Collect food from all farms in a single transaction
+            await this.contracts.gridBuildings.collectAllResourcesByType(
                 GridBuildingsContract.BuildingType.FARM
             );
-            await tx;
             
             // Close loading modal
             loadingModal.close();
@@ -133,11 +132,11 @@ export class FarmPage extends BasePage {
             await this.loadFarmData();
             
             // Show success message
-            this.modal.success('Successfully collected gold from all farms!');
+            this.modal.success('Successfully collected food from all farms!');
             
         } catch (error) {
-            Logger.error('Error collecting gold:', error);
-            this.modal.error('Failed to collect gold. Please try again.');
+            Logger.error('Error collecting food:', error);
+            this.modal.error('Failed to collect food. Please try again.');
         }
     }
 
@@ -148,8 +147,8 @@ export class FarmPage extends BasePage {
         const claimButton = this.element.querySelector('.claim-button');
         if (claimButton) {
             claimButton.addEventListener('click', () => {
-                this.handleClaimGold().catch(error => {
-                    Logger.error('Error in handleClaimGold:', error);
+                this.handleClaimFood().catch(error => {
+                    Logger.error('Error in handleClaimFood:', error);
                 });
             });
         }
@@ -169,8 +168,8 @@ export class FarmPage extends BasePage {
                             <span class="status-value farm-count">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Claimable Gold:</span>
-                            <span class="status-value claimable-gold">0</span>
+                            <span class="status-label">Claimable Food:</span>
+                            <span class="status-value claimable-food">0</span>
                         </div>
                     </div>
                 </div>
@@ -195,7 +194,7 @@ export class FarmPage extends BasePage {
                         </div>
                         <div class="info-card">
                             <h3>Collection Rules</h3>
-                            <p>Collect gold from your farms</p>
+                            <p>Collect food from your farms</p>
                             <div class="info-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Max Collection:</span>
@@ -215,7 +214,7 @@ export class FarmPage extends BasePage {
                     <h2>Actions</h2>
                     <div class="actions-container">
                         <button class="claim-button" disabled>
-                            <span class="button-text">Claim Gold</span>
+                            <span class="button-text">Claim Food</span>
                         </button>
                     </div>
                 </div>
