@@ -303,77 +303,44 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Calculate total claimable gold for a player without collecting it
+     * @dev Calculate claimable resources for a specific building
      * @param player The address of the player
-     * @return uint256 Total claimable gold
+     * @param buildingId The ID of the building to calculate for
+     * @return uint256 Amount of claimable resources
      */
-    function calculateClaimableGold(address player) external view returns (uint256) {
-        uint256 totalGold = 0;
-        uint256 currentTime = block.timestamp;
+    function calculateClaimableResources(address player, uint256 buildingId) external view returns (uint256) {
+        Building storage building = buildings[player][buildingId];
+        require(building.active, "Building not active");
         
-        // Get all building IDs
-        uint256[] memory buildingIds = getActiveBuildings(player);
-        
-        for (uint256 i = 0; i < buildingIds.length; i++) {
-            uint256 buildingId = buildingIds[i];
-            Building storage building = buildings[player][buildingId];
-            
-            if (building.active && building.buildingType == GridBuildingType.HOUSE) {
-                // Calculate time passed since last collection
-                uint256 timePassed = currentTime - building.lastCollectionTime;
-                
-                // Cap the time passed at 24 hours
-                if (timePassed > 24 hours) {
-                    timePassed = 24 hours;
-                }
-                
-                // Calculate gold to collect based on production rate and time passed
-                GridBuildingConfig memory config = buildingConfigs[building.buildingType];
-                uint256 goldToCollect = (config.baseProductionRate * timePassed * building.level) / 1 hours;
-                
-                // Add to total gold
-                totalGold += goldToCollect;
-            }
+        // Calculate time passed since last collection
+        uint256 timePassed = block.timestamp - building.lastCollectionTime;
+        if (timePassed > 24 hours) {
+            timePassed = 24 hours;
         }
         
-        return totalGold;
+        // Calculate resources to collect based on production rate and time passed
+        GridBuildingConfig memory config = buildingConfigs[building.buildingType];
+        return (config.baseProductionRate * timePassed * building.level) / 1 hours;
     }
 
     /**
-     * @dev Calculate total claimable food for a player without collecting it
+     * @dev Calculate total claimable resources for a player's buildings of a specific type
      * @param player The address of the player
-     * @return uint256 Total claimable food
+     * @param buildingType The type of building to calculate for
+     * @return uint256 Total amount of claimable resources
      */
-    function calculateClaimableFood(address player) external view returns (uint256) {
-        uint256 totalFood = 0;
-        uint256 currentTime = block.timestamp;
-        
-        // Get all building IDs
+    function calculateTotalClaimableResources(address player, GridBuildingType buildingType) external view returns (uint256) {
+        uint256 totalResources = 0;
         uint256[] memory buildingIds = getActiveBuildings(player);
         
         for (uint256 i = 0; i < buildingIds.length; i++) {
-            uint256 buildingId = buildingIds[i];
-            Building storage building = buildings[player][buildingId];
-            
-            if (building.active && building.buildingType == GridBuildingType.FARM) {
-                // Calculate time passed since last collection
-                uint256 timePassed = currentTime - building.lastCollectionTime;
-                
-                // Cap the time passed at 24 hours
-                if (timePassed > 24 hours) {
-                    timePassed = 24 hours;
-                }
-                
-                // Calculate food to collect based on production rate and time passed
-                GridBuildingConfig memory config = buildingConfigs[GridBuildingType.FARM];
-                uint256 foodToCollect = (config.baseProductionRate * timePassed * building.level) / 1 hours;
-                
-                // Add to total food
-                totalFood += foodToCollect;
+            Building storage building = buildings[player][buildingIds[i]];
+            if (building.active && building.buildingType == buildingType) {
+                totalResources += this.calculateClaimableResources(player, buildingIds[i]);
             }
         }
         
-        return totalFood;
+        return totalResources;
     }
 
     /**

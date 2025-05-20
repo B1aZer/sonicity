@@ -1,6 +1,13 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
 
+// Define building types enum to match the contract
+const GridBuildingType = {
+    HOUSE: 0,
+    FARM: 1,
+    REP_STATION: 2
+};
+
 describe("GridBuildings", function () {
   let gameState;
   let gridBuildings;
@@ -294,16 +301,31 @@ describe("GridBuildings", function () {
       ).to.be.revertedWith("Building not active");
     });
 
-    it("Should calculate correct claimable gold", async function () {
+    it("Should calculate correct claimable resources for a house", async function () {
       const player1Address = await player1.getAddress();
       
       // Fast forward 12 hours
       await ethers.provider.send("evm_increaseTime", [12 * 3600]);
       await ethers.provider.send("evm_mine");
 
-      // Calculate claimable gold
-      const claimableGold = await gridBuildings.calculateClaimableGold(player1Address);
-      expect(claimableGold).to.equal(BigInt(10 * 12)); // 10 gold per hour * 12 hours
+      // Calculate claimable resources for the house
+      const claimableResources = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableResources).to.equal(BigInt(10 * 12)); // 10 gold per hour * 12 hours
+    });
+
+    it("Should calculate correct total claimable resources for houses", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Fast forward 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Calculate total claimable resources for houses
+      const totalClaimableResources = await gridBuildings.calculateTotalClaimableResources(
+        player1Address,
+        GridBuildingType.HOUSE
+      );
+      expect(totalClaimableResources).to.equal(BigInt(10 * 12)); // 10 gold per hour * 12 hours
     });
 
     it("Should emit ResourcesCollected event", async function () {
@@ -381,37 +403,34 @@ describe("GridBuildings", function () {
         expect(finalFood).to.equal(expectedFood);
       });
 
-      it("Should calculate correct claimable food", async function () {
+      it("Should calculate correct claimable resources for a farm", async function () {
         const player1Address = await player1.getAddress();
         
         // Fast forward 12 hours
         await ethers.provider.send("evm_increaseTime", [12 * 3600]);
         await ethers.provider.send("evm_mine");
 
-        // Calculate claimable food
-        const claimableFood = await gridBuildings.calculateClaimableFood(player1Address);
-        expect(claimableFood).to.equal(BigInt(5 * 12)); // 5 food per hour * 12 hours
+        // Calculate claimable resources for the farm
+        const claimableResources = await gridBuildings.calculateClaimableResources(player1Address, farmId);
+        expect(claimableResources).to.equal(BigInt(5 * 12)); // 5 food per hour * 12 hours
       });
 
-      it("Should collect food from all farms at once", async function () {
+      it("Should calculate correct total claimable resources for farms", async function () {
         const player1Address = await player1.getAddress();
         
         // Create a second farm
-        await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), 1);
+        await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.FARM);
         
-        // Fast forward 1 hour
-        await ethers.provider.send("evm_increaseTime", [3600]);
+        // Fast forward 12 hours
+        await ethers.provider.send("evm_increaseTime", [12 * 3600]);
         await ethers.provider.send("evm_mine");
 
-        // Get initial food balance
-        const initialFood = await gameState.getPlayerFood(player1Address);
-
-        // Collect from all farms
-        await gridBuildings.connect(player1).collectResourcesByType(1); // 1 is FARM type
-
-        // Check food balance increased (should be 10 food total - 5 per farm)
-        const finalFood = await gameState.getPlayerFood(player1Address);
-        expect(finalFood).to.equal(initialFood + BigInt(10));
+        // Calculate total claimable resources for farms
+        const totalClaimableResources = await gridBuildings.calculateTotalClaimableResources(
+          player1Address,
+          GridBuildingType.FARM
+        );
+        expect(totalClaimableResources).to.equal(BigInt(5 * 12 * 2)); // 5 food per hour * 12 hours * 2 farms
       });
 
       it("Should upgrade farm production rate", async function () {
