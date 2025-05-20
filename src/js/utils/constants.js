@@ -35,7 +35,7 @@ export const BUILDINGS = {
     },
     FARM: {
         name: 'Farm',
-        size: new THREE.Vector3(12, 12, 12),
+        size: new THREE.Vector3(8, 8, 8),
         color: 0x90EE90, // Light Green
         isGridBuilding: true
     },
