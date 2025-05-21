@@ -21,7 +21,7 @@ describe("GridBuildings", function () {
   // Helper to stake an NFT and get the building ID from events
   async function stakeNFTAndGetBuildingId(player, tokenId, tier, nftAddress) {
     const altarAddress = await altar.getAddress();
-    await sonicityNFT.connect(player).approve(altarAddress, tokenId);
+    // Remove redundant approval since it's done in beforeEach
     const stakeTx = await altar.connect(player).stake(tokenId, tier, nftAddress);
     const stakeReceipt = await stakeTx.wait();
     
@@ -46,23 +46,31 @@ describe("GridBuildings", function () {
     const playerAddress = await player.getAddress();
     let gold = await gameState.getPlayerGold(playerAddress);
     
-    console.log("gold", gold);
-    console.log("amount", amount);
-    
     // If we already have enough gold, return early
     if (gold >= BigInt(amount)) return;
     
     // Get current houses
     const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
-    console.log("currentHouses", currentHouses);
     
     // Create houses up to the limit of 9 if needed
     if (currentHouses < BigInt(9)) {
         for (let i = Number(currentHouses); i < 9; i++) {
-            console.log("i", i);
-            // Mint and stake an NFT to create a house
-            await sonicityNFT.connect(player).mint(1, { value: ethers.parseEther("0.01") });
-            const tokenId = i + 1;
+            // Mint an NFT to the player
+            const mintTx = await sonicityNFT.connect(player).mint(1, { value: ethers.parseEther("0.01") });
+            const mintReceipt = await mintTx.wait();
+            
+            // Get tokenId from Transfer event
+            const transferEvent = mintReceipt.logs
+              .map(log => {
+                try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
+              })
+              .find(e => e && e.name === "Transfer");
+            if (!transferEvent) throw new Error("Transfer event not found");
+            const tokenId = transferEvent.args.tokenId;
+            
+            // Approve and stake the NFT
+            const altarAddress = await altar.getAddress();
+            await sonicityNFT.connect(player).approve(altarAddress, tokenId);
             await stakeNFTAndGetBuildingId(player, tokenId, 0, await sonicityNFT.getAddress());
         }
     }
@@ -145,10 +153,22 @@ describe("GridBuildings", function () {
     await altar.approveCollection(sonicityNFTAddress);
 
     // Create a house (tier 0) through staking
-    await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-    const houseId = await stakeNFTAndGetBuildingId(player1, 1, 0, sonicityNFTAddress);
+    const mintTx = await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
+    const mintReceipt = await mintTx.wait();
+    
+    // Get tokenId from Transfer event
+    const transferEvent = mintReceipt.logs
+      .map(log => {
+        try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
+      })
+      .find(e => e && e.name === "Transfer");
+    if (!transferEvent) throw new Error("Transfer event not found");
+    const tokenId = transferEvent.args.tokenId;
+    
+    // Approve and stake the NFT
+    await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
+    const houseId = await stakeNFTAndGetBuildingId(player1, tokenId, 0, sonicityNFTAddress);
 
-    console.log("houseId", houseId);
     // Ensure player has enough gold for tier upgrade
     await ensurePlayerGold(player1, 1000);
 
@@ -160,8 +180,21 @@ describe("GridBuildings", function () {
     expect(playerState.tier).to.equal(1);
 
     // Create a farm (tier 1) through staking
-    await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-    const farmId = await stakeNFTAndGetBuildingId(player1, 1, 1, sonicityNFTAddress);
+    const farmMintTx = await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
+    const farmMintReceipt = await farmMintTx.wait();
+    
+    // Get tokenId from Transfer event
+    const farmTransferEvent = farmMintReceipt.logs
+      .map(log => {
+        try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
+      })
+      .find(e => e && e.name === "Transfer");
+    if (!farmTransferEvent) throw new Error("Transfer event not found");
+    const farmTokenId = farmTransferEvent.args.tokenId;
+    
+    // Approve and stake the NFT
+    await sonicityNFT.connect(player1).approve(altarAddress, farmTokenId);
+    const farmId = await stakeNFTAndGetBuildingId(player1, farmTokenId, 1, sonicityNFTAddress);
 
     // Verify buildings are active and have correct types
     const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
