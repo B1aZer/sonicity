@@ -178,6 +178,9 @@ describe("GridBuildings", function () {
     await altar.approveCollection(sonicityNFTAddress);
     await altar.approveCollection(sonicityFarmAddress);
 
+    // Set minimum staking duration to 0 for testing
+    await altar.connect(owner).setMinStakingDuration(0);
+
     // Create a house (tier 0) through staking
     const { buildingId: houseId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
@@ -389,17 +392,18 @@ describe("GridBuildings", function () {
 
     it("Should allow Altar to remove buildings", async function () {
       const player1Address = await player1.getAddress();
-      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
       // Get building count before removal
       const buildingCountBefore = await gridBuildings.buildingCounts(player1Address, 0);
 
-      // Remove building through Altar
-      await gridBuildings.connect(altar).removeBuilding(player1Address, buildingId);
+
+      // Unstake NFT to remove building
+      await altar.connect(player1).unstake(nftAddress, tokenId);
 
       // Check that the building was removed
       const building = await gridBuildings.buildings(player1Address, buildingId);
-      expect(building.buildingType).to.equal(GridBuildingType(0));
+      expect(building.buildingType).to.equal(BigInt(0));
       expect(building.level).to.equal(0);
 
       // Check building count decreased
