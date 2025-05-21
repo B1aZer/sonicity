@@ -413,8 +413,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      */
     function repairBuilding(DistrictBuildingType buildingType) external nonReentrant {
         Building storage building = buildings[msg.sender][buildingType];
-        require(building.damaged, "Building not damaged");
         require(building.active, "Building not built");
+        require(building.damaged, "Building not damaged");
         require(buildings[msg.sender][DistrictBuildingType.WORKSHOP].active, "Workshop required to repair");
 
         // Calculate repair cost (half of build cost)
