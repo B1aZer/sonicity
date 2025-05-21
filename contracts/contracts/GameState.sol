@@ -48,6 +48,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // City tier requirements
     mapping(uint8 => uint256) public tierRequirements;
     
+    // Building slots per tier
+    mapping(uint8 => uint256) public buildingSlotsPerTier;
+    
     // Maximum production time (24 hours in seconds)
     uint256 public constant MAX_PRODUCTION_TIME = 24 hours;
 
@@ -84,6 +87,13 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         tierRequirements[2] = 2500;   // 2500 Gold for Tier 2
         tierRequirements[3] = 5000;   // 5000 Gold for Tier 3
         tierRequirements[4] = 10000;  // 10000 Gold for Tier 4
+
+        // Initialize building slots per tier
+        buildingSlotsPerTier[0] = 9;   // 3x3 grid
+        buildingSlotsPerTier[1] = 12;  // 3x4 grid
+        buildingSlotsPerTier[2] = 16;  // 4x4 grid
+        buildingSlotsPerTier[3] = 20;  // 4x5 grid
+        buildingSlotsPerTier[4] = 25;  // 5x5 grid
     }
 
     /**
@@ -178,16 +188,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         while (nextTier <= 4 && state.treasury >= tierRequirements[nextTier]) {
             state.tier = nextTier;
             
-            // Increase building slots based on tier
-            if (nextTier == 1) {
-                state.buildingSlots = 12;  // Set to 12 slots at tier 1
-            } else if (nextTier == 2) {
-                state.buildingSlots = 16;  // Set to 16 slots at tier 2
-            } else if (nextTier == 3) {
-                state.buildingSlots = 20;  // Set to 20 slots at tier 3
-            } else if (nextTier == 4) {
-                state.buildingSlots = 25;  // Set to 25 slots at tier 4
-            }
+            // Update building slots based on tier using the mapping
+            state.buildingSlots = buildingSlotsPerTier[nextTier];
             
             emit CityTierUpgraded(0, nextTier);
             emit BuildingSlotsUpdated(msg.sender, state.buildingSlots);

@@ -152,11 +152,21 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Check tier requirement
         require(playerTier >= buildingConfigs[buildingType].tier, "Tier requirement not met");
         
-        // For Tier 0, only allow houses and enforce 3x3 grid
-        if (playerTier == 0) {
-            require(buildingType == GridBuildingType.HOUSE, "Only houses allowed in Tier 0");
-            require(buildingCounts[player][GridBuildingType.HOUSE] < 9, "Tier 0 grid is full (3x3)");
+        // Get total building slots for player's tier
+        (success, data) = gameStateAddress.call(
+            abi.encodeWithSignature("buildingSlotsPerTier(uint8)", playerTier)
+        );
+        require(success, "Failed to get building slots per tier");
+        uint256 maxSlots = abi.decode(data, (uint256));
+        
+        // Get current total buildings count
+        uint256 totalBuildings = 0;
+        for (uint8 i = 0; i <= uint8(GridBuildingType.REP_STATION); i++) {
+            totalBuildings += buildingCounts[player][GridBuildingType(i)];
         }
+        
+        // Check if player has reached their building slot limit
+        require(totalBuildings < maxSlots, "Building slot limit reached for current tier");
         
         // Create building
         uint256 buildingId = nextBuildingId[player]++;
