@@ -176,13 +176,13 @@ describe("DistrictBuildings", function () {
 
       // Donate gold to reach tier 1
       await gameState.connect(player1).donateGold(1000);
-      
-      // Build the defense tower
-      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
     });
 
     it("Should allow BattleSystem to damage a building", async function () {
       const player1Address = await player1.getAddress();
+      
+      // Build the defense tower first
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
       
       // Damage the defense tower through BattleSystem
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
@@ -195,6 +195,9 @@ describe("DistrictBuildings", function () {
     it("Should not allow non-BattleSystem to damage a building", async function () {
       const player1Address = await player1.getAddress();
       
+      // Build the defense tower first
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
+      
       // Try to damage the defense tower as player1
       await expect(
         districtBuildings.connect(player1).damageBuildings(player1Address, 1)
@@ -203,6 +206,9 @@ describe("DistrictBuildings", function () {
 
     it("Should not allow damaging an already damaged building", async function () {
       const player1Address = await player1.getAddress();
+      
+      // Build the defense tower first
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
       
       // Damage the defense tower through BattleSystem
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
@@ -226,6 +232,9 @@ describe("DistrictBuildings", function () {
       // Build workshop first (required for repair)
       await districtBuildings.connect(player1).buildDistrictBuilding(1); // WORKSHOP
       
+      // Build the defense tower
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
+      
       // Damage the defense tower through BattleSystem
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
 
@@ -242,11 +251,14 @@ describe("DistrictBuildings", function () {
 
       // Check repair cost was deducted (half of build cost)
       const finalGold = await gameState.getPlayerGold(player1Address);
-      const expectedGold = initialGold - 150n - 100n; // Initial gold - workshop cost - repair cost (half of 200)
+      const expectedGold = initialGold - 150n - 200n - 100n; // Initial gold - workshop cost - defense tower cost - repair cost (half of 200)
       expect(finalGold).to.equal(expectedGold);
     });
 
     it("Should not allow repairing an active building", async function () {
+      // Build the defense tower first
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
+      
       await expect(
         districtBuildings.connect(player1).repairBuilding(3) // DEFENSE_TOWER
       ).to.be.revertedWith("Building not damaged");
@@ -288,14 +300,14 @@ describe("DistrictBuildings", function () {
       // Build multiple buildings of different tiers
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER (tier 1)
       await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS (tier 1)
-      await districtBuildings.connect(player1).buildDistrictBuilding(5); // ARCHERY_RANGE (tier 2)
+      await districtBuildings.connect(player1).buildDistrictBuilding(6); // CARAVAN (tier 2)
       
       // Damage one building
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
       
-      // Check that the highest tier building (ARCHERY_RANGE) was damaged
-      const isArcheryRangeDamaged = await districtBuildings.isBuildingDamaged(player1Address, 5);
-      expect(isArcheryRangeDamaged).to.be.true;
+      // Check that the highest tier building (CARAVAN) was damaged
+      const isCaravanDamaged = await districtBuildings.isBuildingDamaged(player1Address, 6);
+      expect(isCaravanDamaged).to.be.true;
       
       // Check that lower tier buildings are not damaged
       const isDefenseTowerDamaged = await districtBuildings.isBuildingDamaged(player1Address, 3);
