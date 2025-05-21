@@ -836,30 +836,13 @@ describe("GridBuildings", function () {
 
       // Get initial state of all buildings
       const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
-      console.log("Active buildings before damage:", activeBuildings);
-      
-      // Log state of each building before damage
-      for (const id of activeBuildings) {
-        const building = await gridBuildings.buildings(player1Address, id);
-        console.log(`Building ${id} before damage:`, {
-          type: building.buildingType.toString(),
-          level: building.level.toString(),
-          damaged: building.damaged
-        });
-      }
 
       // First damage - should hit first tier 1 building
       const firstDamageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
       const firstDamagedBuildingId = await getDamagedBuildingId(firstDamageTx);
-      console.log("First damaged building ID from event:", firstDamagedBuildingId.toString());
 
       // Check that first tier 1 building was damaged
       const firstDamagedBuilding = await gridBuildings.buildings(player1Address, firstDamagedBuildingId);
-      console.log("First damaged building state after damage:", {
-        type: firstDamagedBuilding.buildingType.toString(),
-        level: firstDamagedBuilding.level.toString(),
-        damaged: firstDamagedBuilding.damaged
-      });
       
       expect(firstDamagedBuilding.buildingType).to.equal(GridBuildingType.FARM);
       expect(firstDamagedBuilding.damaged).to.be.true;
@@ -867,15 +850,9 @@ describe("GridBuildings", function () {
       // Second damage - should hit second tier 1 building
       const secondDamageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
       const secondDamagedBuildingId = await getDamagedBuildingId(secondDamageTx);
-      console.log("Second damaged building ID from event:", secondDamagedBuildingId.toString());
 
       // Check that second tier 1 building was damaged
       const secondDamagedBuilding = await gridBuildings.buildings(player1Address, secondDamagedBuildingId);
-      console.log("Second damaged building state after damage:", {
-        type: secondDamagedBuilding.buildingType.toString(),
-        level: secondDamagedBuilding.level.toString(),
-        damaged: secondDamagedBuilding.damaged
-      });
       
       expect(secondDamagedBuilding.buildingType).to.equal(GridBuildingType.FARM);
       expect(secondDamagedBuilding.damaged).to.be.true;
@@ -884,15 +861,9 @@ describe("GridBuildings", function () {
       // Third damage - should hit tier 0 building
       const thirdDamageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
       const thirdDamagedBuildingId = await getDamagedBuildingId(thirdDamageTx);
-      console.log("Third damaged building ID from event:", thirdDamagedBuildingId.toString());
 
       // Check that a tier 0 building was damaged
       const thirdDamagedBuilding = await gridBuildings.buildings(player1Address, thirdDamagedBuildingId);
-      console.log("Third damaged building state after damage:", {
-        type: thirdDamagedBuilding.buildingType.toString(),
-        level: thirdDamagedBuilding.level.toString(),
-        damaged: thirdDamagedBuilding.damaged
-      });
       
       expect(thirdDamagedBuilding.buildingType).to.equal(GridBuildingType.HOUSE);
       expect(thirdDamagedBuilding.damaged).to.be.true;
@@ -908,15 +879,19 @@ describe("GridBuildings", function () {
       }
     });
 
-  
     it("Should not allow damaging already damaged buildings", async function () {
       const player1Address = await player1.getAddress();
 
-      // First damage the farm
-      const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
-      await getDamagedBuildingId(damageTx);
+      // Get initial state of all buildings
+      const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
 
-      // Try to damage it again
+      // Damage all buildings
+      for (let i = 0; i < activeBuildings.length; i++) {
+        const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
+        const damagedBuildingId = await getDamagedBuildingId(damageTx);
+      }
+
+      // Try to damage one more building - should fail
       await expect(
         battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1)
       ).to.be.revertedWith("No buildings available to damage");
