@@ -329,7 +329,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         // Mark as built and set initial level to 1, and set active to true (even if previously damaged)
         buildings[msg.sender][buildingType] = Building({
             level: 1,
-            active: true
+            active: true,
+            damaged: false
         });
 
         emit DistrictBuildingBuilt(msg.sender, buildingType);
