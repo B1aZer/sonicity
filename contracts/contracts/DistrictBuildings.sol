@@ -52,6 +52,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     struct Building {
         uint256 level;
         bool active;
+        bool damaged;  // New flag to track damage state
     }
 
     // Mappings for district buildings
@@ -310,25 +311,27 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @dev Build a district building
      * @param buildingType The type of building to build
      */
-    function buildDistrictBuilding(DistrictBuildingType buildingType) external nonReentrant {
-        require(!buildings[msg.sender][buildingType].active, "Building already built");
+    function buildDistrictBuildings(DistrictBuildingType buildingType) external nonReentrant {
+        // If building is already active, revert
+        if (buildings[msg.sender][buildingType].active) {
+            revert("Building already built");
+        }
         require(unlockedDistrictBuildings[msg.sender][buildingType], "Building not unlocked");
-        
         DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
         require(config.buildCost > 0, "Invalid building");
-        
+
         // Call GameState to check and deduct gold
         (bool success, ) = gameStateAddress.call(
             abi.encodeWithSignature("deductGoldForDistrictBuilding(address,uint256)", msg.sender, config.buildCost)
         );
         require(success, "Failed to deduct gold");
-        
-        // Mark as built and set initial level to 1
+
+        // Mark as built and set initial level to 1, and set active to true (even if previously damaged)
         buildings[msg.sender][buildingType] = Building({
             level: 1,
             active: true
         });
-        
+
         emit DistrictBuildingBuilt(msg.sender, buildingType);
     }
 
@@ -363,64 +366,81 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @dev Damage district buildings for a player
      * @param player The address of the player
      * @param amount Number of buildings to damage
-     * @return uint256 Number of buildings actually damaged
      */
-    function damageDistrictBuilding(address player, uint256 amount) external returns (uint256) {
+    function damageBuildings(address player, uint256 amount) external {
         require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
         require(amount > 0, "Amount must be greater than 0");
 
-        uint256 damaged = 0;
-        
-        // Go through buildings in reverse order (higher tier first), skipping tier 0
-        for (uint8 i = uint8(DistrictBuildingType.ALTAR); i > uint8(DistrictBuildingType.WORKSHOP) && damaged < amount; i--) {
+        uint256 buildingsDamaged = 0;
+        bool hasBuildingsToDamage = false;
+
+        // First check if there are any buildings that can be damaged (tier > 0)
+        for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
             DistrictBuildingType buildingType = DistrictBuildingType(i);
-            if (buildings[player][buildingType].active) {
-                buildings[player][buildingType].active = false;
-                damaged++;
-                emit DistrictBuildingDamaged(player, buildingType);
+            DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
+            if (config.tier > 0 && buildings[player][buildingType].active && !buildings[player][buildingType].damaged) {
+                hasBuildingsToDamage = true;
+                break;
             }
         }
 
-        require(damaged > 0, "No buildings available to damage");
-        return damaged;
+        if (!hasBuildingsToDamage) {
+            revert("No buildings available to damage");
+        }
+
+        // Start from highest tier and work down, skip tier 0
+        for (uint8 tier = 4; tier > 0; tier--) {
+            for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
+                DistrictBuildingType buildingType = DistrictBuildingType(i);
+                DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
+                if (config.tier != tier) continue;
+                // Only damage if built, active, and not already damaged
+                if (buildings[player][buildingType].active && !buildings[player][buildingType].damaged) {
+                    buildings[player][buildingType].damaged = true;
+                    emit DistrictBuildingDamaged(player, buildingType);
+                    buildingsDamaged++;
+                    if (buildingsDamaged >= amount) {
+                        return;
+                    }
+                }
+            }
+        }
     }
 
     /**
-     * @dev Check if a building can be repaired
-     * @param player The address of the player
-     * @param buildingType The type of building
-     * @return bool Whether the building can be repaired
-     */
-    function canRepairBuilding(address player, DistrictBuildingType buildingType) public view returns (bool) {
-        Building memory building = buildings[player][buildingType];
-        if (!building.active) return false;
-        
-        // Only need to have built Workshop, no need to check if damaged
-        return buildings[player][DistrictBuildingType.WORKSHOP].active;
-    }
-
-    /**
-     * @dev Repair a damaged district building
+     * @dev Repair a damaged building
      * @param buildingType The type of building to repair
      */
-    function repairDistrictBuilding(DistrictBuildingType buildingType) external nonReentrant {
+    function repairBuilding(DistrictBuildingType buildingType) external nonReentrant {
         Building storage building = buildings[msg.sender][buildingType];
         require(building.active, "Building not built");
-        require(!building.active, "Building not damaged");
-        require(canRepairBuilding(msg.sender, buildingType), "Cannot repair: Need Workshop");
-        
+        require(building.damaged, "Building not damaged");
+        require(buildings[msg.sender][DistrictBuildingType.WORKSHOP].active, "Workshop required to repair");
+
+        // Calculate repair cost (base cost * level)
         DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
-        uint256 repairCost = config.buildCost / 2; // Repair costs half of build cost
+        uint256 repairCost = config.buildCost * building.level / 2; // Half the build cost per level
         
         // Call GameState to check and deduct gold
         (bool success, ) = gameStateAddress.call(
             abi.encodeWithSignature("deductGoldForDistrictBuilding(address,uint256)", msg.sender, repairCost)
         );
         require(success, "Failed to deduct gold");
-        
-        building.active = true;
+
+        // Repair building
+        building.damaged = false;
         
         emit DistrictBuildingRepaired(msg.sender, buildingType);
+    }
+
+    /**
+     * @dev Check if a building is damaged
+     * @param player The address of the player
+     * @param buildingType The type of the building
+     * @return bool Whether the building is damaged
+     */
+    function isBuildingDamaged(address player, DistrictBuildingType buildingType) public view returns (bool) {
+        return buildings[player][buildingType].damaged;
     }
 
     /**
