@@ -41,6 +41,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 lastUpgradeTime;
         uint256 lastCollectionTime;
         bool active;
+        bool damaged;  // New flag to track damage state
     }
 
     // Mappings
@@ -57,6 +58,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event ResourcesCollected(address indexed player, uint256 buildingId, uint256 amount);
     event GameStateAddressUpdated(address indexed newAddress);
     event AltarAddressUpdated(address indexed newAddress);
+    event BuildingRepaired(address indexed player, uint256 buildingId);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -394,65 +396,81 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Damage grid buildings for a player
+     * @dev Damage buildings for a player
      * @param player The address of the player
      * @param amount Number of buildings to damage
-     * @return uint256 Number of buildings actually damaged
      */
-    function damageGridBuilding(address player, uint256 amount) external returns (uint256) {
+    function damageBuildings(address player, uint256 amount) external {
         require(msg.sender == gameStateAddress, "Only GameState can call this function");
         require(amount > 0, "Amount must be greater than 0");
 
-        // Count active buildings that can be damaged
-        uint256 activeBuildings = 0;
+        uint256 buildingsDamaged = 0;
+        bool hasBuildingsToDamage = false;
+
+        // First check if there are any buildings that can be damaged
         for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            if (buildings[player][i].active) {
-                activeBuildings++;
+            if (buildings[player][i].active && !buildings[player][i].damaged) {
+                hasBuildingsToDamage = true;
+                break;
             }
         }
 
-        require(activeBuildings > 0, "No buildings available to damage");
-        require(amount <= activeBuildings, "Cannot damage more buildings than available");
-
-        // Sort buildings by tier and level for damage priority
-        uint256[] memory buildingIds = new uint256[](activeBuildings);
-        uint256[] memory buildingScores = new uint256[](activeBuildings);
-        uint256 index = 0;
-
-        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            if (buildings[player][i].active) {
-                buildingIds[index] = i;
-                // Score = tier * 100 + level (higher score = higher priority to damage)
-                buildingScores[index] = uint256(buildingConfigs[buildings[player][i].buildingType].tier) * 100 + buildings[player][i].level;
-                index++;
-            }
+        if (!hasBuildingsToDamage) {
+            revert("No buildings available to damage");
         }
 
-        // Sort buildings by score (descending)
-        for (uint256 i = 0; i < activeBuildings - 1; i++) {
-            for (uint256 j = 0; j < activeBuildings - i - 1; j++) {
-                if (buildingScores[j] < buildingScores[j + 1]) {
-                    // Swap scores
-                    uint256 tempScore = buildingScores[j];
-                    buildingScores[j] = buildingScores[j + 1];
-                    buildingScores[j + 1] = tempScore;
-                    // Swap IDs
-                    uint256 tempId = buildingIds[j];
-                    buildingIds[j] = buildingIds[j + 1];
-                    buildingIds[j + 1] = tempId;
+        // Start from highest tier and work down
+        for (uint8 tier = 2; tier >= 0; tier--) {
+            for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+                Building storage building = buildings[player][i];
+                GridBuildingConfig memory config = buildingConfigs[building.buildingType];
+                if (config.tier != tier) continue;
+                
+                // Only damage if built, active, and not already damaged
+                if (building.active && !building.damaged) {
+                    building.damaged = true;
+                    emit BuildingDamaged(player, i);
+                    buildingsDamaged++;
+                    if (buildingsDamaged >= amount) {
+                        return;
+                    }
                 }
             }
         }
+    }
 
-        // Damage the highest priority buildings
-        uint256 damaged = 0;
-        for (uint256 i = 0; i < amount; i++) {
-            uint256 buildingId = buildingIds[i];
-            buildings[player][buildingId].active = false;
-            damaged++;
-            emit BuildingDamaged(player, buildingId);
-        }
+    /**
+     * @dev Repair a damaged building
+     * @param buildingId The ID of the building to repair
+     */
+    function repairBuilding(uint256 buildingId) external nonReentrant {
+        Building storage building = buildings[msg.sender][buildingId];
+        require(building.active, "Building not built");
+        require(building.damaged, "Building not damaged");
 
-        return damaged;
+        // Calculate repair cost (base cost * level)
+        GridBuildingConfig memory config = buildingConfigs[building.buildingType];
+        uint256 repairCost = config.upgradeCost * building.level / 2; // Half the upgrade cost per level
+        
+        // Call GameState to check and deduct gold
+        (bool success, ) = gameStateAddress.call(
+            abi.encodeWithSignature("deductGold(address,uint256)", msg.sender, repairCost)
+        );
+        require(success, "Failed to deduct gold");
+
+        // Repair building
+        building.damaged = false;
+        
+        emit BuildingRepaired(msg.sender, buildingId);
+    }
+
+    /**
+     * @dev Check if a building is damaged
+     * @param player The address of the player
+     * @param buildingId The ID of the building
+     * @return bool Whether the building is damaged
+     */
+    function isBuildingDamaged(address player, uint256 buildingId) public view returns (bool) {
+        return buildings[player][buildingId].damaged;
     }
 }
