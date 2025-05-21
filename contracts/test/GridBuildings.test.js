@@ -292,7 +292,8 @@ describe("GridBuildings", function () {
 
     beforeEach(async function () {
       // Mint and stake an NFT to create a building
-      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const result = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      buildingId = result.buildingId;
     });
 
     it("Should collect gold from a house building", async function () {
@@ -367,6 +368,17 @@ describe("GridBuildings", function () {
       await ethers.provider.send("evm_increaseTime", [12 * 3600]);
       await ethers.provider.send("evm_mine");
 
+      // Verify the number of active houses
+      const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
+      let activeHouses = 0;
+      for (const id of activeBuildings) {
+        const building = await gridBuildings.buildings(player1Address, id);
+        if (building.buildingType === GridBuildingType.HOUSE) {
+          activeHouses++;
+        }
+      }
+      expect(activeHouses).to.equal(1); // Ensure only one house is active
+
       // Calculate total claimable resources for houses
       const totalClaimableResources = await gridBuildings.calculateTotalClaimableResources(
         player1Address,
@@ -401,7 +413,8 @@ describe("GridBuildings", function () {
         expect(playerState.tier).to.equal(1);
 
         // Create a farm
-        const { buildingId: farmId } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+        const result = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+        farmId = result.buildingId;
         
         // Verify the farm was created correctly
         const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
@@ -463,9 +476,21 @@ describe("GridBuildings", function () {
         
         // Create a second farm
         const { buildingId: farmId2 } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+        
         // Fast forward 12 hours
         await ethers.provider.send("evm_increaseTime", [12 * 3600]);
         await ethers.provider.send("evm_mine");
+
+        // Verify the number of active farms
+        const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
+        let activeFarms = 0;
+        for (const id of activeBuildings) {
+          const building = await gridBuildings.buildings(player1Address, id);
+          if (building.buildingType === GridBuildingType.FARM) {
+            activeFarms++;
+          }
+        }
+        expect(activeFarms).to.equal(2); // Ensure two farms are active
 
         // Calculate total claimable resources for farms
         const totalClaimableResources = await gridBuildings.calculateTotalClaimableResources(
@@ -559,7 +584,8 @@ describe("GridBuildings", function () {
 
     beforeEach(async function () {
       // Create a house (tier 0)
-      const { buildingId: houseId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const houseResult = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      houseId = houseResult.buildingId;
 
       // Ensure player has enough gold for tier upgrade
       await ensurePlayerGold(player1, 1000);
@@ -572,7 +598,8 @@ describe("GridBuildings", function () {
       expect(playerState.tier).to.equal(1);
 
       // Create a farm (tier 1)
-      const { buildingId: farmId } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+      const farmResult = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+      farmId = farmResult.buildingId;
 
       // Verify buildings are active and have correct types
       const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
@@ -721,20 +748,25 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Mint and stake multiple NFTs
-      const buildingId1 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
-      const buildingId2 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const result1 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const result2 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const buildingId1 = result1.buildingId;
+      const buildingId2 = result2.buildingId;
 
       // Fast forward time
       await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 1 day
       await ethers.provider.send("evm_mine");
 
       // Calculate expected resources
-      const building1 = await gridBuildings.buildings(player1Address, buildingId1);
-      const building2 = await gridBuildings.buildings(player1Address, buildingId2);
-      const expectedResources = building1.claimableResources.add(building2.claimableResources);
+      const claimable1 = await gridBuildings.calculateClaimableResources(player1Address, buildingId1);
+      const claimable2 = await gridBuildings.calculateClaimableResources(player1Address, buildingId2);
+      const expectedResources = claimable1 + claimable2;
 
       // Check total claimable resources
-      const totalClaimable = await gridBuildings.getTotalClaimableResources(player1Address);
+      const totalClaimable = await gridBuildings.calculateTotalClaimableResources(
+        player1Address,
+        GridBuildingType.HOUSE
+      );
       expect(totalClaimable).to.equal(expectedResources);
     });
 
@@ -742,10 +774,10 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Mint and stake an NFT
-      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
-      // Damage the building
-      await gridBuildings.connect(player1).damageBuilding(buildingId);
+      // Damage the building using BattleSystem
+      await gridBuildings.connect(battleSystem).damageBuildings(player1Address, 1);
 
       // Repair the building
       await gridBuildings.connect(player1).repairBuilding(buildingId);
@@ -757,10 +789,10 @@ describe("GridBuildings", function () {
 
     it("Should not allow collecting from damaged buildings", async function () {
       // Mint and stake an NFT
-      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
-      // Damage the building
-      await gridBuildings.connect(player1).damageBuilding(buildingId);
+      // Damage the building using BattleSystem
+      await gridBuildings.connect(battleSystem).damageBuildings(await player1.getAddress(), 1);
 
       // Fast forward time
       await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 1 day
