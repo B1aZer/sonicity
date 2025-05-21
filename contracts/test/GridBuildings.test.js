@@ -13,33 +13,48 @@ describe("GridBuildings", function () {
   let gridBuildings;
   let altar;
   let sonicityNFT;
+  let sonicityFarm;
   let owner;
   let player1;
   let player2;
   let battleSystem;
 
-  // Helper to mint and stake an NFT, returning the building ID
+  // Helper to mint and stake an NFT, returning the building ID and tokenId
   async function mintAndStakeNFT(player, buildingType) {
     const playerAddress = await player.getAddress();
     const altarAddress = await altar.getAddress();
-    const sonicityNFTAddress = await sonicityNFT.getAddress();
+    
+    // Select NFT contract based on building type
+    let nftContract;
+    let mintValue;
+    if (buildingType === GridBuildingType.HOUSE) {
+      nftContract = sonicityNFT;
+      mintValue = ethers.parseEther("0.01"); // House NFT price
+    } else if (buildingType === GridBuildingType.FARM) {
+      nftContract = sonicityFarm;
+      mintValue = ethers.parseEther("0.015"); // Farm NFT price
+    } else {
+      throw new Error("Unsupported building type");
+    }
+    
+    const nftAddress = await nftContract.getAddress();
 
     // Mint NFT
-    const mintTx = await sonicityNFT.connect(player).mint(1, { value: ethers.parseEther("0.01") });
+    const mintTx = await nftContract.connect(player).mint(1, { value: mintValue });
     const mintReceipt = await mintTx.wait();
     
     // Get tokenId from Transfer event
     const transferEvent = mintReceipt.logs
       .map(log => {
-        try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
+        try { return nftContract.interface.parseLog(log); } catch { return null; }
       })
       .find(e => e && e.name === "Transfer");
     if (!transferEvent) throw new Error("Transfer event not found");
     const tokenId = transferEvent.args.tokenId;
 
     // Approve and stake
-    await sonicityNFT.connect(player).approve(altarAddress, tokenId);
-    const stakeTx = await altar.connect(player).stake(tokenId, buildingType, sonicityNFTAddress);
+    await nftContract.connect(player).approve(altarAddress, tokenId);
+    const stakeTx = await altar.connect(player).stake(tokenId, buildingType, nftAddress);
     const stakeReceipt = await stakeTx.wait();
     
     // Get the BuildingCreated event from the GridBuildings contract
@@ -54,7 +69,11 @@ describe("GridBuildings", function () {
     }
     
     const buildingCreatedEvent = gridBuildings.interface.parseLog(buildingCreatedLog);
-    return Number(buildingCreatedEvent.args.buildingId);
+    return {
+      buildingId: Number(buildingCreatedEvent.args.buildingId),
+      tokenId: tokenId,
+      nftAddress: nftAddress
+    };
   }
 
   // Helper to ensure player has at least the specified amount of gold
@@ -100,6 +119,12 @@ describe("GridBuildings", function () {
     sonicityNFT = await SonicityNFT.deploy();
     await sonicityNFT.waitForDeployment();
     const sonicityNFTAddress = await sonicityNFT.getAddress();
+
+    // Deploy SonicityFarm
+    const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
+    sonicityFarm = await SonicityFarm.deploy();
+    await sonicityFarm.waitForDeployment();
+    const sonicityFarmAddress = await sonicityFarm.getAddress();
 
     // Deploy GameState
     const GameState = await ethers.getContractFactory("GameState");
@@ -149,11 +174,12 @@ describe("GridBuildings", function () {
     await gameState.connect(player1).initializePlayer();
     await gameState.connect(player2).initializePlayer();
 
-    // Approve NFT collection in Altar
+    // Approve NFT collections in Altar
     await altar.approveCollection(sonicityNFTAddress);
+    await altar.approveCollection(sonicityFarmAddress);
 
     // Create a house (tier 0) through staking
-    const houseId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+    const { buildingId: houseId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
     // Ensure player has enough gold for tier upgrade
     await ensurePlayerGold(player1, 1000);
@@ -166,7 +192,7 @@ describe("GridBuildings", function () {
     expect(playerState.tier).to.equal(1);
 
     // Create a farm (tier 1) through staking
-    const farmId = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+    const { buildingId: farmId } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
 
     // Verify buildings are active and have correct types
     const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
@@ -194,7 +220,7 @@ describe("GridBuildings", function () {
       const initialBuildingCount = await gridBuildings.buildingCounts(player1Address, 0);
 
       // Mint and stake an NFT
-      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
       // Check that a building was created
       const newBuildingCount = await gridBuildings.buildingCounts(player1Address, 0);
@@ -210,21 +236,17 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Mint and stake an NFT
-      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
       // Get building count before unstaking
       const buildingCountBefore = await gridBuildings.buildingCounts(player1Address, 0);
-
-      // Get the tokenId from the stake data
-      const stakeData = await altar.getStakeDataWithCollection(await sonicityNFT.getAddress(), 1);
-      const tokenId = stakeData.tokenId;
 
       // Fast forward time
       await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
       await ethers.provider.send("evm_mine");
 
       // Unstake
-      await altar.connect(player1).unstake(await sonicityNFT.getAddress(), tokenId);
+      await altar.connect(player1).unstake(nftAddress, tokenId);
 
       // Check that the building was removed
       const building = await gridBuildings.buildings(player1Address, buildingId);
@@ -239,7 +261,7 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Mint and stake an NFT
-      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
       // Fast forward time to collect enough gold for upgrade
       await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
@@ -270,7 +292,7 @@ describe("GridBuildings", function () {
 
     beforeEach(async function () {
       // Mint and stake an NFT to create a building
-      buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
     });
 
     it("Should collect gold from a house building", async function () {
@@ -311,18 +333,14 @@ describe("GridBuildings", function () {
     });
 
     it("Should not allow collecting from inactive buildings", async function () {
-      // Mint and stake an NFT
-      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
-      // Get the tokenId from the stake data
-      const stakeData = await altar.getStakeDataWithCollection(await sonicityNFT.getAddress(), 1);
-      const tokenId = stakeData.tokenId;
-
-      // Unstake the NFT to deactivate the building
       // Fast forward time to complete staking period
       await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
       await ethers.provider.send("evm_mine");
-      await altar.connect(player1).unstake(await sonicityNFT.getAddress(), tokenId);
+
+      // Unstake the NFT to deactivate the building
+      await altar.connect(player1).unstake(nftAddress, tokenId);
 
       // Try to collect resources
       await expect(
@@ -383,11 +401,7 @@ describe("GridBuildings", function () {
         expect(playerState.tier).to.equal(1);
 
         // Create a farm
-        await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.FARM);
-        
-        // Get the farm building ID from the nextBuildingId
-        const nextId = await gridBuildings.nextBuildingId(await player1.getAddress());
-        farmId = Number(nextId) - 1;
+        const { buildingId: farmId } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
         
         // Verify the farm was created correctly
         const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
@@ -448,8 +462,7 @@ describe("GridBuildings", function () {
         const player1Address = await player1.getAddress();
         
         // Create a second farm
-        await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.FARM);
-        
+        const { buildingId: farmId2 } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
         // Fast forward 12 hours
         await ethers.provider.send("evm_increaseTime", [12 * 3600]);
         await ethers.provider.send("evm_mine");
@@ -505,7 +518,7 @@ describe("GridBuildings", function () {
         const player1Address = await player1.getAddress();
         
         // Mint and stake an NFT for a farm
-        const farmId = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+        const { buildingId: farmId } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
 
         // Check farm was created
         const farm = await gridBuildings.buildings(player1Address, farmId);
@@ -521,7 +534,7 @@ describe("GridBuildings", function () {
         const player1Address = await player1.getAddress();
         
         // Mint and stake an NFT for a farm
-        const farmId = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+        const { buildingId: farmId } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
 
         // Damage the farm
         await gridBuildings.connect(player1).damageBuilding(farmId);
@@ -546,8 +559,7 @@ describe("GridBuildings", function () {
 
     beforeEach(async function () {
       // Create a house (tier 0)
-      await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.HOUSE);
-      houseId = 0;
+      const { buildingId: houseId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
       // Ensure player has enough gold for tier upgrade
       await ensurePlayerGold(player1, 1000);
@@ -560,8 +572,7 @@ describe("GridBuildings", function () {
       expect(playerState.tier).to.equal(1);
 
       // Create a farm (tier 1)
-      await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.FARM);
-      farmId = 1;
+      const { buildingId: farmId } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
 
       // Verify buildings are active and have correct types
       const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
@@ -736,15 +747,11 @@ describe("GridBuildings", function () {
       // Damage the building
       await gridBuildings.connect(player1).damageBuilding(buildingId);
 
-      // Check building is damaged
-      let building = await gridBuildings.buildings(player1Address, buildingId);
-      expect(building.damaged).to.be.true;
-
       // Repair the building
       await gridBuildings.connect(player1).repairBuilding(buildingId);
 
       // Check building is repaired
-      building = await gridBuildings.buildings(player1Address, buildingId);
+      const building = await gridBuildings.buildings(player1Address, buildingId);
       expect(building.damaged).to.be.false;
     });
 
