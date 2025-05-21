@@ -787,7 +787,7 @@ describe("GridBuildings", function () {
         const { buildingId: farmId } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
 
         // Damage the farm
-        await gridBuildings.connect(player1).damageBuilding(farmId);
+        await battleSystem.connect(owner).testDamageBuildings(await player1.getAddress(), farmId);
 
         // Check farm is damaged
         let farm = await gridBuildings.buildings(player1Address, farmId);
