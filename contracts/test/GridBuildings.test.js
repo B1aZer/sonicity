@@ -820,7 +820,7 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
 
       // Damage 1 building using BattleSystem's test function
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Check that the farm (tier 1) was damaged first
       const farm = await gridBuildings.buildings(player1Address, farmId);
@@ -835,10 +835,10 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
 
       // First damage the farm
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Then damage another building
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Check that the house (tier 0) was damaged
       const house = await gridBuildings.buildings(player1Address, houseId);
@@ -849,11 +849,11 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
 
       // First damage the farm
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Try to damage it again
       await expect(
-        battleSystem.connect(owner).testDamageBuildings(player1Address, 1)
+        battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1)
       ).to.be.revertedWith("No buildings available to damage");
     });
 
@@ -861,7 +861,7 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
 
       // Damage the farm
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Ensure player has enough gold for repair
       await ensurePlayerGold(player1, 100);
@@ -878,7 +878,7 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
 
       // Damage the farm
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Deactivate the farm
       await gridBuildings.connect(owner).removeBuilding(player1Address, farmId);
@@ -892,7 +892,7 @@ describe("GridBuildings", function () {
     it("Should emit BuildingDamaged event", async function () {
       const player1Address = await player1.getAddress();
 
-      await expect(battleSystem.connect(owner).testDamageBuildings(await player1.getAddress(), 1))
+      await expect(battleSystem.connect(owner).testDamageGridBuildings(await player1.getAddress(), 1))
         .to.emit(gridBuildings, "BuildingDamaged")
         .withArgs(await player1.getAddress(), farmId);
     });
@@ -901,7 +901,7 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
 
       // Damage the farm
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Ensure player has enough gold for repair
       await ensurePlayerGold(player1, 100);
@@ -920,7 +920,7 @@ describe("GridBuildings", function () {
       await gridBuildings.connect(player1).upgradeBuilding(farmId);
 
       // Damage the farm
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Get building config
       const config = await gridBuildings.buildingConfigs(GridBuildingType.FARM);
@@ -971,7 +971,7 @@ describe("GridBuildings", function () {
       const buildingId = result.buildingId;
 
       // Damage the building using BattleSystem's test function
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Repair the building
       await gridBuildings.connect(player1).repairBuilding(buildingId);
@@ -989,7 +989,7 @@ describe("GridBuildings", function () {
       const buildingId = result.buildingId;
 
       // Damage the building using BattleSystem's test function
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
 
       // Fast forward time
       await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 1 day
@@ -1005,7 +1005,7 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Damage the farm
-      await expect(battleSystem.connect(owner).testDamageBuildings(player1Address, 1))
+      await expect(battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1))
         .to.emit(gridBuildings, "BuildingDamaged")
         .withArgs(player1Address, farmId);
 
