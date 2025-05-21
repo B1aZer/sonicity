@@ -244,7 +244,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         
         // Call DistrictBuildings contract directly to damage buildings
         (bool success, ) = districtBuildingsAddress.call(
-            abi.encodeWithSignature("damageDistrictBuilding(address,uint256)", defender, amount)
+            abi.encodeWithSignature("damageBuildings(address,uint256)", defender, amount)
         );
         require(success, "Failed to damage district building");
     }

@@ -395,6 +395,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
                 DistrictBuildingType buildingType = DistrictBuildingType(i);
                 DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
                 if (config.tier != tier) continue;
+                
                 // Only damage if built, active, and not already damaged
                 if (buildings[player][buildingType].active && !buildings[player][buildingType].damaged) {
                     buildings[player][buildingType].damaged = true;
