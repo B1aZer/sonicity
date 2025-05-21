@@ -300,7 +300,6 @@ describe("GridBuildings", function () {
       const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
       expect(initialHouseCount).to.equal(BigInt(9)); // Should have 9 houses from beforeEach
 
-      // For Tier 1, verify we can't create more than 12 total buildings
       // First verify current counts
       const initialFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
       expect(initialFarmCount).to.equal(BigInt(1)); // Should have 1 farm from beforeEach
@@ -309,18 +308,15 @@ describe("GridBuildings", function () {
       for (let i = 0; i < 2; i++) {
         await mintAndStakeNFT(player1, GridBuildingType.FARM);
       }
+
+      const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
+      expect(activeBuildings.length).to.equal(12);
       
       // Try to create one more farm (should fail as we've reached the 12 building limit)
       await expect(
         mintAndStakeNFT(player1, GridBuildingType.FARM)
-      ).to.be.revertedWith("Tier 1 grid is full");
+      ).to.be.revertedWith("Building slot limit reached for current tier");
 
-      // Verify total building count is 12 (9 houses + 3 farms)
-      const finalFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
-      expect(finalFarmCount).to.equal(BigInt(3));
-      
-      const totalBuildings = finalHouseCount + finalFarmCount;
-      expect(totalBuildings).to.equal(BigInt(12)); // 4x3 grid = 12 buildings
     });
   });
 
@@ -515,8 +511,11 @@ describe("GridBuildings", function () {
       it("Should calculate correct total claimable resources for farms", async function () {
         const player1Address = await player1.getAddress();
 
-        const houseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
-        expect(houseCount).to.equal(BigInt(2));
+        const houseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
+        expect(houseCount).to.equal(BigInt(10));
+
+        const farmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
+        expect(farmCount).to.equal(BigInt(2));
         
         // Create a second farm
         const result = await mintAndStakeNFT(player1, GridBuildingType.FARM);
