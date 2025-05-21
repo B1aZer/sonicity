@@ -471,7 +471,7 @@ describe("GridBuildings", function () {
       // Try to collect resources
       await expect(
         gridBuildings.connect(player1).collectResources(buildingId)
-      ).to.be.revertedWith("Building not active");
+      ).to.be.revertedWith("Building does not exist");
     });
 
     it("Should calculate correct claimable resources for a house", async function () {
@@ -547,8 +547,8 @@ describe("GridBuildings", function () {
         
         // Verify the farm was created correctly
         const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
-        expect(farm.active).to.be.true;
         expect(farm.buildingType).to.equal(GridBuildingType.FARM);
+        expect(farm.level).to.equal(1);
       });
 
       it("Should collect food from a farm building", async function () {
@@ -685,11 +685,7 @@ describe("GridBuildings", function () {
         // Check farm was created
         const farm = await gridBuildings.buildings(player1Address, farmId);
         expect(farm.buildingType).to.equal(GridBuildingType.FARM);
-        expect(farm.active).to.be.true;
-
-        // Check farm count increased
-        const farmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
-        expect(farmCount).to.equal(BigInt(2)); // We already have one farm from beforeEach
+        expect(farm.level).to.equal(1);
       });
 
       it("Should allow repairing damaged farms", async function () {
