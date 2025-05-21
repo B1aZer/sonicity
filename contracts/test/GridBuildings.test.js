@@ -86,7 +86,7 @@ describe("GridBuildings", function () {
     await altar.waitForDeployment();
     const altarAddress = await altar.getAddress();
 
-    // Deploy a minimal BattleSystem contract
+    // Deploy BattleSystem
     const BattleSystem = await ethers.getContractFactory("BattleSystem");
     battleSystem = await upgrades.deployProxy(BattleSystem, [], {
       kind: 'uups',
@@ -95,28 +95,15 @@ describe("GridBuildings", function () {
     await battleSystem.waitForDeployment();
     const battleSystemAddress = await battleSystem.getAddress();
 
-    // Set GameState address in GridBuildings
+    // Set up contract interactions
     await gridBuildings.connect(owner).setGameStateAddress(gameStateAddress);
-
-    // Set Altar address in GridBuildings
     await gridBuildings.connect(owner).setAltarAddress(altarAddress);
-
-    // Set BattleSystem address in GridBuildings
-    await gridBuildings.connect(owner).setBattleSystemAddress(await owner.getAddress());
-
-    // Set Altar address in GameState
+    await gridBuildings.connect(owner).setBattleSystemAddress(battleSystemAddress);
     await gameState.connect(owner).setAltarAddress(altarAddress);
-
-    // Set GridBuildings address in GameState
     await gameState.connect(owner).setGridBuildingsAddress(gridBuildingsAddress);
+    await gameState.connect(owner).setBattleSystemAddress(battleSystemAddress);
 
-    // Approve the NFT collection in GameState
-    await gameState.connect(owner).approveCollection(sonicityNFTAddress);
-
-    // Approve the NFT collection in Altar
-    await altar.connect(owner).approveCollection(sonicityNFTAddress);
-
-    // Initialize players (they start at tier 0 by default)
+    // Initialize players
     await gameState.connect(player1).initializePlayer();
     await gameState.connect(player2).initializePlayer();
   });
@@ -367,7 +354,7 @@ describe("GridBuildings", function () {
         expect(playerState.tier).to.equal(1);
 
         // Create a farm
-        await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), 1); // 1 is FARM type
+        await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.FARM);
         
         // Get the farm building ID from the nextBuildingId
         const nextId = await gridBuildings.nextBuildingId(await player1.getAddress());
@@ -376,7 +363,7 @@ describe("GridBuildings", function () {
         // Verify the farm was created correctly
         const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
         expect(farm.active).to.be.true;
-        expect(farm.buildingType).to.equal(1); // 1 is FARM type
+        expect(farm.buildingType).to.equal(GridBuildingType.FARM);
       });
 
       it("Should collect food from a farm building", async function () {
@@ -502,15 +489,21 @@ describe("GridBuildings", function () {
       // Donate gold to reach tier 1
       await gameState.connect(player1).donateGold(1000);
 
+      // Verify player is now tier 1
+      const playerState = await gameState.playerState(await player1.getAddress());
+      expect(playerState.tier).to.equal(1);
+
       // Create a farm (tier 1)
       await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.FARM);
       farmId = 1;
 
-      // Verify buildings are active
+      // Verify buildings are active and have correct types
       const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
       const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
       expect(house.active).to.be.true;
+      expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
       expect(farm.active).to.be.true;
+      expect(farm.buildingType).to.equal(GridBuildingType.FARM);
     });
 
     it("Should damage buildings starting from highest tier", async function () {
@@ -518,6 +511,13 @@ describe("GridBuildings", function () {
 
       // Damage 1 building (call as BattleSystem)
       await gridBuildings.connect(owner).damageBuildings(player1Address, 1);
+
+      // Debug: Log the state of all buildings for player1
+      console.log("Building states after damage call:");
+      for (let i = 0; i < 2; i++) {
+        const building = await gridBuildings.buildings(player1Address, i);
+        console.log(`Building ID ${i}: active=${building.active}, damaged=${building.damaged}, type=${building.buildingType}`);
+      }
 
       // Check that the farm (tier 1) was damaged first
       const farm = await gridBuildings.buildings(player1Address, farmId);

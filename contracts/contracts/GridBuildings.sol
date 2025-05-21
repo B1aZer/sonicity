@@ -436,11 +436,10 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         for (uint8 tier = 2; tier >= 0; tier--) {
             for (uint256 i = 0; i < nextBuildingId[player]; i++) {
                 Building storage building = buildings[player][i];
-                GridBuildingConfig memory config = buildingConfigs[building.buildingType];
-                if (config.tier != tier) continue;
+                if (!building.active || building.damaged) continue;
                 
-                // Only damage if built, active, and not already damaged
-                if (building.active && !building.damaged) {
+                GridBuildingConfig memory config = buildingConfigs[building.buildingType];
+                if (config.tier == tier) {
                     building.damaged = true;
                     emit BuildingDamaged(player, i);
                     buildingsDamaged++;
