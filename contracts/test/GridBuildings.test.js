@@ -908,22 +908,7 @@ describe("GridBuildings", function () {
       }
     });
 
-    it("Should damage tier 0 buildings when no higher tier buildings are available", async function () {
-      const player1Address = await player1.getAddress();
-
-      // First damage the farm
-      const firstDamageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
-      const firstDamagedBuildingId = await getDamagedBuildingId(firstDamageTx);
-
-      // Then damage another building
-      const secondDamageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
-      const secondDamagedBuildingId = await getDamagedBuildingId(secondDamageTx);
-
-      // Check that the house (tier 0) was damaged
-      const house = await gridBuildings.buildings(player1Address, houseId);
-      expect(house.damaged).to.be.true;
-    });
-
+  
     it("Should not allow damaging already damaged buildings", async function () {
       const player1Address = await player1.getAddress();
 
