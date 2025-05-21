@@ -253,7 +253,7 @@ describe("GridBuildings", function () {
 
       // Check that the building was removed
       const building = await gridBuildings.buildings(player1Address, buildingId);
-      expect(building.buildingType).to.equal(GridBuildingType(0));
+      expect(building.buildingType).to.equal(BigInt(0));
       expect(building.level).to.equal(0);
 
       // Check building count decreased
