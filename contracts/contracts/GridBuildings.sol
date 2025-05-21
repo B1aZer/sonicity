@@ -42,8 +42,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 level;
         uint256 lastUpgradeTime;
         uint256 lastCollectionTime;
-        bool active;
-        bool damaged;  // New flag to track damage state
+        bool damaged;  // Only keep damaged flag
     }
 
     // Mappings
@@ -133,6 +132,26 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
+     * @dev Remove a building (only callable by Altar)
+     * @param player The address of the player for whom to remove the building
+     * @param buildingId The ID of the building to remove
+     */
+    function removeBuilding(address player, uint256 buildingId) external nonReentrant {
+        require(msg.sender == altarAddress, "Only Altar can remove buildings");
+        
+        Building storage building = buildings[player][buildingId];
+        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+        
+        // Update counts
+        buildingCounts[player][building.buildingType]--;
+        
+        // Delete the building
+        delete buildings[player][buildingId];
+        
+        emit BuildingRemoved(player, buildingId);
+    }
+
+    /**
      * @dev Create a new building
      * @param player The address of the player for whom to create the building
      * @param buildingType The type of building to create
@@ -175,7 +194,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             level: 1,
             lastUpgradeTime: block.timestamp,
             lastCollectionTime: block.timestamp,
-            active: true,
             damaged: false
         });
         
@@ -193,7 +211,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function upgradeBuilding(uint256 buildingId) external nonReentrant {
         Building storage building = buildings[msg.sender][buildingId];
-        require(building.active, "Building not active");
+        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+        require(!building.damaged, "Building is damaged");
         
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         require(building.level < config.maxLevel, "Building at max level");
@@ -215,29 +234,14 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Remove a building
-     * @param player The address of the player for whom to remove the building
-     * @param buildingId The ID of the building to remove
-     */
-    function removeBuilding(address player, uint256 buildingId) external nonReentrant {
-        require(msg.sender == altarAddress || msg.sender == owner(), "Only Altar or owner can remove buildings");
-        Building storage building = buildings[player][buildingId];
-        require(building.active, "Building not active");
-        
-        building.active = false;
-        buildingCounts[player][building.buildingType]--;
-        
-        emit BuildingRemoved(player, buildingId);
-    }
-
-    /**
      * @dev Collect resources from a building
      * @param buildingId The ID of the building to collect from
      * @return amount The amount of resources collected
      */
     function collectResources(uint256 buildingId) external nonReentrant returns (uint256) {
         Building storage building = buildings[msg.sender][buildingId];
-        require(building.active, "Building not active");
+        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+        require(!building.damaged, "Building is damaged");
         
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         
@@ -287,7 +291,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         for (uint256 i = 0; i < buildingIds.length; i++) {
             Building storage building = buildings[msg.sender][buildingIds[i]];
-            if (building.active && building.buildingType == buildingType) {
+            if (building.buildingType == buildingType) {
                 GridBuildingConfig memory config = buildingConfigs[building.buildingType];
                 
                 // Calculate time passed since last collection
@@ -336,7 +340,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function calculateClaimableResources(address player, uint256 buildingId) external view returns (uint256) {
         Building storage building = buildings[player][buildingId];
-        require(building.active, "Building not active");
+        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         
         // Calculate time passed since last collection
         uint256 timePassed = block.timestamp - building.lastCollectionTime;
@@ -361,7 +365,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         for (uint256 i = 0; i < buildingIds.length; i++) {
             Building storage building = buildings[player][buildingIds[i]];
-            if (building.active && building.buildingType == buildingType) {
+            if (building.buildingType == buildingType) {
                 totalResources += this.calculateClaimableResources(player, buildingIds[i]);
             }
         }
@@ -378,19 +382,21 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 count = 0;
         uint256 nextId = nextBuildingId[player];
         
-        // First count active buildings
+        // First count existing buildings
         for (uint256 i = 0; i < nextId; i++) {
-            if (buildings[player][i].active) {
+            Building storage building = buildings[player][i];
+            if (building.buildingType != GridBuildingType(0) || building.level != 0) {
                 count++;
             }
         }
         
-        // Create array and fill with active building IDs
+        // Create array and fill with building IDs
         uint256[] memory activeBuildings = new uint256[](count);
         uint256 index = 0;
         
         for (uint256 i = 0; i < nextId; i++) {
-            if (buildings[player][i].active) {
+            Building storage building = buildings[player][i];
+            if (building.buildingType != GridBuildingType(0) || building.level != 0) {
                 activeBuildings[index] = i;
                 index++;
             }
@@ -432,7 +438,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
         // First check if there are any buildings that can be damaged
         for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            if (buildings[player][i].active && !buildings[player][i].damaged) {
+            Building storage building = buildings[player][i];
+            if ((building.buildingType != GridBuildingType(0) || building.level != 0) && !building.damaged) {
                 hasBuildingsToDamage = true;
                 break;
             }
@@ -446,7 +453,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         for (uint8 tier = 2; tier >= 0; tier--) {
             for (uint256 i = 0; i < nextBuildingId[player]; i++) {
                 Building storage building = buildings[player][i];
-                if (!building.active || building.damaged) continue;
+                if (building.buildingType == GridBuildingType(0) && building.level == 0) continue;
+                if (building.damaged) continue;
                 
                 GridBuildingConfig memory config = buildingConfigs[building.buildingType];
                 if (config.tier == tier) {
@@ -467,7 +475,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function repairBuilding(uint256 buildingId) external nonReentrant {
         Building storage building = buildings[msg.sender][buildingId];
-        require(building.active, "Building not built");
+        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         require(building.damaged, "Building not damaged");
 
         // Calculate repair cost (base cost * level)
@@ -493,6 +501,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @return bool Whether the building is damaged
      */
     function isBuildingDamaged(address player, uint256 buildingId) public view returns (bool) {
-        return buildings[player][buildingId].damaged;
+        Building storage building = buildings[player][buildingId];
+        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+        return building.damaged;
     }
 }
