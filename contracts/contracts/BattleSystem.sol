@@ -235,11 +235,34 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     /**
-     * @dev Test function to damage buildings (only for testing)
+     * @dev Test function to damage grid buildings (only for testing)
      * @param defender The address of the player to damage buildings for
      * @param amount Number of buildings to damage
      */
-    function testDamageBuildings(address defender, uint256 amount) external {
+    function testDamageGridBuildings(address defender, uint256 amount) external {
+        require(msg.sender == owner(), "Only owner can call this function");
+        
+        // Call GridBuildings contract directly to damage buildings
+        (bool success, bytes memory returnData) = gridBuildingsAddress.call(
+            abi.encodeWithSignature("damageBuildings(address,uint256)", defender, amount)
+        );
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to damage grid building");
+        }
+    }
+
+    /**
+     * @dev Test function to damage district buildings (only for testing)
+     * @param defender The address of the player to damage buildings for
+     * @param amount Number of buildings to damage
+     */
+    function testDamageDistrictBuildings(address defender, uint256 amount) external {
         require(msg.sender == owner(), "Only owner can call this function");
         
         // Call DistrictBuildings contract directly to damage buildings
