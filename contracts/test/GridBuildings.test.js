@@ -16,6 +16,7 @@ describe("GridBuildings", function () {
   let owner;
   let player1;
   let player2;
+  let battleSystem;
 
   // Helper to ensure player has at least the specified amount of gold
   async function ensurePlayerGold(player, amount) {
@@ -85,11 +86,23 @@ describe("GridBuildings", function () {
     await altar.waitForDeployment();
     const altarAddress = await altar.getAddress();
 
+    // Deploy a minimal BattleSystem contract
+    const BattleSystem = await ethers.getContractFactory("BattleSystem");
+    battleSystem = await upgrades.deployProxy(BattleSystem, [], {
+      kind: 'uups',
+      initializer: 'initialize',
+    });
+    await battleSystem.waitForDeployment();
+    const battleSystemAddress = await battleSystem.getAddress();
+
     // Set GameState address in GridBuildings
     await gridBuildings.connect(owner).setGameStateAddress(gameStateAddress);
 
     // Set Altar address in GridBuildings
     await gridBuildings.connect(owner).setAltarAddress(altarAddress);
+
+    // Set BattleSystem address in GridBuildings
+    await gridBuildings.connect(owner).setBattleSystemAddress(await owner.getAddress());
 
     // Set Altar address in GameState
     await gameState.connect(owner).setAltarAddress(altarAddress);
@@ -471,6 +484,160 @@ describe("GridBuildings", function () {
         const finalFood = await gameState.getPlayerFood(player1Address);
         expect(finalFood).to.equal(initialFood + BigInt(10));
       });
+    });
+  });
+
+  describe("Building Damage and Repair", function () {
+    let houseId;
+    let farmId;
+
+    beforeEach(async function () {
+      // Create a house (tier 0)
+      await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.HOUSE);
+      houseId = 0;
+
+      // Ensure player has enough gold for tier upgrade
+      await ensurePlayerGold(player1, 1000);
+
+      // Donate gold to reach tier 1
+      await gameState.connect(player1).donateGold(1000);
+
+      // Create a farm (tier 1)
+      await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.FARM);
+      farmId = 1;
+
+      // Verify buildings are active
+      const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
+      const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
+      expect(house.active).to.be.true;
+      expect(farm.active).to.be.true;
+    });
+
+    it("Should damage buildings starting from highest tier", async function () {
+      const player1Address = await player1.getAddress();
+
+      // Damage 1 building (call as BattleSystem)
+      await gridBuildings.connect(owner).damageBuildings(player1Address, 1);
+
+      // Check that the farm (tier 1) was damaged first
+      const farm = await gridBuildings.buildings(player1Address, farmId);
+      expect(farm.damaged).to.be.true;
+
+      // Check that the house (tier 0) was not damaged
+      const house = await gridBuildings.buildings(player1Address, houseId);
+      expect(house.damaged).to.be.false;
+    });
+
+    it("Should damage tier 0 buildings when no higher tier buildings are available", async function () {
+      const player1Address = await player1.getAddress();
+
+      // First damage the farm
+      await gridBuildings.connect(owner).damageBuildings(player1Address, 1);
+
+      // Then damage another building
+      await gridBuildings.connect(owner).damageBuildings(player1Address, 1);
+
+      // Check that the house (tier 0) was damaged
+      const house = await gridBuildings.buildings(player1Address, houseId);
+      expect(house.damaged).to.be.true;
+    });
+
+    it("Should not allow damaging already damaged buildings", async function () {
+      const player1Address = await player1.getAddress();
+
+      // First damage the farm
+      await gridBuildings.connect(owner).damageBuildings(player1Address, 1);
+
+      // Try to damage it again
+      await expect(
+        gridBuildings.connect(owner).damageBuildings(player1Address, 1)
+      ).to.be.revertedWith("No buildings available to damage");
+    });
+
+    it("Should allow repairing damaged buildings", async function () {
+      const player1Address = await player1.getAddress();
+
+      // Damage the farm
+      await gridBuildings.connect(owner).damageBuildings(player1Address, 1);
+
+      // Ensure player has enough gold for repair
+      await ensurePlayerGold(player1, 100);
+
+      // Repair the farm
+      await gridBuildings.connect(player1).repairBuilding(farmId);
+
+      // Check that the farm is no longer damaged
+      const farm = await gridBuildings.buildings(player1Address, farmId);
+      expect(farm.damaged).to.be.false;
+    });
+
+    it("Should not allow repairing undamaged buildings", async function () {
+      await expect(
+        gridBuildings.connect(player1).repairBuilding(farmId)
+      ).to.be.revertedWith("Building not damaged");
+    });
+
+    it("Should not allow repairing inactive buildings", async function () {
+      const player1Address = await player1.getAddress();
+
+      // Damage the farm
+      await gridBuildings.connect(owner).damageBuildings(player1Address, 1);
+
+      // Deactivate the farm
+      await gridBuildings.connect(owner).removeBuilding(player1Address, farmId);
+
+      // Try to repair
+      await expect(
+        gridBuildings.connect(player1).repairBuilding(farmId)
+      ).to.be.revertedWith("Building not built");
+    });
+
+    it("Should emit BuildingDamaged event", async function () {
+      const player1Address = await player1.getAddress();
+
+      await expect(gridBuildings.connect(owner).damageBuildings(player1Address, 1))
+        .to.emit(gridBuildings, "BuildingDamaged")
+        .withArgs(player1Address, farmId);
+    });
+
+    it("Should emit BuildingRepaired event", async function () {
+      const player1Address = await player1.getAddress();
+
+      // Damage the farm
+      await gridBuildings.connect(owner).damageBuildings(player1Address, 1);
+
+      // Ensure player has enough gold for repair
+      await ensurePlayerGold(player1, 100);
+
+      // Repair the farm
+      await expect(gridBuildings.connect(player1).repairBuilding(farmId))
+        .to.emit(gridBuildings, "BuildingRepaired")
+        .withArgs(player1Address, farmId);
+    });
+
+    it("Should calculate correct repair cost based on building level", async function () {
+      const player1Address = await player1.getAddress();
+
+      // Upgrade the farm to level 2
+      await ensurePlayerGold(player1, 300);
+      await gridBuildings.connect(player1).upgradeBuilding(farmId);
+
+      // Damage the farm
+      await gridBuildings.connect(owner).damageBuildings(player1Address, 1);
+
+      // Get building config
+      const config = await gridBuildings.buildingConfigs(GridBuildingType.FARM);
+      const expectedRepairCost = config.upgradeCost * BigInt(2) / BigInt(2); // Half of upgrade cost * level
+
+      // Ensure player has enough gold for repair
+      await ensurePlayerGold(player1, expectedRepairCost);
+
+      // Repair the farm
+      await gridBuildings.connect(player1).repairBuilding(farmId);
+
+      // Check that the farm is no longer damaged
+      const farm = await gridBuildings.buildings(player1Address, farmId);
+      expect(farm.damaged).to.be.false;
     });
   });
 }); 
