@@ -243,10 +243,18 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(msg.sender == owner(), "Only owner can call this function");
         
         // Call DistrictBuildings contract directly to damage buildings
-        (bool success, ) = districtBuildingsAddress.call(
+        (bool success, bytes memory returnData) = districtBuildingsAddress.call(
             abi.encodeWithSignature("damageBuildings(address,uint256)", defender, amount)
         );
-        require(success, "Failed to damage district building");
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to damage district building");
+        }
     }
 
     // Internal helper functions

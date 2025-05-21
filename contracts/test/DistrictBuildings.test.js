@@ -220,7 +220,7 @@ describe("DistrictBuildings", function () {
       // Try to damage it again through BattleSystem
       await expect(
         battleSystem.connect(owner).testDamageBuildings(player1Address, 1)
-      ).to.be.revertedWith("Failed to damage district building");
+      ).to.be.revertedWith("No buildings available to damage");
     });
 
     it("Should allow repairing a damaged building", async function () {
@@ -276,16 +276,21 @@ describe("DistrictBuildings", function () {
       // Build a tier 0 building (SHOP)
       await districtBuildings.connect(player1).buildDistrictBuilding(0);
 
-      // Check how many buildings the player has built
-      const builtBuildings = await districtBuildings.getBuiltDistrictBuildings(player1Address);
-      // builtBuildings is likely an array of booleans or structs; adjust as needed
-      const builtCount = builtBuildings.filter(b => b.isBuilt || b).length;
-      console.log("Player has built", builtCount, "district buildings");
+      // Build a tier 1 building (DEFENSE_TOWER) to ensure we have a valid target
+      await districtBuildings.connect(player1).buildDistrictBuilding(3);
 
-      // Optionally, assert that only one building is built
-      expect(builtCount).to.equal(1);
+      // Damage one building - it should damage the tier 1 building, not the tier 0
+      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
       
-      // Try to damage it through BattleSystem
+      // Verify the tier 0 building (SHOP) is not damaged
+      const isShopDamaged = await districtBuildings.isBuildingDamaged(player1Address, 0);
+      expect(isShopDamaged).to.be.false;
+
+      // Verify the tier 1 building (DEFENSE_TOWER) was damaged
+      const isDefenseTowerDamaged = await districtBuildings.isBuildingDamaged(player1Address, 3);
+      expect(isDefenseTowerDamaged).to.be.true;
+
+      // Try to damage again - should revert since no valid targets remain
       await expect(
         battleSystem.connect(owner).testDamageBuildings(player1Address, 1)
       ).to.be.revertedWith("No buildings available to damage");
