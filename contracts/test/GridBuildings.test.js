@@ -18,11 +18,28 @@ describe("GridBuildings", function () {
   let player2;
   let battleSystem;
 
-  // Helper to stake an NFT and get the building ID from events
-  async function stakeNFTAndGetBuildingId(player, tokenId, tier, nftAddress) {
+  // Helper to mint and stake an NFT, returning the building ID
+  async function mintAndStakeNFT(player, buildingType) {
+    const playerAddress = await player.getAddress();
     const altarAddress = await altar.getAddress();
-    // Remove redundant approval since it's done in beforeEach
-    const stakeTx = await altar.connect(player).stake(tokenId, tier, nftAddress);
+    const sonicityNFTAddress = await sonicityNFT.getAddress();
+
+    // Mint NFT
+    const mintTx = await sonicityNFT.connect(player).mint(1, { value: ethers.parseEther("0.01") });
+    const mintReceipt = await mintTx.wait();
+    
+    // Get tokenId from Transfer event
+    const transferEvent = mintReceipt.logs
+      .map(log => {
+        try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
+      })
+      .find(e => e && e.name === "Transfer");
+    if (!transferEvent) throw new Error("Transfer event not found");
+    const tokenId = transferEvent.args.tokenId;
+
+    // Approve and stake
+    await sonicityNFT.connect(player).approve(altarAddress, tokenId);
+    const stakeTx = await altar.connect(player).stake(tokenId, buildingType, sonicityNFTAddress);
     const stakeReceipt = await stakeTx.wait();
     
     // Get the BuildingCreated event from the GridBuildings contract
@@ -37,7 +54,6 @@ describe("GridBuildings", function () {
     }
     
     const buildingCreatedEvent = gridBuildings.interface.parseLog(buildingCreatedLog);
-    // Convert BigInt to Number for easier handling in tests
     return Number(buildingCreatedEvent.args.buildingId);
   }
 
@@ -55,23 +71,7 @@ describe("GridBuildings", function () {
     // Create houses up to the limit of 9 if needed
     if (currentHouses < BigInt(9)) {
         for (let i = Number(currentHouses); i < 9; i++) {
-            // Mint an NFT to the player
-            const mintTx = await sonicityNFT.connect(player).mint(1, { value: ethers.parseEther("0.01") });
-            const mintReceipt = await mintTx.wait();
-            
-            // Get tokenId from Transfer event
-            const transferEvent = mintReceipt.logs
-              .map(log => {
-                try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
-              })
-              .find(e => e && e.name === "Transfer");
-            if (!transferEvent) throw new Error("Transfer event not found");
-            const tokenId = transferEvent.args.tokenId;
-            
-            // Approve and stake the NFT
-            const altarAddress = await altar.getAddress();
-            await sonicityNFT.connect(player).approve(altarAddress, tokenId);
-            await stakeNFTAndGetBuildingId(player, tokenId, 0, await sonicityNFT.getAddress());
+            await mintAndStakeNFT(player, GridBuildingType.HOUSE);
         }
     }
     
@@ -153,21 +153,7 @@ describe("GridBuildings", function () {
     await altar.approveCollection(sonicityNFTAddress);
 
     // Create a house (tier 0) through staking
-    const mintTx = await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-    const mintReceipt = await mintTx.wait();
-    
-    // Get tokenId from Transfer event
-    const transferEvent = mintReceipt.logs
-      .map(log => {
-        try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
-      })
-      .find(e => e && e.name === "Transfer");
-    if (!transferEvent) throw new Error("Transfer event not found");
-    const tokenId = transferEvent.args.tokenId;
-    
-    // Approve and stake the NFT
-    await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-    const houseId = await stakeNFTAndGetBuildingId(player1, tokenId, 0, sonicityNFTAddress);
+    const houseId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
     // Ensure player has enough gold for tier upgrade
     await ensurePlayerGold(player1, 1000);
@@ -180,21 +166,7 @@ describe("GridBuildings", function () {
     expect(playerState.tier).to.equal(1);
 
     // Create a farm (tier 1) through staking
-    const farmMintTx = await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-    const farmMintReceipt = await farmMintTx.wait();
-    
-    // Get tokenId from Transfer event
-    const farmTransferEvent = farmMintReceipt.logs
-      .map(log => {
-        try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
-      })
-      .find(e => e && e.name === "Transfer");
-    if (!farmTransferEvent) throw new Error("Transfer event not found");
-    const farmTokenId = farmTransferEvent.args.tokenId;
-    
-    // Approve and stake the NFT
-    await sonicityNFT.connect(player1).approve(altarAddress, farmTokenId);
-    const farmId = await stakeNFTAndGetBuildingId(player1, farmTokenId, 1, sonicityNFTAddress);
+    const farmId = await mintAndStakeNFT(player1, GridBuildingType.FARM);
 
     // Verify buildings are active and have correct types
     const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
@@ -218,25 +190,11 @@ describe("GridBuildings", function () {
     it("Should allow players to create buildings through staking", async function () {
       const player1Address = await player1.getAddress();
       
-      // Mint an NFT to player1
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-      const tokenId = 1;
-
       // Get initial building count
       const initialBuildingCount = await gridBuildings.buildingCounts(player1Address, 0);
 
-      // Stake the NFT and get the building ID from the event
-      const altarAddress = await altar.getAddress();
-      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      const stakeTx = await altar.connect(player1).stake(tokenId, 0, await sonicityNFT.getAddress());
-      const stakeReceipt = await stakeTx.wait();
-      
-      // Get the BuildingCreated event from the GridBuildings contract
-      const buildingCreatedEvent = stakeReceipt.logs
-        .filter(log => log.fragment && log.fragment.name === 'BuildingCreated')
-        .map(log => gridBuildings.interface.parseLog(log))[0];
-      
-      const buildingId = buildingCreatedEvent.args.buildingId;
+      // Mint and stake an NFT
+      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
       // Check that a building was created
       const newBuildingCount = await gridBuildings.buildingCounts(player1Address, 0);
@@ -245,31 +203,21 @@ describe("GridBuildings", function () {
       // Check the building details
       const building = await gridBuildings.buildings(player1Address, buildingId);
       expect(building.active).to.be.true;
-      expect(building.buildingType).to.equal(0); // 0 is HOUSE type
+      expect(building.buildingType).to.equal(GridBuildingType.HOUSE);
     });
 
     it("Should allow removing buildings through unstaking", async function () {
       const player1Address = await player1.getAddress();
       
       // Mint and stake an NFT
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-      const tokenId = 1;
-
-      // Stake the NFT and get the building ID from the event
-      const altarAddress = await altar.getAddress();
-      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      const stakeTx = await altar.connect(player1).stake(tokenId, 0, await sonicityNFT.getAddress());
-      const stakeReceipt = await stakeTx.wait();
-      
-      // Get the BuildingCreated event from the GridBuildings contract
-      const buildingCreatedEvent = stakeReceipt.logs
-        .filter(log => log.fragment && log.fragment.name === 'BuildingCreated')
-        .map(log => gridBuildings.interface.parseLog(log))[0];
-      
-      const buildingId = buildingCreatedEvent.args.buildingId;
+      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
       // Get building count before unstaking
       const buildingCountBefore = await gridBuildings.buildingCounts(player1Address, 0);
+
+      // Get the tokenId from the stake data
+      const stakeData = await altar.getStakeDataWithCollection(await sonicityNFT.getAddress(), 1);
+      const tokenId = stakeData.tokenId;
 
       // Fast forward time
       await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
@@ -291,21 +239,7 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Mint and stake an NFT
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-      const tokenId = 1;
-
-      // Stake the NFT and get the building ID from the event
-      const altarAddress = await altar.getAddress();
-      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      const stakeTx = await altar.connect(player1).stake(tokenId, 0, await sonicityNFT.getAddress());
-      const stakeReceipt = await stakeTx.wait();
-      
-      // Get the BuildingCreated event from the GridBuildings contract
-      const buildingCreatedEvent = stakeReceipt.logs
-        .filter(log => log.fragment && log.fragment.name === 'BuildingCreated')
-        .map(log => gridBuildings.interface.parseLog(log))[0];
-      
-      const buildingId = buildingCreatedEvent.args.buildingId;
+      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
       // Fast forward time to collect enough gold for upgrade
       await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
@@ -315,7 +249,7 @@ describe("GridBuildings", function () {
       await gridBuildings.connect(player1).collectResources(buildingId);
 
       // Get building config to check upgrade cost
-      const config = await gridBuildings.buildingConfigs(0); // 0 is HOUSE type
+      const config = await gridBuildings.buildingConfigs(GridBuildingType.HOUSE);
       const upgradeCost = config.upgradeCost;
 
       // Verify player has enough gold
@@ -336,16 +270,7 @@ describe("GridBuildings", function () {
 
     beforeEach(async function () {
       // Mint and stake an NFT to create a building
-      await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-      const tokenId = 1;
-
-      // Stake the NFT
-      const altarAddress = await altar.getAddress();
-      await sonicityNFT.connect(player1).approve(altarAddress, tokenId);
-      await altar.connect(player1).stake(tokenId, 0, await sonicityNFT.getAddress());
-
-      // Get building ID
-      buildingId = await altar.stakedBuilding(await sonicityNFT.getAddress(), tokenId);
+      buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
     });
 
     it("Should collect gold from a house building", async function () {
@@ -386,11 +311,18 @@ describe("GridBuildings", function () {
     });
 
     it("Should not allow collecting from inactive buildings", async function () {
+      // Mint and stake an NFT
+      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Get the tokenId from the stake data
+      const stakeData = await altar.getStakeDataWithCollection(await sonicityNFT.getAddress(), 1);
+      const tokenId = stakeData.tokenId;
+
       // Unstake the NFT to deactivate the building
       // Fast forward time to complete staking period
       await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
       await ethers.provider.send("evm_mine");
-      await altar.connect(player1).unstake(await sonicityNFT.getAddress(), 1);
+      await altar.connect(player1).unstake(await sonicityNFT.getAddress(), tokenId);
 
       // Try to collect resources
       await expect(
@@ -568,6 +500,43 @@ describe("GridBuildings", function () {
         const finalFood = await gameState.getPlayerFood(player1Address);
         expect(finalFood).to.equal(initialFood + BigInt(10));
       });
+
+      it("Should allow creating and managing farms", async function () {
+        const player1Address = await player1.getAddress();
+        
+        // Mint and stake an NFT for a farm
+        const farmId = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+
+        // Check farm was created
+        const farm = await gridBuildings.buildings(player1Address, farmId);
+        expect(farm.buildingType).to.equal(GridBuildingType.FARM);
+        expect(farm.active).to.be.true;
+
+        // Check farm count increased
+        const farmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
+        expect(farmCount).to.equal(BigInt(1));
+      });
+
+      it("Should allow repairing damaged farms", async function () {
+        const player1Address = await player1.getAddress();
+        
+        // Mint and stake an NFT for a farm
+        const farmId = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+
+        // Damage the farm
+        await gridBuildings.connect(player1).damageBuilding(farmId);
+
+        // Check farm is damaged
+        let farm = await gridBuildings.buildings(player1Address, farmId);
+        expect(farm.damaged).to.be.true;
+
+        // Repair the farm
+        await gridBuildings.connect(player1).repairBuilding(farmId);
+
+        // Check farm is repaired
+        farm = await gridBuildings.buildings(player1Address, farmId);
+        expect(farm.damaged).to.be.false;
+      });
     });
   });
 
@@ -735,6 +704,65 @@ describe("GridBuildings", function () {
       // Check that the farm is no longer damaged
       const farm = await gridBuildings.buildings(player1Address, farmId);
       expect(farm.damaged).to.be.false;
+    });
+
+    it("Should calculate total claimable resources correctly", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint and stake multiple NFTs
+      const buildingId1 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const buildingId2 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Fast forward time
+      await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 1 day
+      await ethers.provider.send("evm_mine");
+
+      // Calculate expected resources
+      const building1 = await gridBuildings.buildings(player1Address, buildingId1);
+      const building2 = await gridBuildings.buildings(player1Address, buildingId2);
+      const expectedResources = building1.claimableResources.add(building2.claimableResources);
+
+      // Check total claimable resources
+      const totalClaimable = await gridBuildings.getTotalClaimableResources(player1Address);
+      expect(totalClaimable).to.equal(expectedResources);
+    });
+
+    it("Should allow damaging and repairing buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint and stake an NFT
+      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Damage the building
+      await gridBuildings.connect(player1).damageBuilding(buildingId);
+
+      // Check building is damaged
+      let building = await gridBuildings.buildings(player1Address, buildingId);
+      expect(building.damaged).to.be.true;
+
+      // Repair the building
+      await gridBuildings.connect(player1).repairBuilding(buildingId);
+
+      // Check building is repaired
+      building = await gridBuildings.buildings(player1Address, buildingId);
+      expect(building.damaged).to.be.false;
+    });
+
+    it("Should not allow collecting from damaged buildings", async function () {
+      // Mint and stake an NFT
+      const buildingId = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Damage the building
+      await gridBuildings.connect(player1).damageBuilding(buildingId);
+
+      // Fast forward time
+      await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 1 day
+      await ethers.provider.send("evm_mine");
+
+      // Try to collect resources
+      await expect(
+        gridBuildings.connect(player1).collectResources(buildingId)
+      ).to.be.revertedWith("Building is damaged");
     });
   });
 }); 
