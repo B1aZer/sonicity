@@ -106,6 +106,9 @@ describe("GridBuildings", function () {
     // Initialize players
     await gameState.connect(player1).initializePlayer();
     await gameState.connect(player2).initializePlayer();
+
+    // Approve NFT collection in Altar
+    await altar.connect(owner).approveCollection(await sonicityNFT.getAddress());
   });
 
   describe("Building Management", function () {
