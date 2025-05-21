@@ -302,17 +302,20 @@ describe("DistrictBuildings", function () {
       // Ensure player has enough gold for all buildings
       await ensurePlayerGold(player1, 2000);
       
+      // Donate gold to reach tier 2
+      await gameState.connect(player1).donateGold(2500);
+      
       // Build multiple buildings of different tiers
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER (tier 1)
       await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS (tier 1)
-      await districtBuildings.connect(player1).buildDistrictBuilding(6); // CARAVAN (tier 2)
+      await districtBuildings.connect(player1).buildDistrictBuilding(7); // REP_STATION (tier 2)
       
       // Damage one building
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
       
-      // Check that the highest tier building (CARAVAN) was damaged
-      const isCaravanDamaged = await districtBuildings.isBuildingDamaged(player1Address, 6);
-      expect(isCaravanDamaged).to.be.true;
+      // Check that the highest tier building (REP_STATION) was damaged
+      const isRepStationDamaged = await districtBuildings.isBuildingDamaged(player1Address, 7);
+      expect(isRepStationDamaged).to.be.true;
       
       // Check that lower tier buildings are not damaged
       const isDefenseTowerDamaged = await districtBuildings.isBuildingDamaged(player1Address, 3);
