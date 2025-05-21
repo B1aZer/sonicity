@@ -185,6 +185,8 @@ describe("GridBuildings", function () {
     await gameState.setAltarAddress(altarAddress);
     await gameState.setGridBuildingsAddress(gridBuildingsAddress);
     await gameState.setBattleSystemAddress(battleSystemAddress);
+    await battleSystem.setGridBuildingsAddress(gridBuildingsAddress);
+    await battleSystem.setGameStateAddress(gameStateAddress);
 
     // Initialize players
     await gameState.connect(player1).initializePlayer();
