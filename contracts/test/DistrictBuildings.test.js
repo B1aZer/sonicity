@@ -197,7 +197,7 @@ describe("DistrictBuildings", function () {
       
       // Try to damage the defense tower as player1
       await expect(
-        districtBuildings.connect(player1).damageDistrictBuilding(player1Address, 1)
+        districtBuildings.connect(player1).damageBuildings(player1Address, 1)
       ).to.be.revertedWith("Only BattleSystem can call this function");
     });
 
@@ -226,7 +226,7 @@ describe("DistrictBuildings", function () {
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
 
       // Repair the building
-      await districtBuildings.connect(player1).repairDistrictBuilding(3); // DEFENSE_TOWER
+      await districtBuildings.connect(player1).repairBuilding(3); // DEFENSE_TOWER
 
       // Check if building is active again
       const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 3); // DEFENSE_TOWER
@@ -240,13 +240,13 @@ describe("DistrictBuildings", function () {
 
     it("Should not allow repairing an active building", async function () {
       await expect(
-        districtBuildings.connect(player1).repairDistrictBuilding(2)
+        districtBuildings.connect(player1).repairBuilding(2)
       ).to.be.revertedWith("Building not damaged");
     });
 
     it("Should not allow repairing a non-built building", async function () {
       await expect(
-        districtBuildings.connect(player1).repairDistrictBuilding(3) // BARRACKS
+        districtBuildings.connect(player1).repairBuilding(3) // BARRACKS
       ).to.be.revertedWith("Building not built");
     });
 

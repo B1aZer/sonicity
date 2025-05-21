@@ -311,7 +311,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @dev Build a district building
      * @param buildingType The type of building to build
      */
-    function buildDistrictBuildings(DistrictBuildingType buildingType) external nonReentrant {
+    function buildDistrictBuilding(DistrictBuildingType buildingType) external nonReentrant {
         // If building is already active, revert
         if (buildings[msg.sender][buildingType].active) {
             revert("Building already built");
