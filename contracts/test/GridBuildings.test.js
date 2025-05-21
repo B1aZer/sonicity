@@ -779,27 +779,6 @@ describe("GridBuildings", function () {
         expect(farm.buildingType).to.equal(GridBuildingType.FARM);
         expect(farm.level).to.equal(1);
       });
-
-      it("Should allow repairing damaged farms", async function () {
-        const player1Address = await player1.getAddress();
-        
-        // Mint and stake an NFT for a farm
-        const { buildingId: farmId } = await mintAndStakeNFT(player1, GridBuildingType.FARM);
-
-        // Damage the farm
-        await battleSystem.connect(owner).testDamageBuildings(await player1.getAddress(), farmId);
-
-        // Check farm is damaged
-        let farm = await gridBuildings.buildings(player1Address, farmId);
-        expect(farm.damaged).to.be.true;
-
-        // Repair the farm
-        await gridBuildings.connect(player1).repairBuilding(farmId);
-
-        // Check farm is repaired
-        farm = await gridBuildings.buildings(player1Address, farmId);
-        expect(farm.damaged).to.be.false;
-      });
     });
   });
 
@@ -913,9 +892,9 @@ describe("GridBuildings", function () {
     it("Should emit BuildingDamaged event", async function () {
       const player1Address = await player1.getAddress();
 
-      await expect(battleSystem.connect(owner).testDamageBuildings(player1Address, 1))
+      await expect(battleSystem.connect(owner).testDamageBuildings(await player1.getAddress(), 1))
         .to.emit(gridBuildings, "BuildingDamaged")
-        .withArgs(player1Address, farmId);
+        .withArgs(await player1.getAddress(), farmId);
     });
 
     it("Should emit BuildingRepaired event", async function () {
@@ -1020,6 +999,28 @@ describe("GridBuildings", function () {
       await expect(
         gridBuildings.connect(player1).collectResources(buildingId)
       ).to.be.revertedWith("Building is damaged");
+    });
+
+    it("Should allow repairing damaged farms", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Damage the farm
+      await expect(battleSystem.connect(owner).testDamageBuildings(player1Address, 1))
+        .to.emit(gridBuildings, "BuildingDamaged")
+        .withArgs(player1Address, farmId);
+
+      // Check farm is damaged
+      let farm = await gridBuildings.buildings(player1Address, farmId);
+      expect(farm.damaged).to.be.true;
+
+      // Repair the farm
+      await expect(gridBuildings.connect(player1).repairBuilding(farmId))
+        .to.emit(gridBuildings, "BuildingRepaired")
+        .withArgs(player1Address, farmId);
+
+      // Check farm is repaired
+      farm = await gridBuildings.buildings(player1Address, farmId);
+      expect(farm.damaged).to.be.false;
     });
   });
 }); 
