@@ -419,9 +419,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         require(building.damaged, "Building not damaged");
         require(buildings[msg.sender][DistrictBuildingType.WORKSHOP].active, "Workshop required to repair");
 
-        // Calculate repair cost (base cost * level)
+        // Calculate repair cost (half of build cost)
         DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
-        uint256 repairCost = config.buildCost * building.level / 2; // Half the build cost per level
+        uint256 repairCost = config.buildCost / 2; // Half the build cost
         
         // Call GameState to check and deduct gold
         (bool success, ) = gameStateAddress.call(
