@@ -385,9 +385,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             }
         }
 
-        if (!hasBuildingsToDamage) {
-            revert("No buildings available to damage");
-        }
+        require(hasBuildingsToDamage, "No buildings available to damage");
 
         // Start from highest tier and work down, skip tier 0
         for (uint8 tier = 4; tier > 0; tier--) {
@@ -415,8 +413,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      */
     function repairBuilding(DistrictBuildingType buildingType) external nonReentrant {
         Building storage building = buildings[msg.sender][buildingType];
-        require(building.active, "Building not built");
         require(building.damaged, "Building not damaged");
+        require(building.active, "Building not built");
         require(buildings[msg.sender][DistrictBuildingType.WORKSHOP].active, "Workshop required to repair");
 
         // Calculate repair cost (half of build cost)

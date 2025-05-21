@@ -220,8 +220,8 @@ describe("DistrictBuildings", function () {
     it("Should allow repairing a damaged building", async function () {
       const player1Address = await player1.getAddress();
       
-      // Ensure player has enough gold for repair
-      await ensurePlayerGold(player1, 1000);
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
       
       // Build workshop first (required for repair)
       await districtBuildings.connect(player1).buildDistrictBuilding(1); // WORKSHOP
@@ -241,20 +241,20 @@ describe("DistrictBuildings", function () {
       expect(isDamagedAfter).to.be.false;
 
       // Check repair cost was deducted (half of build cost)
-      const goldBalance = await gameState.getPlayerGold(player1Address);
-      const expectedGold = 1000n - 150n - 100n; // Initial gold - workshop cost - repair cost
-      expect(goldBalance).to.equal(expectedGold);
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      const expectedGold = initialGold - 150n - 100n; // Initial gold - workshop cost - repair cost (half of 200)
+      expect(finalGold).to.equal(expectedGold);
     });
 
     it("Should not allow repairing an active building", async function () {
       await expect(
-        districtBuildings.connect(player1).repairBuilding(2)
+        districtBuildings.connect(player1).repairBuilding(3) // DEFENSE_TOWER
       ).to.be.revertedWith("Building not damaged");
     });
 
     it("Should not allow repairing a non-built building", async function () {
       await expect(
-        districtBuildings.connect(player1).repairBuilding(3) // BARRACKS
+        districtBuildings.connect(player1).repairBuilding(4) // BARRACKS
       ).to.be.revertedWith("Building not built");
     });
 
@@ -272,6 +272,9 @@ describe("DistrictBuildings", function () {
 
     it("Should damage buildings in reverse order (higher tier first)", async function () {
       const player1Address = await player1.getAddress();
+      
+      // Ensure player has enough gold for all buildings
+      await ensurePlayerGold(player1, 2000);
       
       // Build multiple buildings of different tiers
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER (tier 1)
