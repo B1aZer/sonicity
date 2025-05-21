@@ -197,11 +197,11 @@ describe("GridBuildings", function () {
     // Verify buildings are active and have correct types
     const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
     const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
-    expect(house.active).to.be.true;
     expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
+    expect(house.level).to.equal(1);
     expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(9));
-    expect(farm.active).to.be.true;
     expect(farm.buildingType).to.equal(GridBuildingType.FARM);
+    expect(farm.level).to.equal(1);
     expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(1));
   });
 
@@ -230,8 +230,9 @@ describe("GridBuildings", function () {
 
       // Check the building details
       const building = await gridBuildings.buildings(player1Address, buildingId);
-      expect(building.active).to.be.true;
       expect(building.buildingType).to.equal(GridBuildingType.HOUSE);
+      expect(building.level).to.equal(1);
+      expect(building.damaged).to.be.false;
     });
 
     it("Should allow removing buildings through unstaking", async function () {
@@ -252,7 +253,8 @@ describe("GridBuildings", function () {
 
       // Check that the building was removed
       const building = await gridBuildings.buildings(player1Address, buildingId);
-      expect(building.active).to.be.false;
+      expect(building.buildingType).to.equal(GridBuildingType(0));
+      expect(building.level).to.equal(0);
 
       // Check building count decreased
       const buildingCountAfter = await gridBuildings.buildingCounts(player1Address, 0);
@@ -317,6 +319,92 @@ describe("GridBuildings", function () {
         mintAndStakeNFT(player1, GridBuildingType.FARM)
       ).to.be.revertedWith("Building slot limit reached for current tier");
 
+    });
+
+    it("Should not allow collecting from removed buildings", async function () {
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
+      await ethers.provider.send("evm_mine");
+
+      // Unstake the NFT to remove the building
+      await altar.connect(player1).unstake(nftAddress, tokenId);
+
+      // Try to collect resources
+      await expect(
+        gridBuildings.connect(player1).collectResources(buildingId)
+      ).to.be.revertedWith("Building does not exist");
+    });
+
+    it("Should not allow upgrading removed buildings", async function () {
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
+      await ethers.provider.send("evm_mine");
+
+      // Unstake the NFT to remove the building
+      await altar.connect(player1).unstake(nftAddress, tokenId);
+
+      // Try to upgrade
+      await expect(
+        gridBuildings.connect(player1).upgradeBuilding(buildingId)
+      ).to.be.revertedWith("Building does not exist");
+    });
+
+    it("Should not allow repairing removed buildings", async function () {
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
+      await ethers.provider.send("evm_mine");
+
+      // Unstake the NFT to remove the building
+      await altar.connect(player1).unstake(nftAddress, tokenId);
+
+      // Try to repair
+      await expect(
+        gridBuildings.connect(player1).repairBuilding(buildingId)
+      ).to.be.revertedWith("Building does not exist");
+    });
+
+    it("Should not allow removing buildings directly", async function () {
+      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Try to remove building directly
+      await expect(
+        gridBuildings.connect(player1).removeBuilding(await player1.getAddress(), buildingId)
+      ).to.be.revertedWith("Only Altar can remove buildings");
+    });
+
+    it("Should not allow owner to remove buildings", async function () {
+      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Try to remove building as owner
+      await expect(
+        gridBuildings.connect(owner).removeBuilding(await player1.getAddress(), buildingId)
+      ).to.be.revertedWith("Only Altar can remove buildings");
+    });
+
+    it("Should allow Altar to remove buildings", async function () {
+      const player1Address = await player1.getAddress();
+      const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+
+      // Get building count before removal
+      const buildingCountBefore = await gridBuildings.buildingCounts(player1Address, 0);
+
+      // Remove building through Altar
+      await gridBuildings.connect(altar).removeBuilding(player1Address, buildingId);
+
+      // Check that the building was removed
+      const building = await gridBuildings.buildings(player1Address, buildingId);
+      expect(building.buildingType).to.equal(GridBuildingType(0));
+      expect(building.level).to.equal(0);
+
+      // Check building count decreased
+      const buildingCountAfter = await gridBuildings.buildingCounts(player1Address, 0);
+      expect(buildingCountAfter).to.equal(buildingCountBefore - BigInt(1));
     });
   });
 
@@ -649,10 +737,12 @@ describe("GridBuildings", function () {
       // Verify buildings are active and have correct types
       const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
       const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
-      expect(house.active).to.be.true;
       expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
-      expect(farm.active).to.be.true;
+      expect(house.level).to.equal(1);
+      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(9));
       expect(farm.buildingType).to.equal(GridBuildingType.FARM);
+      expect(farm.level).to.equal(1);
+      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(1));
     });
 
     it("Should damage buildings starting from highest tier", async function () {
