@@ -199,8 +199,10 @@ describe("GridBuildings", function () {
     const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
     expect(house.active).to.be.true;
     expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
+    expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(9));
     expect(farm.active).to.be.true;
     expect(farm.buildingType).to.equal(GridBuildingType.FARM);
+    expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(1));
   });
 
   describe("Building Management", function () {
@@ -284,6 +286,41 @@ describe("GridBuildings", function () {
       // Check the building level
       const building = await gridBuildings.buildings(player1Address, buildingId);
       expect(building.level).to.equal(2);
+    });
+
+    it("Should not allow players to create more buildings than their building posts for that tier", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Verify player is in Tier 1
+      const playerState = await gameState.playerState(player1Address);
+      expect(playerState.tier).to.equal(1);
+      
+      // For Tier 0, verify we can't create more than 9 houses
+      // First verify current count
+      const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
+      expect(initialHouseCount).to.equal(BigInt(9)); // Should have 9 houses from beforeEach
+
+      // For Tier 1, verify we can't create more than 12 total buildings
+      // First verify current counts
+      const initialFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
+      expect(initialFarmCount).to.equal(BigInt(1)); // Should have 1 farm from beforeEach
+
+      // Create farms until we reach the limit
+      for (let i = 0; i < 2; i++) {
+        await mintAndStakeNFT(player1, GridBuildingType.FARM);
+      }
+      
+      // Try to create one more farm (should fail as we've reached the 12 building limit)
+      await expect(
+        mintAndStakeNFT(player1, GridBuildingType.FARM)
+      ).to.be.revertedWith("Tier 1 grid is full");
+
+      // Verify total building count is 12 (9 houses + 3 farms)
+      const finalFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
+      expect(finalFarmCount).to.equal(BigInt(3));
+      
+      const totalBuildings = finalHouseCount + finalFarmCount;
+      expect(totalBuildings).to.equal(BigInt(12)); // 4x3 grid = 12 buildings
     });
   });
 
@@ -402,6 +439,10 @@ describe("GridBuildings", function () {
       let farmId;
 
       beforeEach(async function () {
+
+        const farnCount = await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM);
+        expect(farnCount).to.equal(BigInt(1));
+
         // Ensure player has enough gold for tier upgrade
         await ensurePlayerGold(player1, 1000);
 
@@ -473,6 +514,9 @@ describe("GridBuildings", function () {
 
       it("Should calculate correct total claimable resources for farms", async function () {
         const player1Address = await player1.getAddress();
+
+        const houseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
+        expect(houseCount).to.equal(BigInt(2));
         
         // Create a second farm
         const result = await mintAndStakeNFT(player1, GridBuildingType.FARM);
@@ -487,18 +531,18 @@ describe("GridBuildings", function () {
         let activeFarms = 0;
         for (const id of activeBuildings) {
           const building = await gridBuildings.buildings(player1Address, id);
-          if (building.buildingType === GridBuildingType.FARM) {
+          if (building.buildingType === BigInt(GridBuildingType.FARM)) {
             activeFarms++;
           }
         }
-        expect(activeFarms).to.equal(2); // Ensure two farms are active
+        expect(activeFarms).to.equal(3); // Ensure two farms are active
 
         // Calculate total claimable resources for farms
         const totalClaimableResources = await gridBuildings.calculateTotalClaimableResources(
           player1Address,
           GridBuildingType.FARM
         );
-        expect(totalClaimableResources).to.equal(BigInt(5 * 12 * 2)); // 5 food per hour * 12 hours * 2 farms
+        expect(totalClaimableResources).to.equal(BigInt(5 * 12 * 3)); // 5 food per hour * 12 hours * 2 farms
       });
 
       it("Should upgrade farm production rate", async function () {
