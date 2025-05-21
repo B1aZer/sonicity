@@ -109,6 +109,32 @@ describe("GridBuildings", function () {
 
     // Approve NFT collection in Altar
     await altar.connect(owner).approveCollection(await sonicityNFT.getAddress());
+
+    // Create a house (tier 0)
+    await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.HOUSE);
+    houseId = 0;
+
+    // Ensure player has enough gold for tier upgrade
+    await ensurePlayerGold(player1, 1000);
+
+    // Donate gold to reach tier 1
+    await gameState.connect(player1).donateGold(1000);
+
+    // Verify player is now tier 1
+    const playerState = await gameState.playerState(await player1.getAddress());
+    expect(playerState.tier).to.equal(1);
+
+    // Create a farm (tier 1)
+    await gridBuildings.connect(owner).createBuilding(await player1.getAddress(), GridBuildingType.FARM);
+    farmId = 1;
+
+    // Verify buildings are active and have correct types
+    const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
+    const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
+    expect(house.active).to.be.true;
+    expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
+    expect(farm.active).to.be.true;
+    expect(farm.buildingType).to.equal(GridBuildingType.FARM);
   });
 
   describe("Building Management", function () {

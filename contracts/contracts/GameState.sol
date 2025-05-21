@@ -173,7 +173,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         // Check for tier upgrade
         uint8 currentTier = state.tier;
         uint8 nextTier = currentTier + 1;
-        if (nextTier <= 4 && state.treasury >= tierRequirements[nextTier]) {
+        
+        // Check if player meets requirements for next tier
+        while (nextTier <= 4 && state.treasury >= tierRequirements[nextTier]) {
             state.tier = nextTier;
             
             // Increase building slots based on tier
@@ -189,6 +191,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             
             emit CityTierUpgraded(0, nextTier);
             emit BuildingSlotsUpdated(msg.sender, state.buildingSlots);
+            
+            nextTier++;
         }
         
         // Calculate rep points (1% of donated amount, with tier multiplier)

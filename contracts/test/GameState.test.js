@@ -139,18 +139,25 @@ describe("GameState", function () {
 
     it("Should apply tier multiplier to rep points", async function () {
       const player1Address = await player1.getAddress();
-      await gameState.connect(owner).setTierRequirement(2, 1000);
+      
+      // First donation to reach tier 1
+      await ensurePlayerGold(player1, 1000);
       await gameState.connect(player1).donateGold(1000);
       const state = await gameState.playerState(player1Address);
       expect(state.tier).to.equal(1);
+      
+      // Second donation to reach tier 2
       await ensurePlayerGold(player1, 2000);
-      await gameState.connect(player1).donateGold(1000);
+      await gameState.connect(player1).donateGold(1500); // Donate 1500 to reach 2500 total
       const state2 = await gameState.playerState(player1Address);
       expect(state2.tier).to.equal(2);
+      
+      // Third donation with tier 2 multiplier
       await ensurePlayerGold(player1, 3000);
       await gameState.connect(player1).donateGold(1000);
       const finalRep = await gameState.getPlayerRep(player1Address);
-      expect(finalRep).to.equal(36);
+      // Expected rep: 10 (first 1000) + 15 (second 1500) + 24 (third 1000 with tier 2 multiplier)
+      expect(finalRep).to.equal(49);
     });
 
     it("Should accumulate rep points from multiple donations", async function () {
@@ -189,6 +196,39 @@ describe("GameState", function () {
       await gameState.connect(owner).setTierRequirement(1, 2000);
       state = await gameState.playerState(player1Address);
       expect(state.tier).to.equal(1);
+    });
+
+    it("Should upgrade multiple tiers when donating enough gold at once", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Ensure player has enough gold for the test
+      await ensurePlayerGold(player1, 4000);
+      
+      // Get initial state
+      const initialState = await gameState.playerState(player1Address);
+      expect(initialState.tier).to.equal(0);
+      expect(initialState.buildingSlots).to.equal(9);
+      
+      // Donate 4000 gold
+      await gameState.connect(player1).donateGold(4000);
+      
+      // Check final state
+      const finalState = await gameState.playerState(player1Address);
+      expect(finalState.tier).to.equal(2); // Should be tier 2 (meets 1000 and 2500 requirements)
+      expect(finalState.buildingSlots).to.equal(16); // Tier 2 gives 16 slots
+      expect(finalState.treasury).to.equal(4000);
+      
+      // Verify tier requirements
+      const tier1Req = await gameState.tierRequirements(1);
+      const tier2Req = await gameState.tierRequirements(2);
+      const tier3Req = await gameState.tierRequirements(3);
+      
+      expect(tier1Req).to.equal(1000);
+      expect(tier2Req).to.equal(2500);
+      expect(tier3Req).to.equal(5000);
+      
+      // Verify we didn't reach tier 3
+      expect(finalState.tier).to.be.below(3);
     });
   });
 }); 
