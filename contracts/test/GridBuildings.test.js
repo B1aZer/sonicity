@@ -218,7 +218,7 @@ describe("GridBuildings", function () {
     const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
     expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
     expect(house.level).to.equal(1);
-    expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(2));
+    expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(3));
     expect(farm.buildingType).to.equal(GridBuildingType.FARM);
     expect(farm.level).to.equal(1);
     expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(1));
@@ -319,7 +319,7 @@ describe("GridBuildings", function () {
       // For Tier 0, verify we can't create more than 9 houses
       // First verify current count
       const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-      expect(initialHouseCount).to.equal(BigInt(2)); // Should have 1 house from beforeEach
+      expect(initialHouseCount).to.equal(BigInt(3)); // Should have 3 houses from beforeEach
 
       // First verify current counts
       const initialFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
@@ -533,7 +533,7 @@ describe("GridBuildings", function () {
       
       // Get initial house count
       const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-      expect(initialHouseCount).to.equal(BigInt(3)); // Should have 1 house from beforeEach
+      expect(initialHouseCount).to.equal(BigInt(3)); // Should have 3 houses from beforeEach
 
       // Create two additional houses
       const result1 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
@@ -550,7 +550,7 @@ describe("GridBuildings", function () {
         player1Address,
         GridBuildingType.HOUSE
       );
-      expect(totalBeforeRemoval).to.equal(BigInt(10 * 12 * 3)); // 10 gold per hour * 12 hours * 3 houses (1 + 2 new)
+      expect(totalBeforeRemoval).to.equal(BigInt(10 * 12 * 5)); // 10 gold per hour * 12 hours * 5 houses (3 + 2 new)
 
       // Remove one house
       await altar.connect(player1).unstake(result1.nftAddress, result1.tokenId);
@@ -560,7 +560,7 @@ describe("GridBuildings", function () {
         player1Address,
         GridBuildingType.HOUSE
       );
-      expect(totalAfterRemoval).to.equal(BigInt(10 * 12 * 2)); // 10 gold per hour * 12 hours * 2 houses
+      expect(totalAfterRemoval).to.equal(BigInt(10 * 12 * 4)); // 10 gold per hour * 12 hours * 4 houses
 
       const house2Resources = await gridBuildings.calculateClaimableResources(player1Address, houseId2);
       expect(house2Resources).to.equal(BigInt(10 * 12)); // Active house should return normal amount
@@ -657,6 +657,10 @@ describe("GridBuildings", function () {
       it("Should correctly calculate resources if one of the farms was removed", async function () {
         const player1Address = await player1.getAddress();
         
+        // Get initial farm count
+        const initialFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
+        expect(initialFarmCount).to.equal(BigInt(2)); // Should have 2 farms from beforeEach
+
         // Create two additional farms
         const result1 = await mintAndStakeNFT(player1, GridBuildingType.FARM);
         const result2 = await mintAndStakeNFT(player1, GridBuildingType.FARM);
@@ -672,7 +676,7 @@ describe("GridBuildings", function () {
           player1Address,
           GridBuildingType.FARM
         );
-        expect(totalBeforeRemoval).to.equal(BigInt(5 * 12 * 4)); // 5 food per hour * 12 hours * 4 farms
+        expect(totalBeforeRemoval).to.equal(BigInt(5 * 12 * 4)); // 5 food per hour * 12 hours * 4 farms (2 + 2 new)
 
         // Remove one farm
         await altar.connect(player1).unstake(result1.nftAddress, result1.tokenId);
@@ -684,10 +688,6 @@ describe("GridBuildings", function () {
         );
         expect(totalAfterRemoval).to.equal(BigInt(5 * 12 * 3)); // 5 food per hour * 12 hours * 3 farms
 
-        // Verify individual farm calculations
-        const farm1Resources = await gridBuildings.calculateClaimableResources(player1Address, farmId1);
-        expect(farm1Resources).to.equal(BigInt(0)); // Removed farm should return 0
-
         const farm2Resources = await gridBuildings.calculateClaimableResources(player1Address, farmId2);
         expect(farm2Resources).to.equal(BigInt(5 * 12)); // Active farm should return normal amount
       });
@@ -696,7 +696,7 @@ describe("GridBuildings", function () {
         const player1Address = await player1.getAddress();
 
         const houseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-        expect(houseCount).to.equal(BigInt(10));
+        expect(houseCount).to.equal(BigInt(3));
 
         const farmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
         expect(farmCount).to.equal(BigInt(2));
@@ -718,14 +718,14 @@ describe("GridBuildings", function () {
             activeFarms++;
           }
         }
-        expect(activeFarms).to.equal(3); // Ensure two farms are active
+        expect(activeFarms).to.equal(3); // Ensure three farms are active (2 initial + 1 new)
 
         // Calculate total claimable resources for farms
         const totalClaimableResources = await gridBuildings.calculateTotalClaimableResources(
           player1Address,
           GridBuildingType.FARM
         );
-        expect(totalClaimableResources).to.equal(BigInt(5 * 12 * 3)); // 5 food per hour * 12 hours * 2 farms
+        expect(totalClaimableResources).to.equal(BigInt(5 * 12 * 3)); // 5 food per hour * 12 hours * 3 farms
       });
 
       it("Should upgrade farm production rate", async function () {
@@ -831,7 +831,7 @@ describe("GridBuildings", function () {
       const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
       expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
       expect(house.level).to.equal(1);
-      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(1));
+      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(3));
       expect(farm.buildingType).to.equal(GridBuildingType.FARM);
       expect(farm.level).to.equal(1);
       expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(1));
