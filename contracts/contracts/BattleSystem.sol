@@ -328,7 +328,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
                 if (buildingsToDamage > 3) buildingsToDamage = 3;
                 
                 (bool success, ) = gridBuildingsAddress.call(
-                    abi.encodeWithSignature("damageGridBuilding(address,uint256)", defender, buildingsToDamage)
+                    abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
                 );
                 require(success, "Failed to damage grid building");
                 activeBattles[attacker].gridBuildingsDamaged += buildingsToDamage;
