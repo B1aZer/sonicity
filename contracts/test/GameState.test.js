@@ -156,8 +156,13 @@ describe("GameState", function () {
       await ensurePlayerGold(player1, 3000);
       await gameState.connect(player1).donateGold(1000);
       const finalRep = await gameState.getPlayerRep(player1Address);
-      // Expected rep: 10 (first 1000) + 15 (second 1500) + 24 (third 1000 with tier 2 multiplier)
-      expect(finalRep).to.equal(49);
+      
+      // Calculate expected rep:
+      // First donation (1000): 10 rep (1% of 1000, no multiplier at tier 0)
+      // Second donation (1500): 18 rep (1% of 1500 with tier 1 multiplier = 15 * (100 + 20) / 100)
+      // Third donation (1000): 14 rep (1% of 1000 with tier 2 multiplier = 10 * (100 + 40) / 100)
+      // Total: 10 + 18 + 14 = 42 rep
+      expect(finalRep).to.equal(42);
     });
 
     it("Should accumulate rep points from multiple donations", async function () {
