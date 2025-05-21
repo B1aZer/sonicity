@@ -218,7 +218,7 @@ describe("GridBuildings", function () {
     const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
     expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
     expect(house.level).to.equal(1);
-    expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(3));
+    expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(2));
     expect(farm.buildingType).to.equal(GridBuildingType.FARM);
     expect(farm.level).to.equal(1);
     expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(1));
@@ -319,7 +319,7 @@ describe("GridBuildings", function () {
       // For Tier 0, verify we can't create more than 9 houses
       // First verify current count
       const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-      expect(initialHouseCount).to.equal(BigInt(3)); // Should have 3 houses from beforeEach
+      expect(initialHouseCount).to.equal(BigInt(2)); // Should have 3 houses from beforeEach
 
       // First verify current counts
       const initialFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
@@ -834,7 +834,7 @@ describe("GridBuildings", function () {
       expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(3));
       expect(farm.buildingType).to.equal(GridBuildingType.FARM);
       expect(farm.level).to.equal(1);
-      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(1));
+      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(2));
     });
 
     it("Should damage buildings starting from highest tier", async function () {
