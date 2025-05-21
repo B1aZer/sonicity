@@ -834,18 +834,78 @@ describe("GridBuildings", function () {
     it("Should damage buildings starting from highest tier", async function () {
       const player1Address = await player1.getAddress();
 
-      // Damage 1 building using BattleSystem's test function
-      const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
-      const damagedBuildingId = await getDamagedBuildingId(damageTx);
+      // Get initial state of all buildings
+      const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
+      console.log("Active buildings before damage:", activeBuildings);
+      
+      // Log state of each building before damage
+      for (const id of activeBuildings) {
+        const building = await gridBuildings.buildings(player1Address, id);
+        console.log(`Building ${id} before damage:`, {
+          type: building.buildingType.toString(),
+          level: building.level.toString(),
+          damaged: building.damaged
+        });
+      }
 
-      // Check that the farm (tier 1) was damaged first
-      const damagedBuilding = await gridBuildings.buildings(player1Address, damagedBuildingId);
-      expect(damagedBuilding.buildingType).to.equal(GridBuildingType.FARM);
-      expect(damagedBuilding.damaged).to.be.true;
+      // First damage - should hit first tier 1 building
+      const firstDamageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
+      const firstDamagedBuildingId = await getDamagedBuildingId(firstDamageTx);
+      console.log("First damaged building ID from event:", firstDamagedBuildingId.toString());
 
-      // Check that the house (tier 0) was not damaged
-      const house = await gridBuildings.buildings(player1Address, houseId);
-      expect(house.damaged).to.be.false;
+      // Check that first tier 1 building was damaged
+      const firstDamagedBuilding = await gridBuildings.buildings(player1Address, firstDamagedBuildingId);
+      console.log("First damaged building state after damage:", {
+        type: firstDamagedBuilding.buildingType.toString(),
+        level: firstDamagedBuilding.level.toString(),
+        damaged: firstDamagedBuilding.damaged
+      });
+      
+      expect(firstDamagedBuilding.buildingType).to.equal(GridBuildingType.FARM);
+      expect(firstDamagedBuilding.damaged).to.be.true;
+
+      // Second damage - should hit second tier 1 building
+      const secondDamageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
+      const secondDamagedBuildingId = await getDamagedBuildingId(secondDamageTx);
+      console.log("Second damaged building ID from event:", secondDamagedBuildingId.toString());
+
+      // Check that second tier 1 building was damaged
+      const secondDamagedBuilding = await gridBuildings.buildings(player1Address, secondDamagedBuildingId);
+      console.log("Second damaged building state after damage:", {
+        type: secondDamagedBuilding.buildingType.toString(),
+        level: secondDamagedBuilding.level.toString(),
+        damaged: secondDamagedBuilding.damaged
+      });
+      
+      expect(secondDamagedBuilding.buildingType).to.equal(GridBuildingType.FARM);
+      expect(secondDamagedBuilding.damaged).to.be.true;
+      expect(secondDamagedBuildingId).to.not.equal(firstDamagedBuildingId);
+
+      // Third damage - should hit tier 0 building
+      const thirdDamageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
+      const thirdDamagedBuildingId = await getDamagedBuildingId(thirdDamageTx);
+      console.log("Third damaged building ID from event:", thirdDamagedBuildingId.toString());
+
+      // Check that a tier 0 building was damaged
+      const thirdDamagedBuilding = await gridBuildings.buildings(player1Address, thirdDamagedBuildingId);
+      console.log("Third damaged building state after damage:", {
+        type: thirdDamagedBuilding.buildingType.toString(),
+        level: thirdDamagedBuilding.level.toString(),
+        damaged: thirdDamagedBuilding.damaged
+      });
+      
+      expect(thirdDamagedBuilding.buildingType).to.equal(GridBuildingType.HOUSE);
+      expect(thirdDamagedBuilding.damaged).to.be.true;
+      expect(thirdDamagedBuildingId).to.not.equal(firstDamagedBuildingId);
+      expect(thirdDamagedBuildingId).to.not.equal(secondDamagedBuildingId);
+
+      // Verify all other buildings are in correct state
+      for (const id of activeBuildings) {
+        if (id !== firstDamagedBuildingId && id !== secondDamagedBuildingId && id !== thirdDamagedBuildingId) {
+          const building = await gridBuildings.buildings(player1Address, id);
+          expect(building.damaged).to.be.false;
+        }
+      }
     });
 
     it("Should damage tier 0 buildings when no higher tier buildings are available", async function () {
