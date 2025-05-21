@@ -187,9 +187,9 @@ describe("DistrictBuildings", function () {
       // Damage the defense tower through BattleSystem
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
 
-      // Check if building is now inactive
-      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 3); // DEFENSE_TOWER
-      expect(isActive).to.be.false;
+      // Check if building is now damaged
+      const isDamaged = await districtBuildings.isBuildingDamaged(player1Address, 3); // DEFENSE_TOWER
+      expect(isDamaged).to.be.true;
     });
 
     it("Should not allow non-BattleSystem to damage a building", async function () {
@@ -207,10 +207,14 @@ describe("DistrictBuildings", function () {
       // Damage the defense tower through BattleSystem
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
 
+      // Verify the building is damaged
+      const isDamaged = await districtBuildings.isBuildingDamaged(player1Address, 3); // DEFENSE_TOWER
+      expect(isDamaged).to.be.true;
+
       // Try to damage it again through BattleSystem
       await expect(
         battleSystem.connect(owner).testDamageBuildings(player1Address, 1)
-      ).to.be.revertedWith("No buildings available to damage");
+      ).to.be.revertedWith("Failed to damage district building");
     });
 
     it("Should allow repairing a damaged building", async function () {
@@ -225,12 +229,16 @@ describe("DistrictBuildings", function () {
       // Damage the defense tower through BattleSystem
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
 
+      // Verify building is damaged
+      const isDamagedBefore = await districtBuildings.isBuildingDamaged(player1Address, 3); // DEFENSE_TOWER
+      expect(isDamagedBefore).to.be.true;
+
       // Repair the building
       await districtBuildings.connect(player1).repairBuilding(3); // DEFENSE_TOWER
 
-      // Check if building is active again
-      const isActive = await districtBuildings.isDistrictBuildingActive(player1Address, 3); // DEFENSE_TOWER
-      expect(isActive).to.be.true;
+      // Check if building is no longer damaged
+      const isDamagedAfter = await districtBuildings.isBuildingDamaged(player1Address, 3); // DEFENSE_TOWER
+      expect(isDamagedAfter).to.be.false;
 
       // Check repair cost was deducted (half of build cost)
       const goldBalance = await gameState.getPlayerGold(player1Address);
@@ -274,14 +282,14 @@ describe("DistrictBuildings", function () {
       await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
       
       // Check that the highest tier building (ARCHERY_RANGE) was damaged
-      const isArcheryRangeActive = await districtBuildings.isDistrictBuildingActive(player1Address, 5);
-      expect(isArcheryRangeActive).to.be.false;
+      const isArcheryRangeDamaged = await districtBuildings.isBuildingDamaged(player1Address, 5);
+      expect(isArcheryRangeDamaged).to.be.true;
       
-      // Check that lower tier buildings are still active
-      const isDefenseTowerActive = await districtBuildings.isDistrictBuildingActive(player1Address, 3);
-      const isBarracksActive = await districtBuildings.isDistrictBuildingActive(player1Address, 4);
-      expect(isDefenseTowerActive).to.be.true;
-      expect(isBarracksActive).to.be.true;
+      // Check that lower tier buildings are not damaged
+      const isDefenseTowerDamaged = await districtBuildings.isBuildingDamaged(player1Address, 3);
+      const isBarracksDamaged = await districtBuildings.isBuildingDamaged(player1Address, 4);
+      expect(isDefenseTowerDamaged).to.be.false;
+      expect(isBarracksDamaged).to.be.false;
     });
   });
 }); 
