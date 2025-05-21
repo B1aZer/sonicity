@@ -67,10 +67,6 @@ describe("Altar", function () {
     await altar.connect(owner).approveCollection(sonicityNFTAddress);
     await altar.connect(owner).approveCollection(sonicityFarmAddress);
 
-    // Approve the NFT collections in GameState
-    await gameState.connect(owner).approveCollection(sonicityNFTAddress);
-    await gameState.connect(owner).approveCollection(sonicityFarmAddress);
-
     // Initialize players (they start at tier 0 by default)
     await gameState.connect(player1).initializePlayer();
     await gameState.connect(player2).initializePlayer();

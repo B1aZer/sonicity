@@ -41,9 +41,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Mapping from NFT contract address to token ID to metadata
     mapping(address => mapping(uint256 => NFTMetadata)) public nftMetadata;
     
-    // List of approved NFT collections
-    mapping(address => bool) public approvedCollections;
-    
     // City state (modified)
     struct City {
         uint256 treasury;
@@ -72,8 +69,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event RepEarned(address indexed player, uint256 amount);
     event FoodEarned(address indexed player, uint256 amount);
     event ResourcesDeducted(address indexed player, uint256 gold, uint256 food, uint256 rep);
-    event CollectionApproved(address indexed collection);
-    event CollectionRemoved(address indexed collection);
     event NFTMetadataUpdated(address indexed collection, uint256 indexed tokenId);
     event BuildingCreated(address indexed player, string buildingType, uint256 buildingId);
     event BuildingRemoved(address indexed player, string buildingType, uint256 buildingId);
@@ -157,24 +152,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Approve a new NFT collection
-     * @param collection The address of the NFT collection
-     */
-    function approveCollection(address collection) external onlyOwner {
-        approvedCollections[collection] = true;
-        emit CollectionApproved(collection);
-    }
-
-    /**
-     * @dev Remove an NFT collection
-     * @param collection The address of the NFT collection
-     */
-    function removeCollection(address collection) external onlyOwner {
-        approvedCollections[collection] = false;
-        emit CollectionRemoved(collection);
-    }
-
-    /**
      * @dev Set metadata for an NFT
      * @param collection The address of the NFT collection
      * @param tokenId The token ID
@@ -185,7 +162,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint256 tokenId,
         NFTMetadata memory metadata
     ) external onlyOwner {
-        require(approvedCollections[collection], "Collection not approved");
+        require(IAltar(altarAddress).approvedCollections(collection), "Collection not approved");
         nftMetadata[collection][tokenId] = metadata;
         emit NFTMetadataUpdated(collection, tokenId);
     }
@@ -223,7 +200,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint256 tokenId,
         address owner
     ) external view returns (bool) {
-        require(approvedCollections[collection], "Collection not approved");
+        require(IAltar(altarAddress).approvedCollections(collection), "Collection not approved");
         return IERC721(collection).ownerOf(tokenId) == owner;
     }
 
