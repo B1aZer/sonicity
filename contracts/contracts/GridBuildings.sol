@@ -16,6 +16,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     address public gameStateAddress;
     // Reference to the Altar contract
     address public altarAddress;
+    // Reference to the BattleSystem contract
+    address public battleSystemAddress;
 
     // Grid Building Types
     enum GridBuildingType {
@@ -59,6 +61,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event GameStateAddressUpdated(address indexed newAddress);
     event AltarAddressUpdated(address indexed newAddress);
     event BuildingRepaired(address indexed player, uint256 buildingId);
+    event BattleSystemAddressUpdated(address indexed newAddress);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -121,6 +124,15 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
+     * @dev Set the BattleSystem contract address
+     * @param _battleSystemAddress The address of the BattleSystem contract
+     */
+    function setBattleSystemAddress(address _battleSystemAddress) external onlyOwner {
+        battleSystemAddress = _battleSystemAddress;
+        emit BattleSystemAddressUpdated(_battleSystemAddress);
+    }
+
+    /**
      * @dev Create a new building
      * @param player The address of the player for whom to create the building
      * @param buildingType The type of building to create
@@ -153,7 +165,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             level: 1,
             lastUpgradeTime: block.timestamp,
             lastCollectionTime: block.timestamp,
-            active: true
+            active: true,
+            damaged: false
         });
         
         // Update counts
@@ -401,7 +414,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param amount Number of buildings to damage
      */
     function damageBuildings(address player, uint256 amount) external {
-        require(msg.sender == gameStateAddress, "Only GameState can call this function");
+        require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
         require(amount > 0, "Amount must be greater than 0");
 
         uint256 buildingsDamaged = 0;
