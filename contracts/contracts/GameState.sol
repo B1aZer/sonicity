@@ -143,22 +143,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Verify NFT ownership
-     * @param collection The address of the NFT collection
-     * @param tokenId The token ID
-     * @param owner The address to verify ownership for
-     * @return bool Whether the address owns the NFT
-     */
-    function verifyNFTOwnership(
-        address collection,
-        uint256 tokenId,
-        address owner
-    ) external view returns (bool) {
-        require(IAltar(altarAddress).approvedCollections(collection), "Collection not approved");
-        return IERC721(collection).ownerOf(tokenId) == owner;
-    }
-
-    /**
      * @dev Join a city
      * @param cityId The ID of the city to join
      */
