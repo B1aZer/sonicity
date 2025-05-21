@@ -1,5 +1,4 @@
 import { BasePage } from './BasePage.js';
-import { NFTCollection } from '../components/NFTCollection.js';
 import { NFTCard } from '../components/NFTCard.js';
 import { CONTRACT_CONFIG } from '../js/utils/constants.js';
 import { WalletManager } from '../js/utils/wallet.js';
@@ -23,7 +22,6 @@ export class MintPage extends BasePage {
         this.mintPrice = CONTRACT_CONFIG.MINT_PRICE;
         this.farmMaxSupply = CONTRACT_CONFIG.FARM_MAX_SUPPLY;
         this.farmMintPrice = CONTRACT_CONFIG.FARM_MINT_PRICE;
-        this.nftCollection = new NFTCollection();
         this.lastMintedTokenId = null;
         this.modal = new Modal();
         this.userNFTs = [];
@@ -257,19 +255,12 @@ export class MintPage extends BasePage {
                 // Fetch and parse metadata JSON
                 const response = await fetch(tokenURI);
                 const metadata = await response.json();
-                
-                // Get game state metadata
-                const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(
-                    contractAddress,
-                    tokenId
-                );
 
                 nfts.push({
                     tokenId,
                     contractAddress,
                     tokenURI,
-                    metadata,
-                    gameStateMetadata
+                    metadata
                 });
             }
 
@@ -303,18 +294,6 @@ export class MintPage extends BasePage {
                                 <div class="nft-details">
                                     <h3>${lastMintedNft.metadata.name}</h3>
                                     <p>${lastMintedNft.metadata.description}</p>
-                                    <div class="nft-attributes">
-                                        ${lastMintedNft.gameStateMetadata ? `
-                                            <div class="attribute">
-                                                <span class="label">District:</span>
-                                                <span class="value">${['Central', 'North', 'East', 'South'][lastMintedNft.gameStateMetadata.district]}</span>
-                                            </div>
-                                            <div class="attribute">
-                                                <span class="label">Building Slots:</span>
-                                                <span class="value">${lastMintedNft.gameStateMetadata.buildingSlots}</span>
-                                            </div>
-                                        ` : ''}
-                                    </div>
                                     <div class="success-message">Minted Successfully!</div>
                                 </div>
                             </div>

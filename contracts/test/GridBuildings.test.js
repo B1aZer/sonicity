@@ -116,13 +116,6 @@ describe("GridBuildings", function () {
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
 
-      // Set metadata for the NFT
-      const metadata = {
-        district: 1,
-        buildingSlots: 5
-      };
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
-
       // Get initial building count
       const initialBuildingCount = await gridBuildings.buildingCounts(player1Address, 0);
 
@@ -148,13 +141,6 @@ describe("GridBuildings", function () {
       // Mint and stake an NFT
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
-
-      // Set metadata for the NFT
-      const metadata = {
-        district: 1,
-        buildingSlots: 5
-      };
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
       // Stake the NFT
       const altarAddress = await altar.getAddress();
@@ -187,13 +173,6 @@ describe("GridBuildings", function () {
       // Mint and stake an NFT
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
-
-      // Set metadata for the NFT
-      const metadata = {
-        district: 1,
-        buildingSlots: 5
-      };
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
       // Stake the NFT
       const altarAddress = await altar.getAddress();
@@ -234,13 +213,6 @@ describe("GridBuildings", function () {
       // Mint and stake an NFT to create a building
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       const tokenId = 1;
-
-      // Set metadata for the NFT
-      const metadata = {
-        district: 1,
-        buildingSlots: 5
-      };
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), tokenId, metadata);
 
       // Stake the NFT
       const altarAddress = await altar.getAddress();

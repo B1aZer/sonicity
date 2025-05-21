@@ -18,8 +18,7 @@ export class GameStateContract extends BaseContract {
     }
 
     async getPlayerState() {
-        const address = await this.getAddress();
-        return await this.call('playerState', address);
+        return await this.call('getPlayerState');
     }
 
     async isPlayerInitialized() {
@@ -119,18 +118,6 @@ export class GameStateContract extends BaseContract {
         return await this.call('approvedCollections', collectionAddress);
     }
 
-    async setNFTMetadata(collectionAddress, tokenId, metadata) {
-        return await this.transact('setNFTMetadata', collectionAddress, tokenId, metadata);
-    }
-
-    async getNFTMetadata(collectionAddress, tokenId) {
-        return await this.call('getNFTMetadata', collectionAddress, tokenId);
-    }
-
-    async verifyNFTOwnership(collectionAddress, tokenId, owner) {
-        return await this.call('verifyNFTOwnership', collectionAddress, tokenId, owner);
-    }
-
     async getPlayerTier(address) {
         return await this.call('getPlayerTier', address);
     }
@@ -141,6 +128,10 @@ export class GameStateContract extends BaseContract {
 
     async getPlayerBuildingSlots(address) {
         return await this.call('getPlayerBuildingSlots', address);
+    }
+
+    async getAddress() {
+        return await this.call('getAddress');
     }
 
 } 

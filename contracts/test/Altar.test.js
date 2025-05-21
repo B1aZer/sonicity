@@ -126,12 +126,6 @@ describe("Altar", function () {
       // Mint and stake an NFT
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       
-      const metadata = {
-        district: 1,
-        buildingSlots: 5
-      };
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 1, metadata);
-
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, 1);
       await altar.connect(player1).stake(1, 0, await sonicityNFT.getAddress());
@@ -145,12 +139,6 @@ describe("Altar", function () {
       // Mint and stake an NFT
       await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
       
-      const metadata = {
-        district: 1,
-        buildingSlots: 5
-      };
-      await gameState.connect(owner).setNFTMetadata(await sonicityNFT.getAddress(), 1, metadata);
-
       const altarAddress = await altar.getAddress();
       await sonicityNFT.connect(player1).approve(altarAddress, 1);
       await altar.connect(player1).stake(1, 0, await sonicityNFT.getAddress());

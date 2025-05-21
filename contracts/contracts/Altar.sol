@@ -99,13 +99,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         require(approvedCollections[collection], "Collection not approved");
         require(IERC721(collection).ownerOf(tokenId) == msg.sender, "Not the NFT owner");
         require(!stakes[collection][tokenId].isActive, "NFT already staked");
-        
-        // Get NFT metadata from GameState
-        GameState.NFTMetadata memory metadata = gameState.getNFTMetadata(collection, tokenId);
-        
-        // Check building slots
-        require(metadata.buildingSlots > 0, "NFT must have at least 1 building slot");
-        
+              
         // Transfer NFT to this contract
         IERC721(collection).transferFrom(msg.sender, address(this), tokenId);
         

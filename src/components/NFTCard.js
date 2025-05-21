@@ -12,8 +12,7 @@ export class NFTCard {
     }
 
     render(nft) {
-        const { tokenId, metadata, gameStateMetadata, contractAddress } = nft;
-        const districts = ['Central', 'North', 'East', 'South'];
+        const { tokenId, metadata, contractAddress } = nft;
 
         return `
             <div class="nft-card" data-collection="${contractAddress}">
@@ -23,16 +22,6 @@ export class NFTCard {
                 <div class="nft-info">
                     <h3>${metadata.name}</h3>
                     <p class="description">${metadata.description}</p>
-                    <div class="nft-attributes">
-                        <div class="attribute">
-                            <span class="label">District:</span>
-                            <span class="value">${districts[gameStateMetadata.district]}</span>
-                        </div>
-                        <div class="attribute">
-                            <span class="label">Building Slots:</span>
-                            <span class="value">${gameStateMetadata.buildingSlots}</span>
-                        </div>
-                    </div>
                     ${this.renderActionButtons(tokenId)}
                 </div>
             </div>

@@ -1,3 +1,6 @@
+- Watchtower
+- Slot Vault
+
 - stkae houses 
 - do you pay dor city buildings?
 - other options for shop?

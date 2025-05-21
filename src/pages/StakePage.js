@@ -204,17 +204,12 @@ export class StakePage extends BasePage {
                     const tokenURI = await nftContract.tokenURI(tokenId);
                     const response = await fetch(tokenURI);
                     const metadata = await response.json();
-                    const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(
-                        collectionAddress,
-                        tokenId
-                    );
                     
                     const nft = {
                         tokenId,
                         contractAddress: collectionAddress,
                         tokenURI,
-                        metadata,
-                        gameStateMetadata
+                        metadata
                     };
 
                     stakedCount++;
@@ -253,17 +248,12 @@ export class StakePage extends BasePage {
                         const tokenURI = await contract.tokenURI(tokenId);
                         const response = await fetch(tokenURI);
                         const metadata = await response.json();
-                        const gameStateMetadata = await this.contracts.gameState.getNFTMetadata(
-                            address,
-                            tokenId
-                        );
                         
                         this.availableNFTs.push({
                             tokenId,
                             contractAddress: address,
                             tokenURI,
-                            metadata,
-                            gameStateMetadata
+                            metadata
                         });
                     }
                 }

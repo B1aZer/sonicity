@@ -22,12 +22,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Reference to the BattleSystem contract
     address public battleSystemAddress;
 
-    // Structure to store NFT metadata
-    struct NFTMetadata {
-        uint8 district;      // District number (0-9)
-        uint8 buildingSlots; // Number of building slots (1-5)
-    }
-
     // Standalone player state
     struct PlayerState {
         uint256 gold;
@@ -38,9 +32,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint256 treasury;
     }
 
-    // Mapping from NFT contract address to token ID to metadata
-    mapping(address => mapping(uint256 => NFTMetadata)) public nftMetadata;
-    
     // City state (modified)
     struct City {
         uint256 treasury;
@@ -149,43 +140,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         require(msg.sender == districtBuildingsAddress, "Only DistrictBuildings can call this function");
         require(playerState[player].gold >= amount, "Insufficient gold");
         playerState[player].gold -= amount;
-    }
-
-    /**
-     * @dev Set metadata for an NFT
-     * @param collection The address of the NFT collection
-     * @param tokenId The token ID
-     * @param metadata The metadata to set
-     */
-    function setNFTMetadata(
-        address collection,
-        uint256 tokenId,
-        NFTMetadata memory metadata
-    ) external onlyOwner {
-        require(IAltar(altarAddress).approvedCollections(collection), "Collection not approved");
-        nftMetadata[collection][tokenId] = metadata;
-        emit NFTMetadataUpdated(collection, tokenId);
-    }
-
-    /**
-     * @dev Get metadata for an NFT
-     * @param collection The address of the NFT collection
-     * @param tokenId The token ID
-     * @return NFTMetadata The metadata for the NFT
-     */
-    function getNFTMetadata(
-        address collection,
-        uint256 tokenId
-    ) external view returns (NFTMetadata memory) {
-        NFTMetadata memory metadata = nftMetadata[collection][tokenId];
-        // If metadata is not set (district and buildingSlots are 0), return default values
-        if (metadata.district == 0 && metadata.buildingSlots == 0) {
-            return NFTMetadata({
-                district: 0,
-                buildingSlots: 5
-            });
-        }
-        return metadata;
     }
 
     /**
