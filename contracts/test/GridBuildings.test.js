@@ -512,6 +512,68 @@ describe("GridBuildings", function () {
       expect(totalClaimableResources).to.equal(BigInt(10 * 12 * 10)); // 10 gold per hour * 12 hours * 10 houses
     });
 
+    it("Should correctly calculate resources if one of the houses was removed", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Get initial house count
+      const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
+      expect(initialHouseCount).to.equal(BigInt(10)); // Should have 10 houses from beforeEach
+
+      // Remove 5 houses
+      const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
+      let housesRemoved = 0;
+      for (const id of activeBuildings) {
+        if (housesRemoved >= 5) break;
+        const building = await gridBuildings.buildings(player1Address, id);
+        if (building.buildingType === BigInt(GridBuildingType.HOUSE)) {
+          // Find the NFT info for this building
+          const nftInfo = await altar.stakedBuilding(await sonicityNFT.getAddress(), id);
+          if (nftInfo) {
+            await altar.connect(player1).unstake(await sonicityNFT.getAddress(), id);
+            housesRemoved++;
+          }
+        }
+      }
+
+      // Verify house count after removal
+      const houseCountAfterRemoval = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
+      expect(houseCountAfterRemoval).to.equal(BigInt(5)); // 10 - 5 = 5 houses remaining
+
+      // Create two additional houses
+      const result1 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const result2 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
+      const houseId1 = result1.buildingId;
+      const houseId2 = result2.buildingId;
+
+      // Fast forward 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Calculate total claimable resources before removal
+      const totalBeforeRemoval = await gridBuildings.calculateTotalClaimableResources(
+        player1Address,
+        GridBuildingType.HOUSE
+      );
+      expect(totalBeforeRemoval).to.equal(BigInt(10 * 12 * 7)); // 10 gold per hour * 12 hours * 7 houses (5 + 2 new)
+
+      // Remove one house
+      await altar.connect(player1).unstake(result1.nftAddress, result1.tokenId);
+
+      // Calculate total claimable resources after removal
+      const totalAfterRemoval = await gridBuildings.calculateTotalClaimableResources(
+        player1Address,
+        GridBuildingType.HOUSE
+      );
+      expect(totalAfterRemoval).to.equal(BigInt(10 * 12 * 6)); // 10 gold per hour * 12 hours * 6 houses
+
+      // Verify individual house calculations
+      const house1Resources = await gridBuildings.calculateClaimableResources(player1Address, houseId1);
+      expect(house1Resources).to.equal(BigInt(0)); // Removed house should return 0
+
+      const house2Resources = await gridBuildings.calculateClaimableResources(player1Address, houseId2);
+      expect(house2Resources).to.equal(BigInt(10 * 12)); // Active house should return normal amount
+    });
+
     it("Should emit ResourcesCollected event", async function () {
       // Fast forward 1 hour
       await ethers.provider.send("evm_increaseTime", [3600]);
@@ -598,6 +660,44 @@ describe("GridBuildings", function () {
         // Calculate claimable resources for the farm
         const claimableResources = await gridBuildings.calculateClaimableResources(player1Address, farmId);
         expect(claimableResources).to.equal(BigInt(5 * 12)); // 5 food per hour * 12 hours
+      });
+
+      it("Should correctly calculate resources if one of the farms was removed", async function () {
+        const player1Address = await player1.getAddress();
+        
+        // Create two additional farms
+        const result1 = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+        const result2 = await mintAndStakeNFT(player1, GridBuildingType.FARM);
+        const farmId1 = result1.buildingId;
+        const farmId2 = result2.buildingId;
+
+        // Fast forward 12 hours
+        await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+        await ethers.provider.send("evm_mine");
+
+        // Calculate total claimable resources before removal
+        const totalBeforeRemoval = await gridBuildings.calculateTotalClaimableResources(
+          player1Address,
+          GridBuildingType.FARM
+        );
+        expect(totalBeforeRemoval).to.equal(BigInt(5 * 12 * 4)); // 5 food per hour * 12 hours * 4 farms
+
+        // Remove one farm
+        await altar.connect(player1).unstake(result1.nftAddress, result1.tokenId);
+
+        // Calculate total claimable resources after removal
+        const totalAfterRemoval = await gridBuildings.calculateTotalClaimableResources(
+          player1Address,
+          GridBuildingType.FARM
+        );
+        expect(totalAfterRemoval).to.equal(BigInt(5 * 12 * 3)); // 5 food per hour * 12 hours * 3 farms
+
+        // Verify individual farm calculations
+        const farm1Resources = await gridBuildings.calculateClaimableResources(player1Address, farmId1);
+        expect(farm1Resources).to.equal(BigInt(0)); // Removed farm should return 0
+
+        const farm2Resources = await gridBuildings.calculateClaimableResources(player1Address, farmId2);
+        expect(farm2Resources).to.equal(BigInt(5 * 12)); // Active farm should return normal amount
       });
 
       it("Should calculate correct total claimable resources for farms", async function () {
