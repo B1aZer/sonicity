@@ -532,6 +532,24 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         return names;
     }
 
+    function getBuiltDistrictBuildings(address player) external view returns (uint8[] memory) {
+        uint8 totalBuildings = uint8(DistrictBuildingType.ALTAR) + 1;
+        uint8[] memory built = new uint8[](totalBuildings);
+        uint8 count = 0;
+        for (uint8 i = 0; i < totalBuildings; i++) {
+            if (buildings[player][DistrictBuildingType(i)].active) {
+                built[count] = i;
+                count++;
+            }
+        }
+        // Resize array to actual count
+        uint8[] memory result = new uint8[](count);
+        for (uint8 j = 0; j < count; j++) {
+            result[j] = built[j];
+        }
+        return result;
+    }
+
     /**
      * @dev Get defense tower power for a player
      * @param player The address of the player

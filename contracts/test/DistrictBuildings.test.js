@@ -263,6 +263,15 @@ describe("DistrictBuildings", function () {
       
       // Build a tier 0 building (SHOP)
       await districtBuildings.connect(player1).buildDistrictBuilding(0);
+
+      // Check how many buildings the player has built
+      const builtBuildings = await districtBuildings.getBuiltDistrictBuildings(player1Address);
+      // builtBuildings is likely an array of booleans or structs; adjust as needed
+      const builtCount = builtBuildings.filter(b => b.isBuilt || b).length;
+      console.log("Player has built", builtCount, "district buildings");
+
+      // Optionally, assert that only one building is built
+      expect(builtCount).to.equal(1);
       
       // Try to damage it through BattleSystem
       await expect(
