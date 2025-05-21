@@ -139,7 +139,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @return buildingId The ID of the created building
      */
     function createBuilding(address player, GridBuildingType buildingType) external nonReentrant returns (uint256) {
-        require(msg.sender == altarAddress || msg.sender == owner(), "Only Altar or owner can create buildings");
+        require(msg.sender == altarAddress, "Only Altar can create buildings");
         require(buildingType <= GridBuildingType.REP_STATION, "Invalid building type");
         
         // Get player's tier from GameState
