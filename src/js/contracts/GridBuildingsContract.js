@@ -28,6 +28,9 @@ export class GridBuildingsContract extends BaseContract {
                 }
             }
 
+            // TODO: We should modify the transact method in BaseContract to return both the receipt and the event data
+            // This would allow us to get the building ID directly from the event
+            // Currently, we're just returning the receipt and not using the building ID
             return await this.transact('createBuilding', buildingType);
         } catch (error) {
             console.error('Error in createBuilding:', error);
