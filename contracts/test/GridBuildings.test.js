@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
-const { GridBuildingType, mintAndStakeNFT, getDamagedBuildingId } = require("./helpers");
+const { GridBuildingType, mintAndStakeNFT, getDamagedBuildingId, donateGoldForTier } = require("./helpers");
 
 describe("GridBuildings", function () {
   let gameState;
@@ -139,11 +139,8 @@ describe("GridBuildings", function () {
     // Create a house (tier 0) through staking
     const { buildingId: houseId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
 
-    // Ensure player has enough gold for tier upgrade
-    await ensurePlayerGold(player1, 1000);
-
-    // Donate gold to reach tier 1
-    await gameState.connect(player1).donateGold(1000);
+    // Upgrade player to tier 1 using helper
+    await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
     // Verify player is now tier 1
     const playerState = await gameState.playerState(await player1.getAddress());
@@ -506,11 +503,8 @@ describe("GridBuildings", function () {
         const farnCount = await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM);
         expect(farnCount).to.equal(BigInt(1));
 
-        // Ensure player has enough gold for tier upgrade
-        await ensurePlayerGold(player1, 1000);
-
-        // Donate gold to reach tier 1
-        await gameState.connect(player1).donateGold(1000);
+        // Upgrade player to tier 1 using helper
+        await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
         // Verify player is now tier 1
         const playerState = await gameState.playerState(await player1.getAddress());
@@ -712,11 +706,8 @@ describe("GridBuildings", function () {
       const houseResult = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       houseId = houseResult.buildingId;
 
-      // Ensure player has enough gold for tier upgrade
-      await ensurePlayerGold(player1, 1000);
-
-      // Donate gold to reach tier 1
-      await gameState.connect(player1).donateGold(1000);
+      // Upgrade player to tier 1 using helper
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
       // Verify player is now tier 1
       const playerState = await gameState.playerState(await player1.getAddress());

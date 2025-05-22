@@ -74,8 +74,55 @@ async function getDamagedBuildingId(tx, gridBuildings) {
     return buildingDamagedEvent.args.buildingId;
 }
 
+// Helper to ensure player has enough gold and donate for tier upgrade
+async function donateGoldForTier(player, gameState, gridBuildings, altar, sonicityNFT, amount) {
+    const playerAddress = await player.getAddress();
+    let gold = await gameState.getPlayerGold(playerAddress);
+    // If we already have enough gold, skip to donation
+    if (gold < BigInt(amount)) {
+        // Get current houses
+        const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
+        // Create houses up to the limit of 9 if needed
+        if (currentHouses < BigInt(9)) {
+            for (let i = Number(currentHouses); i < 9; i++) {
+                await mintAndStakeNFT(player, altar, sonicityNFT, GridBuildingType.HOUSE);
+            }
+        }
+        // Fast forward time and collect until we have enough gold
+        while (gold < BigInt(amount)) {
+            await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
+            await ethers.provider.send("evm_mine");
+            // Get all active buildings
+            const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
+            // Collect from all houses
+            for (const buildingId of activeBuildings) {
+                await gridBuildings.connect(player).collectResources(buildingId);
+            }
+            gold = await gameState.getPlayerGold(playerAddress);
+        }
+        // After collecting enough gold, remove all houses except one
+        const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
+        let housesRemoved = 0;
+        for (const id of activeBuildings) {
+            if (housesRemoved >= 8) break; // Keep one house
+            const building = await gridBuildings.buildings(playerAddress, id);
+            if (building.buildingType === BigInt(GridBuildingType.HOUSE)) {
+                // Find the NFT info for this building
+                const nftInfo = await altar.stakedBuilding(await sonicityNFT.getAddress(), id);
+                if (nftInfo) {
+                    await altar.connect(player).unstake(await sonicityNFT.getAddress(), id);
+                    housesRemoved++;
+                }
+            }
+        }
+    }
+    // Donate gold
+    await gameState.connect(player).donateGold(amount);
+}
+
 module.exports = {
     GridBuildingType,
     mintAndStakeNFT,
-    getDamagedBuildingId
+    getDamagedBuildingId,
+    donateGoldForTier
 }; 
