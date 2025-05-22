@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { BaseContract } from './BaseContract.js';
 import { CONTRACT_ADDRESSES } from '../utils/constants.js';
 import GameStateABI from '../../../contracts/artifacts/contracts/GameState.sol/GameState.json';
+import Logger from '../utils/logger.js';
 
 export class GameStateContract extends BaseContract {
     constructor() {
@@ -20,12 +21,12 @@ export class GameStateContract extends BaseContract {
     async isPlayerInitialized() {
         try {
             const address = await this.getAddress();
-            console.log('Address:', address);
+            Logger.info('Checking initialization for wallet address:', address);
             const buildingSlots = await this.call('getBuildingSlots', address);
-            console.log('Building slots:', buildingSlots.toString());
+            Logger.info('Player building slots:', buildingSlots);
             return buildingSlots > 0n;
         } catch (error) {
-            console.error('Error checking player initialization:', error);
+            Logger.error('Error checking player initialization:', error);
             return false;
         }
     }
@@ -135,9 +136,5 @@ export class GameStateContract extends BaseContract {
 
     async getPlayerBuildingSlots(address) {
         return await this.call('getPlayerBuildingSlots', address);
-    }
-
-    async getAddress() {
-        return await this.call('getAddress');
     }
 } 
