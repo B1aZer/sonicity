@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
-const { GridBuildingType, mintAndStakeNFT, getDamagedBuildingId, donateGoldForTier } = require("./helpers");
+const { GridBuildingType, mintAndStakeNFT, getDamagedBuildingId, donateGoldForTier, ensurePlayerGold } = require("./helpers");
 
 describe("GridBuildings", function () {
   let gameState;
@@ -12,57 +12,6 @@ describe("GridBuildings", function () {
   let player1;
   let player2;
   let battleSystem;
-
-  // Helper to ensure player has at least the specified amount of gold
-  async function ensurePlayerGold(player, amount) {
-    const playerAddress = await player.getAddress();
-    let gold = await gameState.getPlayerGold(playerAddress);
-    
-    // If we already have enough gold, return early
-    if (gold >= BigInt(amount)) return;
-    
-    // Get current houses
-    const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
-    
-    // Create houses up to the limit of 9 if needed
-    if (currentHouses < BigInt(9)) {
-        for (let i = Number(currentHouses); i < 9; i++) {
-            await mintAndStakeNFT(player, altar, sonicityNFT, GridBuildingType.HOUSE);
-        }
-    }
-    
-    // Fast forward time and collect until we have enough gold
-    while (gold < BigInt(amount)) {
-        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
-        await ethers.provider.send("evm_mine");
-        
-        // Get all active buildings
-        const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
-        
-        // Collect from all houses
-        for (const buildingId of activeBuildings) {
-            await gridBuildings.connect(player).collectResources(buildingId);
-        }
-        
-        gold = await gameState.getPlayerGold(playerAddress);
-    }
-
-    // After collecting enough gold, remove all houses except one
-    const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
-    let housesRemoved = 0;
-    for (const id of activeBuildings) {
-        if (housesRemoved >= 8) break; // Keep one house
-        const building = await gridBuildings.buildings(playerAddress, id);
-        if (building.buildingType === BigInt(GridBuildingType.HOUSE)) {
-            // Find the NFT info for this building
-            const nftInfo = await altar.stakedBuilding(await sonicityNFT.getAddress(), id);
-            if (nftInfo) {
-                await altar.connect(player).unstake(await sonicityNFT.getAddress(), id);
-                housesRemoved++;
-            }
-        }
-    }
-  }
 
   beforeEach(async function () {
     [owner, player1, player2] = await ethers.getSigners();
@@ -802,7 +751,7 @@ describe("GridBuildings", function () {
       const damagedBuildingId = await getDamagedBuildingId(damageTx, gridBuildings);
 
       // Ensure player has enough gold for repair
-      await ensurePlayerGold(player1, 100);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
 
       // Repair the building
       await gridBuildings.connect(player1).repairBuilding(damagedBuildingId);
@@ -874,7 +823,7 @@ describe("GridBuildings", function () {
       const damagedBuildingId = await getDamagedBuildingId(damageTx, gridBuildings);
 
       // Ensure player has enough gold for repair
-      await ensurePlayerGold(player1, 100);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
 
       // Repair the building and verify event
       await expect(gridBuildings.connect(player1).repairBuilding(damagedBuildingId))
@@ -886,7 +835,7 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
 
       // Upgrade the farm to level 2
-      await ensurePlayerGold(player1, 300);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 300);
       await gridBuildings.connect(player1).upgradeBuilding(farmId);
 
       // Damage a building and get its ID
@@ -898,7 +847,7 @@ describe("GridBuildings", function () {
       const expectedRepairCost = config.upgradeCost * BigInt(2) / BigInt(2); // Half of upgrade cost * level
 
       // Ensure player has enough gold for repair
-      await ensurePlayerGold(player1, expectedRepairCost);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, expectedRepairCost);
 
       // Repair the building
       await gridBuildings.connect(player1).repairBuilding(damagedBuildingId);
