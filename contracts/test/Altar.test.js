@@ -64,6 +64,9 @@ describe("Altar", function () {
     // Update GameState's altar address
     await gameState.connect(owner).setAltarAddress(altarAddress);
 
+    // Set GridBuildings address in GameState
+    await gameState.connect(owner).setGridBuildingsAddress(gridBuildingsAddress);
+
     // Approve NFT collections in Altar
     await altar.connect(owner).approveCollection(sonicityNFTAddress);
     await altar.connect(owner).approveCollection(sonicityFarmAddress);
