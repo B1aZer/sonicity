@@ -59,9 +59,10 @@ export class HousePage extends BasePage {
             Logger.info('Filtered houses:', houses);
 
             // Get the current production rate from contract
-            const productionRate = await this.contracts.gridBuildings.getBuildingProductionRate(
+            const buildingConfig = await this.contracts.gridBuildings.getBuildingConfig(
                 GridBuildingsContract.BuildingType.HOUSE
             );
+            const productionRate = buildingConfig.baseProductionRate;
             Logger.info('Current house production rate:', productionRate.toString());
 
             // Update UI with house count
