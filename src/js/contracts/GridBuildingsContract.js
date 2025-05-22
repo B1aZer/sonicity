@@ -15,27 +15,9 @@ export class GridBuildingsContract extends BaseContract {
         REP_STATION: 2
     };
 
+    // Building Management
     async createBuilding(buildingType) {
-        try {
-            const address = await this.getAddress();
-            const activeBuildings = await this.getActiveBuildings(address);
-            
-            // Check if player is in Tier 0 and trying to build more than 9 houses
-            if (buildingType === GridBuildingsContract.BuildingType.HOUSE) {
-                const houseCount = activeBuildings.filter(b => b.buildingType === GridBuildingsContract.BuildingType.HOUSE).length;
-                if (houseCount >= 9) {
-                    throw new Error('Tier 0 grid is full (3x3)');
-                }
-            }
-
-            // TODO: We should modify the transact method in BaseContract to return both the receipt and the event data
-            // This would allow us to get the building ID directly from the event
-            // Currently, we're just returning the receipt and not using the building ID
-            return await this.transact('createBuilding', buildingType);
-        } catch (error) {
-            console.error('Error in createBuilding:', error);
-            throw error;
-        }
+        return await this.transact('createBuilding', buildingType);
     }
 
     async upgradeBuilding(buildingId) {
@@ -46,69 +28,35 @@ export class GridBuildingsContract extends BaseContract {
         return await this.transact('removeBuilding', buildingId);
     }
 
+    async repairBuilding(buildingId) {
+        return await this.transact('repairBuilding', buildingId);
+    }
+
+    // Resource Collection
     async collectResources(buildingId) {
         return await this.transact('collectResources', buildingId);
     }
 
-    async getActiveBuildings(address) {
-        const buildingIds = await this.call('getActiveBuildings', address);
-        const buildings = [];
-        
-        for (const buildingId of buildingIds) {
-            const building = await this.call('getBuilding', address, buildingId);
-            buildings.push({
-                id: buildingId,
-                buildingType: Number(building[0]),
-                level: Number(building[1]),
-                lastUpgradeTime: Number(building[2]),
-                lastCollectionTime: Number(building[3]),
-                active: Boolean(building[4])
-            });
-        }
-        
-        return buildings;
+    async collectResourcesByType(buildingType) {
+        return await this.transact('collectResourcesByType', buildingType);
     }
 
-    async getBuilding(address, buildingId) {
-        const building = await this.call('getBuilding', address, buildingId);
-        return {
-            buildingType: Number(building[0]),
-            level: Number(building[1]),
-            lastUpgradeTime: Number(building[2]),
-            lastCollectionTime: Number(building[3]),
-            active: building[4]
-        };
+    // Building Information
+    async getBuilding(buildingId) {
+        const address = await this.getAddress();
+        return await this.call('getBuilding', address, buildingId);
     }
 
     async getBuildingConfig(buildingType) {
-        const config = await this.call('getBuildingConfig', buildingType);
-        return {
-            name: config[0],
-            baseProductionRate: Number(config[1]),
-            upgradeCost: Number(config[2]),
-            maxLevel: Number(config[3]),
-            description: config[4],
-            tier: Number(config[5])
-        };
+        return await this.call('getBuildingConfig', buildingType);
     }
 
-    async getAllBuildingConfigs() {
-        const configs = [];
-        for (let i = 0; i <= GridBuildingsContract.BuildingType.REP_STATION; i++) {
-            const config = await this.getBuildingConfig(i);
-            configs.push({
-                type: i,
-                ...config
-            });
-        }
-        return configs;
+    async getActiveBuildings() {
+        const address = await this.getAddress();
+        return await this.call('getActiveBuildings', address);
     }
 
-    async getBuildingProductionRate(buildingType) {
-        const config = await this.getBuildingConfig(buildingType);
-        return config.baseProductionRate;
-    }
-
+    // Resource Calculation
     async calculateClaimableResources(buildingId) {
         const address = await this.getAddress();
         return await this.call('calculateClaimableResources', address, buildingId);
@@ -116,24 +64,20 @@ export class GridBuildingsContract extends BaseContract {
 
     async calculateTotalClaimableResources(buildingType) {
         const address = await this.getAddress();
-        const activeBuildings = await this.getActiveBuildings(address);
-        
-        // Filter buildings by type if specified
-        const relevantBuildings = buildingType !== undefined 
-            ? activeBuildings.filter(b => b.buildingType === buildingType)
-            : activeBuildings;
-
-        let totalClaimable = BigInt(0);
-        for (const building of relevantBuildings) {
-            const claimable = await this.calculateClaimableResources(building.id);
-            totalClaimable += claimable;
-        }
-        
-        return totalClaimable;
+        return await this.call('calculateTotalClaimableResources', address, buildingType);
     }
 
-    async collectAllResourcesByType(buildingType) {
-        return await this.transact('collectResourcesByType', buildingType);
+    // Building Counts
+    async getBuildingCount(buildingType) {
+        const address = await this.getAddress();
+        return await this.call('buildingCounts', address, buildingType);
+    }
+
+    // Building Damage
+    async isBuildingDamaged(buildingId) {
+        const address = await this.getAddress();
+        const building = await this.call('getBuilding', address, buildingId);
+        return building.damaged;
     }
 
     async getBuildingLevel(buildingId) {
