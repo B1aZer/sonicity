@@ -55,6 +55,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     // Constants
     uint256 public constant BATTLE_DURATION = 24 hours;
     uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
+    uint256 public noOpponentFoundChance = 20; // 20% chance to not find an opponent
 
     // Battle history record
     struct BattleRecord {
@@ -471,6 +472,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     function findPotentialOpponents() external view returns (address[] memory) {
+        return _findPotentialOpponents();
+    }
+
+    function _findPotentialOpponents() internal view returns (address[] memory) {
         require(isRegisteredForMatchmaking[msg.sender], "Not registered for matchmaking");
         
         // Count potential opponents
@@ -500,6 +505,39 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         return opponents;
     }
 
+    function findRandomOpponent() external view returns (address) {
+        require(isRegisteredForMatchmaking[msg.sender], "Not registered for matchmaking");
+        
+        // Get all potential opponents
+        address[] memory potentialOpponents = _findPotentialOpponents();
+        
+        // If no potential opponents, return zero address
+        if (potentialOpponents.length == 0) {
+            return address(0);
+        }
+        
+        // Use block data to generate a random number between 0 and 99
+        uint256 randomNumber = uint256(keccak256(abi.encodePacked(
+            block.timestamp,
+            block.prevrandao,
+            msg.sender
+        ))) % 100;
+        
+        if (randomNumber < noOpponentFoundChance) {
+            return address(0); // Chance to not find anyone
+        }
+        
+        // Randomly select an opponent from the array
+        uint256 opponentIndex = uint256(keccak256(abi.encodePacked(
+            block.timestamp,
+            block.prevrandao,
+            msg.sender,
+            randomNumber
+        ))) % potentialOpponents.length;
+        
+        return potentialOpponents[opponentIndex];
+    }
+
     function getBattleRecord(uint256 battleId) external view returns (BattleRecord memory) {
         return battleHistory[battleId];
     }
@@ -519,4 +557,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    // Add setter function for the chance
+    function setNoOpponentFoundChance(uint256 _chance) external onlyOwner {
+        require(_chance <= 100, "Chance must be between 0 and 100");
+        noOpponentFoundChance = _chance;
+    }
 } 
