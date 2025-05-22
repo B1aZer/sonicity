@@ -20,6 +20,7 @@ export class GameStateContract extends BaseContract {
     async isPlayerInitialized() {
         try {
             const address = await this.getAddress();
+            console.log('Address:', address);
             const buildingSlots = await this.call('getBuildingSlots', address);
             console.log('Building slots:', buildingSlots.toString());
             return buildingSlots > 0n;
