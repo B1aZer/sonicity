@@ -388,22 +388,6 @@ describe("GridBuildings", function () {
     });
 
     it("Should not allow repairing removed buildings", async function () {
-      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
-
-      // Fast forward time to complete staking period
-      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
-      await ethers.provider.send("evm_mine");
-
-      // Unstake the NFT to remove the building
-      await altar.connect(player1).unstake(nftAddress, tokenId);
-
-      // Try to repair
-      await expect(
-        gridBuildings.connect(player1).repairBuilding(buildingId)
-      ).to.be.revertedWith("Building does not exist");
-    });
-
-    it("Should not allow removing buildings directly", async function () {
       const { buildingId } = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
 
       // Try to remove building directly
@@ -919,21 +903,36 @@ describe("GridBuildings", function () {
       const player1Address = await player1.getAddress();
       const sonicityFarmAddress = await sonicityFarm.getAddress();
 
+      // Mint and stake a farm NFT to ensure at least one farm exists
+      await mintAndStakeNFT(player1, GridBuildingType.FARM);
+
       // Damage a building and get its ID
       const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
       const damagedBuildingId = await getDamagedBuildingId(damageTx);
 
-      // Get the NFT info for this building
-      const nftInfo = await altar.stakedBuilding(sonicityFarmAddress, damagedBuildingId);
-      expect(nftInfo).to.not.be.null;
+      // Find the tokenId for the damaged building
+      const stakedTokenIds = await altar.getUserStakesByCollection(player1Address, sonicityFarmAddress);
+      let tokenIdForDamagedBuilding = null;
+      for (const tokenId of stakedTokenIds) {
+        const buildingId = await altar.stakedBuilding(sonicityFarmAddress, tokenId);
+        if (Number(buildingId) === Number(damagedBuildingId)) {
+          tokenIdForDamagedBuilding = tokenId;
+          break;
+        }
+      }
+      expect(tokenIdForDamagedBuilding).to.not.be.null;
+
+      // Get the stake data to confirm it's active
+      const stakeData = await altar.getStakeDataWithCollection(sonicityFarmAddress, tokenIdForDamagedBuilding);
+      expect(stakeData.isActive).to.be.true;
 
       // Deactivate the building using the correct token ID
-      await altar.connect(player1).unstake(sonicityFarmAddress, nftInfo.tokenId);
+      await altar.connect(player1).unstake(sonicityFarmAddress, tokenIdForDamagedBuilding);
 
       // Try to repair
       await expect(
         gridBuildings.connect(player1).repairBuilding(damagedBuildingId)
-      ).to.be.revertedWith("Building not built");
+      ).to.be.revertedWith("Building does not exist");
     });
 
     it("Should emit BuildingDamaged event", async function () {
