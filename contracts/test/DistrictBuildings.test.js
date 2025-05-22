@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
+const { GridBuildingType, mintAndStakeNFT, donateGoldForTier } = require("./helpers");
 
 describe("DistrictBuildings", function () {
   let districtBuildings;
@@ -8,37 +9,13 @@ describe("DistrictBuildings", function () {
   let battleSystem;
   let owner;
   let player1;
+  let altar;
+  let sonicityNFT;
 
   // Helper to ensure player has at least the specified amount of gold
   async function ensurePlayerGold(player, amount) {
-    const playerAddress = await player.getAddress();
-    let gold = await gameState.getPlayerGold(playerAddress);
-    
-    // If we already have enough gold, return early
-    if (gold >= amount) return;
-    
-    // Get current houses
-    const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
-    
-    // Create houses up to the limit of 9 if needed
-    if (currentHouses < 9) {
-        for (let i = currentHouses; i < 9; i++) {
-            await gridBuildings.connect(owner).createBuilding(playerAddress, 0);
-        }
-    }
-    
-    // Fast forward time and collect until we have enough gold
-    while (gold < amount) {
-        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
-        await ethers.provider.send("evm_mine");
-        
-        // Collect from all houses
-        for (let i = 0; i < 9; i++) {
-            await gridBuildings.connect(player).collectResources(i);
-        }
-        
-        gold = await gameState.getPlayerGold(playerAddress);
-    }
+    // Use the new donateGoldForTier helper, which handles minting, staking, collecting, and donating gold
+    await donateGoldForTier(player, gameState, gridBuildings, altar, sonicityNFT, amount);
   }
 
   beforeEach(async function () {
@@ -71,6 +48,33 @@ describe("DistrictBuildings", function () {
       kind: 'uups',
       initializer: 'initialize',
     });
+
+    // Deploy SonicityNFT (needed for minting/staking)
+    const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
+    sonicityNFT = await SonicityNFT.deploy();
+    await sonicityNFT.waitForDeployment();
+    const sonicityNFTAddress = await sonicityNFT.getAddress();
+
+    // Deploy Altar
+    const Altar = await ethers.getContractFactory("Altar");
+    altar = await upgrades.deployProxy(Altar, [await gameState.getAddress(), await gridBuildings.getAddress()], {
+      kind: 'uups',
+      initializer: 'initialize',
+    });
+    await altar.waitForDeployment();
+    const altarAddress = await altar.getAddress();
+
+    // Set minimum staking duration to 0 for testing
+    await altar.connect(owner).setMinStakingDuration(0);
+
+    // Set Altar address in GridBuildings
+    await gridBuildings.connect(owner).setAltarAddress(altarAddress);
+    // Update GameState's altar address
+    await gameState.connect(owner).setAltarAddress(altarAddress);
+    // Set GridBuildings address in GameState
+    await gameState.connect(owner).setGridBuildingsAddress(await gridBuildings.getAddress());
+    // Approve NFT collection in Altar
+    await altar.connect(owner).approveCollection(sonicityNFTAddress);
 
     // Set up contract interactions
     await districtBuildings.setGameStateAddress(await gameState.getAddress());
