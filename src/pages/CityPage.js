@@ -132,6 +132,9 @@ export class CityPage extends BasePage {
                     const isTierLocked = tier > currentTier;
                     const isBuilt = builtStatuses[index];
                     
+                    // Calculate remaining gold needed
+                    const remainingGold = unlockCostBigInt - treasuryBigInt;
+                    
                     return `
                         <div class="building-card ${isLocked || isTierLocked ? 'locked' : ''} ${isBuilt ? 'built' : ''}" 
                              data-required-donation="${config.unlockCost}"
@@ -142,7 +145,7 @@ export class CityPage extends BasePage {
                                     <div class="unlock-info">
                                         ${isTierLocked ? 
                                             `<p class="unlock-requirement">Requires Tier ${tier}</p>` :
-                                            `<p class="unlock-requirement">Requires ${config.unlockCost} Gold in Treasury</p>
+                                            `<p class="unlock-requirement">Requires ${remainingGold.toString()} more Gold to unlock</p>
                                              <div class="progress-container">
                                                 <div class="progress-bar" style="width: ${Math.min((Number(treasuryBigInt) / Number(unlockCostBigInt)) * 100, 100)}%"></div>
                                              </div>`
