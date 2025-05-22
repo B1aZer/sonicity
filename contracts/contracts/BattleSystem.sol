@@ -56,6 +56,29 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     uint256 public constant BATTLE_DURATION = 24 hours;
     uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
 
+    // Battle history record
+    struct BattleRecord {
+        address attacker;
+        address defender;
+        uint256 timestamp;
+        bool attackerWon;
+        uint256 attackerPower;
+        uint256 defenderPower;
+        uint256 treasuryBurned;
+        uint256 gridBuildingsDamaged;
+        uint256 districtBuildingsDamaged;
+        uint256 repPoints;
+    }
+
+    // Matchmaking pool
+    mapping(address => bool) public isRegisteredForMatchmaking;
+    mapping(address => uint256) public lastBattleTime;
+    address[] public registeredPlayers;
+
+    // Battle history tracking
+    mapping(uint256 => BattleRecord) public battleHistory;
+    uint256 private nextBattleId;
+
     // Events
     event BattleStarted(address indexed attacker, address indexed defender, uint256 startTime);
     event BattleResolved(
@@ -68,6 +91,15 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     );
     event TroopsTrained(address indexed player, TroopType troopType, uint256 amount);
     event TroopsDeployed(address indexed player, TroopType troopType, uint256 amount);
+    event PlayerRegisteredForMatchmaking(address indexed player);
+    event PlayerUnregisteredFromMatchmaking(address indexed player);
+    event BattleRecorded(
+        uint256 indexed battleId,
+        address indexed attacker,
+        address indexed defender,
+        bool attackerWon,
+        uint256 timestamp
+    );
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -222,7 +254,59 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             battle.repPoints = calculateRepPoints(battle.attackerPower, battle.defenderPower);
         }
 
+        // Record battle history
+        uint256 currentBattleId = nextBattleId++;
+        battleHistory[currentBattleId] = BattleRecord({
+            attacker: battle.attacker,
+            defender: battle.defender,
+            timestamp: battle.startTime,
+            attackerWon: attackerWon,
+            attackerPower: battle.attackerPower,
+            defenderPower: battle.defenderPower,
+            treasuryBurned: battle.treasuryBurned,
+            gridBuildingsDamaged: battle.gridBuildingsDamaged,
+            districtBuildingsDamaged: battle.districtBuildingsDamaged,
+            repPoints: battle.repPoints
+        });
+
+        // Update last battle time for both players
+        lastBattleTime[battle.attacker] = block.timestamp;
+        lastBattleTime[battle.defender] = block.timestamp;
+
+        // Unregister both players from matchmaking
+        if (isRegisteredForMatchmaking[battle.attacker]) {
+            isRegisteredForMatchmaking[battle.attacker] = false;
+            // Remove from registeredPlayers array
+            for (uint256 i = 0; i < registeredPlayers.length; i++) {
+                if (registeredPlayers[i] == battle.attacker) {
+                    registeredPlayers[i] = registeredPlayers[registeredPlayers.length - 1];
+                    registeredPlayers.pop();
+                    break;
+                }
+            }
+        }
+        
+        if (isRegisteredForMatchmaking[battle.defender]) {
+            isRegisteredForMatchmaking[battle.defender] = false;
+            // Remove from registeredPlayers array
+            for (uint256 i = 0; i < registeredPlayers.length; i++) {
+                if (registeredPlayers[i] == battle.defender) {
+                    registeredPlayers[i] = registeredPlayers[registeredPlayers.length - 1];
+                    registeredPlayers.pop();
+                    break;
+                }
+            }
+        }
+
         battle.resolved = true;
+
+        emit BattleRecorded(
+            currentBattleId,
+            battle.attacker,
+            battle.defender,
+            attackerWon,
+            battle.startTime
+        );
 
         emit BattleResolved(
             battle.attacker,
@@ -372,6 +456,75 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             );
             require(success, "Failed to award REP points");
         }
+    }
+
+    function registerForMatchmaking() external {
+        // Check if player is tier 1 or higher
+        (bool success, bytes memory data) = gameStateAddress.staticcall(
+            abi.encodeWithSignature("getPlayerTier(address)", msg.sender)
+        );
+        require(success, "Failed to get player tier");
+        uint8 playerTier = abi.decode(data, (uint8));
+        require(playerTier >= 1, "Must be tier 1 or higher to register");
+
+        // Check if not in battle
+        require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
+
+        // Check if not already registered
+        require(!isRegisteredForMatchmaking[msg.sender], "Already registered for matchmaking");
+
+        isRegisteredForMatchmaking[msg.sender] = true;
+        registeredPlayers.push(msg.sender);
+        emit PlayerRegisteredForMatchmaking(msg.sender);
+    }
+
+    function unregisterFromMatchmaking() external {
+        require(isRegisteredForMatchmaking[msg.sender], "Not registered for matchmaking");
+        isRegisteredForMatchmaking[msg.sender] = false;
+        
+        // Remove from registeredPlayers array
+        for (uint256 i = 0; i < registeredPlayers.length; i++) {
+            if (registeredPlayers[i] == msg.sender) {
+                // Replace with last element and pop
+                registeredPlayers[i] = registeredPlayers[registeredPlayers.length - 1];
+                registeredPlayers.pop();
+                break;
+            }
+        }
+        
+        emit PlayerUnregisteredFromMatchmaking(msg.sender);
+    }
+
+    function findPotentialOpponents() external view returns (address[] memory) {
+        require(isRegisteredForMatchmaking[msg.sender], "Not registered for matchmaking");
+        
+        // Count potential opponents
+        uint256 count = 0;
+        for (uint256 i = 0; i < registeredPlayers.length; i++) {
+            address potentialOpponent = registeredPlayers[i];
+            if (potentialOpponent != msg.sender && 
+                activeBattles[potentialOpponent].startTime == 0) {
+                count++;
+            }
+        }
+        
+        // Create array of potential opponents
+        address[] memory opponents = new address[](count);
+        uint256 index = 0;
+        for (uint256 i = 0; i < registeredPlayers.length; i++) {
+            address potentialOpponent = registeredPlayers[i];
+            if (potentialOpponent != msg.sender && 
+                activeBattles[potentialOpponent].startTime == 0) {
+                opponents[index] = potentialOpponent;
+                index++;
+            }
+        }
+        
+        return opponents;
+    }
+
+    function getBattleRecord(uint256 battleId) external view returns (BattleRecord memory) {
+        return battleHistory[battleId];
     }
 
     // Admin functions
