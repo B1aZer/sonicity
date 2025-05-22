@@ -19,6 +19,7 @@ import { AccessControl } from '../utils/accessControl.js';
 import { Modal } from '../utils/modal.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
 import { WalletManager } from '../utils/wallet.js';
+import Logger from '../utils/logger.js';
 
 class App {
     constructor() {
@@ -46,6 +47,8 @@ class App {
     }
 
     async handleRoute(page = window.location.pathname.slice(1) || '') {
+        Logger.info('Handling route:', page);
+        
         // Clean up current page
         if (this.currentPage) {
             this.currentPage.unmount();
@@ -57,11 +60,26 @@ class App {
             this.game = null;
         }
 
-        // Handle protected routes
-        if (page === 'dashboard' || page === 'overview' || page === 'house' || page === 'farm' || page === 'city' || page === 'district') {
-            const hasAccess = await AccessControl.checkCityAccess();
-            if (!hasAccess) {
-                page = 'access';
+        // Check wallet connection for all routes except access and mint
+        if (page !== 'access' && page !== 'mint') {
+            if (!AccessControl.isWalletConnected()) {
+                Logger.info('Wallet not connected, redirecting to access page');
+                window.history.pushState({}, '', '/access');
+                this.currentPage = new AccessPage();
+                this.currentPage.mount(this.layout.content);
+                return;
+            }
+
+            // Check player initialization for all routes except start page
+            if (page !== '') {
+                const isInitialized = await AccessControl.isPlayerInitialized();
+                if (!isInitialized) {
+                    Logger.info('Player not initialized, redirecting to start page');
+                    window.history.pushState({}, '', '/');
+                    this.currentPage = new StartPage();
+                    this.currentPage.mount(this.layout.content);
+                    return;
+                }
             }
         }
 
@@ -120,6 +138,7 @@ class App {
                 this.currentPage.mount(this.layout.content);
                 break;
             default:
+                Logger.info('Invalid route, redirecting to access page');
                 window.history.pushState({}, '', '/access');
                 this.handleRoute('access');
         }
