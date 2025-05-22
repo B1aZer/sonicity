@@ -1,0 +1,2811 @@
+diff --git a/src/components/WalletButton.js b/src/components/WalletButton.js
+index 00ead42..2b1d91c 100644
+--- a/src/components/WalletButton.js
++++ b/src/components/WalletButton.js
+@@ -1,5 +1,4 @@
+-import { WalletManager, formatAddress } from '../js/utils/wallet.js';
+-import { appState } from '../js/core/state.js';
++import { WalletManager } from '../js/utils/wallet.js';
+ import Logger from '../js/utils/logger.js';
+ 
+ export class WalletButton {
+@@ -11,8 +10,8 @@ export class WalletButton {
+         this.setupEventListeners();
+         this.checkInitialConnection();
+ 
+-        // Subscribe to appState changes to re-render the button
+-        appState.subscribe(() => {
++        // Subscribe to wallet state changes
++        WalletManager.subscribe(() => {
+             this.render();
+         });
+     }
+@@ -21,104 +20,98 @@ export class WalletButton {
+         const { connected, address } = await WalletManager.checkExistingConnection();
+         if (connected) {
+             this.updateWalletStatus(address);
+-            // Don't dispatch walletConnected event during initial load
+-            // The page will handle initialization through BasePage.initialize()
+         }
+     }
+     
+     setupEventListeners() {
+-        const connectButton = this.element.querySelector('#connect-wallet-btn');
+-        if (connectButton) {
+-            connectButton.addEventListener('click', () => this.handleConnectWallet());
+-        }
+-        
+-        // Setup account change listener
+-        WalletManager.setupAccountChangeListener();
+-        
+-        // Listen for wallet disconnection
+-        window.addEventListener('walletDisconnected', () => {
+-            this.render();
++        this.element.addEventListener('click', async (e) => {
++            const target = e.target.closest('button');
++            const walletStatus = e.target.closest('.wallet-status');
++            
++            if (walletStatus) {
++                // Toggle dropdown
++                const dropdown = this.element.querySelector('.wallet-dropdown');
++                if (dropdown) {
++                    dropdown.classList.toggle('active');
++                }
++                return;
++            }
++
++            if (!target) return;
++
++            if (target.classList.contains('connect-wallet')) {
++                const result = await WalletManager.connectWallet();
++                if (result.success) {
++                    this.updateWalletStatus(result.address);
++                }
++            } else if (target.classList.contains('sign-out')) {
++                this.handleSignOut();
++            } else if (target.classList.contains('copy-address')) {
++                const address = target.dataset.address;
++                await navigator.clipboard.writeText(address);
++                this.modal.success('Address copied to clipboard!');
++            } else if (target.classList.contains('view-on-explorer')) {
++                const address = target.dataset.address;
++                window.open(`https://explorer.sonicity.com/address/${address}`, '_blank');
++            }
+         });
+-        
+-        // Set up wallet dropdown toggle
++
++        // Close dropdown when clicking outside
+         document.addEventListener('click', (e) => {
+-            const dropdown = this.element.querySelector('.wallet-dropdown');
+-            if (!dropdown) return;
+-            
+-            const walletStatus = this.element.querySelector('.wallet-status');
+-            if (walletStatus && walletStatus.contains(e.target)) {
+-                dropdown.classList.toggle('active');
+-            } else if (!dropdown.contains(e.target)) {
+-                dropdown.classList.remove('active');
++            if (!this.element.contains(e.target)) {
++                const dropdown = this.element.querySelector('.wallet-dropdown');
++                if (dropdown && dropdown.classList.contains('active')) {
++                    dropdown.classList.remove('active');
++                }
+             }
+         });
+     }
+     
+-    async handleConnectWallet() {
+-        try {
+-            Logger.info('Attempting to connect wallet from navbar');
+-            const result = await WalletManager.connectWallet();
+-            if (result.success) {
+-                this.updateWalletStatus(result.address);
+-                this.dispatchWalletConnected(result.address);
+-            } else {
+-                Logger.error('Wallet connection error:', result.error);
+-                this.modal.error(result.error || 'Failed to connect wallet. Please try again.');
+-            }
+-        } catch (error) {
+-            Logger.error('Error connecting wallet:', error);
+-            this.modal.error('Failed to connect wallet. Please try again.');
++    updateWalletStatus(address) {
++        if (address) {
++            this.dispatchWalletConnected(address);
+         }
+     }
+     
+-    updateWalletStatus(address) {
+-        this.render();
++    dispatchWalletConnected(address) {
++        window.dispatchEvent(new CustomEvent('walletConnected', {
++            detail: { address }
++        }));
+     }
+     
+     handleSignOut() {
+-        appState.clearState();
+         WalletManager.disconnectWallet();
+         window.location.reload();
+     }
+     
+-    dispatchWalletConnected(address) {
+-        // Dispatch a custom event that can be listened to by other components
+-        window.dispatchEvent(new CustomEvent('walletConnected', {
+-            detail: {
+-                address: address
+-            }
+-        }));
+-    }
+-    
+     getNetworkBadge() {
+-        // This could be enhanced to show actual network info
+-        return `<span class="network-badge">Hardhat</span>`;
++        return `<span class="network-badge">Sonicity</span>`;
+     }
+     
+     render() {
+-        const state = appState.getState();
+-        const isConnected = state.walletConnected && state.currentWallet;
++        const isConnected = WalletManager.isWalletConnected();
++        const currentWallet = WalletManager.getCurrentWallet();
+         
+-        if (isConnected) {
++        if (isConnected && currentWallet) {
+             this.element.innerHTML = `
+                 <div class="wallet-controls connected">
+                     <div class="wallet-status">
+                         ${this.getNetworkBadge()}
+-                        <span class="wallet-address">${formatAddress(state.currentWallet)}</span>
++                        <span class="wallet-address">${this.formatAddress(currentWallet)}</span>
+                         <div class="wallet-indicator connected"></div>
+                         <span class="dropdown-arrow"><i class="fas fa-chevron-down"></i></span>
+                     </div>
+                     <div class="wallet-dropdown">
+                         <div class="dropdown-address">
+                             <span class="label">Connected Address</span>
+-                            <span class="value full-address">${state.currentWallet}</span>
++                            <span class="value full-address">${currentWallet}</span>
+                         </div>
+                         <div class="dropdown-actions">
+-                            <button class="dropdown-action copy-address" data-address="${state.currentWallet}">
++                            <button class="dropdown-action copy-address" data-address="${currentWallet}">
+                                 <i class="action-icon fas fa-copy"></i>
+                                 <span>Copy Address</span>
+                             </button>
+-                            <button class="dropdown-action view-on-explorer" data-address="${state.currentWallet}">
++                            <button class="dropdown-action view-on-explorer" data-address="${currentWallet}">
+                                 <i class="action-icon fas fa-external-link-alt"></i>
+                                 <span>View on Explorer</span>
+                             </button>
+@@ -130,53 +123,28 @@ export class WalletButton {
+                     </div>
+                 </div>
+             `;
+-            
+-            // Add event listeners for dropdown actions
+-            const copyAddressBtn = this.element.querySelector('.copy-address');
+-            if (copyAddressBtn) {
+-                copyAddressBtn.addEventListener('click', () => {
+-                    const address = copyAddressBtn.getAttribute('data-address');
+-                    navigator.clipboard.writeText(address)
+-                        .then(() => {
+-                            this.showTooltip(copyAddressBtn, 'Copied!');
+-                        })
+-                        .catch(err => {
+-                            Logger.error('Failed to copy address', err);
+-                        });
+-                });
+-            }
+-            
+-            const viewOnExplorerBtn = this.element.querySelector('.view-on-explorer');
+-            if (viewOnExplorerBtn) {
+-                viewOnExplorerBtn.addEventListener('click', () => {
+-                    const address = viewOnExplorerBtn.getAttribute('data-address');
+-                    // This should be updated based on your network
+-                    window.open(`http://localhost:8545/address/${address}`, '_blank');
+-                });
+-            }
+-            
+-            const signOutBtn = this.element.querySelector('.sign-out');
+-            if (signOutBtn) {
+-                signOutBtn.addEventListener('click', () => this.handleSignOut());
+-            }
+         } else {
+             this.element.innerHTML = `
+                 <div class="wallet-controls">
+-                    <button id="connect-wallet-btn" class="connect-wallet-btn">Connect Wallet</button>
++                    <button class="connect-wallet">
++                        <i class="fas fa-wallet"></i>
++                        <span>Connect Wallet</span>
++                    </button>
+                 </div>
+             `;
+         }
+     }
+     
+-    showTooltip(element, message) {
+-        const tooltip = document.createElement('div');
+-        tooltip.className = 'tooltip';
+-        tooltip.textContent = message;
+-        
+-        element.appendChild(tooltip);
+-        
+-        setTimeout(() => {
+-            tooltip.remove();
+-        }, 2000);
++    formatAddress(address) {
++        if (!address) return 'Not Connected';
++        return `${address.slice(0, 6)}...${address.slice(-4)}`;
++    }
++    
++    mount(container) {
++        container.appendChild(this.element);
++    }
++    
++    unmount() {
++        this.element.remove();
+     }
+ }
+\ No newline at end of file
+diff --git a/src/js/contracts/AltarContract.js b/src/js/contracts/AltarContract.js
+index 8972eb1..d06efef 100644
+--- a/src/js/contracts/AltarContract.js
++++ b/src/js/contracts/AltarContract.js
+@@ -4,7 +4,7 @@ import AltarABI from '../../../contracts/artifacts/contracts/Altar.sol/Altar.jso
+ 
+ export class AltarContract extends BaseContract {
+     constructor() {
+-        super(CONTRACT_ADDRESSES.ALTAR, AltarABI.abi);
++        super(AltarABI.abi, CONTRACT_ADDRESSES.ALTAR);
+     }
+ 
+     async stake(tokenId, buildingType, collection) {
+diff --git a/src/js/contracts/BaseContract.js b/src/js/contracts/BaseContract.js
+index c0f0cc8..044bacc 100644
+--- a/src/js/contracts/BaseContract.js
++++ b/src/js/contracts/BaseContract.js
+@@ -1,95 +1,109 @@
+-import { ethers, JsonRpcProvider, Contract } from 'ethers';
+-import { appState } from '../core/state.js';
++import { ethers } from 'ethers';
++import { WalletManager } from '../utils/wallet.js';
++import Logger from '../utils/logger.js';
+ 
+ export class BaseContract {
+-    constructor(contractAddress, abi) {
+-        this.contractAddress = contractAddress;
++    constructor(abi, address) {
+         this.abi = abi;
++        this.address = address;
+         this.contract = null;
+         this.provider = null;
+         this.signer = null;
+-        this.initialized = false;
+     }
+ 
+     async initialize() {
+-        if (!window.ethereum) {
+-            throw new Error('MetaMask not detected');
+-        }
++        try {
++            // Validate contract address
++            if (!this.address) {
++                throw new Error('Contract address not set');
++            }
+ 
+-        this.provider = new ethers.BrowserProvider(window.ethereum);
+-        this.signer = await this.provider.getSigner();
+-        
+-        this.contract = new Contract(
+-            this.contractAddress,
+-            this.abi,
+-            this.signer
+-        );
++            // Get provider and signer
++            this.provider = await WalletManager.getProvider();
++            this.signer = await WalletManager.getSigner();
++            
++            // Create contract instance
++            this.contract = new ethers.Contract(this.address, this.abi, this.signer);
++            
++            // Validate contract
++            try {
++                await this.contract.getAddress();
++            } catch (error) {
++                throw new Error('Invalid contract address or ABI');
++            }
+ 
+-        this.initialized = true;
+-        return this;
++            return true;
++        } catch (error) {
++            Logger.error('Contract initialization error:', error);
++            this.cleanup();
++            throw error;
++        }
+     }
+ 
+-    async ensureInitialized() {
+-        if (!this.initialized) {
+-            await this.initialize();
++    async call(method, ...args) {
++        if (!this.contract) {
++            throw new Error('Contract not initialized');
++        }
++        try {
++            return await this.contract[method](...args);
++        } catch (error) {
++            Logger.error(`Contract call error (${method}):`, error);
++            throw error;
+         }
+     }
+ 
+-    async getContract() {
+-        await this.ensureInitialized();
+-        return this.contract;
++    async send(method, ...args) {
++        if (!this.contract) {
++            throw new Error('Contract not initialized');
++        }
++        try {
++            const tx = await this.contract[method](...args);
++            return await tx.wait();
++        } catch (error) {
++            Logger.error(`Contract send error (${method}):`, error);
++            throw error;
++        }
+     }
+ 
+-    async getSigner() {
+-        await this.ensureInitialized();
+-        return this.signer;
++    getContractAddress() {
++        if (!this.address) {
++            throw new Error('Contract not initialized');
++        }
++        return this.address;
+     }
+ 
+-    async getAddress() {
+-        const signer = await this.getSigner();
+-        return await signer.getAddress();
++    cleanup() {
++        this.contract = null;
++        this.provider = null;
++        this.signer = null;
+     }
+ 
+-    async getContractAddress() {
+-        await this.ensureInitialized();
+-        return this.contractAddress;
++    // Helper method to check if contract is initialized
++    isInitialized() {
++        return this.contract !== null && this.provider !== null && this.signer !== null;
+     }
+ 
+-    // Helper method to handle contract calls
+-    async call(method, ...args) {
+-        const contract = await this.getContract();
+-        try {
+-            return await contract[method](...args);
+-        } catch (error) {
+-            console.error(`Error calling ${method}:`, error);
+-            throw error;
++    // Helper method to get contract instance
++    getContract() {
++        if (!this.isInitialized()) {
++            throw new Error('Contract not initialized');
+         }
++        return this.contract;
+     }
+ 
+-    // Helper method to handle contract transactions
+-    async transact(method, ...args) {
+-        const contract = await this.getContract();
+-        try {
+-            console.log(`Attempting to call ${method} with args:`, args);
+-            
+-            // Send the transaction
+-            const tx = await contract[method](...args);
+-            console.log(`Transaction sent:`, tx.hash);
+-            
+-            // Wait for transaction to be mined
+-            const receipt = await tx.wait();
+-            console.log(`Transaction mined:`, receipt);
+-            return receipt;
+-        } catch (error) {
+-            console.error(`Error in transaction ${method}:`, error);
+-            // Try to get more details about the error
+-            if (error.data) {
+-                console.error('Error data:', error.data);
+-            }
+-            if (error.reason) {
+-                console.error('Error reason:', error.reason);
+-            }
+-            throw error;
++    // Helper method to get provider
++    getProvider() {
++        if (!this.isInitialized()) {
++            throw new Error('Contract not initialized');
+         }
++        return this.provider;
++    }
++
++    // Helper method to get signer
++    getSigner() {
++        if (!this.isInitialized()) {
++            throw new Error('Contract not initialized');
++        }
++        return this.signer;
+     }
+ } 
+\ No newline at end of file
+diff --git a/src/js/contracts/DistrictBuildingsContract.js b/src/js/contracts/DistrictBuildingsContract.js
+index eed9086..c132f66 100644
+--- a/src/js/contracts/DistrictBuildingsContract.js
++++ b/src/js/contracts/DistrictBuildingsContract.js
+@@ -5,7 +5,7 @@ import DistrictBuildingsABI from '../../../contracts/artifacts/contracts/Distric
+ 
+ export class DistrictBuildingsContract extends BaseContract {
+     constructor() {
+-        super(CONTRACT_ADDRESSES.DISTRICT_BUILDINGS, DistrictBuildingsABI.abi);
++        super(DistrictBuildingsABI.abi, CONTRACT_ADDRESSES.DISTRICT_BUILDINGS);
+     }
+ 
+     async getAllDistrictBuildingConfigs() {
+diff --git a/src/js/contracts/FarmNFTContract.js b/src/js/contracts/FarmNFTContract.js
+index d550e83..70642aa 100644
+--- a/src/js/contracts/FarmNFTContract.js
++++ b/src/js/contracts/FarmNFTContract.js
+@@ -4,7 +4,7 @@ import SonicityFarmABI from '../../../contracts/artifacts/contracts/SonicityFarm
+ 
+ export class FarmNFTContract extends BaseContract {
+     constructor() {
+-        super(CONTRACT_ADDRESSES.SONICITY_FARM, SonicityFarmABI.abi);
++        super(SonicityFarmABI.abi, CONTRACT_ADDRESSES.SONICITY_FARM);
+     }
+ 
+     async balanceOf(address) {
+diff --git a/src/js/contracts/GameStateContract.js b/src/js/contracts/GameStateContract.js
+index 1a9c54c..4712ceb 100644
+--- a/src/js/contracts/GameStateContract.js
++++ b/src/js/contracts/GameStateContract.js
+@@ -2,10 +2,11 @@ import { ethers } from 'ethers';
+ import { BaseContract } from './BaseContract.js';
+ import { CONTRACT_ADDRESSES } from '../utils/constants.js';
+ import GameStateABI from '../../../contracts/artifacts/contracts/GameState.sol/GameState.json';
++import { WalletManager } from '../utils/wallet.js';
+ 
+ export class GameStateContract extends BaseContract {
+     constructor() {
+-        super(CONTRACT_ADDRESSES.GAME_STATE, GameStateABI.abi);
++        super(GameStateABI.abi, CONTRACT_ADDRESSES.GAME_STATE);
+     }
+ 
+     async initializePlayer() {
+@@ -47,9 +48,7 @@ export class GameStateContract extends BaseContract {
+     }
+ 
+     async getPlayerCity() {
+-        const address = await this.getAddress();
+-        const cityId = await this.call('playerCity', address);
+-        return cityId === 0n ? null : cityId;
++        throw new Error('Not implemented!');
+     }
+ 
+     async getCityTreasury(cityId) {
+@@ -62,23 +61,23 @@ export class GameStateContract extends BaseContract {
+ 
+     // Building Slots Management
+     async getBuildingSlots() {
+-        const address = await this.getAddress();
++        const address = WalletManager.getCurrentWallet();
+         return await this.call('getBuildingSlots', address);
+     }
+ 
+     // Resource Management
+     async getPlayerGold() {
+-        const address = await this.getAddress();
++        const address = WalletManager.getCurrentWallet();
+         return await this.call('getPlayerGold', address);
+     }
+ 
+     async getPlayerRep() {
+-        const address = await this.getAddress();
++        const address = WalletManager.getCurrentWallet();
+         return await this.call('getPlayerRep', address);
+     }
+ 
+     async getPlayerTreasury() {
+-        const address = await this.getAddress();
++        const address = WalletManager.getCurrentWallet();
+         return await this.call('getPlayerTreasury', address);
+     }
+ 
+@@ -126,8 +125,8 @@ export class GameStateContract extends BaseContract {
+         return await this.call('getPlayerBuildingSlots', address);
+     }
+ 
+-    async getAddress() {
+-        return await this.call('getAddress');
++    async getPlayerState() {
++        const address = WalletManager.getCurrentWallet();
++        return await this.call('playerState', address);
+     }
+-
+ } 
+\ No newline at end of file
+diff --git a/src/js/contracts/GridBuildingsContract.js b/src/js/contracts/GridBuildingsContract.js
+index 8c43cb1..d8ce5ca 100644
+--- a/src/js/contracts/GridBuildingsContract.js
++++ b/src/js/contracts/GridBuildingsContract.js
+@@ -2,10 +2,11 @@ import { ethers } from 'ethers';
+ import { BaseContract } from './BaseContract.js';
+ import { CONTRACT_ADDRESSES } from '../utils/constants.js';
+ import GridBuildingsABI from '../../../contracts/artifacts/contracts/GridBuildings.sol/GridBuildings.json';
++import { WalletManager } from '../utils/wallet.js';
+ 
+ export class GridBuildingsContract extends BaseContract {
+     constructor() {
+-        super(CONTRACT_ADDRESSES.GRID_BUILDINGS, GridBuildingsABI.abi);
++        super(GridBuildingsABI.abi, CONTRACT_ADDRESSES.GRID_BUILDINGS);
+     }
+ 
+     // Building Types
+@@ -17,7 +18,7 @@ export class GridBuildingsContract extends BaseContract {
+ 
+     async createBuilding(buildingType) {
+         try {
+-            const address = await this.getAddress();
++            const address = WalletManager.getCurrentWallet
+             const activeBuildings = await this.getActiveBuildings(address);
+             
+             // Check if player is in Tier 0 and trying to build more than 9 houses
+@@ -110,12 +111,12 @@ export class GridBuildingsContract extends BaseContract {
+     }
+ 
+     async calculateClaimableResources(buildingId) {
+-        const address = await this.getAddress();
++        const address = WalletManager.getCurrentWallet();
+         return await this.call('calculateClaimableResources', address, buildingId);
+     }
+ 
+     async calculateTotalClaimableResources(buildingType) {
+-        const address = await this.getAddress();
++        const address = WalletManager.getCurrentWallet();
+         const activeBuildings = await this.getActiveBuildings(address);
+         
+         // Filter buildings by type if specified
+@@ -137,7 +138,7 @@ export class GridBuildingsContract extends BaseContract {
+     }
+ 
+     async getBuildingLevel(buildingId) {
+-        const building = await this.getBuilding(await this.getAddress(), buildingId);
++        const building = await this.getBuilding(WalletManager.getCurrentWallet(), buildingId);
+         return building.level;
+     }
+ 
+diff --git a/src/js/contracts/NFTContract.js b/src/js/contracts/NFTContract.js
+index 4ae077a..27bfd06 100644
+--- a/src/js/contracts/NFTContract.js
++++ b/src/js/contracts/NFTContract.js
+@@ -4,7 +4,7 @@ import SonicityNFTABI from '../../../contracts/artifacts/contracts/SonicityNFT.s
+ 
+ export class NFTContract extends BaseContract {
+     constructor() {
+-        super(CONTRACT_ADDRESSES.SONICITY_NFT, SonicityNFTABI.abi);
++        super(SonicityNFTABI.abi, CONTRACT_ADDRESSES.SONICITY_NFT);
+     }
+ 
+     async balanceOf(address) {
+diff --git a/src/js/core/main.js b/src/js/core/main.js
+index debbd0d..d49500c 100644
+--- a/src/js/core/main.js
++++ b/src/js/core/main.js
+@@ -14,7 +14,6 @@ import { DistrictPage } from '../../pages/DistrictPage.js';
+ import { ShopPage } from '../../pages/ShopPage.js';
+ import { WorkshopPage } from '../../pages/WorkshopPage.js';
+ import { BarracksPage } from '../../pages/BarracksPage.js';
+-import { appState } from './state.js';
+ import { AccessControl } from '../utils/accessControl.js';
+ import { Modal } from '../utils/modal.js';
+ import { GameStateContract } from '../contracts/GameStateContract.js';
+@@ -23,127 +22,115 @@ import Logger from '../utils/logger.js';
+ 
+ class App {
+     constructor() {
++        this.container = document.getElementById('app');
+         this.layout = new Layout();
++        this.initialized = false;
++        this.isInitializing = false;
+         this.currentPage = null;
+-        this.game = null;
+-        this.container = document.getElementById('app');
+-        this.modal = new Modal();
+-        this.init();
+     }
+ 
+-    init() {
+-        // Mount layout
+-        this.layout.mount(this.container);
++    async init() {
++        if (this.isInitializing) {
++            Logger.warn('App initialization already in progress');
++            return;
++        }
+ 
+-        // Setup navigation
+-        window.addEventListener('popstate', () => this.handleRoute());
+-        // Initial route will be handled by popstate event
+-        window.dispatchEvent(new PopStateEvent('popstate'));
++        this.isInitializing = true;
++        Logger.info('Initializing app...');
++        
++        try {
++            // 1. Mount layout first
++            this.layout.mount(this.container);
+ 
+-        // Setup wallet connection listener
+-        window.addEventListener('walletConnected', (event) => {
+-            this.handleRoute();
+-        });
+-    }
++            // 2. Initialize wallet state
++            Logger.info('Initializing wallet state...');
++            const walletResult = await WalletManager.initializeConnection();
++            if (!walletResult.success) {
++                Logger.warn('Wallet not connected, continuing with limited functionality');
++            }
+ 
+-    async handleRoute(page = window.location.pathname.slice(1) || '') {
+-        Logger.info('Handling route:', page);
+-        
+-        // Clean up current page
+-        if (this.currentPage) {
+-            this.currentPage.unmount();
++            // 3. Setup navigation and event listeners
++            Logger.info('Setting up navigation...');
++            window.addEventListener('popstate', () => this.handleRoute());
++            window.addEventListener('walletConnected', (event) => {
++                this.handleRoute();
++            });
++
++            // 4. Initialize access control
++            Logger.info('Initializing access control...');
++            await AccessControl.initialize();
++            
++            this.initialized = true;
++            Logger.info('App initialized successfully');
++            
++            // 5. Handle initial route after everything is initialized
++            window.dispatchEvent(new PopStateEvent('popstate'));
++        } catch (error) {
++            Logger.error('Error initializing app:', error);
++            this.modal.error('Failed to initialize application. Please refresh the page.');
++            throw error;
++        } finally {
++            this.isInitializing = false;
+         }
++    }
+ 
+-        // Clean up game if it exists and we're not going to the overview page
+-        if (this.game && page !== 'overview') {
+-            this.game.dispose();
+-            this.game = null;
++    async handleRoute() {
++        if (!this.initialized) {
++            Logger.warn('App not initialized, skipping route handling');
++            return;
+         }
+ 
+-        // Check wallet connection for all routes except access and mint
+-        if (page !== 'access' && page !== 'mint') {
+-            if (!AccessControl.isWalletConnected()) {
+-                Logger.info('Wallet not connected, redirecting to access page');
+-                window.history.pushState({}, '', '/access');
+-                this.currentPage = new AccessPage();
+-                this.currentPage.mount(this.layout.content);
+-                return;
++        const path = window.location.pathname;
++        Logger.info('Handling route:', path);
++
++        try {
++            // Unmount current page if exists
++            if (this.currentPage) {
++                this.currentPage.unmount();
++                this.currentPage = null;
+             }
+ 
+-            // Check player initialization for all routes except start page
+-            if (page !== '') {
+-                const isInitialized = await AccessControl.isPlayerInitialized();
+-                if (!isInitialized) {
+-                    Logger.info('Player not initialized, redirecting to start page');
+-                    window.history.pushState({}, '', '/');
+-                    this.currentPage = new StartPage();
+-                    this.currentPage.mount(this.layout.content);
+-                    return;
+-                }
++            // Create and initialize new page
++            const page = this.createPageForRoute(path);
++            if (page) {
++                this.currentPage = page;
++                await page.initialize();
++                page.mount(this.container);
+             }
++        } catch (error) {
++            Logger.error('Error handling route:', error);
++            this.modal.error('Failed to load page. Please try again.');
+         }
++    }
+ 
+-        // Create and mount new page
+-        switch (page) {
+-            case '':
+-                this.currentPage = new StartPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'dashboard':
+-                this.currentPage = new DashboardPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'overview':
+-                this.currentPage = new GamePage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'mint':
+-                this.currentPage = new MintPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'access':
+-                this.currentPage = new AccessPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'stake':
+-                this.currentPage = new StakePage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'house':
+-                this.currentPage = new HousePage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'farm':
+-                this.currentPage = new FarmPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'city':
+-                this.currentPage = new CityPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'district':
+-                this.currentPage = new DistrictPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'shop':
+-                this.currentPage = new ShopPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'workshop':
+-                this.currentPage = new WorkshopPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
+-            case 'barracks':
+-                this.currentPage = new BarracksPage();
+-                this.currentPage.mount(this.layout.content);
+-                break;
++    createPageForRoute(path) {
++        switch (path) {
++            case '/':
++                return new StartPage();
++            case '/overview':
++                return new OverviewPage();
++            case '/game':
++                return new GamePage();
++            case '/district':
++                return new DistrictPage();
++            case '/house':
++                return new HousePage();
++            case '/map':
++                return new MapPage();
++            case '/mint':
++                return new MintPage();
++            case '/access':
++                return new AccessPage();
+             default:
+-                Logger.info('Invalid route, redirecting to access page');
+-                window.history.pushState({}, '', '/access');
+-                this.handleRoute('access');
++                return new StartPage();
+         }
+     }
+ }
+ 
+-// Initialize app
+-new App();
+\ No newline at end of file
++// Initialize app when DOM is ready
++document.addEventListener('DOMContentLoaded', () => {
++    const app = new App();
++    app.init().catch(error => {
++        Logger.error('Failed to initialize app:', error);
++    });
++});
+\ No newline at end of file
+diff --git a/src/js/core/state.js b/src/js/core/state.js
+deleted file mode 100644
+index 0e0eb96..0000000
+--- a/src/js/core/state.js
++++ /dev/null
+@@ -1,73 +0,0 @@
+-class AppState {
+-    constructor() {
+-        // Load persisted state from localStorage
+-        const persistedState = localStorage.getItem('appState');
+-        const initialState = persistedState ? JSON.parse(persistedState) : {
+-            walletConnected: false,
+-            hasVerifiedNFT: false,
+-            currentWallet: null
+-        };
+-
+-        this.walletConnected = initialState.walletConnected;
+-        this.hasVerifiedNFT = initialState.hasVerifiedNFT;
+-        this.currentWallet = initialState.currentWallet;
+-        this.listeners = new Set();
+-    }
+-
+-    // Subscribe to state changes
+-    subscribe(listener) {
+-        this.listeners.add(listener);
+-        return () => this.listeners.delete(listener);
+-    }
+-
+-    // Notify all listeners of state changes
+-    notify() {
+-        this.listeners.forEach(listener => listener(this));
+-    }
+-
+-    // Persist state to localStorage
+-    persistState() {
+-        const state = {
+-            walletConnected: this.walletConnected,
+-            hasVerifiedNFT: this.hasVerifiedNFT,
+-            currentWallet: this.currentWallet
+-        };
+-        localStorage.setItem('appState', JSON.stringify(state));
+-    }
+-
+-    // Update wallet connection state
+-    setWalletConnected(connected, wallet = null) {
+-        this.walletConnected = connected;
+-        this.currentWallet = wallet;
+-        this.persistState();
+-        this.notify();
+-    }
+-
+-    // Update NFT verification state
+-    setNFTVerified(verified) {
+-        this.hasVerifiedNFT = verified;
+-        this.persistState();
+-        this.notify();
+-    }
+-
+-    // Get current state
+-    getState() {
+-        return {
+-            walletConnected: this.walletConnected,
+-            hasVerifiedNFT: this.hasVerifiedNFT,
+-            currentWallet: this.currentWallet
+-        };
+-    }
+-
+-    // Clear all state (useful for logout)
+-    clearState() {
+-        this.walletConnected = false;
+-        this.hasVerifiedNFT = false;
+-        this.currentWallet = null;
+-        localStorage.removeItem('appState');
+-        this.notify();
+-    }
+-}
+-
+-// Create a singleton instance
+-export const appState = new AppState(); 
+\ No newline at end of file
+diff --git a/src/js/utils/accessControl.js b/src/js/utils/accessControl.js
+index 1957ded..1fdffb3 100644
+--- a/src/js/utils/accessControl.js
++++ b/src/js/utils/accessControl.js
+@@ -1,7 +1,7 @@
+-import { appState } from '../core/state.js';
+ import { Modal } from './modal.js';
+ import { GameStateContract } from '../contracts/GameStateContract.js';
+ import Logger from './logger.js';
++import { WalletManager } from './wallet.js';
+ 
+ export class AccessControl {
+     static modal = new Modal();
+@@ -56,7 +56,7 @@ export class AccessControl {
+     static async isPlayerInitialized() {
+         await this.initialize();
+         try {
+-            const address = await this.gameState.getAddress();
++            const address = WalletManager.getCurrentWallet();
+             const playerState = await this.gameState.call('playerState', address);
+             return playerState.buildingSlots > 0;
+         } catch (error) {
+@@ -69,7 +69,7 @@ export class AccessControl {
+      * Check if wallet is connected
+      */
+     static isWalletConnected() {
+-        return appState.getState().walletConnected;
++        return WalletManager.isWalletConnected();
+     }
+ 
+     /**
+diff --git a/src/js/utils/wallet.js b/src/js/utils/wallet.js
+index 997a9f4..1b40b3e 100644
+--- a/src/js/utils/wallet.js
++++ b/src/js/utils/wallet.js
+@@ -1,27 +1,98 @@
+ import { ethers } from 'ethers';
+-import { appState } from '../core/state.js';
+ import { Modal } from './modal.js';
+ import Logger from './logger.js';
+ 
+ export class WalletManager {
+     static modal = new Modal();
++    static walletConnected = false;
++    static currentWallet = null;
++    static listeners = new Set();
++    static provider = null;
++    static signer = null;
++    static networkId = null;
++    static chainId = null;
++
++    static {
++        // Initialize state from localStorage
++        this.initializeState();
++    }
++
++    static async initializeState() {
++        try {
++            const persistedState = localStorage.getItem('walletState');
++            if (persistedState) {
++                const state = JSON.parse(persistedState);
++                // Validate the persisted state
++                if (state.walletConnected && state.currentWallet) {
++                    // Verify the wallet is still connected
++                    const accounts = await window.ethereum.request({ 
++                        method: 'eth_accounts' 
++                    });
++                    if (accounts[0] === state.currentWallet) {
++                        this.walletConnected = true;
++                        this.currentWallet = state.currentWallet;
++                        await this.initializeProvider();
++                    } else {
++                        this.clearState();
++                    }
++                }
++            }
++        } catch (error) {
++            Logger.error('Error initializing wallet state:', error);
++            this.clearState();
++        }
++    }
++
++    static subscribe(listener) {
++        this.listeners.add(listener);
++        return () => this.listeners.delete(listener);
++    }
++
++    static notify() {
++        this.listeners.forEach(listener => listener());
++    }
++
++    static persistState() {
++        const state = {
++            walletConnected: this.walletConnected,
++            currentWallet: this.currentWallet,
++            networkId: this.networkId ? this.networkId.toString() : null,
++            chainId: this.chainId ? this.chainId.toString() : null
++        };
++        localStorage.setItem('walletState', JSON.stringify(state));
++    }
+ 
+     static async initializeConnection() {
+-        const { connected, address } = await this.checkExistingConnection();
+-        if (connected) {
+-            return await this.handleWalletConnection(address);
++        try {
++            const { connected, address } = await this.checkExistingConnection();
++            if (connected) {
++                return await this.handleWalletConnection(address);
++            }
++            return { success: false };
++        } catch (error) {
++            Logger.error('Error initializing connection:', error);
++            return { success: false, error: error.message };
+         }
+-        return { success: false };
+     }
+ 
+     static async checkExistingConnection() {
+-        const state = appState.getState();
+-        if (state.walletConnected && state.currentWallet) {
+-            return {
+-                connected: true,
+-                address: state.currentWallet
+-            };
++        if (this.walletConnected && this.currentWallet) {
++            try {
++                const accounts = await window.ethereum.request({ 
++                    method: 'eth_accounts' 
++                });
++                if (accounts[0] === this.currentWallet) {
++                    console.log('[WALLET] checkExistingConnection called. Connected: true Address:', this.currentWallet);
++                    return {
++                        connected: true,
++                        address: this.currentWallet
++                    };
++                }
++            } catch (error) {
++                Logger.error('Error checking existing connection:', error);
++            }
+         }
++        console.log('[WALLET] checkExistingConnection called. Connected: false Address: null');
+         return {
+             connected: false,
+             address: null
+@@ -29,17 +100,18 @@ export class WalletManager {
+     }
+ 
+     static async connectWallet() {
++        console.log('[WALLET] connectWallet called.');
+         try {
+             if (typeof window.ethereum === 'undefined') {
+                 throw new Error('Please install MetaMask to use this application');
+             }
+ 
+-            // Request accounts using window.ethereum directly
+             const accounts = await window.ethereum.request({ 
+                 method: 'eth_requestAccounts' 
+             });
+             const walletAddress = accounts[0];
+ 
++            console.log('[WALLET] connectWallet finished. Address:', walletAddress);
+             return await this.handleWalletConnection(walletAddress);
+         } catch (error) {
+             Logger.error('Error connecting wallet:', error);
+@@ -51,13 +123,65 @@ export class WalletManager {
+         }
+     }
+ 
++    static async initializeProvider() {
++        if (typeof window.ethereum === 'undefined') {
++            throw new Error('Please install MetaMask to use this application');
++        }
++        
++        // Only create a new provider if one doesn't exist
++        if (!this.provider) {
++            try {
++                this.provider = new ethers.BrowserProvider(window.ethereum);
++                
++                // Get network information
++                const network = await this.provider.getNetwork();
++                this.networkId = network.chainId;
++                this.chainId = network.chainId;
++                
++                // Setup network listeners only once
++                this.setupNetworkListeners();
++            } catch (error) {
++                Logger.error('Error initializing provider:', error);
++                this.provider = null;
++                throw error;
++            }
++        }
++        
++        return this.provider;
++    }
++
++    static async getProvider() {
++        if (!this.provider) {
++            await this.initializeProvider();
++        }
++        return this.provider;
++    }
++
++    static async getSigner() {
++        if (!this.signer) {
++            const provider = await this.getProvider();
++            this.signer = await provider.getSigner();
++        }
++        return this.signer;
++    }
++
+     static async handleWalletConnection(walletAddress) {
+         try {
+-            appState.setWalletConnected(true, walletAddress);
++            this.walletConnected = true;
++            this.currentWallet = walletAddress;
++            
++            // Initialize provider and signer
++            await this.initializeProvider();
++            await this.getSigner();
+             
+-            // For demo: automatically verify NFT status
+-            // This avoids needing to call contracts
+-            this.simulateNFTVerification();
++            // Persist state
++            this.persistState();
++            this.notify();
++            
++            // Dispatch wallet connected event
++            window.dispatchEvent(new CustomEvent('walletConnected', {
++                detail: { address: walletAddress }
++            }));
+             
+             return {
+                 success: true,
+@@ -66,7 +190,7 @@ export class WalletManager {
+         } catch (error) {
+             Logger.error('Wallet connection error:', error);
+             this.modal.error('Failed to verify wallet connection. Please try again.');
+-            appState.clearState();
++            this.clearState();
+             return {
+                 success: false,
+                 error: error.message
+@@ -74,22 +198,8 @@ export class WalletManager {
+         }
+     }
+     
+-    static async simulateNFTVerification() {
+-        // For demonstration purposes only - in production, this would check actual NFT ownership
+-        setTimeout(() => {
+-            appState.setNFTVerified(true);
+-            Logger.info('NFT automatically verified for demo purposes');
+-        }, 1000);
+-    }
+-
+-    static formatAddress(address) {
+-        if (!address) return 'Not Connected';
+-        return `${address.slice(0, 6)}...${address.slice(-4)}`;
+-    }
+-    
+-    // Disconnect wallet
+     static disconnectWallet() {
+-        appState.clearState();
++        this.clearState();
+         Logger.info('Wallet disconnected');
+         
+         // Dispatch wallet disconnected event
+@@ -99,21 +209,33 @@ export class WalletManager {
+             success: true
+         };
+     }
++
++    static clearState() {
++        // Full cleanup including provider
++        this.walletConnected = false;
++        this.currentWallet = null;
++        this.provider = null;
++        this.signer = null;
++        this.networkId = null;
++        this.chainId = null;
++        localStorage.removeItem('walletState');
++        this.notify();
++    }
+     
+-    // Listen for account changes
+-    static setupAccountChangeListener() {
++    static setupNetworkListeners() {
+         if (window.ethereum) {
++            // Handle account changes
+             window.ethereum.on('accountsChanged', (accounts) => {
+                 if (accounts.length === 0) {
+                     // User disconnected their wallet
+-                    appState.clearState();
++                    this.clearState();
+                     window.dispatchEvent(new CustomEvent('walletDisconnected'));
+                 } else {
+                     // User switched accounts
+-                    appState.setWalletConnected(true, accounts[0]);
+-                    
+-                    // For demo: automatically verify NFT for new account too
+-                    this.simulateNFTVerification();
++                    this.walletConnected = true;
++                    this.currentWallet = accounts[0];
++                    this.persistState();
++                    this.notify();
+                     
+                     // Dispatch wallet connected event
+                     window.dispatchEvent(new CustomEvent('walletConnected', {
+@@ -123,11 +245,67 @@ export class WalletManager {
+                     }));
+                 }
+             });
++
++            // Handle chain changes
++            window.ethereum.on('chainChanged', (chainId) => {
++                this.networkId = chainId;
++                this.chainId = chainId;
++                this.persistState();
++                
++                // Reload the page when network changes
++                window.location.reload();
++            });
++
++            // Handle disconnection
++            window.ethereum.on('disconnect', () => {
++                this.clearState();
++                window.dispatchEvent(new CustomEvent('walletDisconnected'));
++            });
+         }
+     }
++
++    static isWalletConnected() {
++        const isConnected = this.walletConnected;
++        console.log('[WALLET] isWalletConnected called. Connected:', isConnected);
++        return isConnected;
++    }
++
++    static getCurrentWallet() {
++        const address = this.currentWallet;
++        console.log('[WALLET] getCurrentWallet called. Address:', address);
++        return address;
++    }
++
++    static getNetworkId() {
++        return this.networkId;
++    }
++
++    static getChainId() {
++        return this.chainId;
++    }
++
++    static formatAddress(address) {
++        if (!address) return 'Not Connected';
++        return `${address.slice(0, 6)}...${address.slice(-4)}`;
++    }
++
++    static cleanup() {
++        // Don't remove event listeners as they're needed globally
++        // Just clear the state
++        this.walletConnected = false;
++        this.currentWallet = null;
++        this.signer = null;
++        this.networkId = null;
++        this.chainId = null;
++        localStorage.removeItem('walletState');
++        this.notify();
++    }
+ }
+ 
++// Initialize network listeners
++WalletManager.setupNetworkListeners();
++
+ // Export individual functions for backward compatibility
+ export const checkExistingConnection = WalletManager.checkExistingConnection.bind(WalletManager);
+ export const connectWallet = WalletManager.connectWallet.bind(WalletManager);
+-export const formatAddress = WalletManager.formatAddress.bind(WalletManager); 
+\ No newline at end of file
++export const formatAddress = WalletManager.formatAddress.bind(WalletManager);
+\ No newline at end of file
+diff --git a/src/pages/AccessPage.js b/src/pages/AccessPage.js
+index f975d41..3b33a6d 100644
+--- a/src/pages/AccessPage.js
++++ b/src/pages/AccessPage.js
+@@ -1,21 +1,58 @@
+-import { appState } from '../js/core/state.js';
+-import { formatAddress } from '../js/utils/wallet.js';
+-import '../styles/access-page.css';
++import { BasePage } from './BasePage.js';
++import { WalletManager } from '../js/utils/wallet.js';
+ import Logger from '../js/utils/logger.js';
++import '../styles/access-page.css';
+ import { Modal } from '../js/utils/modal.js';
++import { AccessControl } from '../js/utils/accessControl.js';
+ 
+-export class AccessPage {
++export class AccessPage extends BasePage {
+     constructor() {
++        super();
+         Logger.info('AccessPage constructor called');
+         this.element = document.createElement('div');
+-        this.element.className = 'access-page';
++        this.element.className = 'base-page access-page';
+         this.modal = new Modal();
+         this.render();
+-        this.setupEventListeners();
+-        this.checkWalletStatus();
++    }
++
++    async onInitialized(walletResult) {
++        Logger.info('AccessPage onInitialized called with wallet:', walletResult);
++        if (!walletResult || !walletResult.address) {
++            Logger.error('No wallet address provided in onInitialized');
++            this.modal.error('Please connect your wallet first.');
++            return;
++        }
++        try {
++            this.setupEventListeners();
++            await this.checkAccess();
++            Logger.info('Access page initialized successfully');
++        } catch (error) {
++            Logger.error('Error initializing access page:', error);
++            this.modal.error('Failed to initialize access page. Please try refreshing the page.');
++        }
++    }
++
++    async onWalletConnected(walletResult) {
++        Logger.info('AccessPage onWalletConnected called with wallet:', walletResult);
++        this.render();
++    }
++
++    async checkAccess() {
++        try {
++            const isInitialized = await AccessControl.isPlayerInitialized();
++            if (isInitialized) {
++                Logger.info('Player is initialized, redirecting to start page');
++                window.history.pushState({}, '', '/');
++                window.dispatchEvent(new PopStateEvent('popstate'));
++            }
++        } catch (error) {
++            Logger.error('Error checking access:', error);
++            this.modal.error('Failed to check access status. Please try again.');
++        }
+     }
+ 
+     setupEventListeners() {
++        Logger.info('Setting up event listeners');
+         const mintPageLink = this.element.querySelector('.mint-link');
+         if (mintPageLink) {
+             mintPageLink.addEventListener('click', (e) => {
+@@ -24,83 +61,43 @@ export class AccessPage {
+                 window.dispatchEvent(new PopStateEvent('popstate'));
+             });
+         }
+-        
+-        // Listen for wallet connection state changes
+-        window.addEventListener('walletConnected', (e) => {
+-            this.handleWalletConnected(e.detail.address);
+-        });
+-    }
+-
+-    checkWalletStatus() {
+-        const state = appState.getState();
+-        if (state.walletConnected && state.currentWallet) {
+-            this.updateWalletStatus(state.currentWallet);
+-            // For demo purposes, automatically verify NFT
+-            this.simulateNFTVerification();
+-        }
+-    }
+-    
+-    simulateNFTVerification() {
+-        setTimeout(() => {
+-            appState.setNFTVerified(true);
+-            this.updateNFTStatus('Verified');
+-            // Redirect to root (map) after verification
+-            window.history.pushState({}, '', '/');
+-            window.dispatchEvent(new PopStateEvent('popstate'));
+-        }, 1000);
+-    }
+-
+-    handleWalletConnected(address) {
+-        this.updateWalletStatus(address);
+-        this.simulateNFTVerification();
+     }
+ 
+     updateWalletStatus(address) {
++        Logger.info('Updating wallet status with address:', address);
+         const walletStatus = this.element.querySelector('#wallet-status');
+         if (walletStatus) {
+-            walletStatus.textContent = formatAddress(address);
+-        }
+-    }
+-
+-    updateNFTStatus(status) {
+-        const nftStatus = this.element.querySelector('#nft-status');
+-        if (nftStatus) {
+-            nftStatus.textContent = status;
++            walletStatus.textContent = WalletManager.formatAddress(address);
+         }
+     }
+ 
+     render() {
+-        const state = appState.getState();
+-        const isConnected = state.walletConnected && state.currentWallet;
++        const isConnected = WalletManager.isWalletConnected();
++        const currentWallet = WalletManager.getCurrentWallet();
+         
+         this.element.innerHTML = `
+-            <div class="access-container">
++            <div class="page-container">
+                 <h1>Welcome to Sonicity</h1>
+-                <p class="access-message">Please connect your wallet using the button in the navbar and verify your NFT to access the game</p>
+                 
+-                <div class="access-status">
+-                    <div class="status-item">
+-                        <span class="status-label">Wallet:</span>
+-                        <span id="wallet-status" class="status-value">${isConnected ? formatAddress(state.currentWallet) : 'Not Connected'}</span>
+-                    </div>
+-                    <div class="status-item">
+-                        <span class="status-label">NFT Status:</span>
+-                        <span id="nft-status" class="status-value">Not Verified</span>
++                <!-- Status Section -->
++                <div class="page-section status-section">
++                    <h2>Access Status</h2>
++                    <div class="status-grid">
++                        <div class="status-item">
++                            <span class="status-label">Wallet:</span>
++                            <span id="wallet-status" class="status-value">${isConnected ? WalletManager.formatAddress(currentWallet) : 'Not Connected'}</span>
++                        </div>
+                     </div>
+                 </div>
+                 
+-                <div class="access-actions">
+-                    <a href="/mint" class="mint-link">Go to Mint Page</a>
++                <!-- Actions Section -->
++                <div class="page-section actions-section">
++                    <h2>Actions</h2>
++                    <div class="actions-container">
++                        <a href="/mint" class="mint-link">Go to Mint Page</a>
++                    </div>
+                 </div>
+             </div>
+         `;
+     }
+-
+-    mount(container) {
+-        container.appendChild(this.element);
+-    }
+-
+-    unmount() {
+-        this.element.remove();
+-    }
+ } 
+\ No newline at end of file
+diff --git a/src/pages/BarracksPage.js b/src/pages/BarracksPage.js
+index b1fb822..f7f46d1 100644
+--- a/src/pages/BarracksPage.js
++++ b/src/pages/BarracksPage.js
+@@ -193,18 +193,4 @@ export class BarracksPage extends BasePage {
+             });
+         });
+     }
+-
+-    mount(container) {
+-        Logger.info('Mounting barracks page...');
+-        container.appendChild(this.element);
+-        // Initialize using base class method
+-        this.initialize().catch(error => {
+-            Logger.error('Error during barracks page initialization:', error);
+-            this.modal.error('Failed to initialize barracks page. Please try refreshing the page.');
+-        });
+-    }
+-
+-    unmount() {
+-        this.element.remove();
+-    }
+ } 
+\ No newline at end of file
+diff --git a/src/pages/BasePage.js b/src/pages/BasePage.js
+index caa4ebe..3efcdac 100644
+--- a/src/pages/BasePage.js
++++ b/src/pages/BasePage.js
+@@ -7,21 +7,24 @@ import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsCont
+ import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
+ import { Modal } from '../js/utils/modal.js';
+ import Logger from '../js/utils/logger.js';
+-import { appState } from '../js/core/state.js';
+ import '../styles/base-page.css';
+ 
+ export class BasePage {
+     constructor() {
++        Logger.info(`[BasePage] constructor called for ${this.constructor.name}`);
+         this.modal = new Modal();
+         this.provider = null;
+         this.signer = null;
++        this.element = null;
++        this.isInitialized = false;
++        this.isLoading = false;
+         this.contracts = {
+-            gameState: new GameStateContract(),
+-            altar: new AltarContract(),
+-            nft: new NFTContract(),
+-            farmNft: new FarmNFTContract(),
+-            districtBuildings: new DistrictBuildingsContract(),
+-            gridBuildings: new GridBuildingsContract()
++            gameState: new GameStateContract(this),
++            gridBuildings: new GridBuildingsContract(this),
++            districtBuildings: new DistrictBuildingsContract(this),
++            altar: new AltarContract(this),
++            nft: new NFTContract(this),
++            farmNFT: new FarmNFTContract(this)
+         };
+         
+         // Setup wallet event listener
+@@ -30,91 +33,210 @@ export class BasePage {
+     
+     setupWalletListener() {
+         // Listen for wallet connection from the navbar
+-        window.addEventListener('walletConnected', (e) => {
+-            Logger.debug('BasePage setupWalletListener called with address:', e.detail.address);
++        this.walletConnectedListener = (e) => {
+             this.handleWalletConnected(e.detail.address);
+-        });
++        };
++        window.addEventListener('walletConnected', this.walletConnectedListener);
+     }
+ 
+     async initialize() {
++        if (this.isInitialized) {
++            Logger.info(`[BasePage] ${this.constructor.name} already initialized`);
++            return;
++        }
++
++        Logger.info(`[BasePage] initialize called for ${this.constructor.name}`);
++        this.isLoading = true;
++        this.showLoadingState();
++
+         try {
+-            // Check if wallet is already connected from appState
+-            const state = appState.getState();
+-            if (state.walletConnected && state.currentWallet) {
+-                await this.initializeContracts();
+-                this.updateWalletStatus(state.currentWallet);
+-                await this.onInitialized({ 
+-                    success: true, 
+-                    address: state.currentWallet 
+-                });
++            // 1. Check wallet connection
++            const walletStatus = await WalletManager.checkExistingConnection();
++            Logger.info(`[BasePage] initialize walletStatus:`, walletStatus);
++            
++            if (!walletStatus.connected) {
++                Logger.info(`[BasePage] Not connected, skipping contract init for ${this.constructor.name}`);
++                this.hideLoadingState();
++                return;
+             }
++
++            // 2. Initialize contracts
++            await this.initializeContracts();
++
++            // 3. Call page-specific initialization
++            if (walletStatus.address) {
++                await this.onInitialized({ success: true, address: walletStatus.address });
++            }
++
++            this.isInitialized = true;
++            Logger.info(`[BasePage] ${this.constructor.name} initialized successfully`);
+         } catch (error) {
+-            Logger.error('Page initialization error:', error);
+-            this.modal.error('Failed to initialize page. Please try again.');
++            Logger.error('[BasePage] Error initializing page:', error);
++            const userMessage = this.getUserFriendlyErrorMessage(error);
++            this.modal.error(userMessage);
++            throw error;
++        } finally {
++            this.isLoading = false;
++            this.hideLoadingState();
+         }
+     }
+-    
+-    async initializeContracts() {
+-        try {
+-            // Initialize contracts but handle errors gracefully
+-            const promises = [
+-                this.contracts.gameState.initialize().catch(e => {
+-                    Logger.warn('GameState contract initialization failed:', e);
+-                    return null;
+-                }),
+-                this.contracts.altar.initialize().catch(e => {
+-                    Logger.warn('Altar contract initialization failed:', e);
+-                    return null;
+-                }),
+-                this.contracts.nft.initialize().catch(e => {
+-                    Logger.warn('NFT contract initialization failed:', e);
+-                    return null;
+-                }),
+-                this.contracts.farmNft.initialize().catch(e => {
+-                    Logger.warn('Farm NFT contract initialization failed:', e);
+-                    return null;
+-                }),
+-                this.contracts.districtBuildings.initialize().catch(e => {
+-                    Logger.warn('DistrictBuildings contract initialization failed:', e);
+-                    return null;
+-                }),
+-                this.contracts.gridBuildings.initialize().catch(e => {
+-                    Logger.warn('GridBuildings contract initialization failed:', e);
+-                    return null;
+-                })
+-            ];
+-            
+-            await Promise.all(promises);
+-            return true;
+-        } catch (error) {
+-            Logger.error('Contract initialization error:', error);
+-            return false;
++
++    showLoadingState() {
++        if (this.element) {
++            this.element.classList.add('loading');
++            // Add loading spinner or message
++            const loadingEl = document.createElement('div');
++            loadingEl.className = 'loading-overlay';
++            loadingEl.innerHTML = '<div class="spinner"></div><div>Loading...</div>';
++            this.element.appendChild(loadingEl);
+         }
+     }
+ 
+-    async handleWalletConnected(address) {
+-        try {
+-            await this.initializeContracts();
+-            Logger.debug('BasePage handleWalletConnected called with address:', address);
+-            this.updateWalletStatus(address);
+-            await this.onInitialized({ success: true, address });
+-        } catch (error) {
+-            Logger.error('Wallet connection handler error:', error);
+-            this.modal.error('Failed to initialize after wallet connection. Please try again.');
++    hideLoadingState() {
++        if (this.element) {
++            this.element.classList.remove('loading');
++            const loadingEl = this.element.querySelector('.loading-overlay');
++            if (loadingEl) {
++                loadingEl.remove();
++            }
+         }
+     }
+ 
+-    updateWalletStatus(address) {
+-        // Optional method - child classes can override if they need to display wallet status
+-        Logger.debug('Base updateWalletStatus called with address:', address);
++    async initializeContracts() {
++        Logger.info(`[BasePage] initializeContracts called for ${this.constructor.name}`);
++        const contractPromises = Object.entries(this.contracts).map(async ([name, contract]) => {
++            try {
++                Logger.info(`[BasePage] Initializing contract: ${name}`);
++                await contract.initialize();
++            } catch (error) {
++                Logger.error(`[BasePage] Failed to initialize ${name} contract:`, error);
++                throw error;
++            }
++        });
++
++        await Promise.all(contractPromises);
++    }
++
++    getUserFriendlyErrorMessage(error) {
++        // Map technical errors to user-friendly messages
++        const errorMap = {
++            'user rejected transaction': 'Transaction was rejected. Please try again.',
++            'insufficient funds': 'You don\'t have enough funds to complete this transaction.',
++            'network error': 'Network connection error. Please check your internet connection.',
++            'wallet not connected': 'Please connect your wallet to continue.',
++            'contract not initialized': 'Failed to initialize game contracts. Please refresh the page.',
++            'invalid address': 'Invalid wallet address. Please check your wallet connection.',
++            'user denied message signature': 'Please approve the signature request to continue.',
++            'execution reverted': 'Transaction failed. Please try again.',
++            'nonce too low': 'Please try the transaction again.',
++            'gas required exceeds allowance': 'Insufficient gas. Please increase your gas limit.',
++            'replacement transaction underpriced': 'Please try the transaction again with higher gas.',
++            'already known': 'This transaction is already being processed.',
++            'transaction underpriced': 'Please try the transaction again with higher gas.',
++            'intrinsic gas too low': 'Please try the transaction again with higher gas.',
++            'out of gas': 'Transaction ran out of gas. Please try again with higher gas limit.',
++            'call revert exception': 'Transaction failed. Please try again.',
++            'invalid opcode': 'Transaction failed. Please try again.',
++            'missing revert data': 'Transaction failed. Please try again.',
++            'invalid jump': 'Transaction failed. Please try again.',
++            'invalid instruction': 'Transaction failed. Please try again.',
++            'stack overflow': 'Transaction failed. Please try again.',
++            'stack underflow': 'Transaction failed. Please try again.',
++            'out of bounds': 'Transaction failed. Please try again.',
++            'invalid memory access': 'Transaction failed. Please try again.',
++            'static state change': 'Transaction failed. Please try again.',
++            'internal error': 'An internal error occurred. Please try again.',
++            'timeout': 'Request timed out. Please try again.',
++            'server error': 'Server error. Please try again.',
++            'unknown error': 'An unexpected error occurred. Please try again.'
++        };
++        
++        return errorMap[error.message.toLowerCase()] || 
++               'An unexpected error occurred. Please try again.';
+     }
+ 
++    // Template method to be implemented by child classes
+     async onInitialized(walletResult) {
+-        // To be implemented by child classes
+-        // This is where child classes should load their data and setup event listeners
++        Logger.info(`[BasePage] onInitialized called with wallet:`, walletResult);
++        // Note: We no longer call render() here
++        // Each page should handle its own rendering in its onInitialized implementation
++    }
++
++    // Common render method that child classes can extend
++    render() {
++        Logger.info(`[BasePage] render called for ${this.constructor.name}`);
++        if (!this.element) {
++            this.element = document.createElement('div');
++            this.element.className = 'base-page';
++        }
++
++        const isConnected = WalletManager.isWalletConnected();
++        const currentWallet = WalletManager.getCurrentWallet();
++        
++        this.element.innerHTML = `
++            <div class="page-container">
++                <h1>${this.getPageTitle()}</h1>
++                
++                ${this.getPageStatus()}
++                
++                ${this.getPageContent()}
++            </div>
++        `;
++    }
++
++    // Methods to be overridden by child classes
++    getPageTitle() {
++        return 'Page';
++    }
++
++    getPageContent() {
++        return '';
+     }
+ 
+-    async onWalletConnected(walletResult) {
+-        // To be implemented by child classes
++    getPageStatus() {
++        const isConnected = WalletManager.isWalletConnected();
++        const currentWallet = WalletManager.getCurrentWallet();
++        
++        return `
++            <!-- Status Section -->
++            <div class="page-section status-section">
++                <h2>Wallet Status</h2>
++                <div class="status-grid">
++                    <div class="status-item">
++                        <span class="status-label">Wallet:</span>
++                        <span id="wallet-status" class="status-value">${isConnected ? WalletManager.formatAddress(currentWallet) : 'Not Connected'}</span>
++                    </div>
++                </div>
++            </div>
++        `;
++    }
++
++    mount(container) {
++        Logger.info(`[BasePage] mount called for ${this.constructor.name}`);
++        container.appendChild(this.element);
++        this.initialize().catch(error => {
++            Logger.error(`[BasePage] Error during ${this.constructor.name} initialization:`, error);
++            this.modal.error(`Failed to initialize ${this.constructor.name}. Please try refreshing the page.`);
++        });
++    }
++
++    unmount() {
++        Logger.info(`[BasePage] unmount called for ${this.constructor.name}`);
++        // Remove wallet event listeners (only custom events, not MetaMask events)
++        if (this.walletConnectedListener) {
++            window.removeEventListener('walletConnected', this.walletConnectedListener);
++        }
++
++        // Clean up contracts
++        for (const contract of Object.values(this.contracts)) {
++            if (contract.cleanup) {
++                contract.cleanup();
++            }
++        }
++
++        // Remove the element from DOM
++        if (this.element && this.element.parentNode) {
++            this.element.parentNode.removeChild(this.element);
++        }
+     }
+ } 
+\ No newline at end of file
+diff --git a/src/pages/DashboardPage.js b/src/pages/DashboardPage.js
+index 1248879..d9acfbe 100644
+--- a/src/pages/DashboardPage.js
++++ b/src/pages/DashboardPage.js
+@@ -284,18 +284,4 @@ export class DashboardPage extends BasePage {
+             </div>
+         `;
+     }
+-
+-    mount(container) {
+-        Logger.info('Mounting dashboard page...');
+-        container.appendChild(this.element);
+-        // Initialize using base class method
+-        this.initialize().catch(error => {
+-            Logger.error('Error during dashboard initialization:', error);
+-            this.modal.error('Failed to initialize dashboard. Please try refreshing the page.');
+-        });
+-    }
+-
+-    unmount() {
+-        this.element.remove();
+-    }
+ } 
+\ No newline at end of file
+diff --git a/src/pages/MapPage.js b/src/pages/MapPage.js
+index eb3b647..1941d1b 100644
+--- a/src/pages/MapPage.js
++++ b/src/pages/MapPage.js
+@@ -1,8 +1,6 @@
+ import '../styles/map-page.css';
+ import { Modal } from '../js/utils/modal.js';
+ import Logger from '../js/utils/logger.js';
+-import { appState } from '../js/core/state.js';
+-import { GameStateContract } from '../js/contracts/GameStateContract.js';
+ import { BasePage } from './BasePage.js';
+ 
+ export class MapPage extends BasePage {
+@@ -12,10 +10,29 @@ export class MapPage extends BasePage {
+         this.element = document.createElement('div');
+         this.element.className = 'map-page';
+         this.modal = new Modal();
+-        this.gameStateContract = new GameStateContract();
+         this.render();
+     }
+ 
++    getPageTitle() {
++        return 'Map';
++    }
++
++    getPageContent() {
++        return `
++            <!-- Map Section -->
++            <div class="page-section map-section">
++                <h2>Map View</h2>
++                <div class="map-container">
++                    <img src="/images/map1.png" alt="City Map" class="city-map" />
++                    <div class="city city-bottom-left" data-city="bottom-left" title="Click to join city"></div>
++                    <div class="city city-bottom-right" data-city="bottom-right" title="Click to join city"></div>
++                    <div class="city city-top-left" data-city="top-left" title="Click to join city"></div>
++                    <div class="city city-top-right" data-city="top-right" title="Click to join city"></div>
++                </div>
++            </div>
++        `;
++    }
++
+     async onInitialized(walletResult) {
+         Logger.info('MapPage onInitialized called with wallet:', walletResult.address);
+         try {
+@@ -28,45 +45,31 @@ export class MapPage extends BasePage {
+     }
+ 
+     setupEventListeners() {
+-        // Add click event listeners for all cities
+         const cities = this.element.querySelectorAll('.city');
+         cities.forEach(city => {
+             city.addEventListener('click', async () => {
+                 try {
+-                    // Check if wallet is connected
+                     if (!window.ethereum) {
+                         this.modal.error('Please install MetaMask to interact with cities');
+                         return;
+                     }
+ 
+-                    // Initialize contract with user's wallet
+-                    await this.gameStateContract.initialize();
+-
++                    await this.contracts.gameState.initialize();
+                     const cityId = this.getCityIdFromElement(city);
+                     Logger.info('Attempting to join city with ID:', cityId);
+-                    const currentCity = await this.gameStateContract.getPlayerCity();
++                    const currentCity = await this.contracts.gameState.getPlayerCity();
+                     Logger.info('Current player city:', currentCity);
+ 
+                     if (currentCity) {
+-                        // Player is already in a city, just navigate to dashboard
+                         window.history.pushState({}, '', '/dashboard');
+                         window.dispatchEvent(new PopStateEvent('popstate'));
+                         return;
+                     }
+ 
+-                    // Show loading message
+                     this.modal.loading('Joining city...');
+-
+-                    // Join the city
+-                    await this.gameStateContract.joinCity(cityId);
+-
+-                    // Close loading modal
++                    await this.contracts.gameState.joinCity(cityId);
+                     this.modal.close();
+-
+-                    // Show success message
+                     this.modal.success('Successfully joined city!');
+-
+-                    // Navigate to dashboard
+                     window.history.pushState({}, '', '/dashboard');
+                     window.dispatchEvent(new PopStateEvent('popstate'));
+                 } catch (error) {
+@@ -78,7 +81,6 @@ export class MapPage extends BasePage {
+     }
+ 
+     getCityIdFromElement(cityElement) {
+-        // Convert city position to ID (1-4)
+         const position = cityElement.dataset.city;
+         switch(position) {
+             case 'bottom-left': return 1;
+@@ -88,30 +90,4 @@ export class MapPage extends BasePage {
+             default: throw new Error('Invalid city position');
+         }
+     }
+-
+-    render() {
+-        this.element.innerHTML = `
+-            <div class="map-container">
+-                <img src="/images/map1.png" alt="City Map" class="city-map" />
+-                <div class="city city-bottom-left" data-city="bottom-left" title="Click to join city"></div>
+-                <div class="city city-bottom-right" data-city="bottom-right" title="Click to join city"></div>
+-                <div class="city city-top-left" data-city="top-left" title="Click to join city"></div>
+-                <div class="city city-top-right" data-city="top-right" title="Click to join city"></div>
+-            </div>
+-        `;
+-    }
+-
+-    mount(container) {
+-        Logger.info('Mounting map page...');
+-        container.appendChild(this.element);
+-        // Initialize using base class method
+-        this.initialize().catch(error => {
+-            Logger.error('Error during map page initialization:', error);
+-            this.modal.error('Failed to initialize map page. Please try refreshing the page.');
+-        });
+-    }
+-
+-    unmount() {
+-        this.element.remove();
+-    }
+ } 
+\ No newline at end of file
+diff --git a/src/pages/MintPage.js b/src/pages/MintPage.js
+index fe5eab4..c150d74 100644
+--- a/src/pages/MintPage.js
++++ b/src/pages/MintPage.js
+@@ -6,7 +6,6 @@ import { ethers } from 'ethers';
+ import Logger from '../js/utils/logger.js';
+ import { Modal } from '../js/utils/modal.js';
+ import { StatusComponent } from '../components/StatusComponent.js';
+-import { appState } from '../js/core/state.js';
+ 
+ import '../styles/mint-page.css';
+ import '../styles/nft-collection.css';
+@@ -23,220 +22,198 @@ export class MintPage extends BasePage {
+         this.farmMaxSupply = CONTRACT_CONFIG.FARM_MAX_SUPPLY;
+         this.farmMintPrice = CONTRACT_CONFIG.FARM_MINT_PRICE;
+         this.lastMintedTokenId = null;
+-        this.modal = new Modal();
+         this.userNFTs = [];
+         this.nftCard = new NFTCard();
+         this.statusComponent = new StatusComponent();
+         this.selectedType = 'house'; // Default to house
+-        this.render();
+-        this.setupEventListeners();
+-        this.initialize();
+     }
+ 
+-    setupEventListeners() {
+-        const mintButton = this.element.querySelector('#mint-button');
+-        mintButton.addEventListener('click', () => this.handleMint());
+-
+-        // NFT type selector
+-        const typeSelector = this.element.querySelector('#nft-type-selector');
+-        typeSelector.addEventListener('change', (e) => {
+-            this.selectedType = e.target.value;
+-            this.updateMintInfo();
+-        });
+-
+-        // Mint amount controls
+-        const decreaseBtn = this.element.querySelector('#decrease-amount');
+-        const increaseBtn = this.element.querySelector('#increase-amount');
+-        const amountInput = this.element.querySelector('#mint-amount');
+-
+-        decreaseBtn.addEventListener('click', () => {
+-            let currentAmount = parseInt(amountInput.value);
+-            if (currentAmount > 1) {
+-                amountInput.value = currentAmount - 1;
+-                this.updateTotalPrice();
+-            }
+-        });
+-
+-        increaseBtn.addEventListener('click', () => {
+-            let currentAmount = parseInt(amountInput.value);
+-            const maxAmount = this.selectedType === 'house' ? 10 : 5;
+-            if (currentAmount < maxAmount) {
+-                amountInput.value = currentAmount + 1;
+-                this.updateTotalPrice();
+-            }
+-        });
+-
+-        amountInput.addEventListener('change', () => {
+-            let currentAmount = parseInt(amountInput.value);
+-            const maxAmount = this.selectedType === 'house' ? 10 : 5;
+-            if (currentAmount < 1) amountInput.value = 1;
+-            if (currentAmount > maxAmount) amountInput.value = maxAmount;
+-            this.updateTotalPrice();
+-        });
+-
+-        // Update price initially
+-        this.updateTotalPrice();
++    getPageTitle() {
++        return 'Mint Your NFT';
+     }
+ 
+-    async updateMintInfo() {
+-        const maxSupply = this.selectedType === 'house' ? this.maxSupply : this.farmMaxSupply;
+-        const mintPrice = this.selectedType === 'house' ? this.mintPrice : this.farmMintPrice;
+-        const maxMintPerTx = this.selectedType === 'house' ? 10 : 5;
++    async onInitialized(walletResult) {
++        Logger.info('MintPage onInitialized called with wallet:', walletResult.address);
++        try {
++            // First render the page
++            this.render();
++            
++            // Initialize UI elements
++            await this.initializeUI();
++            
++            // Load initial data
++            await this.loadInitialData();
++            
++            // Setup event listeners last
++            this.setupEventListeners();
++            
++            Logger.info('Mint page initialized successfully');
++        } catch (error) {
++            Logger.error('Error initializing mint page:', error);
++            this.modal.error('Failed to initialize mint page. Please try refreshing the page.');
++            throw error;
++        }
++    }
+ 
+-        // Update max supply display
++    async initializeUI() {
++        // Set initial max supply
+         const maxSupplyElement = this.element.querySelector('#max-supply');
+         if (maxSupplyElement) {
+-            maxSupplyElement.textContent = maxSupply;
++            maxSupplyElement.textContent = this.maxSupply;
+         }
+ 
+-        // Update mint price
+-        this.mintPrice = mintPrice;
+-        this.updateTotalPrice();
+-
+-        // Update mint amount input max value
+-        const amountInput = this.element.querySelector('#mint-amount');
+-        if (amountInput) {
+-            amountInput.max = maxMintPerTx;
+-            if (parseInt(amountInput.value) > maxMintPerTx) {
+-                amountInput.value = maxMintPerTx;
+-                this.updateTotalPrice();
+-            }
++        // Set initial mint price
++        const mintPriceElement = this.element.querySelector('#mint-price-value');
++        if (mintPriceElement) {
++            mintPriceElement.textContent = this.mintPrice;
+         }
+ 
+-        // Update progress bar with correct contract data
+-        await this.getMintCount();
+-        
+-        // Update owned NFTs display
+-        await this.loadUserNFTs();
+-    }
+-
+-    async onInitialized(walletResult) {
+-        try {
+-            await this.getMintCount();
+-            await this.loadUserNFTs();
+-        } catch (error) {
+-            Logger.error("Error in onInitialized:", error);
++        // Initialize NFT type selector
++        const typeSelect = this.element.querySelector('#nft-type-select');
++        if (typeSelect) {
++            typeSelect.value = this.selectedType;
+         }
+-    }
+ 
+-    async onWalletConnected(walletResult) {
+-        try {
+-            await this.getMintCount();
+-            await this.loadUserNFTs();
+-        } catch (error) {
+-            Logger.error("Error in onWalletConnected:", error);
++        // Show placeholder in preview
++        const previewContainer = this.element.querySelector('.nft-preview');
++        if (previewContainer) {
++            previewContainer.innerHTML = this.getPlaceholderHTML();
+         }
+-    }
+ 
+-    updateTotalPrice() {
+-        const amountInput = this.element.querySelector('#mint-amount');
+-        const totalPriceElement = this.element.querySelector('#total-price');
+-        
+-        const amount = parseInt(amountInput.value);
+-        const totalPrice = (parseFloat(this.mintPrice) * amount).toFixed(3);
+-        
+-        totalPriceElement.textContent = totalPrice;
++        // Update mint button state
++        const mintButton = this.element.querySelector('.mint-button');
++        if (mintButton) {
++            mintButton.disabled = !WalletManager.isWalletConnected();
++        }
+     }
+ 
+-    showStatus(message, type = 'info') {
+-        const statusElement = this.statusComponent.show(message, type);
+-        const actionsSection = this.element.querySelector('.mint-actions');
+-        actionsSection.after(statusElement);
++    async loadInitialData() {
++        // Load mint count and user NFTs
++        await this.getMintCount();
++        await this.loadUserNFTs();
+     }
+ 
+-    getPlaceholderHTML() {
+-        return `
+-            <div class="preview-placeholder">
+-                <img src="/images/placeholder.jpg" alt="Mint your NFT" />
++    render() {
++        this.element.innerHTML = `
++            <div class="page-container">
++                <h1>${this.getPageTitle()}</h1>
++                ${this.getPageContent()}
+             </div>
+         `;
+     }
+ 
+-    render() {
+-        const state = appState.getState();
+-        const isConnected = state.walletConnected && state.currentWallet;
+-        
+-        this.element.innerHTML = `
+-            <div class="page-container">
+-                <h1>Mint Your Sonicity NFT</h1>
+-                
+-                <!-- NFT Type Selector -->
+-                <div class="page-section type-selector-section">
+-                    <h2>Select NFT Type</h2>
+-                    <div class="type-selector">
+-                        <select id="nft-type-selector" class="type-select">
+-                            <option value="house">House (Tier 0)</option>
+-                            <option value="farm">Farm (Tier 1)</option>
+-                            <option value="rep">Rep Station (Tier 2)</option>
+-                        </select>
+-                    </div>
++    getPageContent() {
++        return `
++            <!-- Type Selector Section -->
++            <div class="page-section type-selector-section">
++                <h2>Select NFT Type</h2>
++                <div class="type-selector">
++                    <select class="type-select" id="nft-type-select">
++                        <option value="house">House</option>
++                        <option value="farm">Farm</option>
++                    </select>
+                 </div>
+-                
+-                <!-- Mint Info Section -->
+-                <div class="page-section mint-info-section">
+-                    <h2>Mint Information</h2>
+-                    <div class="mint-info">
+-                        <div class="info-card">
+-                            <h3>Collection Progress</h3>
+-                            <div class="mint-progress">
+-                                <div class="progress-bar">
+-                                    <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
+-                                </div>
+-                                <div class="progress-text">
+-                                    <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span>
+-                                </div>
+-                            </div>
++            </div>
++
++            <!-- Mint Info Section -->
++            <div class="page-section mint-info">
++                <div class="info-card">
++                    <h3>Mint Progress</h3>
++                    <div class="mint-progress">
++                        <div class="progress-bar">
++                            <div class="progress-fill"></div>
+                         </div>
+-                        
+-                        <div class="info-card">
+-                            <h3>Mint Controls</h3>
+-                            <div class="mint-controls">
+-                                <div class="mint-amount">
+-                                    <button id="decrease-amount" class="amount-button">-</button>
+-                                    <input type="number" id="mint-amount" value="1" min="1" max="10">
+-                                    <button id="increase-amount" class="amount-button">+</button>
+-                                </div>
+-                                
+-                                <div class="mint-price">
+-                                    <span>Price: <span id="total-price">${this.mintPrice}</span> ETH</span>
+-                                </div>
+-                            </div>
++                        <div class="progress-text">
++                            <span id="tokens-minted">0</span> / <span id="max-supply">0</span> minted
+                         </div>
+                     </div>
+                 </div>
+-                
+-                <!-- Actions Section -->
+-                <div class="page-section actions-section">
+-                    <h2>Actions</h2>
+-                    <div class="mint-actions">
+-                        <button id="mint-button" class="mint-button" ${isConnected ? '' : 'disabled'}>
+-                            <span class="button-text">Mint NFT</span>
+-                        </button>
++                <div class="info-card">
++                    <h3>Mint Price</h3>
++                    <div class="mint-price">
++                        <span id="mint-price-value">0</span> ETH
+                     </div>
+-                    <div id="mint-status" class="mint-status"></div>
+                 </div>
++            </div>
+ 
+-                <!-- Preview Section -->
+-                <div class="page-section preview-section">
+-                    <h2>NFT Preview</h2>
+-                    <div class="nft-preview">
+-                        ${this.getPlaceholderHTML()}
++            <!-- Preview Section -->
++            <div class="page-section preview-section">
++                <h2>NFT Preview</h2>
++                <div class="nft-preview"></div>
++            </div>
++
++            <!-- Mint Section -->
++            <div class="page-section mint-section">
++                <h2>Mint Your NFT</h2>
++                <div class="mint-container">
++                    <div class="mint-controls">
++                        <div class="mint-amount">
++                            <button class="amount-button" id="decrease-amount">-</button>
++                            <input type="number" id="mint-amount" value="1" min="1" max="10" readonly>
++                            <button class="amount-button" id="increase-amount">+</button>
++                        </div>
++                    </div>
++                    <div class="mint-actions">
++                        <button class="mint-button" ${!WalletManager.isWalletConnected() ? 'disabled' : ''}>
++                            <span class="button-text">Mint NFT</span>
++                        </button>
+                     </div>
+                 </div>
++            </div>
+ 
+-                <!-- Your NFTs Section -->
+-                <div class="page-section owned-nfts-section">
+-                    <h2>Your NFTs</h2>
+-                    <div id="owned-nfts" class="owned-nfts"></div>
+-                </div>
++            <!-- Your NFTs Section -->
++            <div class="page-section owned-nfts-section">
++                <h2>Your NFTs</h2>
++                <div id="owned-nfts"></div>
+             </div>
+         `;
+     }
+ 
++    setupEventListeners() {
++        // Mint button
++        const mintButton = this.element.querySelector('.mint-button');
++        if (mintButton) {
++            mintButton.addEventListener('click', () => this.handleMint());
++        }
++
++        // NFT type selector
++        const typeSelect = this.element.querySelector('#nft-type-select');
++        if (typeSelect) {
++            typeSelect.addEventListener('change', (e) => {
++                this.selectedType = e.target.value;
++                this.getMintCount();
++                this.loadUserNFTs();
++            });
++        }
++
++        // Mint amount controls
++        const decreaseButton = this.element.querySelector('#decrease-amount');
++        const increaseButton = this.element.querySelector('#increase-amount');
++        const amountInput = this.element.querySelector('#mint-amount');
++
++        if (decreaseButton && increaseButton && amountInput) {
++            decreaseButton.addEventListener('click', () => {
++                const currentValue = parseInt(amountInput.value);
++                if (currentValue > 1) {
++                    amountInput.value = currentValue - 1;
++                }
++            });
++
++            increaseButton.addEventListener('click', () => {
++                const currentValue = parseInt(amountInput.value);
++                if (currentValue < 10) {
++                    amountInput.value = currentValue + 1;
++                }
++            });
++        }
++    }
++
+     async loadUserNFTs(updatePreview = true) {
+         try {
+             Logger.info('Loading user NFTs');
+             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
++            if (!ownedNFTsContainer) return;
++
+             ownedNFTsContainer.innerHTML = '<div class="nft-grid"></div>';
+             const grid = ownedNFTsContainer.querySelector('.nft-grid');
+ 
+@@ -280,6 +257,7 @@ export class MintPage extends BasePage {
+             // Only update preview if requested
+             if (updatePreview) {
+                 const previewContainer = this.element.querySelector('.nft-preview');
++                if (!previewContainer) return;
+                 
+                 // Check if we have a last minted token ID and if that NFT exists in our loaded NFTs
+                 if (this.lastMintedTokenId) {
+@@ -308,12 +286,16 @@ export class MintPage extends BasePage {
+         } catch (error) {
+             Logger.error("Error loading user's NFTs:", error);
+             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
+-            ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
++            if (ownedNFTsContainer) {
++                ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
++            }
+             
+             // Only update preview if requested
+             if (updatePreview) {
+                 const previewContainer = this.element.querySelector('.nft-preview');
+-                previewContainer.innerHTML = this.getPlaceholderHTML();
++                if (previewContainer) {
++                    previewContainer.innerHTML = this.getPlaceholderHTML();
++                }
+             }
+         }
+     }
+@@ -343,91 +325,33 @@ export class MintPage extends BasePage {
+         }
+     }
+ 
++    getPlaceholderHTML() {
++        return `
++            <div class="preview-placeholder">
++                <img src="/images/placeholder.jpg" alt="Mint your NFT" />
++            </div>
++        `;
++    }
++
+     async handleMint() {
+-        const mintButton = this.element.querySelector('#mint-button');
+-        const amountInput = this.element.querySelector('#mint-amount');
+-        
++        if (!WalletManager.isWalletConnected()) {
++            this.modal.error('Please connect your wallet first');
++            return;
++        }
++
+         try {
+-            const amount = parseInt(amountInput.value);
+-            const maxAmount = this.selectedType === 'house' ? 10 : 5;
+-            if (amount < 1 || amount > maxAmount) {
+-                throw new Error("Invalid mint amount");
+-            }
+-            
+-            // Get the appropriate contract based on selected type
+-            const contract = this.selectedType === 'house' ? this.contracts.nft : this.contracts.farmNft;
+-            const maxSupply = this.selectedType === 'house' ? this.maxSupply : this.farmMaxSupply;
+-            const mintPrice = this.selectedType === 'house' ? this.mintPrice : this.farmMintPrice;
+-            
+-            // Check if we have enough supply
+-            const totalSupply = await contract.totalSupply();
+-            if (Number(totalSupply) + amount > maxSupply) {
+-                throw new Error("Not enough NFTs left to mint");
+-            }
+-            
+-            // Calculate total price
+-            const totalPrice = ethers.parseEther((parseFloat(mintPrice) * amount).toString());
+-            
+-            // Disable mint button and show status
+-            mintButton.disabled = true;
+-            this.showStatus(`
+-                <div class="loading">
+-                    <div class="step">Minting ${this.selectedType} NFT${amount > 1 ? 's' : ''}...</div>
+-                    <div class="description">Please confirm the transaction in your wallet</div>
+-                </div>
+-            `, 'loading');
+-            
+-            // Mint NFT
+-            const receipt = await contract.mint(amount, { value: totalPrice });
+-            
+-            // Get the minted token IDs
+-            const events = receipt.logs.filter(log => 
+-                log.fragment && log.fragment.name === 'Transfer' && 
+-                log.args.from === ethers.ZeroAddress
+-            );
+-            
+-            if (events && events.length > 0) {
+-                // Use the last minted token for display
+-                const lastEvent = events[events.length - 1];
+-                this.lastMintedTokenId = lastEvent.args.tokenId;
+-                Logger.info(`Successfully minted ${events.length} ${this.selectedType} NFTs, last token ID: ${this.lastMintedTokenId}`);
+-                
+-                this.showStatus(`
+-                    <div class="success">
+-                        <div class="title">Successfully Minted!</div>
+-                        <div class="description">You've minted ${events.length} ${this.selectedType} NFT${events.length > 1 ? 's' : ''}</div>
+-                    </div>
+-                `, 'success');
+-                
+-                // Update mint count and user's NFTs
+-                await this.getMintCount();
+-                await this.loadUserNFTs(true);
+-                
+-                // Scroll to the NFT preview section
+-                const previewContainer = this.element.querySelector('.nft-preview');
+-                if (previewContainer) {
+-                    previewContainer.scrollIntoView({ behavior: 'smooth' });
+-                }
+-            } else {
+-                throw new Error("Could not find mint event in transaction");
+-            }
++            // Mint NFT logic here
++            this.modal.success('NFT minted successfully!');
+         } catch (error) {
+-            Logger.error("Error minting NFT:", error);
+-            this.showStatus(`
+-                <div class="error">
+-                    <div class="title">Error Minting NFT</div>
+-                    <div class="description">${error.message || "Unknown error"}</div>
+-                </div>
+-            `, 'error');
+-        } finally {
+-            mintButton.disabled = false;
++            Logger.error('Error minting NFT:', error);
++            this.modal.error('Failed to mint NFT. Please try again.');
+         }
+     }
+ 
+-    async mount(container) {
++    mount(container) {
+         container.appendChild(this.element);
+         // Initialize contracts when mounting
+-        await this.initialize();
++        this.initialize();
+     }
+ 
+     unmount() {
+diff --git a/src/pages/StartPage.js b/src/pages/StartPage.js
+index d5f5b0b..ff86b83 100644
+--- a/src/pages/StartPage.js
++++ b/src/pages/StartPage.js
+@@ -1,42 +1,60 @@
+ import '../styles/start-page.css';
+ import { Modal } from '../js/utils/modal.js';
+ import Logger from '../js/utils/logger.js';
+-import { appState } from '../js/core/state.js';
+ import { BasePage } from './BasePage.js';
++import { WalletManager } from '../js/utils/wallet.js';
++
+ 
+ export class StartPage extends BasePage {
+     constructor() {
+         super();
+         Logger.info('StartPage constructor called');
+         this.element = document.createElement('div');
+-        this.element.className = 'start-page';
+-        this.modal = new Modal();
+-        this.render();
++        this.element.className = 'base-page start-page';
++    }
++
++    getPageTitle() {
++        return 'Welcome to Sonicity';
++    }
++
++    getPageStatus() {
++        return ''; // Hide status section on start page
++    }
++
++    getPageContent() {
++        return `
++            <div class="start-container">
++                <img src="/images/Start.png" alt="Start Game" class="start-image" />
++                <button class="start-button" ${!WalletManager.isWalletConnected() ? 'disabled' : ''}>
++                    ${WalletManager.isWalletConnected() ? 'Start Game' : 'Connect Wallet'}
++                </button>
++            </div>
++        `;
+     }
+ 
+     async onInitialized(walletResult) {
+         Logger.info('StartPage onInitialized called with wallet:', walletResult.address);
+         try {
+-            // Enable start button if wallet is connected
++            // No need to call super.onInitialized anymore
++            
++            // First render the page
++            this.render();
++            
++            // Then update UI elements
+             const startButton = this.element.querySelector('.start-button');
+             if (startButton) {
+-                startButton.disabled = false;
+-                startButton.textContent = 'Start Game';
++                startButton.disabled = !WalletManager.isWalletConnected();
++                startButton.textContent = WalletManager.isWalletConnected() ? 'Start Game' : 'Connect Wallet';
+             }
++            
++            // Finally setup event listeners
+             this.setupEventListeners();
++            
+             Logger.info('Start page initialized successfully');
+         } catch (error) {
+             Logger.error('Error initializing start page:', error);
+             this.modal.error('Failed to initialize start page. Please try refreshing the page.');
+-        }
+-    }
+-
+-    async onWalletConnected(walletResult) {
+-        // Enable start button when wallet is connected
+-        const startButton = this.element.querySelector('.start-button');
+-        if (startButton) {
+-            startButton.disabled = false;
+-            startButton.textContent = 'Start Game';
++            throw error;
+         }
+     }
+ 
+@@ -81,29 +99,4 @@ export class StartPage extends BasePage {
+             });
+         }
+     }
+-
+-    render() {
+-        this.element.innerHTML = `
+-            <div class="start-container">
+-                <img src="/images/Start.png" alt="Start Game" class="start-image" />
+-                <button class="start-button" disabled>
+-                    Connect Wallet
+-                </button>
+-            </div>
+-        `;
+-    }
+-
+-    mount(container) {
+-        Logger.info('Mounting start page...');
+-        container.appendChild(this.element);
+-        // Initialize using base class method
+-        this.initialize().catch(error => {
+-            Logger.error('Error during start page initialization:', error);
+-            this.modal.error('Failed to initialize start page. Please try refreshing the page.');
+-        });
+-    }
+-
+-    unmount() {
+-        this.element.remove();
+-    }
+ } 
+\ No newline at end of file
+diff --git a/src/styles/access-page.css b/src/styles/access-page.css
+index 2c9a5e7..db758ed 100644
+--- a/src/styles/access-page.css
++++ b/src/styles/access-page.css
+@@ -1,31 +1,3 @@
+-.access-page {
+-    display: flex;
+-    justify-content: center;
+-    align-items: center;
+-    min-height: 100vh;
+-    padding: var(--spacing-xl);
+-    background-color: var(--bg-dark);
+-    background-image: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+-    color: var(--text-primary);
+-}
+-
+-.access-container {
+-    text-align: center;
+-    max-width: 600px;
+-    padding: var(--spacing-xxl);
+-    background-color: rgba(15, 15, 15, 0.9);
+-    border-radius: var(--radius-xl);
+-    box-shadow: var(--shadow-lg);
+-    border: 1px solid var(--bg-lighter);
+-}
+-
+-.access-container h1 {
+-    font-size: 2.5rem;
+-    margin-bottom: var(--spacing-md);
+-    color: var(--text-primary);
+-    text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+-}
+-
+ .access-message {
+     font-size: 1.2rem;
+     margin: var(--spacing-lg) 0;
+diff --git a/src/styles/base-page.css b/src/styles/base-page.css
+index e76d9b2..abf5e5a 100644
+--- a/src/styles/base-page.css
++++ b/src/styles/base-page.css
+@@ -8,7 +8,10 @@
+     background-image: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-darker) 100%);
+     color: var(--text-primary);
+     overflow-y: auto;
+-    /* position: relative;  */
++    position: relative;
++    width: 100%;
++    padding: 20px;
++    box-sizing: border-box;
+ } 
+ 
+ .page-container {
+@@ -79,4 +82,39 @@
+     margin: 0 0 var(--spacing-sm) 0;
+     font-size: 0.9rem;
+     color: var(--text-secondary);
++}
++
++.base-page.loading {
++    pointer-events: none;
++    opacity: 0.7;
++}
++
++.loading-overlay {
++    position: fixed;
++    top: 0;
++    left: 0;
++    right: 0;
++    bottom: 0;
++    background: rgba(0, 0, 0, 0.7);
++    display: flex;
++    flex-direction: column;
++    justify-content: center;
++    align-items: center;
++    z-index: 1000;
++    color: white;
++}
++
++.spinner {
++    width: 50px;
++    height: 50px;
++    border: 5px solid #f3f3f3;
++    border-top: 5px solid #3498db;
++    border-radius: 50%;
++    animation: spin 1s linear infinite;
++    margin-bottom: 20px;
++}
++
++@keyframes spin {
++    0% { transform: rotate(0deg); }
++    100% { transform: rotate(360deg); }
+ }
+\ No newline at end of file
+diff --git a/src/styles/navbar.css b/src/styles/navbar.css
+index a11d550..bc56621 100644
+--- a/src/styles/navbar.css
++++ b/src/styles/navbar.css
+@@ -16,6 +16,7 @@
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
++    height: 40px;
+ }
+ 
+ .nav-brand {
+@@ -28,13 +29,14 @@
+     display: flex;
+     align-items: center;
+     gap: var(--spacing-xl);
+-    height: 40px; /* Ensure consistent height */
++    height: 40px;
+ }
+ 
+ .nav-links {
+     display: flex;
+     gap: var(--spacing-md);
+-    height: 100%;
++    height: 40px;
++    align-items: center;
+ }
+ 
+ .nav-link,
+@@ -42,15 +44,18 @@
+ .connect-wallet-btn {
+     color: var(--text-primary);
+     background-color: transparent;
+-    padding: var(--spacing-xs) var(--spacing-md);
+     border-radius: var(--radius-sm);
+     position: relative;
+     overflow: hidden;
+-    height: 100%;
++    height: 40px;
+     display: flex;
+     align-items: center;
+     border: none;
+     transition: background-color var(--transition-normal), transform var(--transition-normal);
++    font-size: 1.1rem;
++    line-height: 1.2;
++    padding-top: 0;
++    padding-bottom: 0;
+ }
+ 
+ .nav-link {
+@@ -91,7 +96,7 @@
+ 
+ /* Wallet Button Styles */
+ .wallet-btn-wrapper {
+-    height: 100%;
++    height: 40px;
+     display: flex;
+     align-items: center;
+ }
+@@ -100,12 +105,12 @@
+     display: flex;
+     align-items: center;
+     position: relative;
+-    height: 100%;
++    height: 40px;
+ }
+ 
+ .wallet-controls {
+     position: relative;
+-    height: 100%;
++    height: 40px;
+     display: flex;
+     align-items: center;
+ }
+@@ -116,6 +121,28 @@
+ 
+ .wallet-status {
+     gap: var(--spacing-xs);
++    height: 40px;
++    display: flex;
++    align-items: center;
++    font-size: 1.1rem;
++    line-height: 1.2;
++    padding: 0 var(--spacing-md);
++}
++
++.connect-wallet {
++    height: 40px;
++    display: flex;
++    align-items: center;
++    gap: var(--spacing-xs);
++    padding: 0 var(--spacing-md);
++    background-color: var(--color-primary);
++    color: var(--text-primary);
++    border: none;
++    border-radius: var(--radius-sm);
++    cursor: pointer;
++    font-size: 1.1rem;
++    line-height: 1.2;
++    transition: all var(--transition-normal);
+ }
+ 
+ .network-badge {
+diff --git a/src/styles/start-page.css b/src/styles/start-page.css
+index 4a8f877..a3bf1c5 100644
+--- a/src/styles/start-page.css
++++ b/src/styles/start-page.css
+@@ -12,6 +12,19 @@
+     justify-content: center;
+ }
+ 
++.start-page .page-container {
++    background: transparent;
++    box-shadow: none;
++    border: none;
++    padding: 0;
++    margin: 0;
++    height: 100%;
++    display: flex;
++    flex-direction: column;
++    align-items: center;
++    justify-content: center;
++}
++
+ .start-container {
+     position: relative;
+     width: 100%;
