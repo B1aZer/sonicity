@@ -49,13 +49,17 @@ export class HousePage extends BasePage {
             const playerAddress = await this.contracts.gameState.getAddress();
             
             // Get all active buildings
-            const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings(playerAddress);
-            Logger.info('Retrieved active buildings:', activeBuildings);
+            const activeBuildingIds = await this.contracts.gridBuildings.getActiveBuildings(playerAddress);
+            Logger.info('Retrieved active building IDs:', activeBuildingIds);
 
-            // Filter for houses
-            const houses = activeBuildings.filter(building => 
-                building.buildingType === GridBuildingsContract.BuildingType.HOUSE
-            );
+            // Get building details for each ID and filter for houses
+            const houses = [];
+            for (const buildingId of activeBuildingIds) {
+                const building = await this.contracts.gridBuildings.getBuilding(buildingId);
+                if (building.buildingType === GridBuildingsContract.BuildingType.HOUSE) {
+                    houses.push(building);
+                }
+            }
             Logger.info('Filtered houses:', houses);
 
             // Get the current production rate from contract
