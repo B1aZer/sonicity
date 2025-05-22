@@ -8,6 +8,41 @@ export class DistrictBuildingsContract extends BaseContract {
         super(CONTRACT_ADDRESSES.DISTRICT_BUILDINGS, DistrictBuildingsABI.abi);
     }
 
+    // Building Management
+    async buildDistrictBuilding(buildingType) {
+        return await this.transact('buildDistrictBuilding', buildingType);
+    }
+
+    async upgradeDistrictBuilding(buildingType) {
+        return await this.transact('upgradeDistrictBuilding', buildingType);
+    }
+
+    async repairBuilding(buildingType) {
+        return await this.transact('repairBuilding', buildingType);
+    }
+
+    // Building Information
+    async isDistrictBuildingUnlocked(buildingType) {
+        const address = await this.getAddress();
+        return await this.call('isDistrictBuildingUnlocked', address, buildingType);
+    }
+
+    async isDistrictBuildingBuilt(buildingType) {
+        const address = await this.getAddress();
+        return await this.call('isDistrictBuildingBuilt', address, buildingType);
+    }
+
+    async isDistrictBuildingActive(buildingType) {
+        const address = await this.getAddress();
+        return await this.call('isDistrictBuildingActive', address, buildingType);
+    }
+
+    async isBuildingDamaged(buildingType) {
+        const address = await this.getAddress();
+        return await this.call('isBuildingDamaged', address, buildingType);
+    }
+
+    // Building Configuration
     async getAllDistrictBuildingConfigs() {
         return await this.call('getAllDistrictBuildingConfigs');
     }
@@ -16,18 +51,10 @@ export class DistrictBuildingsContract extends BaseContract {
         return await this.call('getDistrictBuildingsByTier', tier);
     }
 
-    async isDistrictBuildingUnlocked(buildingType) {
+    // Defense Tower Power (for Battle System)
+    async getDefenseTowerPower() {
         const address = await this.getAddress();
-        return await this.call('isDistrictBuildingUnlocked', address, buildingType);
-    }
-
-    async buildDistrictBuilding(buildingType) {
-        return await this.transact('buildDistrictBuilding', buildingType);
-    }
-
-    async isDistrictBuildingBuilt(buildingType) {
-        const address = await this.getAddress();
-        return await this.call('isDistrictBuildingBuilt', address, buildingType);
+        return await this.call('getDefenseTowerPower', address);
     }
 
     async getBuiltBuildings() {
