@@ -44,7 +44,14 @@ export class GridBuildingsContract extends BaseContract {
     // Building Information
     async getBuilding(buildingId) {
         const address = await this.getAddress();
-        return await this.call('getBuilding', address, buildingId);
+        const buildingData = await this.call('getBuilding', address, buildingId);
+        return {
+            buildingType: buildingData[0],
+            level: buildingData[1],
+            lastUpgradeTime: buildingData[2],
+            lastCollectionTime: buildingData[3],
+            damaged: buildingData[4]
+        };
     }
 
     async getBuildingConfig(buildingType) {
