@@ -17,11 +17,15 @@ export class StartPage extends BasePage {
     async onInitialized(walletResult) {
         Logger.info('StartPage onInitialized called with wallet:', walletResult.address);
         try {
+            // Check if player is initialized
+            const isInitialized = await this.contracts.gameState.isPlayerInitialized();
+            Logger.info('Player initialization status:', isInitialized);
+
             // Enable start button if wallet is connected
             const startButton = this.element.querySelector('.start-button');
             if (startButton) {
                 startButton.disabled = false;
-                startButton.textContent = 'Start Game';
+                startButton.textContent = isInitialized ? 'Continue Game' : 'Start Game';
             }
             this.setupEventListeners();
             Logger.info('Start page initialized successfully');
@@ -52,12 +56,18 @@ export class StartPage extends BasePage {
 
                     // Check if player is already initialized
                     const isInitialized = await this.contracts.gameState.isPlayerInitialized();
+                    Logger.info('Checking player initialization before start:', isInitialized);
+
                     if (!isInitialized) {
+                        Logger.info('Player not initialized, initializing contract and player...');
                         // Initialize contract with user's wallet
                         await this.contracts.gameState.initialize();
                         
                         // Initialize player
                         await this.contracts.gameState.initializePlayer();
+                        Logger.info('Player initialization completed');
+                    } else {
+                        Logger.info('Player already initialized, proceeding to game...');
                     }
 
                     // Show loading message
