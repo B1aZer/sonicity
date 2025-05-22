@@ -17,14 +17,10 @@ export class GameStateContract extends BaseContract {
         }
     }
 
-    async getPlayerState() {
-        return await this.call('getPlayerState');
-    }
-
     async isPlayerInitialized() {
         try {
-            const state = await this.getPlayerState();
-            return state.buildingSlots > 0;
+            const buildingSlots = await this.getBuildingSlots();
+            return buildingSlots > 0n;
         } catch (error) {
             console.error('Error checking player initialization:', error);
             return false;
