@@ -119,11 +119,6 @@ export class GameStateContract extends BaseContract {
         return await this.transact('deductResources', goldAmount, foodAmount, repAmount);
     }
 
-    // Test Functions (only available in test environment)
-    async testEarnGold(amount) {
-        return await this.transact('testEarnGold', amount);
-    }
-
     // NFT Collection Management
     async approveCollection(collectionAddress) {
         return await this.transact('approveCollection', collectionAddress);
