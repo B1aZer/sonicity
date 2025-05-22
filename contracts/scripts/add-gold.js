@@ -19,7 +19,7 @@ async function main() {
 
     const address = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8";
     const goldAmount = 1000; // 1000 gold
-    const foodAmount = 10; // 500 food
+    const foodAmount = 30; // 500 food
 
     console.log(`Adding ${goldAmount} gold and ${foodAmount} food to address ${address}...`);
     
