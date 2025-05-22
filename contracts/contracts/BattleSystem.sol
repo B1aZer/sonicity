@@ -273,31 +273,6 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         lastBattleTime[battle.attacker] = block.timestamp;
         lastBattleTime[battle.defender] = block.timestamp;
 
-        // Unregister both players from matchmaking
-        if (isRegisteredForMatchmaking[battle.attacker]) {
-            isRegisteredForMatchmaking[battle.attacker] = false;
-            // Remove from registeredPlayers array
-            for (uint256 i = 0; i < registeredPlayers.length; i++) {
-                if (registeredPlayers[i] == battle.attacker) {
-                    registeredPlayers[i] = registeredPlayers[registeredPlayers.length - 1];
-                    registeredPlayers.pop();
-                    break;
-                }
-            }
-        }
-        
-        if (isRegisteredForMatchmaking[battle.defender]) {
-            isRegisteredForMatchmaking[battle.defender] = false;
-            // Remove from registeredPlayers array
-            for (uint256 i = 0; i < registeredPlayers.length; i++) {
-                if (registeredPlayers[i] == battle.defender) {
-                    registeredPlayers[i] = registeredPlayers[registeredPlayers.length - 1];
-                    registeredPlayers.pop();
-                    break;
-                }
-            }
-        }
-
         battle.resolved = true;
 
         emit BattleRecorded(
@@ -503,7 +478,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         for (uint256 i = 0; i < registeredPlayers.length; i++) {
             address potentialOpponent = registeredPlayers[i];
             if (potentialOpponent != msg.sender && 
-                activeBattles[potentialOpponent].startTime == 0) {
+                activeBattles[potentialOpponent].startTime == 0 &&
+                block.timestamp >= lastBattleTime[potentialOpponent] + BATTLE_DURATION) {
                 count++;
             }
         }
@@ -514,7 +490,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         for (uint256 i = 0; i < registeredPlayers.length; i++) {
             address potentialOpponent = registeredPlayers[i];
             if (potentialOpponent != msg.sender && 
-                activeBattles[potentialOpponent].startTime == 0) {
+                activeBattles[potentialOpponent].startTime == 0 &&
+                block.timestamp >= lastBattleTime[potentialOpponent] + BATTLE_DURATION) {
                 opponents[index] = potentialOpponent;
                 index++;
             }
