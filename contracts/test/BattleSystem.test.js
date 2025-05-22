@@ -50,6 +50,9 @@ describe("BattleSystem", function () {
         await altar.waitForDeployment();
         const altarAddress = await altar.getAddress();
 
+        // Set minimum staking duration to 0 for testing
+        await altar.connect(owner).setMinStakingDuration(0);
+
         // Deploy BattleSystem
         const BattleSystem = await ethers.getContractFactory("BattleSystem");
         battleSystem = await upgrades.deployProxy(BattleSystem, [], { initializer: 'initialize' });
@@ -80,12 +83,12 @@ describe("BattleSystem", function () {
         await gameState.connect(player2).initializePlayer();
         await gameState.connect(player3).initializePlayer();
 
-        // Setup initial resources for players
-        await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
-        await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
-        await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 1000);
+        // Setup initial resources for players and unlock tier 1
+        await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1200); // 1000 for tier 1 + 200 for building
+        await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1200);
+        await donateGoldForTier(player3, gameState, gridBuildings, altar, sonicityNFT, 1200);
 
-        // Donate to treasury to unlock defense tower and build it for each player
+        // Now build the defense tower for each player
         await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
         await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
         await districtBuildings.connect(player3).buildDistrictBuilding(3); // DEFENSE_TOWER
