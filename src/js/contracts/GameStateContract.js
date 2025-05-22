@@ -19,7 +19,9 @@ export class GameStateContract extends BaseContract {
 
     async isPlayerInitialized() {
         try {
-            const buildingSlots = await this.getBuildingSlots();
+            const address = await this.getAddress();
+            const buildingSlots = await this.call('getBuildingSlots', address);
+            console.log('Building slots:', buildingSlots.toString());
             return buildingSlots > 0n;
         } catch (error) {
             console.error('Error checking player initialization:', error);
@@ -77,9 +79,19 @@ export class GameStateContract extends BaseContract {
         return await this.call('getPlayerRep', address);
     }
 
+    async getPlayerFood() {
+        const address = await this.getAddress();
+        return await this.call('getPlayerFood', address);
+    }
+
     async getPlayerTreasury() {
         const address = await this.getAddress();
         return await this.call('getPlayerTreasury', address);
+    }
+
+    async getPlayerTier() {
+        const address = await this.getAddress();
+        return await this.call('getPlayerTier', address);
     }
 
     async getNextTierCost(cityId) {
@@ -89,16 +101,27 @@ export class GameStateContract extends BaseContract {
         return nextTierCost;
     }
 
-    async earnGold(player, amount) {
-        return await this.transact('earnGold', player, amount);
-    }
-
     async donateGold(amount) {
         return await this.transact('donateGold', amount);
     }
 
     async getTierRequirements(tier) {
         return await this.call('tierRequirements', tier);
+    }
+
+    // Battle System Integration
+    async burnTreasury(amount) {
+        return await this.transact('burnTreasury', amount);
+    }
+
+    // Resource Deduction
+    async deductResources(goldAmount, foodAmount, repAmount) {
+        return await this.transact('deductResources', goldAmount, foodAmount, repAmount);
+    }
+
+    // Test Functions (only available in test environment)
+    async testEarnGold(amount) {
+        return await this.transact('testEarnGold', amount);
     }
 
     // NFT Collection Management
@@ -114,14 +137,6 @@ export class GameStateContract extends BaseContract {
         return await this.call('approvedCollections', collectionAddress);
     }
 
-    async getPlayerTier(address) {
-        return await this.call('getPlayerTier', address);
-    }
-
-    async getPlayerFood(address) {
-        return await this.call('getPlayerFood', address);
-    }
-
     async getPlayerBuildingSlots(address) {
         return await this.call('getPlayerBuildingSlots', address);
     }
@@ -129,5 +144,4 @@ export class GameStateContract extends BaseContract {
     async getAddress() {
         return await this.call('getAddress');
     }
-
 } 
