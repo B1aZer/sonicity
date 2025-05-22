@@ -125,7 +125,7 @@ export class FarmPage extends BasePage {
             const loadingModal = this.modal.loading('Collecting food...');
             
             // Collect food from all farms in a single transaction
-            await this.contracts.gridBuildings.collectAllResourcesByType(
+            await this.contracts.gridBuildings.collectResourcesByType(
                 GridBuildingsContract.BuildingType.FARM
             );
             
