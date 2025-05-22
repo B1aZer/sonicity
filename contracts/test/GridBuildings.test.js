@@ -917,13 +917,18 @@ describe("GridBuildings", function () {
 
     it("Should not allow repairing inactive buildings", async function () {
       const player1Address = await player1.getAddress();
+      const sonicityFarmAddress = await sonicityFarm.getAddress();
 
       // Damage a building and get its ID
       const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
       const damagedBuildingId = await getDamagedBuildingId(damageTx);
 
-      // Deactivate the building
-      await gridBuildings.connect(owner).removeBuilding(player1Address, damagedBuildingId);
+      // Get the NFT info for this building
+      const nftInfo = await altar.stakedBuilding(sonicityFarmAddress, damagedBuildingId);
+      expect(nftInfo).to.not.be.null;
+
+      // Deactivate the building using the correct token ID
+      await altar.connect(player1).unstake(sonicityFarmAddress, nftInfo.tokenId);
 
       // Try to repair
       await expect(
@@ -994,6 +999,9 @@ describe("GridBuildings", function () {
     it("Should calculate total claimable resources correctly", async function () {
       const player1Address = await player1.getAddress();
       
+      // Get initial house count
+      const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
+      
       // Mint and stake multiple NFTs
       const result1 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
       const result2 = await mintAndStakeNFT(player1, GridBuildingType.HOUSE);
@@ -1004,17 +1012,24 @@ describe("GridBuildings", function () {
       await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 1 day
       await ethers.provider.send("evm_mine");
 
-      // Calculate expected resources
+      // Calculate expected resources for each building
       const claimable1 = await gridBuildings.calculateClaimableResources(player1Address, buildingId1);
       const claimable2 = await gridBuildings.calculateClaimableResources(player1Address, buildingId2);
-      const expectedResources = claimable1 + claimable2;
+      
+      // Each house produces 10 gold per hour, so 24 hours = 240 gold per house
+      const expectedPerHouse = BigInt(10 * 24);
+      expect(claimable1).to.equal(expectedPerHouse);
+      expect(claimable2).to.equal(expectedPerHouse);
 
-      // Check total claimable resources
+      // Calculate total claimable resources
       const totalClaimable = await gridBuildings.calculateTotalClaimableResources(
         player1Address,
         GridBuildingType.HOUSE
       );
-      expect(totalClaimable).to.equal(expectedResources);
+
+      // Total should be (initial houses + 2 new houses) * 240 gold
+      const expectedTotal = expectedPerHouse * (initialHouseCount + BigInt(2));
+      expect(totalClaimable).to.equal(expectedTotal);
     });
 
     it("Should allow damaging and repairing buildings", async function () {
