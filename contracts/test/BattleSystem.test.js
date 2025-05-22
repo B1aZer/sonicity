@@ -85,10 +85,10 @@ describe("BattleSystem", function () {
         await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
         await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
-        // Setup defense towers for players
-        await districtBuildings.connect(player1).buildDefenseTower();
-        await districtBuildings.connect(player2).buildDefenseTower();
-        await districtBuildings.connect(player3).buildDefenseTower();
+        // Donate to treasury to unlock defense tower and build it for each player
+        await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
+        await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
+        await districtBuildings.connect(player3).buildDistrictBuilding(3); // DEFENSE_TOWER
     });
 
     describe("Troop Training", function () {
