@@ -1040,13 +1040,18 @@ describe("GridBuildings", function () {
       const buildingId = result.buildingId;
 
       // Damage the building using BattleSystem's test function
-      await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
+      const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
+      const damagedBuildingId = await getDamagedBuildingId(damageTx);
+
+      // Verify the building is damaged
+      let building = await gridBuildings.buildings(player1Address, damagedBuildingId);
+      expect(building.damaged).to.be.true;
 
       // Repair the building
-      await gridBuildings.connect(player1).repairBuilding(buildingId);
+      await gridBuildings.connect(player1).repairBuilding(damagedBuildingId);
 
       // Check building is repaired
-      const building = await gridBuildings.buildings(player1Address, buildingId);
+      building = await gridBuildings.buildings(player1Address, damagedBuildingId);
       expect(building.damaged).to.be.false;
     });
 
