@@ -55,7 +55,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     // Constants
     uint256 public constant BATTLE_DURATION = 24 hours;
     uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
-    uint256 public noOpponentFoundChance = 20; // 20% chance to not find an opponent
+    uint256 public noOpponentFoundChance;
 
     // Battle history record
     struct BattleRecord {
@@ -139,6 +139,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             districtDamageChance: 50, // 50% chance to damage district buildings
             treasuryBurnChance: 10    // 10% chance to burn treasury
         });
+
+        // Set the initial value for noOpponentFoundChance
+        noOpponentFoundChance = 20;
     }
 
     /**
