@@ -176,12 +176,15 @@ export class GamePage extends BasePage {
             Logger.info('Retrieved active buildings:', activeBuildings);
 
             // Place houses on the grid
-            for (const building of activeBuildings) {
-                Logger.info('Processing building:', building);
-                if (!building.active) {
-                    Logger.info('Skipping building - not active:', {
+            for (const buildingId of activeBuildings) {
+                Logger.info('Processing building:', buildingId);
+                const building = await this.contracts.gridBuildings.getBuilding(buildingId);
+                
+                // Skip if building type is 0 and level is 0 (inactive building)
+                if (building.buildingType === 0n && building.level === 0n) {
+                    Logger.info('Skipping building - inactive:', {
                         buildingType: building.buildingType,
-                        active: building.active
+                        level: building.level
                     });
                     continue;
                 }
