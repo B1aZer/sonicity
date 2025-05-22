@@ -1,6 +1,7 @@
 import { appState } from '../core/state.js';
 import { Modal } from './modal.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
+import Logger from './logger.js';
 
 export class AccessControl {
     static modal = new Modal();
@@ -15,13 +16,21 @@ export class AccessControl {
 
     /**
      * Check if the user can access the dashboard
-     * Requires wallet connection and NFT verification
+     * Requires wallet connection and player initialization
      */
     static async canAccessDashboard() {
-        const state = appState.getState();
-        if (!state.walletConnected || !state.hasVerifiedNFT) {
+        if (!this.isWalletConnected()) {
+            Logger.info('Access denied: Wallet not connected');
             return false;
         }
+
+        const isInitialized = await this.isPlayerInitialized();
+        if (!isInitialized) {
+            Logger.info('Access denied: Player not initialized');
+            this.modal.error('Please start the game first to access the dashboard.');
+            return false;
+        }
+
         return true;
     }
 
@@ -51,7 +60,7 @@ export class AccessControl {
             const playerState = await this.gameState.call('playerState', address);
             return playerState.buildingSlots > 0;
         } catch (error) {
-            console.error('Error checking player initialization:', error);
+            Logger.error('Error checking player initialization:', error);
             return false;
         }
     }
@@ -64,20 +73,19 @@ export class AccessControl {
     }
 
     /**
-     * Check if NFT is verified
+     * Check access to protected routes
+     * Returns true if access is granted, false otherwise
      */
-    static hasVerifiedNFT() {
-        return appState.getState().hasVerifiedNFT;
-    }
-
-    static async checkCityAccess() {
-        if (!this.isWalletConnected() || !this.hasVerifiedNFT()) {
+    static async checkAccess() {
+        if (!this.isWalletConnected()) {
+            Logger.info('Access denied: Wallet not connected');
             return false;
         }
 
         const isInitialized = await this.isPlayerInitialized();
         if (!isInitialized) {
-            this.modal.error('Please start the game first to access the dashboard.');
+            Logger.info('Access denied: Player not initialized');
+            this.modal.error('Please start the game first to access this page.');
             return false;
         }
 
