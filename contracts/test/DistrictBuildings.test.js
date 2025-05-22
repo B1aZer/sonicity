@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
-const { GridBuildingType, mintAndStakeNFT, donateGoldForTier } = require("./helpers");
+const { GridBuildingType, mintAndStakeNFT, donateGoldForTier, ensurePlayerGold } = require("./helpers");
 
 describe("DistrictBuildings", function () {
   let districtBuildings;
@@ -11,12 +11,6 @@ describe("DistrictBuildings", function () {
   let player1;
   let altar;
   let sonicityNFT;
-
-  // Helper to ensure player has at least the specified amount of gold
-  async function ensurePlayerGold(player, amount) {
-    // Use the new donateGoldForTier helper, which handles minting, staking, collecting, and donating gold
-    await donateGoldForTier(player, gameState, gridBuildings, altar, sonicityNFT, amount);
-  }
 
   beforeEach(async function () {
     [owner, player1] = await ethers.getSigners();
@@ -112,7 +106,7 @@ describe("DistrictBuildings", function () {
   describe("Building Unlocking", function () {
     it("Should unlock buildings when tier requirement is met", async function () {
       // Ensure player has enough gold
-      await ensurePlayerGold(player1, 1000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
       // Donate gold to reach tier 1
       await gameState.connect(player1).donateGold(1000);
@@ -136,7 +130,7 @@ describe("DistrictBuildings", function () {
   describe("Building Construction", function () {
     beforeEach(async function () {
       // Ensure player has enough gold
-      await ensurePlayerGold(player1, 1000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
       // Donate gold to reach tier 1
       await gameState.connect(player1).donateGold(1000);
@@ -176,7 +170,7 @@ describe("DistrictBuildings", function () {
   describe("Building Damage and Repair", function () {
     beforeEach(async function () {
       // Ensure player has enough gold
-      await ensurePlayerGold(player1, 1000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
       // Donate gold to reach tier 1
       await gameState.connect(player1).donateGold(1000);
@@ -189,7 +183,7 @@ describe("DistrictBuildings", function () {
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
       
       // Damage the defense tower through BattleSystem
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
 
       // Check if building is now damaged
       const isDamaged = await districtBuildings.isBuildingDamaged(player1Address, 3); // DEFENSE_TOWER
@@ -215,7 +209,7 @@ describe("DistrictBuildings", function () {
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
       
       // Damage the defense tower through BattleSystem
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
 
       // Verify the building is damaged
       const isDamaged = await districtBuildings.isBuildingDamaged(player1Address, 3); // DEFENSE_TOWER
@@ -223,7 +217,7 @@ describe("DistrictBuildings", function () {
 
       // Try to damage it again through BattleSystem
       await expect(
-        battleSystem.connect(owner).testDamageBuildings(player1Address, 1)
+        battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1)
       ).to.be.revertedWith("No buildings available to damage");
     });
 
@@ -240,7 +234,7 @@ describe("DistrictBuildings", function () {
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
       
       // Damage the defense tower through BattleSystem
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
 
       // Verify building is damaged
       const isDamagedBefore = await districtBuildings.isBuildingDamaged(player1Address, 3); // DEFENSE_TOWER
@@ -249,28 +243,33 @@ describe("DistrictBuildings", function () {
       // Repair the building
       await districtBuildings.connect(player1).repairBuilding(3); // DEFENSE_TOWER
 
-      // Check if building is no longer damaged
+      // Verify building is repaired
       const isDamagedAfter = await districtBuildings.isBuildingDamaged(player1Address, 3); // DEFENSE_TOWER
       expect(isDamagedAfter).to.be.false;
 
-      // Check repair cost was deducted (half of build cost)
+      // Check gold was deducted
       const finalGold = await gameState.getPlayerGold(player1Address);
-      const expectedGold = initialGold - 150n - 200n - 100n; // Initial gold - workshop cost - defense tower cost - repair cost (half of 200)
+      // Workshop costs 150, defense tower costs 200, repair is half of 200 = 100
+      const expectedGold = initialGold - 150n - 200n - 100n;
       expect(finalGold).to.equal(expectedGold);
     });
 
     it("Should not allow repairing an active building", async function () {
-      // Build the defense tower first
+      const player1Address = await player1.getAddress();
+      
+      // Build the defense tower
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
       
+      // Try to repair an undamaged building
       await expect(
         districtBuildings.connect(player1).repairBuilding(3) // DEFENSE_TOWER
       ).to.be.revertedWith("Building not damaged");
     });
 
     it("Should not allow repairing a non-built building", async function () {
+      // Try to repair a building that hasn't been built
       await expect(
-        districtBuildings.connect(player1).repairBuilding(4) // BARRACKS
+        districtBuildings.connect(player1).repairBuilding(3) // DEFENSE_TOWER
       ).to.be.revertedWith("Building not built");
     });
 
@@ -284,7 +283,7 @@ describe("DistrictBuildings", function () {
       await districtBuildings.connect(player1).buildDistrictBuilding(3);
 
       // Damage one building - it should damage the tier 1 building, not the tier 0
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
       
       // Verify the tier 0 building (SHOP) is not damaged
       const isShopDamaged = await districtBuildings.isBuildingDamaged(player1Address, 0);
@@ -296,7 +295,7 @@ describe("DistrictBuildings", function () {
 
       // Try to damage again - should revert since no valid targets remain
       await expect(
-        battleSystem.connect(owner).testDamageBuildings(player1Address, 1)
+        battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1)
       ).to.be.revertedWith("No buildings available to damage");
     });
 
@@ -304,7 +303,7 @@ describe("DistrictBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Ensure player has enough gold for all buildings
-      await ensurePlayerGold(player1, 2000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 2000);
       
       // Donate gold to reach tier 2
       await gameState.connect(player1).donateGold(2500);
@@ -315,7 +314,7 @@ describe("DistrictBuildings", function () {
       await districtBuildings.connect(player1).buildDistrictBuilding(7); // REP_STATION (tier 2)
       
       // Damage one building
-      await battleSystem.connect(owner).testDamageBuildings(player1Address, 1);
+      await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
       
       // Check that the highest tier building (REP_STATION) was damaged
       const isRepStationDamaged = await districtBuildings.isBuildingDamaged(player1Address, 7);
