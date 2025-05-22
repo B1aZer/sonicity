@@ -59,9 +59,10 @@ export class FarmPage extends BasePage {
             Logger.info('Filtered farms:', farms);
 
             // Get the current production rate from contract
-            const productionRate = await this.contracts.gridBuildings.getBuildingProductionRate(
+            const buildingConfig = await this.contracts.gridBuildings.getBuildingConfig(
                 GridBuildingsContract.BuildingType.FARM
             );
+            const productionRate = buildingConfig.baseProductionRate;
             Logger.info('Current farm production rate:', productionRate.toString());
 
             // Update UI with farm count
