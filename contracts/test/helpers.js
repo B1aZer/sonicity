@@ -120,9 +120,44 @@ async function donateGoldForTier(player, gameState, gridBuildings, altar, sonici
     await gameState.connect(player).donateGold(amount);
 }
 
+// Helper to ensure player has at least the specified amount of gold (without donating)
+async function ensurePlayerGold(player, gameState, gridBuildings, altar, sonicityNFT, amount) {
+    const playerAddress = await player.getAddress();
+    let gold = await gameState.getPlayerGold(playerAddress);
+    
+    // If we already have enough gold, return early
+    if (gold >= amount) return;
+    
+    // Get current houses
+    const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
+    
+    // Create houses up to the limit of 9 if needed
+    if (currentHouses < 9) {
+        for (let i = currentHouses; i < 9; i++) {
+            await mintAndStakeNFT(player, altar, sonicityNFT, GridBuildingType.HOUSE);
+        }
+    }
+    
+    // Fast forward time and collect until we have enough gold
+    while (gold < amount) {
+        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
+        await ethers.provider.send("evm_mine");
+        
+        // Get all active buildings
+        const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
+        // Collect from all houses
+        for (const buildingId of activeBuildings) {
+            await gridBuildings.connect(player).collectResources(buildingId);
+        }
+        
+        gold = await gameState.getPlayerGold(playerAddress);
+    }
+}
+
 module.exports = {
     GridBuildingType,
     mintAndStakeNFT,
     getDamagedBuildingId,
-    donateGoldForTier
+    donateGoldForTier,
+    ensurePlayerGold
 }; 
