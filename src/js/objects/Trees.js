@@ -8,17 +8,39 @@ export class Trees {
         this.trees = [];
         this.options = {
             count: options.count || 20,
-            minDistance: options.minDistance || 5,
-            maxDistance: options.maxDistance || 80,
+            minDistance: options.minDistance || 80,  // Increased to avoid city hall area
+            maxDistance: options.maxDistance || 150, // Increased to spread trees further
             scale: options.scale || 1.0,
             ...options
         };
+        
+        // Define building exclusion zones
+        this.buildingZones = [
+            { x: 0, z: -40, radius: 30 },    // City Hall zone
+            { x: -40, z: 0, radius: 20 },    // Altar zone
+            { x: -20, z: -35, radius: 15 },  // Shop zone
+            { x: 20, z: -35, radius: 15 },   // Workshop zone
+            { x: -20, z: 35, radius: 15 },   // Defense Tower zone
+        ];
         
         this.treeModels = [
             'assets/tree.glb',
         ];
         
         this.loadTrees();
+    }
+
+    isPositionValid(x, z) {
+        // Check if position is too close to any building
+        for (const zone of this.buildingZones) {
+            const dx = x - zone.x;
+            const dz = z - zone.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+            if (distance < zone.radius) {
+                return false;
+            }
+        }
+        return true;
     }
 
     async loadTrees() {
@@ -40,7 +62,11 @@ export class Trees {
             );
 
             // Place trees randomly
-            for (let i = 0; i < this.options.count; i++) {
+            let placedTrees = 0;
+            let attempts = 0;
+            const maxAttempts = this.options.count * 3; // Allow some extra attempts
+
+            while (placedTrees < this.options.count && attempts < maxAttempts) {
                 const randomModel = treeModels[Math.floor(Math.random() * treeModels.length)];
                 const tree = randomModel.scene.clone();
                 
@@ -49,35 +75,42 @@ export class Trees {
                 const distance = this.options.minDistance + 
                     Math.random() * (this.options.maxDistance - this.options.minDistance);
                 
-                tree.position.x = Math.cos(angle) * distance;
-                tree.position.z = Math.sin(angle) * distance;
-                tree.position.y = 0;
+                const x = Math.cos(angle) * distance;
+                const z = Math.sin(angle) * distance;
                 
-                // Random rotation
-                tree.rotation.y = Math.random() * Math.PI * 2;
+                // Check if position is valid (not too close to buildings)
+                if (this.isPositionValid(x, z)) {
+                    tree.position.set(x, 0, z);
+                    
+                    // Random rotation
+                    tree.rotation.y = Math.random() * Math.PI * 2;
+                    
+                    // Random scale variation for more natural look
+                    const scaleVariation = 0.6 + Math.random() * 0.8;
+                    const heightVariation = 0.8 + Math.random() * 0.4;
+                    tree.scale.set(
+                        this.options.scale * scaleVariation,
+                        this.options.scale * heightVariation,
+                        this.options.scale * scaleVariation
+                    );
+                    
+                    // Enable shadows
+                    tree.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+                    
+                    this.scene.add(tree);
+                    this.trees.push(tree);
+                    placedTrees++;
+                }
                 
-                // Random scale variation for more natural look
-                const scaleVariation = 0.6 + Math.random() * 0.8; // Random scale between 0.6 and 1.4
-                const heightVariation = 0.8 + Math.random() * 0.4; // Slightly different height variation
-                tree.scale.set(
-                    this.options.scale * scaleVariation,
-                    this.options.scale * heightVariation,
-                    this.options.scale * scaleVariation
-                );
-                
-                // Enable shadows
-                tree.traverse((child) => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
-                    }
-                });
-                
-                this.scene.add(tree);
-                this.trees.push(tree);
+                attempts++;
             }
             
-            Logger.info(`Placed ${this.options.count} trees in the scene`);
+            Logger.info(`Placed ${placedTrees} trees in the scene after ${attempts} attempts`);
         } catch (error) {
             Logger.error('Error loading trees:', error);
         }
