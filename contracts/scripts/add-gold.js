@@ -18,20 +18,29 @@ async function main() {
     console.log(`Using owner address: ${owner.address}`);
 
     const address = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8";
-    const amount = 1000; // 1000 gold
+    const goldAmount = 1000; // 1000 gold
+    const foodAmount = Math.floor(goldAmount / 2); // 500 food
 
-    console.log(`Adding ${amount} gold to address ${address}...`);
+    console.log(`Adding ${goldAmount} gold and ${foodAmount} food to address ${address}...`);
     
     // Connect gameState with owner's signer
     const gameStateWithOwner = gameState.connect(owner);
-    const tx = await gameStateWithOwner.testEarnGold(address, amount);
-    await tx.wait();
-
-    console.log("Gold added successfully!");
     
-    // Verify the new balance
-    const newBalance = await gameState.getPlayerGold(address);
-    console.log(`New gold balance: ${newBalance}`);
+    // Add gold
+    const goldTx = await gameStateWithOwner.testEarnGold(address, goldAmount);
+    await goldTx.wait();
+    console.log("Gold added successfully!");
+
+    // Add food
+    const foodTx = await gameStateWithOwner.testEarnFood(address, foodAmount);
+    await foodTx.wait();
+    console.log("Food added successfully!");
+    
+    // Verify the new balances
+    const newGoldBalance = await gameState.getPlayerGold(address);
+    const newFoodBalance = await gameState.getPlayerFood(address);
+    console.log(`New gold balance: ${newGoldBalance}`);
+    console.log(`New food balance: ${newFoodBalance}`);
 }
 
 main()
