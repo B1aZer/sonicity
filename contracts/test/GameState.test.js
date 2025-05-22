@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
+const { GridBuildingType, mintAndStakeNFT, getDamagedBuildingId, donateGoldForTier, ensurePlayerGold } = require("./helpers");
 
 describe("GameState", function () {
   let gameState;
@@ -9,38 +10,6 @@ describe("GameState", function () {
   let sonicityNFT;
   let altar;
   let gridBuildings;
-
-  // Helper to ensure player has at least the specified amount of gold
-  async function ensurePlayerGold(player, amount) {
-    const playerAddress = await player.getAddress();
-    let gold = await gameState.getPlayerGold(playerAddress);
-    
-    // If we already have enough gold, return early
-    if (gold >= amount) return;
-    
-    // Get current houses
-    const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
-    
-    // Create houses up to the limit of 9 if needed
-    if (currentHouses < 9) {
-        for (let i = currentHouses; i < 9; i++) {
-            await gridBuildings.connect(owner).createBuilding(playerAddress, 0);
-        }
-    }
-    
-    // Fast forward time and collect until we have enough gold
-    while (gold < amount) {
-        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
-        await ethers.provider.send("evm_mine");
-        
-        // Collect from all houses
-        for (let i = 0; i < 9; i++) {
-            await gridBuildings.connect(player).collectResources(i);
-        }
-        
-        gold = await gameState.getPlayerGold(playerAddress);
-    }
-  }
 
   beforeEach(async function () {
     [owner, player1, player2] = await ethers.getSigners();
@@ -84,6 +53,9 @@ describe("GameState", function () {
     // Set Altar address in GridBuildings
     await gridBuildings.setAltarAddress(altarAddress);
 
+    // Approve NFT collection in Altar
+    await altar.approveCollection(sonicityNFTAddress);
+
     // Initialize players
     await gameState.connect(player1).initializePlayer();
     await gameState.connect(player2).initializePlayer();
@@ -108,7 +80,7 @@ describe("GameState", function () {
 
   describe("Gold Management", function () {
     it("Should allow players to earn and donate gold", async function () {
-      await ensurePlayerGold(player1, 1000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
       const initialGold = await gameState.getPlayerGold(await player1.getAddress());
       const initialTreasury = await gameState.getPlayerTreasury(await player1.getAddress());
       await gameState.connect(player1).donateGold(500);
@@ -125,7 +97,7 @@ describe("GameState", function () {
 
   describe("Reputation Points", function () {
     beforeEach(async function () {
-      await ensurePlayerGold(player1, 1000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
     });
 
     it("Should award rep points for gold donations", async function () {
@@ -141,19 +113,19 @@ describe("GameState", function () {
       const player1Address = await player1.getAddress();
       
       // First donation to reach tier 1
-      await ensurePlayerGold(player1, 1000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
       await gameState.connect(player1).donateGold(1000);
       const state = await gameState.playerState(player1Address);
       expect(state.tier).to.equal(1);
       
       // Second donation to reach tier 2
-      await ensurePlayerGold(player1, 2000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 2000);
       await gameState.connect(player1).donateGold(1500); // Donate 1500 to reach 2500 total
       const state2 = await gameState.playerState(player1Address);
       expect(state2.tier).to.equal(2);
       
       // Third donation with tier 2 multiplier
-      await ensurePlayerGold(player1, 3000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 3000);
       await gameState.connect(player1).donateGold(1000);
       const finalRep = await gameState.getPlayerRep(player1Address);
       
@@ -168,7 +140,7 @@ describe("GameState", function () {
     it("Should accumulate rep points from multiple donations", async function () {
       const player1Address = await player1.getAddress();
       await gameState.connect(player1).donateGold(500);
-      await ensurePlayerGold(player1, 500);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 500);
       await gameState.connect(player1).donateGold(500);
       const finalRep = await gameState.getPlayerRep(player1Address);
       expect(finalRep).to.equal(10); // 1% of 500 + 1% of 500 = 10
@@ -185,7 +157,7 @@ describe("GameState", function () {
     it("Should upgrade tier when rep threshold is reached", async function () {
       const player1Address = await player1.getAddress();
       await gameState.connect(owner).setTierRequirement(1, 1000);
-      await ensurePlayerGold(player1, 1000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
       await gameState.connect(player1).donateGold(1000);
       const state = await gameState.playerState(player1Address);
       expect(state.tier).to.equal(1);
@@ -194,7 +166,7 @@ describe("GameState", function () {
     it("Should not downgrade tier when rep falls below threshold", async function () {
       const player1Address = await player1.getAddress();
       await gameState.connect(owner).setTierRequirement(1, 1000);
-      await ensurePlayerGold(player1, 1000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
       await gameState.connect(player1).donateGold(1000);
       let state = await gameState.playerState(player1Address);
       expect(state.tier).to.equal(1);
@@ -207,7 +179,7 @@ describe("GameState", function () {
       const player1Address = await player1.getAddress();
       
       // Ensure player has enough gold for the test
-      await ensurePlayerGold(player1, 4000);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 4000);
       
       // Get initial state
       const initialState = await gameState.playerState(player1Address);
