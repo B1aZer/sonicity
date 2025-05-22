@@ -54,8 +54,7 @@ export class HousePage extends BasePage {
 
             // Filter for houses
             const houses = activeBuildings.filter(building => 
-                building.buildingType === GridBuildingsContract.BuildingType.HOUSE && 
-                building.active
+                building.buildingType === GridBuildingsContract.BuildingType.HOUSE
             );
             Logger.info('Filtered houses:', houses);
 
