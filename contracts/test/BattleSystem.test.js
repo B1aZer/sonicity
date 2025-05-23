@@ -141,7 +141,7 @@ describe("BattleSystem", function () {
         });
 
         it("should fail if player doesn't have enough resources", async function () {
-            await gameState.connect(player1).donateGold(1000); // Donate all gold
+            // await gameState.connect(player1).donateGold(1000); // Donate all gold
             
             await expect(
                 battleSystem.connect(player1).trainTroops(0, 1)
@@ -151,10 +151,33 @@ describe("BattleSystem", function () {
 
     describe("Battle Mechanics", function () {
         beforeEach(async function () {
-            // Train some troops for player1
-            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
-            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
-            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
+            // Calculate total resources needed
+            const infantryCount = 10;
+            const cavalryCount = 5;
+            const siegeCount = 3;
+            
+            // Infantry: 100 gold, 50 food each
+            // Cavalry: 200 gold, 100 food each
+            // Siege: 300 gold, 150 food each
+            const totalGoldNeeded = (infantryCount * 100) + (cavalryCount * 200) + (siegeCount * 300);
+            const totalFoodNeeded = (infantryCount * 50) + (cavalryCount * 100) + (siegeCount * 150);
+
+            // Ensure player has enough resources
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, totalGoldNeeded);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, totalFoodNeeded);
+
+            // Log player's current resources
+            const gold = await gameState.getPlayerGold(player1.address);
+            const food = await gameState.getPlayerFood(player1.address);
+            console.log("Player1 resources before training:", {
+                gold: gold.toString(),
+                food: food.toString()
+            });
+
+            // Train troops for player1
+            await battleSystem.connect(player1).trainTroops(0, infantryCount); // 10 infantry
+            await battleSystem.connect(player1).trainTroops(1, cavalryCount);  // 5 cavalry
+            await battleSystem.connect(player1).trainTroops(2, siegeCount);  // 3 siege
         });
 
         it("should allow players to start a battle", async function () {
