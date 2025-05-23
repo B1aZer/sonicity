@@ -434,20 +434,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         require(amount > 0, "Amount must be greater than 0");
 
         uint256 buildingsDamaged = 0;
-        bool hasBuildingsToDamage = false;
-
-        // First check if there are any buildings that can be damaged
-        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-            Building storage building = buildings[player][i];
-            if ((building.buildingType != GridBuildingType(0) || building.level != 0) && !building.damaged) {
-                hasBuildingsToDamage = true;
-                break;
-            }
-        }
-
-        if (!hasBuildingsToDamage) {
-            revert("No buildings available to damage");
-        }
 
         // Start from highest tier and work down
         for (uint8 tier = 2; tier >= 0; tier--) {
@@ -502,7 +488,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function isBuildingDamaged(address player, uint256 buildingId) public view returns (bool) {
         Building storage building = buildings[player][buildingId];
-        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         return building.damaged;
     }
 }

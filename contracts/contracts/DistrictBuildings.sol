@@ -382,20 +382,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         require(amount > 0, "Amount must be greater than 0");
 
         uint256 buildingsDamaged = 0;
-        bool hasBuildingsToDamage = false;
-
-        // First check if there are any buildings that can be damaged (tier > 0)
         uint8 totalBuildings = getDistrictBuildingTypeCount();
-        for (uint8 i = 0; i < totalBuildings; i++) {
-            DistrictBuildingType buildingType = DistrictBuildingType(i);
-            DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
-            if (config.tier > 0 && buildings[player][buildingType].active && !buildings[player][buildingType].damaged) {
-                hasBuildingsToDamage = true;
-                break;
-            }
-        }
-
-        require(hasBuildingsToDamage, "No buildings available to damage");
 
         // Start from highest tier and work down, skip tier 0
         for (uint8 tier = 4; tier > 0; tier--) {
