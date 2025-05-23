@@ -7,6 +7,16 @@ const GridBuildingType = {
     REP_STATION: 2
 };
 
+// Logging configuration
+const ENABLE_LOGGING = false;
+
+// Helper function for logging
+function log(message) {
+    if (ENABLE_LOGGING) {
+        console.log(message);
+    }
+}
+
 // Helper to mint and stake an NFT, returning the building ID and tokenId
 async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
     const playerAddress = await player.getAddress();
@@ -78,46 +88,73 @@ async function getDamagedBuildingId(tx, gridBuildings) {
 async function donateGoldForTier(player, gameState, gridBuildings, altar, sonicityNFT, amount) {
     const playerAddress = await player.getAddress();
     let gold = await gameState.getPlayerGold(playerAddress);
+    
+    // Calculate total buildings and slot limit
+    let totalHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
+    let totalFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
+    let totalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_STATION);
+    let totalBuildings = totalHouses + totalFarms + totalRepStations;
+    let playerTier = await gameState.getPlayerTier(playerAddress);
+    let buildingSlotLimit = await gameState.buildingSlotsPerTier(playerTier);
+    
+    log(`Player (${playerAddress.slice(-6)}): gold: ${gold}, need: ${amount}. Total buildings: ${totalBuildings} / ${buildingSlotLimit} (${totalHouses}/${totalFarms}/${totalRepStations})`);
+    
+    // Track tokenIds for houses we create
+    const houseTokenIds = [];
+    
     // If we already have enough gold, skip to donation
     if (gold < BigInt(amount)) {
         // Get current houses
         const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
+
         // Create houses up to the limit of 9 if needed
         if (currentHouses < BigInt(9)) {
             for (let i = Number(currentHouses); i < 9; i++) {
-                await mintAndStakeNFT(player, altar, sonicityNFT, GridBuildingType.HOUSE);
+                const { tokenId } = await mintAndStakeNFT(player, altar, sonicityNFT, GridBuildingType.HOUSE);
+                houseTokenIds.push(tokenId);
             }
         }
+        
         // Fast forward time and collect until we have enough gold
         while (gold < BigInt(amount)) {
             await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
             await ethers.provider.send("evm_mine");
+            
             // Get all active buildings
             const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
             // Collect from all houses
             for (const buildingId of activeBuildings) {
                 await gridBuildings.connect(player).collectResources(buildingId);
-            }
+            }       
             gold = await gameState.getPlayerGold(playerAddress);
         }
-        // After collecting enough gold, remove all houses except one
-        const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
-        let housesRemoved = 0;
-        for (const id of activeBuildings) {
-            if (housesRemoved >= 8) break; // Keep one house
-            const building = await gridBuildings.buildings(playerAddress, id);
-            if (building.buildingType === BigInt(GridBuildingType.HOUSE)) {
-                // Find the NFT info for this building
-                const nftInfo = await altar.stakedBuilding(await sonicityNFT.getAddress(), id);
-                if (nftInfo) {
-                    await altar.connect(player).unstake(await sonicityNFT.getAddress(), id);
-                    housesRemoved++;
-                }
-            }
+    }
+    
+    // After collecting enough gold, remove all houses we created except one
+    let housesRemoved = 0;
+    for (const tokenId of houseTokenIds) {
+        if (housesRemoved >= 8) break; // Keep one house
+        try {
+            await altar.connect(player).unstake(await sonicityNFT.getAddress(), tokenId);
+            housesRemoved++;
+        } catch (error) {
+            log(`Failed to unstake token ${tokenId}: ${error.message}`);
         }
     }
+    
     // Donate gold
     await gameState.connect(player).donateGold(amount);
+
+    // Recalculate total buildings after donation
+    totalHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
+    totalFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
+    totalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_STATION);
+    totalBuildings = totalHouses + totalFarms + totalRepStations;
+    
+    // Get updated player's tier and building slot limit
+    playerTier = await gameState.getPlayerTier(playerAddress);
+    buildingSlotLimit = await gameState.buildingSlotsPerTier(playerTier);
+    log(`Player (${playerAddress.slice(-6)}) donated ${amount}: Total buildings: ${totalBuildings} / ${buildingSlotLimit} (${totalHouses}/${totalFarms}/${totalRepStations}). Removed ${housesRemoved} houses`);
 }
 
 // Helper to ensure player has at least the specified amount of gold (without donating)
@@ -125,16 +162,30 @@ async function ensurePlayerGold(player, gameState, gridBuildings, altar, sonicit
     const playerAddress = await player.getAddress();
     let gold = await gameState.getPlayerGold(playerAddress);
     
+    // Calculate total buildings and slot limit
+    const goldHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
+    const goldFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
+    const goldRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_STATION);
+    const goldTotalBuildings = goldHouses + goldFarms + goldRepStations;
+    const goldPlayerTier = await gameState.getPlayerTier(playerAddress);
+    const goldBuildingSlotLimit = await gameState.buildingSlotsPerTier(goldPlayerTier);
+    
+    log(`Player (${playerAddress.slice(-6)}): gold: ${gold}, need: ${amount}. Total buildings: ${goldTotalBuildings} / ${goldBuildingSlotLimit} (${goldHouses}/${goldFarms}/${goldRepStations})`);
+    
     // If we already have enough gold, return early
     if (gold >= amount) return;
     
     // Get current houses
     const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
     
+    // Track tokenIds for houses we create
+    const houseTokenIds = [];
+    
     // Create houses up to the limit of 9 if needed
     if (currentHouses < 9) {
         for (let i = currentHouses; i < 9; i++) {
-            await mintAndStakeNFT(player, altar, sonicityNFT, GridBuildingType.HOUSE);
+            const { tokenId } = await mintAndStakeNFT(player, altar, sonicityNFT, GridBuildingType.HOUSE);
+            houseTokenIds.push(tokenId);
         }
     }
     
@@ -152,6 +203,102 @@ async function ensurePlayerGold(player, gameState, gridBuildings, altar, sonicit
         
         gold = await gameState.getPlayerGold(playerAddress);
     }
+    
+    // After collecting enough gold, remove all houses we created except one
+    let housesRemoved = 0;
+    for (const tokenId of houseTokenIds) {
+        if (housesRemoved >= 8) break; // Keep one house
+        try {
+            await altar.connect(player).unstake(await sonicityNFT.getAddress(), tokenId);
+            housesRemoved++;
+        } catch (error) {
+            log(`Failed to unstake token ${tokenId}: ${error.message}`);
+        }
+    }
+    
+    // Recalculate total buildings after unstaking
+    const finalHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
+    const finalFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
+    const finalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_STATION);
+    const finalTotalBuildings = finalHouses + finalFarms + finalRepStations;
+    log(`Player (${playerAddress.slice(-6)}) collected ${amount} gold: Total buildings: ${finalTotalBuildings} / ${goldBuildingSlotLimit} (${finalHouses}/${finalFarms}/${finalRepStations}). Removed ${housesRemoved} houses`);
+}
+
+// Helper to ensure player has at least the specified amount of food
+async function ensurePlayerFood(player, gameState, gridBuildings, altar, sonicityFarm, amount) {
+    const playerAddress = await player.getAddress();
+    let food = await gameState.getPlayerFood(playerAddress);
+    
+    // Calculate total buildings and slot limit
+    const foodHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
+    const foodFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
+    const foodRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_STATION);
+    const foodTotalBuildings = foodHouses + foodFarms + foodRepStations;
+    const foodPlayerTier = await gameState.getPlayerTier(playerAddress);
+    const foodBuildingSlotLimit = await gameState.buildingSlotsPerTier(foodPlayerTier);
+    
+    log(`Player (${playerAddress.slice(-6)}): food: ${food}, need: ${amount}. Total buildings: ${foodTotalBuildings} / ${foodBuildingSlotLimit} (${foodHouses}/${foodFarms}/${foodRepStations})`);
+    
+    // If we already have enough food, return early
+    if (food >= amount) return;
+    
+    // Get current farms
+    const currentFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
+    
+    // Track tokenIds for farms we create
+    const farmTokenIds = [];
+    
+    // Create farms up to the limit of 9 if needed
+    if (currentFarms < 9) {
+        for (let i = currentFarms; i < 9; i++) {
+            const { tokenId } = await mintAndStakeNFT(player, altar, sonicityFarm, GridBuildingType.FARM);
+            farmTokenIds.push(tokenId);
+        }
+    }
+    
+    // Fast forward time and collect until we have enough food
+    let iterations = 0;
+    const maxIterations = 10; // Prevent infinite loop
+    while (food < amount && iterations < maxIterations) {
+        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
+        await ethers.provider.send("evm_mine");
+        
+        // Get all active buildings
+        const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
+        // Collect from all farms
+        for (const buildingId of activeBuildings) {
+            const building = await gridBuildings.buildings(playerAddress, buildingId);
+            if (building.buildingType === GridBuildingType.FARM) {
+                await gridBuildings.connect(player).collectResources(buildingId);
+            }
+        }
+        
+        const newFood = await gameState.getPlayerFood(playerAddress);
+        if (newFood <= food) {
+            break;
+        }
+        food = newFood;
+        iterations++;
+    }
+    
+    // After collecting enough food, remove all farms we created except one
+    let farmsRemoved = 0;
+    for (const tokenId of farmTokenIds) {
+        if (farmsRemoved >= 8) break; // Keep one farm
+        try {
+            await altar.connect(player).unstake(await sonicityFarm.getAddress(), tokenId);
+            farmsRemoved++;
+        } catch (error) {
+            log(`Failed to unstake token ${tokenId}: ${error.message}`);
+        }
+    }
+    
+    // Recalculate total buildings after unstaking
+    const finalHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
+    const finalFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
+    const finalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_STATION);
+    const finalTotalBuildings = finalHouses + finalFarms + finalRepStations;
+    log(`Player (${playerAddress.slice(-6)}) collected ${amount} food: Total buildings: ${finalTotalBuildings} / ${foodBuildingSlotLimit} (${finalHouses}/${finalFarms}/${finalRepStations}). Removed ${farmsRemoved} farms`);
 }
 
 module.exports = {
@@ -159,5 +306,6 @@ module.exports = {
     mintAndStakeNFT,
     getDamagedBuildingId,
     donateGoldForTier,
-    ensurePlayerGold
+    ensurePlayerGold,
+    ensurePlayerFood
 }; 
