@@ -632,4 +632,38 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(_chance <= 100, "Chance must be between 0 and 100");
         noOpponentFoundChance = _chance;
     }
+
+    /**
+     * @dev Set troop configuration
+     * @param troopType Type of troop to configure
+     * @param goldCost Cost in gold to train
+     * @param foodCost Cost in food to train
+     * @param power Power of the troop
+     * @param gridDamageChance Chance to damage grid buildings (0-100)
+     * @param districtDamageChance Chance to damage district buildings (0-100)
+     * @param treasuryBurnChance Chance to burn treasury (0-100)
+     */
+    function setTroopConfig(
+        uint8 troopType,
+        uint256 goldCost,
+        uint256 foodCost,
+        uint256 power,
+        uint256 gridDamageChance,
+        uint256 districtDamageChance,
+        uint256 treasuryBurnChance
+    ) external onlyOwner {
+        require(troopType <= uint8(TroopType.SIEGE), "Invalid troop type");
+        require(gridDamageChance <= 100, "Grid damage chance must be between 0 and 100");
+        require(districtDamageChance <= 100, "District damage chance must be between 0 and 100");
+        require(treasuryBurnChance <= 100, "Treasury burn chance must be between 0 and 100");
+
+        troopConfigs[TroopType(troopType)] = TroopConfig({
+            goldCost: goldCost,
+            foodCost: foodCost,
+            power: power,
+            gridDamageChance: gridDamageChance,
+            districtDamageChance: districtDamageChance,
+            treasuryBurnChance: treasuryBurnChance
+        });
+    }
 } 
