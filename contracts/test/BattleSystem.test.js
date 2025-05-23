@@ -329,6 +329,59 @@ describe("BattleSystem", function () {
             ).to.be.revertedWith("Battle duration not elapsed");
         });
 
+        it("should apply battle effects (treasury burn, building damage)", async function () {
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
+            await ethers.provider.send("evm_mine");
+
+            // Get initial state
+            const initialTreasury = await gameState.getPlayerTreasury(player2.address);
+            const initialGridBuildings = await gridBuildings.buildingCounts(player2.address, GridBuildingType.HOUSE);
+            const initialDistrictBuildings = await districtBuildings.getDefenseTowerPower(player2.address);
+
+            // Log player2's district buildings
+            console.log("Player2's district buildings before battle:", initialDistrictBuildings.toString());
+
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+            
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.treasuryBurned).to.be.gt(0);
+            expect(battle.gridBuildingsDamaged).to.be.gt(0);
+            expect(battle.districtBuildingsDamaged).to.be.gt(0);
+
+            // Verify effects were applied
+            const finalTreasury = await gameState.getPlayerTreasury(player2.address);
+            expect(finalTreasury).to.be.lt(initialTreasury);
+
+            const finalGridBuildings = await gridBuildings.buildingCounts(player2.address, GridBuildingType.HOUSE);
+            expect(finalGridBuildings).to.be.lt(initialGridBuildings);
+
+            const finalDistrictBuildings = await districtBuildings.getDefenseTowerLevel(player2.address);
+            expect(finalDistrictBuildings).to.be.lt(initialDistrictBuildings);
+        });
+
+        it("should resolve battle after duration has passed for player2 without defense tower but with district buildings", async function () {
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
+            await ethers.provider.send("evm_mine");
+
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+            
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.resolved).to.equal(true);
+        });
+
+        it("should resolve battle after duration has passed for player2 without district buildings", async function () {
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
+            await ethers.provider.send("evm_mine");
+
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+            
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.resolved).to.equal(true);
+        });
+
         it("should resolve battle after duration has passed", async function () {
             // Fast forward time
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
@@ -352,32 +405,5 @@ describe("BattleSystem", function () {
             expect(battleRecord.defender).to.equal(player2.address);
         });
 
-        it("should apply battle effects (treasury burn, building damage)", async function () {
-            // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
-            await ethers.provider.send("evm_mine");
-
-            // Get initial state
-            const initialTreasury = await gameState.getPlayerTreasury(player2.address);
-            const initialGridBuildings = await gridBuildings.buildingCounts(player2.address, GridBuildingType.HOUSE);
-            const initialDistrictBuildings = await districtBuildings.getDefenseTowerLevel(player2.address);
-
-            await battleSystem.connect(player1).resolveBattle(player1.address);
-            
-            const battle = await battleSystem.activeBattles(player1.address);
-            expect(battle.treasuryBurned).to.be.gt(0);
-            expect(battle.gridBuildingsDamaged).to.be.gt(0);
-            expect(battle.districtBuildingsDamaged).to.be.gt(0);
-
-            // Verify effects were applied
-            const finalTreasury = await gameState.getPlayerTreasury(player2.address);
-            expect(finalTreasury).to.be.lt(initialTreasury);
-
-            const finalGridBuildings = await gridBuildings.buildingCounts(player2.address, GridBuildingType.HOUSE);
-            expect(finalGridBuildings).to.be.lt(initialGridBuildings);
-
-            const finalDistrictBuildings = await districtBuildings.getDefenseTowerLevel(player2.address);
-            expect(finalDistrictBuildings).to.be.lt(initialDistrictBuildings);
-        });
     });
 }); 
