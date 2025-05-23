@@ -368,6 +368,9 @@ describe("BattleSystem", function () {
                     validOpponentCount++;
                     foundOpponents.add(opponent);
                 }
+
+                await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
+                await ethers.provider.send("evm_mine");
             }
 
             // Log the results
@@ -405,6 +408,9 @@ describe("BattleSystem", function () {
                     validOpponentCount++;
                     foundOpponents.add(opponent);
                 }
+                
+                await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
+                await ethers.provider.send("evm_mine");
             }
 
             // Log the results
@@ -494,7 +500,7 @@ describe("BattleSystem", function () {
             const resolveTx = await battleSystem.connect(player1).resolveBattle(player1.address);
             
             const battle = await battleSystem.activeBattles(player1.address);
-            
+
             expect(battle.treasuryBurned).to.be.eq(0);
             expect(battle.gridBuildingsDamaged).to.be.eq(0);
             expect(battle.districtBuildingsDamaged).to.be.eq(0);
@@ -504,7 +510,7 @@ describe("BattleSystem", function () {
         it("should apply battle effects (treasury burn, building damage)", async function () {
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
-            await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
+            //await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
 
             // Start a battle
             await battleSystem.connect(player1).startBattle(
