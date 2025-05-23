@@ -103,7 +103,7 @@ describe("GridBuildings", function () {
     const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
     expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
     expect(house.level).to.equal(1);
-    expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(2));
+    expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(1));
     expect(farm.buildingType).to.equal(GridBuildingType.FARM);
     expect(farm.level).to.equal(1);
     expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(1));
@@ -204,14 +204,14 @@ describe("GridBuildings", function () {
       // For Tier 0, verify we can't create more than 9 houses
       // First verify current count
       const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-      expect(initialHouseCount).to.equal(BigInt(2)); // Should have 3 houses from beforeEach
+      expect(initialHouseCount).to.equal(BigInt(1)); // Should have 2 houses from beforeEach
 
       // First verify current counts
       const initialFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
       expect(initialFarmCount).to.equal(BigInt(1)); // Should have 1 farm from beforeEach
 
       // Create farms until we reach the limit
-      for (let i = 0; i < 8; i++) {
+      for (let i = 0; i < 9; i++) {
         await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
       }
       await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
@@ -386,14 +386,14 @@ describe("GridBuildings", function () {
           activeHouses++;
         }
       }
-      expect(activeHouses).to.equal(3); // Update expected count to match actual houses
+      expect(activeHouses).to.equal(2); // Update expected count to match actual houses
 
       // Calculate total claimable resources for houses
       const totalClaimableResources = await gridBuildings.calculateTotalClaimableResources(
         player1Address,
         GridBuildingType.HOUSE
       );
-      expect(totalClaimableResources).to.equal(BigInt(10 * 12 * 3)); // 10 gold per hour * 12 hours * 10 houses
+      expect(totalClaimableResources).to.equal(BigInt(10 * 12 * 2)); // 10 gold per hour * 12 hours * 2 houses
     });
 
     it("Should correctly calculate resources if one of the houses was removed", async function () {
@@ -401,7 +401,7 @@ describe("GridBuildings", function () {
       
       // Get initial house count
       const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-      expect(initialHouseCount).to.equal(BigInt(3)); // Should have 3 houses from beforeEach
+      expect(initialHouseCount).to.equal(BigInt(2)); // Should have 2 houses from beforeEach
 
       // Create two additional houses
       const result1 = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
@@ -418,7 +418,7 @@ describe("GridBuildings", function () {
         player1Address,
         GridBuildingType.HOUSE
       );
-      expect(totalBeforeRemoval).to.equal(BigInt(10 * 12 * 5)); // 10 gold per hour * 12 hours * 5 houses (3 + 2 new)
+      expect(totalBeforeRemoval).to.equal(BigInt(10 * 12 * 4)); // 10 gold per hour * 12 hours * 4 houses (2 + 2 new)
 
       // Remove one house
       await altar.connect(player1).unstake(result1.nftAddress, result1.tokenId);
@@ -428,7 +428,7 @@ describe("GridBuildings", function () {
         player1Address,
         GridBuildingType.HOUSE
       );
-      expect(totalAfterRemoval).to.equal(BigInt(10 * 12 * 4)); // 10 gold per hour * 12 hours * 4 houses
+      expect(totalAfterRemoval).to.equal(BigInt(10 * 12 * 3)); // 10 gold per hour * 12 hours * 3 houses
 
       const house2Resources = await gridBuildings.calculateClaimableResources(player1Address, houseId2);
       expect(house2Resources).to.equal(BigInt(10 * 12)); // Active house should return normal amount
@@ -560,7 +560,7 @@ describe("GridBuildings", function () {
         const player1Address = await player1.getAddress();
 
         const houseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-        expect(houseCount).to.equal(BigInt(3));
+        expect(houseCount).to.equal(BigInt(2));
 
         const farmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
         expect(farmCount).to.equal(BigInt(2));
@@ -671,7 +671,7 @@ describe("GridBuildings", function () {
       const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
       expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
       expect(house.level).to.equal(1);
-      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(3));
+      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(2));
       expect(farm.buildingType).to.equal(GridBuildingType.FARM);
       expect(farm.level).to.equal(1);
       expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(2));
