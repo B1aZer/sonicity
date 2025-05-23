@@ -737,10 +737,11 @@ describe("GridBuildings", function () {
         const damagedBuildingId = await getDamagedBuildingId(damageTx, gridBuildings);
       }
 
-      // Try to damage one more building - should fail
-      await expect(
-        battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1)
-      ).to.be.revertedWith("No buildings available to damage");
+      // Try to damage one more building - should return 0
+      const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
+      await damageTx.wait();
+      const returnValue = await battleSystem.connect(owner).testDamageGridBuildings.staticCall(player1Address, 1);
+      expect(returnValue).to.equal(0);
     });
 
     it("Should allow repairing damaged buildings", async function () {
@@ -956,6 +957,37 @@ describe("GridBuildings", function () {
       // Check building is repaired
       building = await gridBuildings.buildings(player1Address, damagedBuildingId);
       expect(building.damaged).to.be.false;
+    });
+
+    it("Should not damage more buildings than specified", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create multiple houses
+      const { buildingId: house1Id } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      const { buildingId: house2Id } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      const { buildingId: house3Id } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Try to damage 2 buildings
+      const damageAmount = 2;
+      const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, damageAmount);
+      await damageTx.wait();
+      const returnValue = await battleSystem.connect(owner).testDamageGridBuildings.staticCall(player1Address, damageAmount);
+      
+      // Verify exactly 2 buildings were damaged
+      expect(returnValue).to.equal(damageAmount);
+      
+      // Count how many buildings are actually damaged
+      let damagedCount = 0;
+      const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
+      for (const buildingId of activeBuildings) {
+        const building = await gridBuildings.buildings(player1Address, buildingId);
+        if (building.damaged) {
+          damagedCount++;
+        }
+      }
+      
+      // Verify exactly 2 buildings were damaged
+      expect(damagedCount).to.equal(damageAmount);
     });
   });
 }); 
