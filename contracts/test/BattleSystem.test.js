@@ -169,10 +169,6 @@ describe("BattleSystem", function () {
             // Log player's current resources
             const gold = await gameState.getPlayerGold(player1.address);
             const food = await gameState.getPlayerFood(player1.address);
-            console.log("Player1 resources before training:", {
-                gold: gold.toString(),
-                food: food.toString()
-            });
 
             // Train troops for player1
             await battleSystem.connect(player1).trainTroops(0, infantryCount); // 10 infantry
@@ -253,11 +249,12 @@ describe("BattleSystem", function () {
         });
 
         it("should fail to register if player tier is too low", async function () {
-            // Reset player tier to 0
-            await gameState.connect(owner).setPlayerTier(player1.address, 0);
+            // Create a new player that will be at tier 0
+            const [newPlayer] = await ethers.getSigners();
+            await gameState.connect(newPlayer).initializePlayer();
             
             await expect(
-                battleSystem.connect(player1).registerForMatchmaking()
+                battleSystem.connect(newPlayer).registerForMatchmaking()
             ).to.be.revertedWith("Must be tier 1 or higher to register");
         });
 
@@ -293,10 +290,29 @@ describe("BattleSystem", function () {
 
     describe("Battle Resolution", function () {
         beforeEach(async function () {
+            // Calculate total resources needed
+            const infantryCount = 10;
+            const cavalryCount = 5;
+            const siegeCount = 3;
+            
+            // Infantry: 100 gold, 50 food each
+            // Cavalry: 200 gold, 100 food each
+            // Siege: 300 gold, 150 food each
+            const totalGoldNeeded = (infantryCount * 100) + (cavalryCount * 200) + (siegeCount * 300);
+            const totalFoodNeeded = (infantryCount * 50) + (cavalryCount * 100) + (siegeCount * 150);
+
+            // Ensure player has enough resources
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, totalGoldNeeded);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, totalFoodNeeded);
+
+            // Log player's current resources
+            const gold = await gameState.getPlayerGold(player1.address);
+            const food = await gameState.getPlayerFood(player1.address);
+
             // Train troops for player1
-            await battleSystem.connect(player1).trainTroops(0, 10);
-            await battleSystem.connect(player1).trainTroops(1, 5);
-            await battleSystem.connect(player1).trainTroops(2, 3);
+            await battleSystem.connect(player1).trainTroops(0, infantryCount); // 10 infantry
+            await battleSystem.connect(player1).trainTroops(1, cavalryCount);  // 5 cavalry
+            await battleSystem.connect(player1).trainTroops(2, siegeCount);  // 3 siege
 
             // Start a battle
             await battleSystem.connect(player1).startBattle(
