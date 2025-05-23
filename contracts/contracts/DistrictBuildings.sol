@@ -389,52 +389,35 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     }
 
     /**
-     * @dev Damage buildings (only callable by BattleSystem)
-     * @param player The address of the player whose buildings to damage
+     * @dev Damage district buildings for a player
+     * @param player The address of the player
      * @param amount Number of buildings to damage
-     * @return Number of buildings actually damaged
      */
-    function damageBuildings(address player, uint256 amount) external nonReentrant returns (uint256) {
-        require(msg.sender == battleSystemAddress, "Only BattleSystem can damage buildings");
+    function damageBuildings(address player, uint256 amount) external {
+        require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
         require(amount > 0, "Amount must be greater than 0");
         
         uint256 buildingsDamaged = 0;
-        uint256 totalBuildings = 0;
-        
-        // Count total active buildings
-        for (uint8 i = 0; i <= uint8(DistrictBuildingType.ALTAR); i++) {
-            if (activeDistrictBuildings[player][DistrictBuildingType(i)]) {
-                totalBuildings++;
-            }
-        }
-        
-        // If no buildings, return 0
-        if (totalBuildings == 0) {
-            return 0;
-        }
-        
-        // Calculate actual amount to damage (can't damage more than total buildings)
-        uint256 actualAmount = amount > totalBuildings ? totalBuildings : amount;
-        
-        // Damage buildings starting from highest tier
-        for (uint8 tier = 4; tier >= 0; tier--) {
-            for (uint8 i = 0; i <= uint8(DistrictBuildingType.ALTAR); i++) {
-                if (buildingsDamaged >= actualAmount) break;
-                
+        uint8 totalBuildings = getDistrictBuildingTypeCount();
+
+        // Start from highest tier and work down, skip tier 0
+        for (uint8 tier = 4; tier > 0; tier--) {
+            for (uint8 i = 0; i < totalBuildings; i++) {
                 DistrictBuildingType buildingType = DistrictBuildingType(i);
                 DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
+                if (config.tier != tier) continue;
                 
-                if (config.tier == tier && 
-                    activeDistrictBuildings[player][buildingType] && 
-                    !buildings[player][buildingType].damaged) {
+                // Only damage if built, active, and not already damaged
+                if (buildings[player][buildingType].active && !buildings[player][buildingType].damaged) {
                     buildings[player][buildingType].damaged = true;
-                    buildingsDamaged++;
                     emit DistrictBuildingDamaged(player, buildingType);
+                    buildingsDamaged++;
+                    if (buildingsDamaged >= amount) {
+                        return;
+                    }
                 }
             }
         }
-        
-        return buildingsDamaged;
     }
 
     /**

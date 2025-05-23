@@ -481,46 +481,34 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Damage buildings (only callable by BattleSystem)
-     * @param player The address of the player whose buildings to damage
+     * @dev Damage buildings for a player
+     * @param player The address of the player
      * @param amount Number of buildings to damage
-     * @return Number of buildings actually damaged
      */
-    function damageBuildings(address player, uint256 amount) external nonReentrant returns (uint256) {
-        require(msg.sender == battleSystemAddress, "Only BattleSystem can damage buildings");
+    function damageBuildings(address player, uint256 amount) external {
+        require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
         require(amount > 0, "Amount must be greater than 0");
         
         uint256 buildingsDamaged = 0;
-        uint256 totalBuildings = 0;
-        
-        // Count total buildings
-        for (uint8 i = 0; i <= uint8(GridBuildingType.REP_STATION); i++) {
-            totalBuildings += buildingCounts[player][GridBuildingType(i)];
-        }
-        
-        // If no buildings, return 0
-        if (totalBuildings == 0) {
-            return 0;
-        }
-        
-        // Calculate actual amount to damage (can't damage more than total buildings)
-        uint256 actualAmount = amount > totalBuildings ? totalBuildings : amount;
-        
-        // Damage buildings
-        for (uint256 buildingId = 0; buildingId < nextBuildingId[player]; buildingId++) {
-            if (buildingsDamaged >= actualAmount) break;
-            
-            Building storage building = buildings[player][buildingId];
-            if (building.buildingType != GridBuildingType(0) || building.level != 0) {
-                if (!building.damaged) {
+
+        // Start from highest tier and work down
+        for (uint8 tier = 2; tier >= 0; tier--) {
+            for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+                Building storage building = buildings[player][i];
+                // Skip if building doesn't exist or is already damaged
+                if ((building.buildingType == GridBuildingType(0) && building.level == 0) || building.damaged) continue;
+                
+                GridBuildingConfig memory config = buildingConfigs[building.buildingType];
+                if (config.tier == tier) {
                     building.damaged = true;
+                    emit BuildingDamaged(player, i);
                     buildingsDamaged++;
-                    emit BuildingDamaged(player, buildingId);
+                    if (buildingsDamaged >= amount) {
+                        return;
+                    }
                 }
             }
         }
-        
-        return buildingsDamaged;
     }
 
     /**
