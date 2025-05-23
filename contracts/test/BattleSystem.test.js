@@ -283,7 +283,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player3).registerForMatchmaking();
 
             const opponent = await battleSystem.connect(player1).findRandomOpponent();
-            expect(opponent).to.not.equal(ethers.constants.AddressZero);
+            expect(opponent).to.not.equal(ethers.ZeroAddress);
             expect(opponent).to.not.equal(player1.address);
         });
     });
