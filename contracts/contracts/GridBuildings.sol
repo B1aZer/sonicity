@@ -221,10 +221,18 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 upgradeCost = config.upgradeCost * building.level;
         
         // Deduct gold from player
-        (bool success, ) = gameStateAddress.call(
+        (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("deductGold(address,uint256)", msg.sender, upgradeCost)
         );
-        require(success, "Failed to deduct gold");
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to deduct gold");
+        }
         
         // Upgrade building
         building.level++;
@@ -259,20 +267,44 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         // Add resources to player based on building type
         if (building.buildingType == GridBuildingType.HOUSE) {
-            (bool success, ) = gameStateAddress.call(
+            (bool success, bytes memory returnData) = gameStateAddress.call(
                 abi.encodeWithSignature("earnGold(address,uint256)", msg.sender, amount)
             );
-            require(success, "Failed to add gold");
+            if (!success) {
+                // If the call failed, decode and propagate the error message
+                if (returnData.length > 0) {
+                    assembly {
+                        revert(add(returnData, 32), mload(returnData))
+                    }
+                }
+                revert("Failed to add gold");
+            }
         } else if (building.buildingType == GridBuildingType.FARM) {
-            (bool success, ) = gameStateAddress.call(
+            (bool success, bytes memory returnData) = gameStateAddress.call(
                 abi.encodeWithSignature("earnFood(address,uint256)", msg.sender, amount)
             );
-            require(success, "Failed to add food");
+            if (!success) {
+                // If the call failed, decode and propagate the error message
+                if (returnData.length > 0) {
+                    assembly {
+                        revert(add(returnData, 32), mload(returnData))
+                    }
+                }
+                revert("Failed to add food");
+            }
         } else if (building.buildingType == GridBuildingType.REP_STATION) {
-            (bool success, ) = gameStateAddress.call(
+            (bool success, bytes memory returnData) = gameStateAddress.call(
                 abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
             );
-            require(success, "Failed to add rep");
+            if (!success) {
+                // If the call failed, decode and propagate the error message
+                if (returnData.length > 0) {
+                    assembly {
+                        revert(add(returnData, 32), mload(returnData))
+                    }
+                }
+                revert("Failed to add rep");
+            }
         }
         
         emit ResourcesCollected(msg.sender, buildingId, amount);
@@ -308,20 +340,44 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 
                 // Add resources to player based on building type
                 if (building.buildingType == GridBuildingType.HOUSE) {
-                    (bool success, ) = gameStateAddress.call(
+                    (bool success, bytes memory returnData) = gameStateAddress.call(
                         abi.encodeWithSignature("earnGold(address,uint256)", msg.sender, amount)
                     );
-                    require(success, "Failed to add gold");
+                    if (!success) {
+                        // If the call failed, decode and propagate the error message
+                        if (returnData.length > 0) {
+                            assembly {
+                                revert(add(returnData, 32), mload(returnData))
+                            }
+                        }
+                        revert("Failed to add gold");
+                    }
                 } else if (building.buildingType == GridBuildingType.FARM) {
-                    (bool success, ) = gameStateAddress.call(
+                    (bool success, bytes memory returnData) = gameStateAddress.call(
                         abi.encodeWithSignature("earnFood(address,uint256)", msg.sender, amount)
                     );
-                    require(success, "Failed to add food");
+                    if (!success) {
+                        // If the call failed, decode and propagate the error message
+                        if (returnData.length > 0) {
+                            assembly {
+                                revert(add(returnData, 32), mload(returnData))
+                            }
+                        }
+                        revert("Failed to add food");
+                    }
                 } else if (building.buildingType == GridBuildingType.REP_STATION) {
-                    (bool success, ) = gameStateAddress.call(
+                    (bool success, bytes memory returnData) = gameStateAddress.call(
                         abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
                     );
-                    require(success, "Failed to add rep");
+                    if (!success) {
+                        // If the call failed, decode and propagate the error message
+                        if (returnData.length > 0) {
+                            assembly {
+                                revert(add(returnData, 32), mload(returnData))
+                            }
+                        }
+                        revert("Failed to add rep");
+                    }
                 }
                 
                 emit ResourcesCollected(msg.sender, buildingIds[i], amount);
@@ -425,34 +481,46 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Damage buildings for a player
-     * @param player The address of the player
+     * @dev Damage buildings (only callable by BattleSystem)
+     * @param player The address of the player whose buildings to damage
      * @param amount Number of buildings to damage
+     * @return Number of buildings actually damaged
      */
-    function damageBuildings(address player, uint256 amount) external {
-        require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
+    function damageBuildings(address player, uint256 amount) external nonReentrant returns (uint256) {
+        require(msg.sender == battleSystemAddress, "Only BattleSystem can damage buildings");
         require(amount > 0, "Amount must be greater than 0");
-
+        
         uint256 buildingsDamaged = 0;
-
-        // Start from highest tier and work down
-        for (uint8 tier = 2; tier >= 0; tier--) {
-            for (uint256 i = 0; i < nextBuildingId[player]; i++) {
-                Building storage building = buildings[player][i];
-                // Skip if building doesn't exist or is already damaged
-                if ((building.buildingType == GridBuildingType(0) && building.level == 0) || building.damaged) continue;
-                
-                GridBuildingConfig memory config = buildingConfigs[building.buildingType];
-                if (config.tier == tier) {
+        uint256 totalBuildings = 0;
+        
+        // Count total buildings
+        for (uint8 i = 0; i <= uint8(GridBuildingType.REP_STATION); i++) {
+            totalBuildings += buildingCounts[player][GridBuildingType(i)];
+        }
+        
+        // If no buildings, return 0
+        if (totalBuildings == 0) {
+            return 0;
+        }
+        
+        // Calculate actual amount to damage (can't damage more than total buildings)
+        uint256 actualAmount = amount > totalBuildings ? totalBuildings : amount;
+        
+        // Damage buildings
+        for (uint256 buildingId = 0; buildingId < nextBuildingId[player]; buildingId++) {
+            if (buildingsDamaged >= actualAmount) break;
+            
+            Building storage building = buildings[player][buildingId];
+            if (building.buildingType != GridBuildingType(0) || building.level != 0) {
+                if (!building.damaged) {
                     building.damaged = true;
-                    emit BuildingDamaged(player, i);
                     buildingsDamaged++;
-                    if (buildingsDamaged >= amount) {
-                        return;
-                    }
+                    emit BuildingDamaged(player, buildingId);
                 }
             }
         }
+        
+        return buildingsDamaged;
     }
 
     /**
@@ -469,10 +537,18 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 repairCost = config.upgradeCost * building.level / 2; // Half the upgrade cost per level
         
         // Call GameState to check and deduct gold
-        (bool success, ) = gameStateAddress.call(
+        (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("deductGold(address,uint256)", msg.sender, repairCost)
         );
-        require(success, "Failed to deduct gold");
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to deduct gold");
+        }
 
         // Repair building
         building.damaged = false;

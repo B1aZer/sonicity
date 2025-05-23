@@ -330,10 +330,18 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         require(config.buildCost > 0, "Invalid building");
 
         // Call GameState to check and deduct gold
-        (bool success, ) = gameStateAddress.call(
+        (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("deductGoldForDistrictBuilding(address,uint256)", msg.sender, config.buildCost)
         );
-        require(success, "Failed to deduct gold");
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to deduct gold");
+        }
 
         // Mark as built and set initial level to 1, and set active to true (even if previously damaged)
         buildings[msg.sender][buildingType] = Building({
@@ -361,10 +369,18 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         uint256 upgradeCost = config.upgradeCost * building.level;
         
         // Call GameState to check and deduct gold
-        (bool success, ) = gameStateAddress.call(
+        (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("deductGoldForDistrictBuilding(address,uint256)", msg.sender, upgradeCost)
         );
-        require(success, "Failed to deduct gold");
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to deduct gold");
+        }
         
         // Upgrade building
         building.level++;
@@ -373,35 +389,52 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     }
 
     /**
-     * @dev Damage district buildings for a player
-     * @param player The address of the player
+     * @dev Damage buildings (only callable by BattleSystem)
+     * @param player The address of the player whose buildings to damage
      * @param amount Number of buildings to damage
+     * @return Number of buildings actually damaged
      */
-    function damageBuildings(address player, uint256 amount) external {
-        require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
+    function damageBuildings(address player, uint256 amount) external nonReentrant returns (uint256) {
+        require(msg.sender == battleSystemAddress, "Only BattleSystem can damage buildings");
         require(amount > 0, "Amount must be greater than 0");
-
+        
         uint256 buildingsDamaged = 0;
-        uint8 totalBuildings = getDistrictBuildingTypeCount();
-
-        // Start from highest tier and work down, skip tier 0
-        for (uint8 tier = 4; tier > 0; tier--) {
-            for (uint8 i = 0; i < totalBuildings; i++) {
+        uint256 totalBuildings = 0;
+        
+        // Count total active buildings
+        for (uint8 i = 0; i <= uint8(DistrictBuildingType.ALTAR); i++) {
+            if (activeDistrictBuildings[player][DistrictBuildingType(i)]) {
+                totalBuildings++;
+            }
+        }
+        
+        // If no buildings, return 0
+        if (totalBuildings == 0) {
+            return 0;
+        }
+        
+        // Calculate actual amount to damage (can't damage more than total buildings)
+        uint256 actualAmount = amount > totalBuildings ? totalBuildings : amount;
+        
+        // Damage buildings starting from highest tier
+        for (uint8 tier = 4; tier >= 0; tier--) {
+            for (uint8 i = 0; i <= uint8(DistrictBuildingType.ALTAR); i++) {
+                if (buildingsDamaged >= actualAmount) break;
+                
                 DistrictBuildingType buildingType = DistrictBuildingType(i);
                 DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
-                if (config.tier != tier) continue;
                 
-                // Only damage if built, active, and not already damaged
-                if (buildings[player][buildingType].active && !buildings[player][buildingType].damaged) {
+                if (config.tier == tier && 
+                    activeDistrictBuildings[player][buildingType] && 
+                    !buildings[player][buildingType].damaged) {
                     buildings[player][buildingType].damaged = true;
-                    emit DistrictBuildingDamaged(player, buildingType);
                     buildingsDamaged++;
-                    if (buildingsDamaged >= amount) {
-                        return;
-                    }
+                    emit DistrictBuildingDamaged(player, buildingType);
                 }
             }
         }
+        
+        return buildingsDamaged;
     }
 
     /**
@@ -419,10 +452,18 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         uint256 repairCost = config.buildCost / 2; // Half the build cost
         
         // Call GameState to check and deduct gold
-        (bool success, ) = gameStateAddress.call(
+        (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("deductGoldForDistrictBuilding(address,uint256)", msg.sender, repairCost)
         );
-        require(success, "Failed to deduct gold");
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to deduct gold");
+        }
 
         // Repair building
         building.damaged = false;
