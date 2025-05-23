@@ -382,7 +382,7 @@ describe("BattleSystem", function () {
             expect(battle.resolved).to.equal(true);
         });
 
-        it("should resolve battle after duration has passed", async function () {
+        it("should resolve battle after duration has passed without grid buildings", async function () {
             // Fast forward time
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
             await ethers.provider.send("evm_mine");
