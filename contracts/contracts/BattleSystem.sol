@@ -355,19 +355,11 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function getDefenderPower(address defender) internal view returns (bool, uint256) {
         // Call DistrictBuildings to get defense tower level and calculate power
-        (bool success, bytes memory returnData) = districtBuildingsAddress.staticcall(
+        (bool success, bytes memory data) = districtBuildingsAddress.staticcall(
             abi.encodeWithSignature("getDefenseTowerPower(address)", defender)
         );
-        if (!success) {
-            // If the call failed, decode and propagate the error message
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            return (false, 0);
-        }
-        return (true, abi.decode(returnData, (uint256)));
+        if (!success) return (false, 0);
+        return (true, abi.decode(data, (uint256)));
     }
 
     function calculateTreasuryBurn(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
@@ -379,19 +371,11 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     function calculateTreasuryBurnAmount(address defender, uint256 burnPercent) internal view returns (uint256) {
-        (bool success, bytes memory returnData) = gameStateAddress.staticcall(
+        (bool success, bytes memory data) = gameStateAddress.staticcall(
             abi.encodeWithSignature("getPlayerTreasury(address)", defender)
         );
-        if (!success) {
-            // If the call failed, decode and propagate the error message
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to get treasury amount");
-        }
-        uint256 treasuryAmount = abi.decode(returnData, (uint256));
+        require(success, "Failed to get treasury amount");
+        uint256 treasuryAmount = abi.decode(data, (uint256));
         return (treasuryAmount * burnPercent) / 100;
     }
 
@@ -521,19 +505,11 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function registerForMatchmaking() external {
         // Check if player is tier 1 or higher
-        (bool success, bytes memory returnData) = gameStateAddress.staticcall(
+        (bool success, bytes memory data) = gameStateAddress.staticcall(
             abi.encodeWithSignature("getPlayerTier(address)", msg.sender)
         );
-        if (!success) {
-            // If the call failed, decode and propagate the error message
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to get player tier");
-        }
-        uint8 playerTier = abi.decode(returnData, (uint8));
+        require(success, "Failed to get player tier");
+        uint8 playerTier = abi.decode(data, (uint8));
         require(playerTier >= 1, "Must be tier 1 or higher to register");
 
         // Check if not in battle
