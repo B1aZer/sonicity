@@ -356,6 +356,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function calculateTreasuryBurn(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
         // Calculate burn percentage based on power difference
+        if (attackerPower == 0) return 0;
         uint256 powerDiff = attackerPower > defenderPower ? attackerPower - defenderPower : 0;
         uint256 burnPercent = (powerDiff * 100) / attackerPower;
         return burnPercent > MAX_TREASURY_BURN_PERCENT ? MAX_TREASURY_BURN_PERCENT : burnPercent;
@@ -371,6 +372,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     function calculateRepPoints(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
+        if (attackerPower == 0) return 0;
         uint256 powerDiff = attackerPower > defenderPower ? attackerPower - defenderPower : 0;
         return (powerDiff * 10) / 100; // 10 REP points per 100 power difference
     }
@@ -384,7 +386,15 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 cavalryCount = playerTroops[attacker][TroopType.CAVALRY];
         if (cavalryCount > 0) {
             uint256 damageChance = troopConfigs[TroopType.CAVALRY].gridDamageChance;
-            if (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, attacker))) % 100 < damageChance) {
+            // Use a more secure random number generation
+            bytes32 randomSeed = keccak256(abi.encodePacked(
+                blockhash(block.number - 1),
+                block.timestamp,
+                attacker,
+                defender,
+                "cavalry"
+            ));
+            if (uint256(randomSeed) % 100 < damageChance) {
                 // Calculate number of buildings to damage based on cavalry count
                 // 1 building per 5 cavalry, max 3 buildings
                 uint256 buildingsToDamage = (cavalryCount / 5) + 1;
@@ -403,7 +413,15 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         if (siegeCount > 0) {
             // Try to damage district building
             uint256 damageChance = troopConfigs[TroopType.SIEGE].districtDamageChance;
-            if (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, attacker))) % 100 < damageChance) {
+            // Use a more secure random number generation
+            bytes32 randomSeed = keccak256(abi.encodePacked(
+                blockhash(block.number - 1),
+                block.timestamp,
+                attacker,
+                defender,
+                "siege"
+            ));
+            if (uint256(randomSeed) % 100 < damageChance) {
                 // Calculate number of buildings to damage based on siege count
                 // 1 building per 3 siege, max 2 buildings
                 uint256 buildingsToDamage = (siegeCount / 3) + 1;
@@ -419,7 +437,15 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             // Try to burn treasury
             if (treasuryBurned > 0) {
                 uint256 burnChance = troopConfigs[TroopType.SIEGE].treasuryBurnChance;
-                if (uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, attacker))) % 100 < burnChance) {
+                // Use a more secure random number generation
+                bytes32 randomSeed = keccak256(abi.encodePacked(
+                    blockhash(block.number - 1),
+                    block.timestamp,
+                    attacker,
+                    defender,
+                    "treasury"
+                ));
+                if (uint256(randomSeed) % 100 < burnChance) {
                     (bool success, ) = gameStateAddress.call(
                         abi.encodeWithSignature("burnTreasury(address,uint256)", defender, treasuryBurned)
                     );
