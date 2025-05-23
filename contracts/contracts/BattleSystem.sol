@@ -154,7 +154,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(amount > 0, "Amount must be greater than 0");
 
         // Check and deduct resources
-        (bool success, ) = gameStateAddress.call(
+        (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature(
                 "deductResources(address,uint256,uint256,uint256)",
                 msg.sender,
@@ -163,7 +163,15 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
                 0  // No rep cost for training
             )
         );
-        require(success, "Failed to deduct resources");
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to deduct resources");
+        }
 
         // Add troops to player's army
         playerTroops[msg.sender][troopType] += amount;
@@ -347,11 +355,19 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function getDefenderPower(address defender) internal view returns (bool, uint256) {
         // Call DistrictBuildings to get defense tower level and calculate power
-        (bool success, bytes memory data) = districtBuildingsAddress.staticcall(
+        (bool success, bytes memory returnData) = districtBuildingsAddress.staticcall(
             abi.encodeWithSignature("getDefenseTowerPower(address)", defender)
         );
-        if (!success) return (false, 0);
-        return (true, abi.decode(data, (uint256)));
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            return (false, 0);
+        }
+        return (true, abi.decode(returnData, (uint256)));
     }
 
     function calculateTreasuryBurn(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
@@ -363,11 +379,19 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     function calculateTreasuryBurnAmount(address defender, uint256 burnPercent) internal view returns (uint256) {
-        (bool success, bytes memory data) = gameStateAddress.staticcall(
+        (bool success, bytes memory returnData) = gameStateAddress.staticcall(
             abi.encodeWithSignature("getPlayerTreasury(address)", defender)
         );
-        require(success, "Failed to get treasury amount");
-        uint256 treasuryAmount = abi.decode(data, (uint256));
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to get treasury amount");
+        }
+        uint256 treasuryAmount = abi.decode(returnData, (uint256));
         return (treasuryAmount * burnPercent) / 100;
     }
 
@@ -400,10 +424,18 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
                 uint256 buildingsToDamage = (cavalryCount / 5) + 1;
                 if (buildingsToDamage > 3) buildingsToDamage = 3;
                 
-                (bool success, ) = gridBuildingsAddress.call(
+                (bool success, bytes memory returnData) = gridBuildingsAddress.call(
                     abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
                 );
-                require(success, "Failed to damage grid building");
+                if (!success) {
+                    // If the call failed, decode and propagate the error message
+                    if (returnData.length > 0) {
+                        assembly {
+                            revert(add(returnData, 32), mload(returnData))
+                        }
+                    }
+                    revert("Failed to damage grid building");
+                }
                 activeBattles[attacker].gridBuildingsDamaged += buildingsToDamage;
             }
         }
@@ -427,10 +459,18 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
                 uint256 buildingsToDamage = (siegeCount / 3) + 1;
                 if (buildingsToDamage > 2) buildingsToDamage = 2;
                 
-                (bool success, ) = districtBuildingsAddress.call(
+                (bool success, bytes memory returnData) = districtBuildingsAddress.call(
                     abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
                 );
-                require(success, "Failed to damage district building");
+                if (!success) {
+                    // If the call failed, decode and propagate the error message
+                    if (returnData.length > 0) {
+                        assembly {
+                            revert(add(returnData, 32), mload(returnData))
+                        }
+                    }
+                    revert("Failed to damage district building");
+                }
                 activeBattles[attacker].districtBuildingsDamaged += buildingsToDamage;
             }
 
@@ -446,30 +486,54 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
                     "treasury"
                 ));
                 if (uint256(treasuryRandomSeed) % 100 < burnChance) {
-                    (bool success, ) = gameStateAddress.call(
+                    (bool success, bytes memory returnData) = gameStateAddress.call(
                         abi.encodeWithSignature("burnTreasury(address,uint256)", defender, treasuryBurned)
                     );
-                    require(success, "Failed to burn treasury");
+                    if (!success) {
+                        // If the call failed, decode and propagate the error message
+                        if (returnData.length > 0) {
+                            assembly {
+                                revert(add(returnData, 32), mload(returnData))
+                            }
+                        }
+                        revert("Failed to burn treasury");
+                    }
                 }
             }
         }
 
         // Award REP points
         if (treasuryBurned > 0 || activeBattles[attacker].gridBuildingsDamaged > 0 || activeBattles[attacker].districtBuildingsDamaged > 0) {
-            (bool success, ) = gameStateAddress.call(
+            (bool success, bytes memory returnData) = gameStateAddress.call(
                 abi.encodeWithSignature("earnRep(address,uint256)", attacker, calculateRepPoints(activeBattles[attacker].attackerPower, activeBattles[attacker].defenderPower))
             );
-            require(success, "Failed to award REP points");
+            if (!success) {
+                // If the call failed, decode and propagate the error message
+                if (returnData.length > 0) {
+                    assembly {
+                        revert(add(returnData, 32), mload(returnData))
+                    }
+                }
+                revert("Failed to award REP points");
+            }
         }
     }
 
     function registerForMatchmaking() external {
         // Check if player is tier 1 or higher
-        (bool success, bytes memory data) = gameStateAddress.staticcall(
+        (bool success, bytes memory returnData) = gameStateAddress.staticcall(
             abi.encodeWithSignature("getPlayerTier(address)", msg.sender)
         );
-        require(success, "Failed to get player tier");
-        uint8 playerTier = abi.decode(data, (uint8));
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to get player tier");
+        }
+        uint8 playerTier = abi.decode(returnData, (uint8));
         require(playerTier >= 1, "Must be tier 1 or higher to register");
 
         // Check if not in battle
