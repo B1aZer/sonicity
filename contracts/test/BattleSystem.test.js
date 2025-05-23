@@ -374,6 +374,7 @@ describe("BattleSystem", function () {
             }
 
             // Log the results
+            /*
             console.log("\nRandomness Test Results (50% chance):");
             console.log("----------------------------------------");
             console.log(`Total attempts: ${attempts}`);
@@ -382,6 +383,7 @@ describe("BattleSystem", function () {
             console.log("Opponent distribution:");
             console.log(`  Player2: ${Array.from(foundOpponents).filter(addr => addr === player2.address).length} times`);
             console.log(`  Player3: ${Array.from(foundOpponents).filter(addr => addr === player3.address).length} times`);
+            */
 
             // Verify that we got both zero addresses and valid opponents
             expect(zeroAddressCount).to.be.gt(0);
@@ -414,6 +416,7 @@ describe("BattleSystem", function () {
             }
 
             // Log the results
+            /*
             console.log("\nRandomness Test Results (75% chance):");
             console.log("----------------------------------------");
             console.log(`Total attempts: ${attempts}`);
@@ -422,7 +425,8 @@ describe("BattleSystem", function () {
             console.log("Opponent distribution:");
             console.log(`  Player2: ${Array.from(foundOpponents).filter(addr => addr === player2.address).length} times`);
             console.log(`  Player3: ${Array.from(foundOpponents).filter(addr => addr === player3.address).length} times`);
-
+            */
+           
             // Verify that we got both zero addresses and valid opponents
             expect(zeroAddressCount).to.be.gt(0);
             expect(validOpponentCount).to.be.gt(0);
