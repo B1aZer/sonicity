@@ -145,7 +145,7 @@ describe("BattleSystem", function () {
             
             await expect(
                 battleSystem.connect(player1).trainTroops(0, 1)
-            ).to.be.revertedWith("Failed to deduct resources");
+            ).to.be.revertedWith("Insufficient food");
         });
     });
 
@@ -277,14 +277,157 @@ describe("BattleSystem", function () {
         });
 
         it("should find a random opponent", async function () {
+            // Set noOpponentFoundChance to 0 for testing
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+
             // Register multiple players
             await battleSystem.connect(player1).registerForMatchmaking();
             await battleSystem.connect(player2).registerForMatchmaking();
             await battleSystem.connect(player3).registerForMatchmaking();
 
+            // Get all registered players
+            const registeredPlayers = await battleSystem.connect(player1).findPotentialOpponents();
+            expect(registeredPlayers.length).to.equal(2); // Should find player2 and player3
+            expect(registeredPlayers).to.include(player2.address);
+            expect(registeredPlayers).to.include(player3.address);
+
+            // Test multiple times to ensure consistent behavior
+            const attempts = 10;
+            const foundOpponents = new Set();
+
+            for (let i = 0; i < attempts; i++) {
+                const opponent = await battleSystem.connect(player1).findRandomOpponent();
+                
+                // Basic validation
+                expect(opponent).to.not.equal(ethers.ZeroAddress);
+                expect(opponent).to.not.equal(player1.address);
+                
+                // Verify opponent is one of the registered players
+                expect(registeredPlayers).to.include(opponent);
+                
+                // Track unique opponents found
+                foundOpponents.add(opponent);
+            }
+
+            // Verify we found at least one opponent
+            expect(foundOpponents.size).to.be.gt(0);
+            
+            // Log the distribution of opponents found
+            console.log("Opponents found in", attempts, "attempts:", {
+                player2: Array.from(foundOpponents).filter(addr => addr === player2.address).length,
+                player3: Array.from(foundOpponents).filter(addr => addr === player3.address).length
+            });
+        });
+
+        it("should return zero address when no opponents are available", async function () {
+            // Set noOpponentFoundChance to 0 for testing
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+
+            // Register only player1
+            await battleSystem.connect(player1).registerForMatchmaking();
+
+            // Should return zero address as there are no other players
             const opponent = await battleSystem.connect(player1).findRandomOpponent();
-            expect(opponent).to.not.equal(ethers.ZeroAddress);
-            expect(opponent).to.not.equal(player1.address);
+            expect(opponent).to.equal(ethers.ZeroAddress);
+        });
+
+        it("should return zero address based on noOpponentFoundChance", async function () {
+            // Set noOpponentFoundChance to 100 to always return zero address
+            await battleSystem.connect(owner).setNoOpponentFoundChance(100);
+
+            // Register multiple players
+            await battleSystem.connect(player1).registerForMatchmaking();
+            await battleSystem.connect(player2).registerForMatchmaking();
+            await battleSystem.connect(player3).registerForMatchmaking();
+
+            // Should always return zero address due to 100% chance
+            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            expect(opponent).to.equal(ethers.ZeroAddress);
+        });
+
+        it("should demonstrate randomness with different probability settings", async function () {
+            // Register multiple players
+            await battleSystem.connect(player1).registerForMatchmaking();
+            await battleSystem.connect(player2).registerForMatchmaking();
+            await battleSystem.connect(player3).registerForMatchmaking();
+
+            // Test with 50% chance of finding opponent
+            await battleSystem.connect(owner).setNoOpponentFoundChance(50);
+            
+            const attempts = 100;
+            let zeroAddressCount = 0;
+            let validOpponentCount = 0;
+            const foundOpponents = new Set();
+
+            for (let i = 0; i < attempts; i++) {
+                const opponent = await battleSystem.connect(player1).findRandomOpponent();
+                
+                if (opponent === ethers.ZeroAddress) {
+                    zeroAddressCount++;
+                } else {
+                    validOpponentCount++;
+                    foundOpponents.add(opponent);
+                }
+            }
+
+            // Log the results
+            console.log("\nRandomness Test Results (50% chance):");
+            console.log("----------------------------------------");
+            console.log(`Total attempts: ${attempts}`);
+            console.log(`Zero address returns: ${zeroAddressCount} (${(zeroAddressCount/attempts*100).toFixed(1)}%)`);
+            console.log(`Valid opponent returns: ${validOpponentCount} (${(validOpponentCount/attempts*100).toFixed(1)}%)`);
+            console.log("Opponent distribution:");
+            console.log(`  Player2: ${Array.from(foundOpponents).filter(addr => addr === player2.address).length} times`);
+            console.log(`  Player3: ${Array.from(foundOpponents).filter(addr => addr === player3.address).length} times`);
+
+            // Verify that we got both zero addresses and valid opponents
+            expect(zeroAddressCount).to.be.gt(0);
+            expect(validOpponentCount).to.be.gt(0);
+            
+            // Verify that when we got valid opponents, they were either player2 or player3
+            for (const opponent of foundOpponents) {
+                expect([player2.address, player3.address]).to.include(opponent);
+            }
+
+            // Test with 75% chance of finding opponent
+            await battleSystem.connect(owner).setNoOpponentFoundChance(25);
+            
+            zeroAddressCount = 0;
+            validOpponentCount = 0;
+            foundOpponents.clear();
+
+            for (let i = 0; i < attempts; i++) {
+                const opponent = await battleSystem.connect(player1).findRandomOpponent();
+                
+                if (opponent === ethers.ZeroAddress) {
+                    zeroAddressCount++;
+                } else {
+                    validOpponentCount++;
+                    foundOpponents.add(opponent);
+                }
+            }
+
+            // Log the results
+            console.log("\nRandomness Test Results (75% chance):");
+            console.log("----------------------------------------");
+            console.log(`Total attempts: ${attempts}`);
+            console.log(`Zero address returns: ${zeroAddressCount} (${(zeroAddressCount/attempts*100).toFixed(1)}%)`);
+            console.log(`Valid opponent returns: ${validOpponentCount} (${(validOpponentCount/attempts*100).toFixed(1)}%)`);
+            console.log("Opponent distribution:");
+            console.log(`  Player2: ${Array.from(foundOpponents).filter(addr => addr === player2.address).length} times`);
+            console.log(`  Player3: ${Array.from(foundOpponents).filter(addr => addr === player3.address).length} times`);
+
+            // Verify that we got both zero addresses and valid opponents
+            expect(zeroAddressCount).to.be.gt(0);
+            expect(validOpponentCount).to.be.gt(0);
+            
+            // Verify that when we got valid opponents, they were either player2 or player3
+            for (const opponent of foundOpponents) {
+                expect([player2.address, player3.address]).to.include(opponent);
+            }
+
+            // Verify that with 75% chance we got more valid opponents than with 50% chance
+            expect(validOpponentCount).to.be.gt(attempts * 0.5);
         });
     });
 
@@ -334,17 +477,72 @@ describe("BattleSystem", function () {
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
             await ethers.provider.send("evm_mine");
 
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
+            await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
+
             // Get initial state
             const initialTreasury = await gameState.getPlayerTreasury(player2.address);
-            const initialGridBuildings = await gridBuildings.buildingCounts(player2.address, GridBuildingType.HOUSE);
-            const initialDistrictBuildings = await districtBuildings.getDefenseTowerPower(player2.address);
+            const initialGridBuildings = await gridBuildings.getActiveBuildings(player2.address);
+            const initialDistrictBuildings = await districtBuildings.getBuiltDistrictBuildings(player2.address);
+            const initialDistrictBuildingsPower = await districtBuildings.getDefenseTowerPower(player2.address);
 
-            // Log player2's district buildings
-            console.log("Player2's district buildings before battle:", initialDistrictBuildings.toString());
+            // Log detailed building information for player2
+            console.log("\nPlayer2's Building State Before Battle:");
+            console.log("----------------------------------------");
+            
+            // District Buildings
+            console.log(`District Buildings: ${initialDistrictBuildings.length}`);
+            const buildingTypeCount = await districtBuildings.getDistrictBuildingTypeCount();
+            for (let i = 0; i < buildingTypeCount; i++) {
+                const building = await districtBuildings.buildings(player2.address, i);
+                if (building.active) {
+                    const config = await districtBuildings.districtBuildingConfigs(i);
+                    console.log(`  ${config.name}:`, {
+                        level: building.level.toString(),
+                        active: building.active,
+                        damaged: building.damaged
+                    });
+                }
+            }
 
-            await battleSystem.connect(player1).resolveBattle(player1.address);
+            // Grid Buildings
+            const activeBuildings = await gridBuildings.getActiveBuildings(player2.address);
+            console.log(`\nGrid Buildings: ${activeBuildings.length} active`);
+            for (let i = 0; i < activeBuildings.length; i++) {
+                const buildingId = activeBuildings[i];
+                const building = await gridBuildings.buildings(player2.address, buildingId);
+                console.log(`  Building ${buildingId}:`, {
+                    type: building.buildingType.toString(),
+                    level: building.level.toString(),
+                    damaged: building.damaged,
+                    lastUpgradeTime: building.lastUpgradeTime.toString(),
+                    lastCollectionTime: building.lastCollectionTime.toString()
+                });
+            }
+
+            console.log("\nDefense Tower Power:", initialDistrictBuildingsPower.toString());
+            console.log("----------------------------------------\n");
+
+            // Resolve battle and capture debug events
+            const resolveTx = await battleSystem.connect(player1).resolveBattle(player1.address);
             
             const battle = await battleSystem.activeBattles(player1.address);
+            console.log("\nBattle Record:");
+            console.log("----------------------------------------");
+            console.log("Attacker:", battle.attacker);
+            console.log("Defender:", battle.defender);
+            console.log("Start Time:", new Date(Number(battle.startTime) * 1000).toISOString());
+            console.log("Resolved:", battle.resolved);
+            console.log("\nPower Levels:");
+            console.log("  Attacker Power:", battle.attackerPower.toString());
+            console.log("  Defender Power:", battle.defenderPower.toString());
+            console.log("\nBattle Effects:");
+            console.log("  Treasury Burned:", battle.treasuryBurned.toString());
+            console.log("  Grid Buildings Damaged:", battle.gridBuildingsDamaged.toString());
+            console.log("  District Buildings Damaged:", battle.districtBuildingsDamaged.toString());
+            console.log("  REP Points Awarded:", battle.repPoints.toString());
+            console.log("----------------------------------------\n");
+
             expect(battle.treasuryBurned).to.be.gt(0);
             expect(battle.gridBuildingsDamaged).to.be.gt(0);
             expect(battle.districtBuildingsDamaged).to.be.gt(0);
@@ -404,6 +602,5 @@ describe("BattleSystem", function () {
             expect(battleRecord.attacker).to.equal(player1.address);
             expect(battleRecord.defender).to.equal(player2.address);
         });
-
     });
 }); 
