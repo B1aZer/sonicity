@@ -269,6 +269,14 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     }
 
     /**
+     * @dev Get the number of district building types
+     * @return uint8 The number of building types
+     */
+    function getDistrictBuildingTypeCount() public pure returns (uint8) {
+        return uint8(DistrictBuildingType.ALTAR) + 1;
+    }
+
+    /**
      * @dev Check and unlock district buildings based on treasury
      * @param player The address of the player
      * @param treasury The player's treasury amount
@@ -277,7 +285,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         require(msg.sender == gameStateAddress, "Only GameState can call this function");
         
         // Check each building's unlock cost
-        for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
+        uint8 totalBuildings = getDistrictBuildingTypeCount();
+        for (uint8 i = 0; i < totalBuildings; i++) {
             DistrictBuildingType buildingType = DistrictBuildingType(i);
             DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
             if (treasury >= config.unlockCost && !unlockedDistrictBuildings[player][buildingType]) {
@@ -376,7 +385,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         bool hasBuildingsToDamage = false;
 
         // First check if there are any buildings that can be damaged (tier > 0)
-        for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
+        uint8 totalBuildings = getDistrictBuildingTypeCount();
+        for (uint8 i = 0; i < totalBuildings; i++) {
             DistrictBuildingType buildingType = DistrictBuildingType(i);
             DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
             if (config.tier > 0 && buildings[player][buildingType].active && !buildings[player][buildingType].damaged) {
@@ -389,7 +399,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
 
         // Start from highest tier and work down, skip tier 0
         for (uint8 tier = 4; tier > 0; tier--) {
-            for (uint8 i = 0; i < uint8(DistrictBuildingType.ALTAR) + 1; i++) {
+            for (uint8 i = 0; i < totalBuildings; i++) {
                 DistrictBuildingType buildingType = DistrictBuildingType(i);
                 DistrictBuildingConfig memory config = districtBuildingConfigs[buildingType];
                 if (config.tier != tier) continue;
@@ -460,7 +470,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return DistrictBuildingConfig[] Array of building configurations
      */
     function getAllDistrictBuildingConfigs() external view returns (DistrictBuildingType[] memory, DistrictBuildingConfig[] memory) {
-        uint8 totalBuildings = uint8(DistrictBuildingType.ALTAR) + 1;
+        uint8 totalBuildings = getDistrictBuildingTypeCount();
         DistrictBuildingType[] memory buildingTypes = new DistrictBuildingType[](totalBuildings);
         DistrictBuildingConfig[] memory configs = new DistrictBuildingConfig[](totalBuildings);
         
@@ -479,7 +489,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return DistrictBuildingConfig[] Array of building configurations
      */
     function getDistrictBuildingsByTier(uint8 tier) external view returns (DistrictBuildingType[] memory, DistrictBuildingConfig[] memory) {
-        uint8 totalBuildings = uint8(DistrictBuildingType.ALTAR) + 1;
+        uint8 totalBuildings = getDistrictBuildingTypeCount();
         uint8 count = 0;
         
         // First count how many buildings are in this tier
@@ -533,7 +543,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     }
 
     function getBuiltDistrictBuildings(address player) external view returns (uint8[] memory) {
-        uint8 totalBuildings = uint8(DistrictBuildingType.ALTAR) + 1;
+        uint8 totalBuildings = getDistrictBuildingTypeCount();
         uint8[] memory built = new uint8[](totalBuildings);
         uint8 count = 0;
         for (uint8 i = 0; i < totalBuildings; i++) {
