@@ -176,7 +176,7 @@ async function ensurePlayerGold(player, gameState, gridBuildings, altar, sonicit
     if (gold >= amount) return;
     
     // Get current houses
-    const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
+    const currentHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
     
     // Track tokenIds for houses we create
     const houseTokenIds = [];
@@ -191,17 +191,24 @@ async function ensurePlayerGold(player, gameState, gridBuildings, altar, sonicit
     
     // Fast forward time and collect until we have enough gold
     while (gold < amount) {
-        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
+        await ethers.provider.send("evm_increaseTime", [1 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
         
         // Get all active buildings
         const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
         // Collect from all houses
         for (const buildingId of activeBuildings) {
-            await gridBuildings.connect(player).collectResources(buildingId);
+            const building = await gridBuildings.buildings(playerAddress, buildingId);
+            if (BigInt(building.buildingType) === BigInt(GridBuildingType.HOUSE)) {
+                await gridBuildings.connect(player).collectResources(buildingId);
+            }
         }
         
-        gold = await gameState.getPlayerGold(playerAddress);
+        const newGold = await gameState.getPlayerGold(playerAddress);
+        if (newGold <= gold) {
+            break; // No more gold being generated
+        }
+        gold = newGold;
     }
     
     // After collecting enough gold, remove all houses we created except one
@@ -257,10 +264,8 @@ async function ensurePlayerFood(player, gameState, gridBuildings, altar, sonicit
     }
     
     // Fast forward time and collect until we have enough food
-    let iterations = 0;
-    const maxIterations = 10; // Prevent infinite loop
-    while (food < amount && iterations < maxIterations) {
-        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
+    while (food < amount) {
+        await ethers.provider.send("evm_increaseTime", [1 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
         
         // Get all active buildings
@@ -268,17 +273,16 @@ async function ensurePlayerFood(player, gameState, gridBuildings, altar, sonicit
         // Collect from all farms
         for (const buildingId of activeBuildings) {
             const building = await gridBuildings.buildings(playerAddress, buildingId);
-            if (building.buildingType === GridBuildingType.FARM) {
+            if (BigInt(building.buildingType) === BigInt(GridBuildingType.FARM)) {
                 await gridBuildings.connect(player).collectResources(buildingId);
             }
         }
         
         const newFood = await gameState.getPlayerFood(playerAddress);
         if (newFood <= food) {
-            break;
+            break; // No more food being generated
         }
         food = newFood;
-        iterations++;
     }
     
     // After collecting enough food, remove all farms we created except one
