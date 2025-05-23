@@ -484,10 +484,25 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @dev Damage buildings for a player
      * @param player The address of the player
      * @param amount Number of buildings to damage
+     * @return uint256 Number of buildings actually damaged
      */
-    function damageBuildings(address player, uint256 amount) external {
+    function damageBuildings(address player, uint256 amount) external returns (uint256) {
         require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
         require(amount > 0, "Amount must be greater than 0");
+        
+        // Count available buildings to damage
+        uint256 availableBuildings = 0;
+        for (uint256 i = 0; i < nextBuildingId[player]; i++) {
+            Building storage building = buildings[player][i];
+            if ((building.buildingType != GridBuildingType(0) || building.level != 0) && !building.damaged) {
+                availableBuildings++;
+            }
+        }
+        
+        // If no buildings available, return 0
+        if (availableBuildings == 0) {
+            return 0;
+        }
         
         uint256 buildingsDamaged = 0;
 
@@ -504,11 +519,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                     emit BuildingDamaged(player, i);
                     buildingsDamaged++;
                     if (buildingsDamaged >= amount) {
-                        return;
+                        return buildingsDamaged;
                     }
                 }
             }
         }
+        
+        return buildingsDamaged;
     }
 
     /**
