@@ -457,19 +457,14 @@ describe("BattleSystem", function () {
             // Ensure player has enough resources
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, totalGoldNeeded);
             await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, totalFoodNeeded);
-
-            // Log player's current resources
-            const gold = await gameState.getPlayerGold(player1.address);
-            const food = await gameState.getPlayerFood(player1.address);
-
-            // Train troops for player1
-            await battleSystem.connect(player1).trainTroops(0, infantryCount); // 10 infantry
-            await battleSystem.connect(player1).trainTroops(1, cavalryCount);  // 5 cavalry
-            await battleSystem.connect(player1).trainTroops(2, siegeCount);  // 3 siege
-
         });
 
         it("should fail to resolve battle before duration has passed", async function () {
+            // Train troops for player1
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
+            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
+            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
+
             // Start a battle
             await battleSystem.connect(player1).startBattle(
                 player2.address,
@@ -484,6 +479,10 @@ describe("BattleSystem", function () {
         });
 
         it("should not apply battle effects (equal power)", async function () {
+            // Train troops for player1
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
+            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
+            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
             await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
@@ -508,10 +507,13 @@ describe("BattleSystem", function () {
             expect(battle.treasuryBurned).to.be.eq(0);
             expect(battle.gridBuildingsDamaged).to.be.eq(0);
             expect(battle.districtBuildingsDamaged).to.be.eq(0);
-
         });
 
         it("should apply battle effects (treasury burn, building damage)", async function () {
+            // Train troops for player1
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
+            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
+            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
             //await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
@@ -527,7 +529,6 @@ describe("BattleSystem", function () {
             // Fast forward time
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
             await ethers.provider.send("evm_mine");
-
 
             // Get initial state
             const initialTreasury = await gameState.getPlayerTreasury(player2.address);
@@ -608,6 +609,10 @@ describe("BattleSystem", function () {
         });
 
         it("should resolve battle after duration has passed for player2 without defense tower but with district buildings", async function () {
+            // Train troops for player1
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
+            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
+            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             // Start a battle
             await battleSystem.connect(player1).startBattle(
@@ -628,6 +633,10 @@ describe("BattleSystem", function () {
         });
 
         it("should resolve battle after duration has passed for player2 without district buildings", async function () {
+            // Train troops for player1
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
+            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
+            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             // Start a battle
             await battleSystem.connect(player1).startBattle(
@@ -648,6 +657,10 @@ describe("BattleSystem", function () {
         });
 
         it("should resolve battle after duration has passed without grid buildings", async function () {
+            // Train troops for player1
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
+            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
+            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             // Start a battle
             await battleSystem.connect(player1).startBattle(
@@ -668,6 +681,11 @@ describe("BattleSystem", function () {
         });
 
         it("should record battle history after resolution", async function () {
+            // Train troops for player1
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
+            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
+            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
+
             // Start a battle
             await battleSystem.connect(player1).startBattle(
                 player2.address,
