@@ -457,6 +457,9 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(1, cavalryCount);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, siegeCount);  // 3 siege
 
+        });
+
+        it("should fail to resolve battle before duration has passed", async function () {
             // Start a battle
             await battleSystem.connect(player1).startBattle(
                 player2.address,
@@ -464,21 +467,29 @@ describe("BattleSystem", function () {
                 2,
                 1
             );
-        });
 
-        it("should fail to resolve battle before duration has passed", async function () {
             await expect(
                 battleSystem.connect(player1).resolveBattle(player1.address)
             ).to.be.revertedWith("Battle duration not elapsed");
         });
 
         it("should apply battle effects (treasury burn, building damage)", async function () {
+
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
+            await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
+
+            // Start a battle
+            await battleSystem.connect(player1).startBattle(
+                player2.address,
+                5,
+                2,
+                1
+            );
+
             // Fast forward time
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
             await ethers.provider.send("evm_mine");
 
-            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
-            await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
 
             // Get initial state
             const initialTreasury = await gameState.getPlayerTreasury(player2.address);
@@ -559,6 +570,15 @@ describe("BattleSystem", function () {
         });
 
         it("should resolve battle after duration has passed for player2 without defense tower but with district buildings", async function () {
+
+            // Start a battle
+            await battleSystem.connect(player1).startBattle(
+                player2.address,
+                5,
+                2,
+                1
+            );
+
             // Fast forward time
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
             await ethers.provider.send("evm_mine");
@@ -570,6 +590,15 @@ describe("BattleSystem", function () {
         });
 
         it("should resolve battle after duration has passed for player2 without district buildings", async function () {
+
+            // Start a battle
+            await battleSystem.connect(player1).startBattle(
+                player2.address,
+                5,
+                2,
+                1
+            );
+
             // Fast forward time
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
             await ethers.provider.send("evm_mine");
@@ -581,6 +610,15 @@ describe("BattleSystem", function () {
         });
 
         it("should resolve battle after duration has passed without grid buildings", async function () {
+
+            // Start a battle
+            await battleSystem.connect(player1).startBattle(
+                player2.address,
+                5,
+                2,
+                1
+            );
+
             // Fast forward time
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
             await ethers.provider.send("evm_mine");
@@ -592,6 +630,14 @@ describe("BattleSystem", function () {
         });
 
         it("should record battle history after resolution", async function () {
+            // Start a battle
+            await battleSystem.connect(player1).startBattle(
+                player2.address,
+                5,
+                2,
+                1
+            );
+
             // Fast forward time
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
             await ethers.provider.send("evm_mine");
