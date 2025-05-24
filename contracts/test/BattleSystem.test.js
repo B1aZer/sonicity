@@ -627,7 +627,7 @@ describe("BattleSystem", function () {
 
             expect(battle.treasuryBurned).to.be.gt(0);
             expect(battle.gridBuildingsDamaged).to.be.gt(0);
-            expect(battle.districtBuildingsDamaged).to.be.gt(0);
+            expect(battle.districtBuildingsDamaged).to.be.eq(0);
 
             // Verify effects were applied
             /*
@@ -648,6 +648,11 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 2400);
+            await districtBuildings.connect(player2).buildDistrictBuilding(4); // BARRACKS
+            await districtBuildings.connect(player2).buildDistrictBuilding(5); // SCOUT_GUILD
+            await districtBuildings.connect(player2).buildDistrictBuilding(6); // CARAVAN
+
             // Start a battle
             await battleSystem.connect(player1).startBattle(
                 player2.address,
@@ -664,6 +669,26 @@ describe("BattleSystem", function () {
             
             const battle = await battleSystem.activeBattles(player1.address);
             expect(battle.resolved).to.equal(true);
+
+            console.log("\nBattle Record:");
+            console.log("----------------------------------------");
+            console.log("Attacker:", battle.attacker);
+            console.log("Defender:", battle.defender);
+            console.log("Start Time:", new Date(Number(battle.startTime) * 1000).toISOString());
+            console.log("Resolved:", battle.resolved);
+            console.log("\nPower Levels:");
+            console.log("  Attacker Power:", battle.attackerPower.toString());
+            console.log("  Defender Power:", battle.defenderPower.toString());
+            console.log("\nBattle Effects:");
+            console.log("  Treasury Burned:", battle.treasuryBurned.toString());
+            console.log("  Grid Buildings Damaged:", battle.gridBuildingsDamaged.toString());
+            console.log("  District Buildings Damaged:", battle.districtBuildingsDamaged.toString());
+            console.log("  REP Points Awarded:", battle.repPoints.toString());
+            console.log("----------------------------------------\n");
+
+            expect(battle.treasuryBurned).to.be.gt(0);
+            expect(battle.gridBuildingsDamaged).to.be.gt(0);
+            expect(battle.districtBuildingsDamaged).to.be.gt(0);
         });
 
         it("should resolve battle after duration has passed for player2 without district buildings", async function () {
