@@ -309,8 +309,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      * @dev Test function to damage grid buildings (only for testing)
      * @param defender The address of the player to damage buildings for
      * @param amount Number of buildings to damage
+     * @return uint256 Number of buildings actually damaged
      */
-    function testDamageGridBuildings(address defender, uint256 amount) external {
+    function testDamageGridBuildings(address defender, uint256 amount) external returns (uint256) {
         require(msg.sender == owner(), "Only owner can call this function");
         
         // Call GridBuildings contract directly to damage buildings
@@ -326,14 +327,18 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             }
             revert("Failed to damage grid building");
         }
+        
+        // Decode and return the number of buildings damaged
+        return abi.decode(returnData, (uint256));
     }
 
     /**
      * @dev Test function to damage district buildings (only for testing)
      * @param defender The address of the player to damage buildings for
      * @param amount Number of buildings to damage
+     * @return uint256 Number of buildings actually damaged
      */
-    function testDamageDistrictBuildings(address defender, uint256 amount) external {
+    function testDamageDistrictBuildings(address defender, uint256 amount) external returns (uint256) {
         require(msg.sender == owner(), "Only owner can call this function");
         
         // Call DistrictBuildings contract directly to damage buildings
@@ -349,6 +354,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             }
             revert("Failed to damage district building");
         }
+        
+        // Decode and return the number of buildings damaged
+        return abi.decode(returnData, (uint256));
     }
 
     // Internal helper functions
@@ -420,7 +428,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
                     }
                     revert("Failed to damage grid building");
                 }
-                activeBattles[attacker].gridBuildingsDamaged += buildingsToDamage;
+                uint256 actualBuildingsDamaged = abi.decode(returnData, (uint256));
+                activeBattles[attacker].gridBuildingsDamaged += actualBuildingsDamaged;
             }
         }
 
@@ -455,7 +464,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
                     }
                     revert("Failed to damage district building");
                 }
-                activeBattles[attacker].districtBuildingsDamaged += buildingsToDamage;
+                uint256 actualBuildingsDamaged = abi.decode(returnData, (uint256));
+                activeBattles[attacker].districtBuildingsDamaged += actualBuildingsDamaged;
             }
 
             // Try to burn treasury
