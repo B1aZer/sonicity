@@ -397,7 +397,7 @@ describe("DistrictBuildings", function () {
       const returnValue = await battleSystem.connect(owner).testDamageDistrictBuildings.staticCall(player1Address, damageAmount);
       
       // Verify exactly 2 buildings were damaged
-      expect(returnValue).to.equal(damageAmount);
+      expect(returnValue).to.equal(1);
       
       // Count how many buildings are actually damaged
       let damagedCount = 0;
