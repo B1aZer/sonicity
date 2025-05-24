@@ -392,8 +392,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @dev Damage district buildings for a player
      * @param player The address of the player
      * @param amount Number of buildings to damage
+     * @return uint256 Number of buildings actually damaged
      */
-    function damageBuildings(address player, uint256 amount) external {
+    function damageBuildings(address player, uint256 amount) external returns (uint256) {
         require(msg.sender == battleSystemAddress, "Only BattleSystem can call this function");
         require(amount > 0, "Amount must be greater than 0");
         
@@ -413,11 +414,13 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
                     emit DistrictBuildingDamaged(player, buildingType);
                     buildingsDamaged++;
                     if (buildingsDamaged >= amount) {
-                        return;
+                        return buildingsDamaged;
                     }
                 }
             }
         }
+
+        return buildingsDamaged;
     }
 
     /**

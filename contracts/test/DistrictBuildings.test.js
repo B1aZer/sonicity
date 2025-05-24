@@ -138,8 +138,10 @@ describe("DistrictBuildings", function () {
 
     it("Should allow building construction when unlocked", async function () {
       const player1Address = await player1.getAddress();
+      const TOWER_COST = 200n;
       
       // Get initial gold balance
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, TOWER_COST);
       const initialGold = await gameState.getPlayerGold(player1Address);
       
       // Build the defense tower
@@ -155,7 +157,7 @@ describe("DistrictBuildings", function () {
 
       // Check gold was deducted
       const finalGold = await gameState.getPlayerGold(player1Address);
-      const expectedGold = initialGold - 200n; // Defense tower costs 200 gold
+      const expectedGold = initialGold - TOWER_COST; // Defense tower costs 200 gold
       expect(finalGold).to.equal(expectedGold);
     });
 
@@ -178,6 +180,7 @@ describe("DistrictBuildings", function () {
 
     it("Should allow BattleSystem to damage a building", async function () {
       const player1Address = await player1.getAddress();
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 200);
       
       // Build the defense tower first
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
@@ -193,6 +196,9 @@ describe("DistrictBuildings", function () {
     it("Should not allow non-BattleSystem to damage a building", async function () {
       const player1Address = await player1.getAddress();
       
+      // Ensure player has enough gold
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 200);
+      
       // Build the defense tower first
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
       
@@ -205,6 +211,9 @@ describe("DistrictBuildings", function () {
     it("Should not allow damaging an already damaged building", async function () {
       const player1Address = await player1.getAddress();
       
+      // Ensure player has enough gold
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 200);
+      
       // Build the defense tower first
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
       
@@ -216,13 +225,17 @@ describe("DistrictBuildings", function () {
       expect(isDamaged).to.be.true;
 
       // Try to damage it again through BattleSystem
-      await expect(
-        battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1)
-      ).to.be.revertedWith("No buildings available to damage");
+      const damageTx = await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
+      await damageTx.wait();
+      const returnValue = await battleSystem.connect(owner).testDamageDistrictBuildings.staticCall(player1Address, 1);
+      expect(returnValue).to.equal(0);
     });
 
     it("Should allow repairing a damaged building", async function () {
       const player1Address = await player1.getAddress();
+      
+      // Ensure player has enough gold for both buildings and repair
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 450);
       
       // Get initial gold balance
       const initialGold = await gameState.getPlayerGold(player1Address);
@@ -257,6 +270,9 @@ describe("DistrictBuildings", function () {
     it("Should not allow repairing an active building", async function () {
       const player1Address = await player1.getAddress();
       
+      // Ensure player has enough gold
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 200);
+      
       // Build the defense tower
       await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
       
@@ -276,6 +292,9 @@ describe("DistrictBuildings", function () {
     it("Should not allow damaging tier 0 buildings", async function () {
       const player1Address = await player1.getAddress();
       
+      // Ensure player has enough gold for both buildings
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 300);
+      
       // Build a tier 0 building (SHOP)
       await districtBuildings.connect(player1).buildDistrictBuilding(0);
 
@@ -293,17 +312,18 @@ describe("DistrictBuildings", function () {
       const isDefenseTowerDamaged = await districtBuildings.isBuildingDamaged(player1Address, 3);
       expect(isDefenseTowerDamaged).to.be.true;
 
-      // Try to damage again - should revert since no valid targets remain
-      await expect(
-        battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1)
-      ).to.be.revertedWith("No buildings available to damage");
+      // Try to damage again - should return 0 since no valid targets remain
+      const damageTx = await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
+      await damageTx.wait();
+      const returnValue = await battleSystem.connect(owner).testDamageDistrictBuildings.staticCall(player1Address, 1);
+      expect(returnValue).to.equal(0);
     });
 
     it("Should damage buildings in reverse order (higher tier first)", async function () {
       const player1Address = await player1.getAddress();
       
-      // Ensure player has enough gold for all buildings
-      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 2000);
+      // Ensure player has enough gold for all buildings and donation
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 4500);
       
       // Donate gold to reach tier 2
       await gameState.connect(player1).donateGold(2500);
@@ -325,6 +345,72 @@ describe("DistrictBuildings", function () {
       const isBarracksDamaged = await districtBuildings.isBuildingDamaged(player1Address, 4);
       expect(isDefenseTowerDamaged).to.be.false;
       expect(isBarracksDamaged).to.be.false;
+    });
+
+    it("Should not allow damaging already damaged buildings", async function () {
+      const player1Address = await player1.getAddress();
+
+      // Ensure player has enough gold for all buildings and donation
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 4500);
+      
+      // Donate gold to reach tier 2
+      await gameState.connect(player1).donateGold(2500);
+
+      // Build multiple buildings
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
+      await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
+      await districtBuildings.connect(player1).buildDistrictBuilding(7); // REP_STATION
+
+      // Get built buildings
+      const builtBuildings = await districtBuildings.getBuiltDistrictBuildings(player1Address);
+
+      // Damage all buildings
+      for (let i = 0; i < builtBuildings.length; i++) {
+        await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
+      }
+
+      // Try to damage one more building - should return 0
+      const damageTx = await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
+      await damageTx.wait();
+      const returnValue = await battleSystem.connect(owner).testDamageDistrictBuildings.staticCall(player1Address, 1);
+      expect(returnValue).to.equal(0);
+    });
+
+    it("Should not damage more buildings than specified", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Ensure player has enough gold for all buildings and donation
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 4500);
+      
+      // Donate gold to reach tier 2 (to unlock all three buildings)
+      await gameState.connect(player1).donateGold(2500);
+      
+      // Build multiple buildings
+      await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
+      await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
+      await districtBuildings.connect(player1).buildDistrictBuilding(5); // SCOUT_GUILD
+      
+      // Try to damage 2 buildings
+      const damageAmount = 2;
+      const damageTx = await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, damageAmount);
+      await damageTx.wait();
+      const returnValue = await battleSystem.connect(owner).testDamageDistrictBuildings.staticCall(player1Address, damageAmount);
+      
+      // Verify exactly 2 buildings were damaged
+      expect(returnValue).to.equal(damageAmount);
+      
+      // Count how many buildings are actually damaged
+      let damagedCount = 0;
+      const builtBuildings = await districtBuildings.getBuiltDistrictBuildings(player1Address);
+      for (const buildingId of builtBuildings) {
+        const isDamaged = await districtBuildings.isBuildingDamaged(player1Address, buildingId);
+        if (isDamaged) {
+          damagedCount++;
+        }
+      }
+      
+      // Verify exactly 2 buildings were damaged
+      expect(damagedCount).to.equal(damageAmount);
     });
   });
 }); 
