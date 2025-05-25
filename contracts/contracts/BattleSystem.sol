@@ -56,6 +56,16 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     uint256 public constant BATTLE_DURATION = 24 hours;
     uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
     uint256 public noOpponentFoundChance;
+    uint256 public searchCost; // Cost in gold to start a search
+    uint256 public searchDuration; // Duration of search
+
+    // Search state
+    struct SearchState {
+        uint256 startTime;
+        bool active;
+        address foundOpponent;  // Store the found opponent
+    }
+    mapping(address => SearchState) public playerSearches;
 
     // Battle history record
     struct BattleRecord {
@@ -101,6 +111,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         bool attackerWon,
         uint256 timestamp
     );
+    event SearchStarted(address indexed player, uint256 startTime);
+    event SearchCompleted(address indexed player);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -142,6 +154,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
         // Set the initial value for noOpponentFoundChance
         noOpponentFoundChance = 20;
+
+        // Initialize search parameters
+        searchCost = 100; // Cost in gold to start a search
+        searchDuration = 6 hours; // Duration of search
     }
 
     /**
@@ -181,20 +197,27 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     /**
      * @dev Start a battle against another player
-     * @param defender Address of the player to attack
      * @param infantryCount Number of infantry to deploy
      * @param cavalryCount Number of cavalry to deploy
      * @param siegeCount Number of siege units to deploy
      */
     function startBattle(
-        address defender,
         uint256 infantryCount,
         uint256 cavalryCount,
         uint256 siegeCount
     ) external nonReentrant {
+        require(playerSearches[msg.sender].active, "No active search");
+        require(block.timestamp >= playerSearches[msg.sender].startTime + searchDuration, "Search not complete");
+        address defender = playerSearches[msg.sender].foundOpponent;
+        require(defender != address(0), "No opponent found");
         require(defender != msg.sender, "Cannot attack yourself");
         require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
         require(activeBattles[defender].startTime == 0, "Defender already in a battle");
+
+        // Clear search state
+        playerSearches[msg.sender].active = false;
+        playerSearches[msg.sender].foundOpponent = address(0);
+        emit SearchCompleted(msg.sender);
 
         // Check if attacker has enough troops
         require(playerTroops[msg.sender][TroopType.INFANTRY] >= infantryCount, "Not enough infantry");
@@ -514,23 +537,14 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     function registerForMatchmaking() external {
-        // Check if player is tier 1 or higher
-        (bool success, bytes memory data) = gameStateAddress.staticcall(
-            abi.encodeWithSignature("getPlayerTier(address)", msg.sender)
-        );
-        require(success, "Failed to get player tier");
-        uint8 playerTier = abi.decode(data, (uint8));
-        require(playerTier >= 1, "Must be tier 1 or higher to register");
+        require(msg.sender == gameStateAddress, "Only GameState can call this function");
 
-        // Check if not in battle
-        require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
-
-        // Check if not already registered
-        require(!isRegisteredForMatchmaking[msg.sender], "Already registered for matchmaking");
-
-        isRegisteredForMatchmaking[msg.sender] = true;
-        registeredPlayers.push(msg.sender);
-        emit PlayerRegisteredForMatchmaking(msg.sender);
+        // Only register if not already registered
+        if (!isRegisteredForMatchmaking[tx.origin]) {
+            isRegisteredForMatchmaking[tx.origin] = true;
+            registeredPlayers.push(tx.origin);
+            emit PlayerRegisteredForMatchmaking(tx.origin);
+        }
     }
 
     function unregisterFromMatchmaking() external {
@@ -584,8 +598,57 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         return opponents;
     }
 
-    function findRandomOpponent() external view returns (address) {
-        require(isRegisteredForMatchmaking[msg.sender], "Not registered for matchmaking");
+    function startSearch() external nonReentrant {
+        // Only check if player is in battle
+        require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
+
+        // Deduct search cost
+        (bool success, bytes memory returnData) = gameStateAddress.call(
+            abi.encodeWithSignature(
+                "deductResources(address,uint256,uint256,uint256)",
+                msg.sender,
+                searchCost,  // gold cost
+                0,          // no food cost
+                0           // no rep cost
+            )
+        );
+        if (!success) {
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to deduct search cost");
+        }
+
+        // Reset and start new search
+        playerSearches[msg.sender] = SearchState({
+            startTime: block.timestamp,
+            active: true,
+            foundOpponent: address(0)
+        });
+
+        emit SearchStarted(msg.sender, block.timestamp);
+    }
+
+    function checkSearchStatus() external view returns (bool completed, uint256 timeRemaining, address foundOpponent) {
+        SearchState memory search = playerSearches[msg.sender];
+        if (!search.active) {
+            return (false, 0, address(0));
+        }
+
+        if (block.timestamp >= search.startTime + searchDuration) {
+            return (true, 0, search.foundOpponent);
+        }
+
+        return (false, search.startTime + searchDuration - block.timestamp, search.foundOpponent);
+    }
+
+    function findRandomOpponent() external returns (address) {
+        SearchState memory search = playerSearches[msg.sender];
+        require(search.startTime > 0, "No search in progress");
+        require(block.timestamp >= search.startTime + searchDuration, "Search not complete");
+        require(search.foundOpponent == address(0), "Opponent already found");
         
         // Get all potential opponents
         address[] memory potentialOpponents = _findPotentialOpponents();
@@ -613,6 +676,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             msg.sender,
             randomNumber
         ))) % potentialOpponents.length;
+        
+        // Store the found opponent
+        playerSearches[msg.sender].foundOpponent = potentialOpponents[opponentIndex];
         
         return potentialOpponents[opponentIndex];
     }
@@ -675,5 +741,13 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             districtDamageChance: districtDamageChance,
             treasuryBurnChance: treasuryBurnChance
         });
+    }
+
+    function setSearchCost(uint256 _cost) external onlyOwner {
+        searchCost = _cost;
+    }
+
+    function setSearchDuration(uint256 _duration) external onlyOwner {
+        searchDuration = _duration;
     }
 } 
