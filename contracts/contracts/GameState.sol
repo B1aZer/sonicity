@@ -191,6 +191,22 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             // Update building slots based on tier using the mapping
             state.buildingSlots = buildingSlotsPerTier[nextTier];
             
+            // If player reaches tier 1, register them for matchmaking
+            if (nextTier == 1) {
+                (bool matchmakingSuccess, bytes memory returnData) = battleSystemAddress.call(
+                    abi.encodeWithSignature("registerForMatchmaking()")
+                );
+                if (!matchmakingSuccess) {
+                    // If the call failed, decode and propagate the error message
+                    if (returnData.length > 0) {
+                        assembly {
+                            revert(add(returnData, 32), mload(returnData))
+                        }
+                    }
+                    revert("Failed to register for matchmaking");
+                }
+            }
+            
             emit CityTierUpgraded(0, nextTier);
             emit BuildingSlotsUpdated(msg.sender, state.buildingSlots);
             
