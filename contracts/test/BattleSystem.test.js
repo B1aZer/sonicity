@@ -166,7 +166,12 @@ describe("BattleSystem", function () {
             const infantryCount = 10;
             const cavalryCount = 5;
             const siegeCount = 3;
-            
+
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 2500); // 1500 gold for upgrade
+            await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade BARRACKS to level 2
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(4);
+
             // Infantry: 100 gold, 50 food each
             // Cavalry: 200 gold, 100 food each
             // Siege: 300 gold, 150 food each
@@ -185,11 +190,12 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(0, infantryCount); // 10 infantry
             await battleSystem.connect(player1).trainTroops(1, cavalryCount);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, siegeCount);  // 3 siege
+
+            // Set noOpponentFoundChance to 0 for testing
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
         });
 
         it("should allow players to start a battle", async function () {
-            // Set noOpponentFoundChance to 0 for testing
-            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
            
             // Ensure player has enough gold for search
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1100);
@@ -229,7 +235,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             // Find opponent
@@ -252,7 +258,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             // Find opponent
@@ -262,7 +268,7 @@ describe("BattleSystem", function () {
             if (opponent === player1.address) {
                 await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
                 await battleSystem.connect(player1).startSearch();
-                await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+                await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
                 await ethers.provider.send("evm_mine");
                 await battleSystem.connect(player1).findRandomOpponent();
             }
@@ -282,7 +288,7 @@ describe("BattleSystem", function () {
 
             // Start first battle
             await battleSystem.connect(player1).startSearch();
-            await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             const opponent = await battleSystem.connect(player1).findRandomOpponent();
             
@@ -296,7 +302,7 @@ describe("BattleSystem", function () {
             // Try to start second battle with same defender
             await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player3).startSearch();
-            await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             await battleSystem.connect(player3).findRandomOpponent();
             
@@ -890,7 +896,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
             await ethers.provider.send("evm_mine");
             
             const opponent = await battleSystem.connect(player1).findRandomOpponent();
@@ -904,7 +910,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -918,7 +924,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
             await ethers.provider.send("evm_mine");
             
             const firstOpponent = await battleSystem.connect(player1).findRandomOpponent();
@@ -930,7 +936,7 @@ describe("BattleSystem", function () {
             expect(search.foundOpponent).to.equal(ethers.constants.AddressZero);
             
             // Fast forward time again
-            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
             await ethers.provider.send("evm_mine");
             
             const secondOpponent = await battleSystem.connect(player1).findRandomOpponent();
@@ -946,7 +952,7 @@ describe("BattleSystem", function () {
             expect(status.foundOpponent).to.equal(ethers.constants.AddressZero);
             
             // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
             await ethers.provider.send("evm_mine");
             
             status = await battleSystem.connect(player1).checkSearchStatus();
@@ -964,7 +970,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
             await ethers.provider.send("evm_mine");
             
             await expect(
@@ -976,7 +982,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
             await ethers.provider.send("evm_mine");
             
             const opponent = await battleSystem.connect(player1).findRandomOpponent();
@@ -999,7 +1005,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
             await ethers.provider.send("evm_mine");
             
             const opponent = await battleSystem.connect(player1).findRandomOpponent();
