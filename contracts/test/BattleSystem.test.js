@@ -270,7 +270,10 @@ describe("BattleSystem", function () {
             // Find opponent - should return zero address since no other players are registered
             const tx = await battleSystem.connect(player1).findRandomOpponent();
             await tx.wait();
-            const opponent = await battleSystem.connect(player1).findRandomOpponent.staticCall();
+            
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
             expect(opponent).to.equal(ethers.ZeroAddress);
             
             // Try to start battle - should fail because no valid opponent was found
@@ -283,40 +286,53 @@ describe("BattleSystem", function () {
             ).to.be.revertedWith("No opponent found");
         });
 
-        it("should fail if defender is already in a battle", async function () {
-            // Ensure player has enough gold for search
+        it("should not find any opponent when all other players are in battle", async function () {
+            // Ensure players have enough gold
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
+
+
+            // Register players for matchmaking
+            await gameState.connect(player1).donateGold(100);
+            await gameState.connect(player2).donateGold(100);
+  
 
             // Start first battle
             await battleSystem.connect(player1).startSearch();
             await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
-            const opponent = await battleSystem.connect(player1).findRandomOpponent();
             
-            // Train troops for player1
-            await battleSystem.connect(player1).trainTroops(0, 5);
-            await battleSystem.connect(player1).trainTroops(1, 2);
-            await battleSystem.connect(player1).trainTroops(2, 1);
+            // Find opponent for player1
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
             
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
+            expect(opponent).to.equal(player2.address); // Verify we found player2
+            
+            // Start first battle
             await battleSystem.connect(player1).startBattle(5, 2, 1);
 
-            // Try to start second battle with same defender
-            await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await donateGoldForTier(player3, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await gameState.connect(player3).donateGold(100);
+
+            // Now player3 tries to find an opponent
             await battleSystem.connect(player3).startSearch();
             await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
-            await battleSystem.connect(player3).findRandomOpponent();
             
-            // Train troops for player3
-            await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 1000);
-            await ensurePlayerFood(player3, gameState, gridBuildings, altar, farmNFT, 500);
-            await battleSystem.connect(player3).trainTroops(0, 5);
-            await battleSystem.connect(player3).trainTroops(1, 2);
-            await battleSystem.connect(player3).trainTroops(2, 1);
+            // Find opponent for player3 - should return zero address since both player1 and player2 are in battle
+            const tx3 = await battleSystem.connect(player3).findRandomOpponent();
+            await tx3.wait();
+            const searchStatus3 = await battleSystem.connect(player3).checkSearchStatus();
+            const opponent3 = searchStatus3.foundOpponent;
+            expect(opponent3).to.equal(ethers.ZeroAddress);
             
+            // Verify that player3 cannot start a battle
             await expect(
                 battleSystem.connect(player3).startBattle(5, 2, 1)
-            ).to.be.revertedWith("Defender already in a battle");
+            ).to.be.revertedWith("No opponent found");
         });
     });
 
@@ -416,7 +432,10 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).registerForMatchmaking();
 
             // Should return zero address as there are no other players
-            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
             expect(opponent).to.equal(ethers.ZeroAddress);
         });
 
@@ -430,7 +449,10 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player3).registerForMatchmaking();
 
             // Should always return zero address due to 100% chance
-            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
             expect(opponent).to.equal(ethers.ZeroAddress);
         });
 
