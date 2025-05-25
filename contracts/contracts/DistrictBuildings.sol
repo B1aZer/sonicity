@@ -127,9 +127,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Barracks",
             unlockCost: 1250,
             buildCost: 250,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Train troops (requires food)",
+            upgradeCost: 500,    // 500 gold per level
+            maxLevel: 3,         // Can be upgraded to level 3
+            description: "Train troops (INFANTRY at level 1, CAVALRY at level 2, SIEGE at level 3)",
             tier: 1
         });
 
@@ -595,5 +595,21 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      */
     function getBuildingLevel(address player, DistrictBuildingType buildingType) public view returns (uint8) {
         return uint8(buildings[player][buildingType].level);
+    }
+
+    /**
+     * @dev Check if a troop type can be trained based on barracks level
+     * @param player The address of the player
+     * @param troopType The type of troop to check
+     * @return bool Whether the troop can be trained
+     */
+    function canTrainTroopType(address player, uint8 troopType) external view returns (bool) {
+        Building memory barracks = buildings[player][DistrictBuildingType.BARRACKS];
+        if (!barracks.active) return false;
+        
+        // Level 1: INFANTRY (0)
+        // Level 2: INFANTRY (0) + CAVALRY (1)
+        // Level 3: INFANTRY (0) + CAVALRY (1) + SIEGE (2)
+        return barracks.level > troopType;
     }
 } 

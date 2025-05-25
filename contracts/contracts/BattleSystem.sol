@@ -169,8 +169,14 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         TroopConfig memory config = troopConfigs[troopType];
         require(amount > 0, "Amount must be greater than 0");
 
+        // Check if player can train this troop type based on barracks level
+        (bool success, bytes memory returnData) = districtBuildingsAddress.staticcall(
+            abi.encodeWithSignature("canTrainTroopType(address,uint8)", msg.sender, uint8(troopType))
+        );
+        require(success && abi.decode(returnData, (bool)), "Cannot train this troop type at current barracks level");
+
         // Check and deduct resources
-        (bool success, bytes memory returnData) = gameStateAddress.call(
+        (success, returnData) = gameStateAddress.call(
             abi.encodeWithSignature(
                 "deductResources(address,uint256,uint256,uint256)",
                 msg.sender,
