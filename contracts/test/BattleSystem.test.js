@@ -228,6 +228,9 @@ describe("BattleSystem", function () {
         });
 
         it("should fail if attacker doesn't have enough troops", async function () {
+            // Register player2 for matchmaking
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
+
             // Ensure player has enough gold for search
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
 
@@ -250,9 +253,12 @@ describe("BattleSystem", function () {
             ).to.be.revertedWith("Not enough infantry");
         });
 
-        it("should fail if trying to attack yourself", async function () {
+        it("should fail if no valid opponent is found", async function () {
             // Ensure player has enough gold for search
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Register player1 for matchmaking
+            // await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
             // Start search
             await battleSystem.connect(player1).startSearch();
@@ -261,25 +267,20 @@ describe("BattleSystem", function () {
             await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
-            // Find opponent
-            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            // Find opponent - should return zero address since no other players are registered
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            const opponent = await battleSystem.connect(player1).findRandomOpponent.staticCall();
+            expect(opponent).to.equal(ethers.ZeroAddress);
             
-            // If opponent is player1, start a new search
-            if (opponent === player1.address) {
-                await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
-                await battleSystem.connect(player1).startSearch();
-                await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
-                await ethers.provider.send("evm_mine");
-                await battleSystem.connect(player1).findRandomOpponent();
-            }
-            
+            // Try to start battle - should fail because no valid opponent was found
             await expect(
                 battleSystem.connect(player1).startBattle(
                     5,
                     2,
                     1
                 )
-            ).to.be.revertedWith("Cannot attack yourself");
+            ).to.be.revertedWith("No opponent found");
         });
 
         it("should fail if defender is already in a battle", async function () {
