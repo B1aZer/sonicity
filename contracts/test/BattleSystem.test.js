@@ -442,6 +442,11 @@ describe("BattleSystem", function () {
             const infantryCount = 10;
             const cavalryCount = 5;
             const siegeCount = 3;
+
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 2500); // 1500 gold for upgrade
+            await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade BARRACKS to level 2
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(4);
             
             // Infantry: 100 gold, 50 food each
             // Cavalry: 200 gold, 100 food each
@@ -483,6 +488,7 @@ describe("BattleSystem", function () {
                 100, // districtDamageChance (30%)
                 100  // treasuryBurnChance (15%)
             );
+
         });
 
         it("should fail to resolve battle before duration has passed", async function () {
