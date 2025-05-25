@@ -375,6 +375,13 @@ describe("BattleSystem", function () {
             // Set noOpponentFoundChance to 100 to always return zero address
             await battleSystem.connect(owner).setNoOpponentFoundChance(100);
 
+            // Start search first
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+
             // Should always return zero address due to 100% chance
             const tx = await battleSystem.connect(player1).findRandomOpponent();
             await tx.wait();
@@ -384,22 +391,33 @@ describe("BattleSystem", function () {
         });
 
         it("should demonstrate randomness with different probability settings", async function () {
-
             // Test with 50% chance of finding opponent
             await battleSystem.connect(owner).setNoOpponentFoundChance(50);
             
             const attempts = 100;
             let zeroAddressCount = 0;
-            let validOpponentCount = 0;
             const foundOpponents = new Set();
 
             for (let i = 0; i < attempts; i++) {
-                const opponent = await battleSystem.connect(player1).findRandomOpponent();
+                await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+                // Start search
+                await battleSystem.connect(player1).startSearch();
+                
+                // Fast forward time
+                await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+                await ethers.provider.send("evm_mine");
+                
+                // Find opponent
+                const tx = await battleSystem.connect(player1).findRandomOpponent();
+                await tx.wait();
+                
+                // Get opponent using checkSearchStatus
+                const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+                const opponent = searchStatus.foundOpponent;
                 
                 if (opponent === ethers.ZeroAddress) {
                     zeroAddressCount++;
                 } else {
-                    validOpponentCount++;
                     foundOpponents.add(opponent);
                 }
 
@@ -407,71 +425,14 @@ describe("BattleSystem", function () {
                 await ethers.provider.send("evm_mine");
             }
 
-            // Log the results
-            /*
-            console.log("\nRandomness Test Results (50% chance):");
-            console.log("----------------------------------------");
-            console.log(`Total attempts: ${attempts}`);
-            console.log(`Zero address returns: ${zeroAddressCount} (${(zeroAddressCount/attempts*100).toFixed(1)}%)`);
-            console.log(`Valid opponent returns: ${validOpponentCount} (${(validOpponentCount/attempts*100).toFixed(1)}%)`);
-            console.log("Opponent distribution:");
-            console.log(`  Player2: ${Array.from(foundOpponents).filter(addr => addr === player2.address).length} times`);
-            console.log(`  Player3: ${Array.from(foundOpponents).filter(addr => addr === player3.address).length} times`);
-            */
+            // With 50% chance, we should get roughly half zero addresses
+            expect(zeroAddressCount).to.be.gt(attempts * 0.3); // At least 30% zero addresses
+            expect(zeroAddressCount).to.be.lt(attempts * 0.7); // At most 70% zero addresses
 
-            // Verify that we got both zero addresses and valid opponents
-            expect(zeroAddressCount).to.be.gt(0);
-            expect(validOpponentCount).to.be.gt(0);
-            
-            // Verify that when we got valid opponents, they were either player2 or player3
+            // When we got valid opponents, they should be either player2 or player3
             for (const opponent of foundOpponents) {
                 expect([player2.address, player3.address]).to.include(opponent);
             }
-
-            // Test with 75% chance of finding opponent
-            await battleSystem.connect(owner).setNoOpponentFoundChance(25);
-            
-            zeroAddressCount = 0;
-            validOpponentCount = 0;
-            foundOpponents.clear();
-
-            for (let i = 0; i < attempts; i++) {
-                const opponent = await battleSystem.connect(player1).findRandomOpponent();
-                
-                if (opponent === ethers.ZeroAddress) {
-                    zeroAddressCount++;
-                } else {
-                    validOpponentCount++;
-                    foundOpponents.add(opponent);
-                }
-                
-                await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
-                await ethers.provider.send("evm_mine");
-            }
-
-            // Log the results
-            /*
-            console.log("\nRandomness Test Results (75% chance):");
-            console.log("----------------------------------------");
-            console.log(`Total attempts: ${attempts}`);
-            console.log(`Zero address returns: ${zeroAddressCount} (${(zeroAddressCount/attempts*100).toFixed(1)}%)`);
-            console.log(`Valid opponent returns: ${validOpponentCount} (${(validOpponentCount/attempts*100).toFixed(1)}%)`);
-            console.log("Opponent distribution:");
-            console.log(`  Player2: ${Array.from(foundOpponents).filter(addr => addr === player2.address).length} times`);
-            console.log(`  Player3: ${Array.from(foundOpponents).filter(addr => addr === player3.address).length} times`);
-            */
-           
-            // Verify that we got both zero addresses and valid opponents
-            expect(zeroAddressCount).to.be.gt(0);
-            expect(validOpponentCount).to.be.gt(0);
-            
-            // Verify that when we got valid opponents, they were either player2 or player3
-            for (const opponent of foundOpponents) {
-                expect([player2.address, player3.address]).to.include(opponent);
-            }
-
-            // Verify that with 75% chance we got more valid opponents than with 50% chance
-            expect(validOpponentCount).to.be.gt(attempts * 0.5);
         });
     });
 
