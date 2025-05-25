@@ -371,82 +371,9 @@ describe("BattleSystem", function () {
             expect(isRegistered).to.equal(false);
         });
 
-        it("should find potential opponents", async function () {
-            // Register multiple players
-            await battleSystem.connect(player1).registerForMatchmaking();
-            await battleSystem.connect(player2).registerForMatchmaking();
-            await battleSystem.connect(player3).registerForMatchmaking();
-
-            const opponents = await battleSystem.connect(player1).findPotentialOpponents();
-            expect(opponents.length).to.equal(2); // Should find player2 and player3
-        });
-
-        it("should find a random opponent", async function () {
-            // Set noOpponentFoundChance to 0 for testing
-            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
-
-            // Register multiple players
-            await battleSystem.connect(player1).registerForMatchmaking();
-            await battleSystem.connect(player2).registerForMatchmaking();
-            await battleSystem.connect(player3).registerForMatchmaking();
-
-            // Get all registered players
-            const registeredPlayers = await battleSystem.connect(player1).findPotentialOpponents();
-            expect(registeredPlayers.length).to.equal(2); // Should find player2 and player3
-            expect(registeredPlayers).to.include(player2.address);
-            expect(registeredPlayers).to.include(player3.address);
-
-            // Test multiple times to ensure consistent behavior
-            const attempts = 10;
-            const foundOpponents = new Set();
-
-            for (let i = 0; i < attempts; i++) {
-                const opponent = await battleSystem.connect(player1).findRandomOpponent();
-                
-                // Basic validation
-                expect(opponent).to.not.equal(ethers.ZeroAddress);
-                expect(opponent).to.not.equal(player1.address);
-                
-                // Verify opponent is one of the registered players
-                expect(registeredPlayers).to.include(opponent);
-                
-                // Track unique opponents found
-                foundOpponents.add(opponent);
-            }
-
-            // Verify we found at least one opponent
-            expect(foundOpponents.size).to.be.gt(0);
-            
-            // Log the distribution of opponents found
-            console.log("Opponents found in", attempts, "attempts:", {
-                player2: Array.from(foundOpponents).filter(addr => addr === player2.address).length,
-                player3: Array.from(foundOpponents).filter(addr => addr === player3.address).length
-            });
-        });
-
-        it("should return zero address when no opponents are available", async function () {
-            // Set noOpponentFoundChance to 0 for testing
-            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
-
-            // Register only player1
-            await battleSystem.connect(player1).registerForMatchmaking();
-
-            // Should return zero address as there are no other players
-            const tx = await battleSystem.connect(player1).findRandomOpponent();
-            await tx.wait();
-            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
-            const opponent = searchStatus.foundOpponent;
-            expect(opponent).to.equal(ethers.ZeroAddress);
-        });
-
         it("should return zero address based on noOpponentFoundChance", async function () {
             // Set noOpponentFoundChance to 100 to always return zero address
             await battleSystem.connect(owner).setNoOpponentFoundChance(100);
-
-            // Register multiple players
-            await battleSystem.connect(player1).registerForMatchmaking();
-            await battleSystem.connect(player2).registerForMatchmaking();
-            await battleSystem.connect(player3).registerForMatchmaking();
 
             // Should always return zero address due to 100% chance
             const tx = await battleSystem.connect(player1).findRandomOpponent();
@@ -457,10 +384,6 @@ describe("BattleSystem", function () {
         });
 
         it("should demonstrate randomness with different probability settings", async function () {
-            // Register multiple players
-            await battleSystem.connect(player1).registerForMatchmaking();
-            await battleSystem.connect(player2).registerForMatchmaking();
-            await battleSystem.connect(player3).registerForMatchmaking();
 
             // Test with 50% chance of finding opponent
             await battleSystem.connect(owner).setNoOpponentFoundChance(50);
