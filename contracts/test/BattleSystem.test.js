@@ -489,6 +489,10 @@ describe("BattleSystem", function () {
                 100  // treasuryBurnChance (15%)
             );
 
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
+
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+
         });
 
         it("should fail to resolve battle before duration has passed", async function () {
@@ -496,6 +500,25 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
+
+            // Register players for matchmaking
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
 
             // Start a battle with troop counts
             await battleSystem.connect(player1).startBattle(
@@ -518,9 +541,26 @@ describe("BattleSystem", function () {
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
             await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
 
+            // Register players for matchmaking
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
+
             // Start a battle
             await battleSystem.connect(player1).startBattle(
-                player2.address,
                 5,
                 2,
                 1
@@ -549,9 +589,26 @@ describe("BattleSystem", function () {
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
             //await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
 
+            // Register players for matchmaking
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
+
             // Start a battle
             await battleSystem.connect(player1).startBattle(
-                player2.address,
                 5,
                 2,
                 1
@@ -627,18 +684,6 @@ describe("BattleSystem", function () {
             expect(battle.treasuryBurned).to.be.gt(0);
             expect(battle.gridBuildingsDamaged).to.be.gt(0);
             expect(battle.districtBuildingsDamaged).to.be.eq(0);
-
-            // Verify effects were applied
-            /*
-            const finalTreasury = await gameState.getPlayerTreasury(player2.address);
-            expect(finalTreasury).to.be.lt(initialTreasury);
-
-            const finalGridBuildings = await gridBuildings.buildingCounts(player2.address, GridBuildingType.HOUSE);
-            expect(finalGridBuildings).to.be.lt(initialGridBuildings);
-
-            const finalDistrictBuildings = await districtBuildings.getDefenseTowerLevel(player2.address);
-            expect(finalDistrictBuildings).to.be.lt(initialDistrictBuildings);
-            */
         });
 
         it("should resolve battle after duration has passed for player2 without defense tower but with district buildings", async function () {
@@ -646,15 +691,31 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
-
-            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 2400);
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1750);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 700);
             await districtBuildings.connect(player2).buildDistrictBuilding(4); // BARRACKS
             await districtBuildings.connect(player2).buildDistrictBuilding(5); // SCOUT_GUILD
             await districtBuildings.connect(player2).buildDistrictBuilding(6); // CARAVAN
 
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
+
             // Start a battle
             await battleSystem.connect(player1).startBattle(
-                player2.address,
                 5,
                 2,
                 1
@@ -696,9 +757,28 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
+            // Register players for matchmaking
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            
+            // Find opponent
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
+
             // Start a battle
             await battleSystem.connect(player1).startBattle(
-                player2.address,
                 5,
                 2,
                 1
@@ -720,9 +800,26 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
+            // Register players for matchmaking
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
+
             // Start a battle
             await battleSystem.connect(player1).startBattle(
-                player2.address,
                 5,
                 2,
                 1
@@ -744,9 +841,26 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
+            // Register players for matchmaking
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
+
             // Start a battle
             await battleSystem.connect(player1).startBattle(
-                player2.address,
                 5,
                 2,
                 1
