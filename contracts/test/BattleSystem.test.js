@@ -93,17 +93,20 @@ describe("BattleSystem", function () {
         await gameState.connect(player3).initializePlayer();
 
         // Setup initial resources for players and unlock tier 1
-        await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1200); // 1000 for tier 1 + 200 for building
-        await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1200);
-        await donateGoldForTier(player3, gameState, gridBuildings, altar, sonicityNFT, 1200);
+        await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1500); // 1000 for tier 1 + 500 for building
 
         // Now build the defense tower for each player
         await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
         // await districtBuildings.connect(player2).buildDistrictBuilding(3); // Do not create defense tower for player2
-        await districtBuildings.connect(player3).buildDistrictBuilding(3); // DEFENSE_TOWER
+        // await districtBuildings.connect(player3).buildDistrictBuilding(3); // DEFENSE_TOWER
     });
 
     describe("Troop Training", function () {
+        beforeEach(async function () {    
+            // Build barracks for player1
+            await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
+        });
+
         it("should allow players to train infantry", async function () {
             const amount = 5;
 
@@ -118,6 +121,10 @@ describe("BattleSystem", function () {
         });
 
         it("should allow players to train cavalry", async function () {
+            // Upgrade barracks to level 2 for cavalry
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 500); // 500 gold for upgrade
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade BARRACKS to level 2
+
             const amount = 3;
             // Ensure resources for cavalry (200 gold, 100 food each)
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 200 * amount);
@@ -130,6 +137,11 @@ describe("BattleSystem", function () {
         });
 
         it("should allow players to train siege units", async function () {
+            // Upgrade barracks to level 3 for siege units
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1500); // 500/1000 gold for each upgrade
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade to level 2
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade to level 3
+
             const amount = 2;
             // Ensure resources for siege units (300 gold, 150 food each)
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 300 * amount);
@@ -142,8 +154,6 @@ describe("BattleSystem", function () {
         });
 
         it("should fail if player doesn't have enough resources", async function () {
-            // await gameState.connect(player1).donateGold(1000); // Donate all gold
-            
             await expect(
                 battleSystem.connect(player1).trainTroops(0, 1)
             ).to.be.revertedWith("Insufficient food");
@@ -185,7 +195,7 @@ describe("BattleSystem", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1100);
             await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
-            // Register players for matchmaking
+            // Register players for matchmaking by donating gold to reach tier 1
             await gameState.connect(player1).donateGold(1000); // This will register player1
             await gameState.connect(player2).donateGold(1000); // This will register player2
 
@@ -198,7 +208,7 @@ describe("BattleSystem", function () {
             
             await battleSystem.connect(player1).findRandomOpponent();
             
-            // Start battle
+            // Start battle with troop counts
             await battleSystem.connect(player1).startBattle(
                 5, // infantry
                 2, // cavalry
@@ -312,7 +322,8 @@ describe("BattleSystem", function () {
         });
 
         it("should allow players to register for matchmaking", async function () {
-            await battleSystem.connect(player1).registerForMatchmaking();
+            // Register for matchmaking by donating gold to reach tier 1
+            await gameState.connect(player1).donateGold(1000);
             
             const isRegistered = await battleSystem.isRegisteredForMatchmaking(player1.address);
             expect(isRegistered).to.equal(true);
@@ -324,12 +335,13 @@ describe("BattleSystem", function () {
             await gameState.connect(newPlayer).initializePlayer();
             
             await expect(
-                battleSystem.connect(newPlayer).registerForMatchmaking()
-            ).to.be.revertedWith("Must be tier 1 or higher to register");
+                gameState.connect(newPlayer).donateGold(1000)
+            ).to.be.revertedWith("Insufficient Gold");
         });
 
         it("should allow players to unregister from matchmaking", async function () {
-            await battleSystem.connect(player1).registerForMatchmaking();
+            // Register for matchmaking by donating gold to reach tier 1
+            await gameState.connect(player1).donateGold(1000);
             await battleSystem.connect(player1).unregisterFromMatchmaking();
             
             const isRegistered = await battleSystem.isRegisteredForMatchmaking(player1.address);
@@ -566,12 +578,11 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
-            // Start a battle
+            // Start a battle with troop counts
             await battleSystem.connect(player1).startBattle(
-                player2.address,
-                5,
-                2,
-                1
+                5, // infantry
+                2, // cavalry
+                1  // siege
             );
 
             await expect(
