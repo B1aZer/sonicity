@@ -178,8 +178,28 @@ describe("BattleSystem", function () {
         });
 
         it("should allow players to start a battle", async function () {
+            // Set noOpponentFoundChance to 0 for testing
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+           
+            // Ensure player has enough gold for search
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1100);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
+
+            // Register players for matchmaking
+            await gameState.connect(player1).donateGold(1000); // This will register player1
+            await gameState.connect(player2).donateGold(1000); // This will register player2
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            await battleSystem.connect(player1).findRandomOpponent();
+            
+            // Start battle
             await battleSystem.connect(player1).startBattle(
-                player2.address,
                 5, // infantry
                 2, // cavalry
                 1  // siege
@@ -192,9 +212,21 @@ describe("BattleSystem", function () {
         });
 
         it("should fail if attacker doesn't have enough troops", async function () {
+            // Ensure player has enough gold for search
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent
+            await battleSystem.connect(player1).findRandomOpponent();
+            
             await expect(
                 battleSystem.connect(player1).startBattle(
-                    player2.address,
                     20, // too many infantry
                     2,
                     1
@@ -203,9 +235,30 @@ describe("BattleSystem", function () {
         });
 
         it("should fail if trying to attack yourself", async function () {
+            // Ensure player has enough gold for search
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent
+            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            
+            // If opponent is player1, start a new search
+            if (opponent === player1.address) {
+                await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+                await battleSystem.connect(player1).startSearch();
+                await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+                await ethers.provider.send("evm_mine");
+                await battleSystem.connect(player1).findRandomOpponent();
+            }
+            
             await expect(
                 battleSystem.connect(player1).startBattle(
-                    player1.address,
                     5,
                     2,
                     1
@@ -214,22 +267,38 @@ describe("BattleSystem", function () {
         });
 
         it("should fail if defender is already in a battle", async function () {
+            // Ensure player has enough gold for search
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
             // Start first battle
-            await battleSystem.connect(player1).startBattle(
-                player2.address,
-                5,
-                2,
-                1
-            );
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+            await ethers.provider.send("evm_mine");
+            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            
+            // Train troops for player1
+            await battleSystem.connect(player1).trainTroops(0, 5);
+            await battleSystem.connect(player1).trainTroops(1, 2);
+            await battleSystem.connect(player1).trainTroops(2, 1);
+            
+            await battleSystem.connect(player1).startBattle(5, 2, 1);
 
             // Try to start second battle with same defender
+            await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player3).startSearch();
+            await ethers.provider.send("evm_increaseTime", [await battleSystem.searchDuration() + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player3).findRandomOpponent();
+            
+            // Train troops for player3
+            await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await ensurePlayerFood(player3, gameState, gridBuildings, altar, farmNFT, 500);
+            await battleSystem.connect(player3).trainTroops(0, 5);
+            await battleSystem.connect(player3).trainTroops(1, 2);
+            await battleSystem.connect(player3).trainTroops(2, 1);
+            
             await expect(
-                battleSystem.connect(player3).startBattle(
-                    player2.address,
-                    5,
-                    2,
-                    1
-                )
+                battleSystem.connect(player3).startBattle(5, 2, 1)
             ).to.be.revertedWith("Defender already in a battle");
         });
     });
@@ -762,6 +831,178 @@ describe("BattleSystem", function () {
             const battleRecord = await battleSystem.battleHistory(0);
             expect(battleRecord.attacker).to.equal(player1.address);
             expect(battleRecord.defender).to.equal(player2.address);
+        });
+    });
+
+    describe("Search functionality", function () {
+        let searchCost;
+        let searchDuration;
+
+        beforeEach(async function () {
+            // Get search parameters
+            searchCost = await battleSystem.searchCost();
+            searchDuration = await battleSystem.searchDuration();
+
+            // Set up players with enough gold
+            await gameState.setPlayerGold(player1.address, 1000);
+            await gameState.setPlayerGold(player2.address, 1000);
+            await gameState.setPlayerGold(player3.address, 1000);
+
+            // Set player tiers
+            await gameState.setPlayerTier(player1.address, 1);
+            await gameState.setPlayerTier(player2.address, 1);
+            await gameState.setPlayerTier(player3.address, 1);
+        });
+
+        it("Should start a search and deduct gold", async function () {
+            const initialGold = await gameState.getPlayerGold(player1.address);
+            
+            await battleSystem.connect(player1).startSearch();
+            
+            const finalGold = await gameState.getPlayerGold(player1.address);
+            expect(finalGold).to.equal(initialGold - searchCost);
+            
+            const search = await battleSystem.playerSearches(player1.address);
+            expect(search.startTime).to.be.gt(0);
+            expect(search.foundOpponent).to.equal(ethers.constants.AddressZero);
+        });
+
+        it("Should not allow finding opponent before search duration", async function () {
+            await battleSystem.connect(player1).startSearch();
+            
+            await expect(
+                battleSystem.connect(player1).findRandomOpponent()
+            ).to.be.revertedWith("Search not complete");
+        });
+
+        it("Should find opponent after search duration", async function () {
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            expect(opponent).to.not.equal(ethers.constants.AddressZero);
+            
+            const search = await battleSystem.playerSearches(player1.address);
+            expect(search.foundOpponent).to.equal(opponent);
+        });
+
+        it("Should not allow finding opponent twice", async function () {
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            await battleSystem.connect(player1).findRandomOpponent();
+            
+            await expect(
+                battleSystem.connect(player1).findRandomOpponent()
+            ).to.be.revertedWith("Opponent already found");
+        });
+
+        it("Should allow starting new search and reset found opponent", async function () {
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            const firstOpponent = await battleSystem.connect(player1).findRandomOpponent();
+            
+            // Start new search
+            await battleSystem.connect(player1).startSearch();
+            
+            const search = await battleSystem.playerSearches(player1.address);
+            expect(search.foundOpponent).to.equal(ethers.constants.AddressZero);
+            
+            // Fast forward time again
+            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            const secondOpponent = await battleSystem.connect(player1).findRandomOpponent();
+            expect(secondOpponent).to.not.equal(firstOpponent);
+        });
+
+        it("Should check search status correctly", async function () {
+            await battleSystem.connect(player1).startSearch();
+            
+            let status = await battleSystem.connect(player1).checkSearchStatus();
+            expect(status.completed).to.be.false;
+            expect(status.timeRemaining).to.be.gt(0);
+            expect(status.foundOpponent).to.equal(ethers.constants.AddressZero);
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            status = await battleSystem.connect(player1).checkSearchStatus();
+            expect(status.completed).to.be.true;
+            expect(status.timeRemaining).to.equal(0);
+            expect(status.foundOpponent).to.equal(ethers.constants.AddressZero);
+            
+            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            
+            status = await battleSystem.connect(player1).checkSearchStatus();
+            expect(status.foundOpponent).to.equal(opponent);
+        });
+
+        it("Should not allow starting battle without found opponent", async function () {
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            await expect(
+                battleSystem.connect(player1).startBattle(1, 1, 1)
+            ).to.be.revertedWith("No opponent found");
+        });
+
+        it("Should start battle with found opponent", async function () {
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            
+            // Train some troops
+            await battleSystem.connect(player1).trainTroops(0, 1); // Infantry
+            await battleSystem.connect(player1).trainTroops(1, 1); // Cavalry
+            await battleSystem.connect(player1).trainTroops(2, 1); // Siege
+            
+            await battleSystem.connect(player1).startBattle(1, 1, 1);
+            
+            const search = await battleSystem.playerSearches(player1.address);
+            expect(search.foundOpponent).to.equal(ethers.constants.AddressZero);
+            
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.defender).to.equal(opponent);
+        });
+
+        it("Should not allow starting search while in battle", async function () {
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [searchDuration + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            const opponent = await battleSystem.connect(player1).findRandomOpponent();
+            
+            // Train some troops
+            await battleSystem.connect(player1).trainTroops(0, 1); // Infantry
+            await battleSystem.connect(player1).trainTroops(1, 1); // Cavalry
+            await battleSystem.connect(player1).trainTroops(2, 1); // Siege
+            
+            await battleSystem.connect(player1).startBattle(1, 1, 1);
+            
+            await expect(
+                battleSystem.connect(player1).startSearch()
+            ).to.be.revertedWith("Already in a battle");
         });
     });
 }); 
