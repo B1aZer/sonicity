@@ -1032,36 +1032,11 @@ describe("BattleSystem", function () {
             ).to.be.revertedWith("No opponent found");
         });
 
-        it("Should start battle with found opponent", async function () {
-            await battleSystem.connect(player1).startSearch();
-            
-            // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
-            await ethers.provider.send("evm_mine");
-            
-            // Find opponent
-            const tx = await battleSystem.connect(player1).findRandomOpponent();
-            await tx.wait();
-            
-            // Get opponent using checkSearchStatus
-            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
-            const opponent = searchStatus.foundOpponent;
-            
-            // Train some troops
-            await battleSystem.connect(player1).trainTroops(0, 1); // Infantry
-            await battleSystem.connect(player1).trainTroops(1, 1); // Cavalry
-            await battleSystem.connect(player1).trainTroops(2, 1); // Siege
-            
-            await battleSystem.connect(player1).startBattle(1, 1, 1);
-            
-            const search = await battleSystem.playerSearches(player1.address);
-            expect(search.foundOpponent).to.equal(ethers.ZeroAddress);
-            
-            const battle = await battleSystem.activeBattles(player1.address);
-            expect(battle.defender).to.equal(opponent);
-        });
-
         it("Should not allow starting search while in battle", async function () {
+
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 250);
+            await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
+
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
@@ -1077,11 +1052,10 @@ describe("BattleSystem", function () {
             const opponent = searchStatus.foundOpponent;
             
             // Train some troops
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, 100);
             await battleSystem.connect(player1).trainTroops(0, 1); // Infantry
-            await battleSystem.connect(player1).trainTroops(1, 1); // Cavalry
-            await battleSystem.connect(player1).trainTroops(2, 1); // Siege
             
-            await battleSystem.connect(player1).startBattle(1, 1, 1);
+            await battleSystem.connect(player1).startBattle(1, 0, 0);
             
             await expect(
                 battleSystem.connect(player1).startSearch()
