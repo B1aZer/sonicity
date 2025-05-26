@@ -154,6 +154,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         });
 
         // Tier 2 Buildings
+        // TODO: This is a grid building
         districtBuildingConfigs[DistrictBuildingType.REP_STATION] = DistrictBuildingConfig({
             name: "Rep Station",
             unlockCost: 3000,
@@ -164,6 +165,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             tier: 2
         });
 
+        // TODO: This is engine?
         districtBuildingConfigs[DistrictBuildingType.COUNCIL_CHAMBER] = DistrictBuildingConfig({
             name: "Council Chamber",
             unlockCost: 3500,
@@ -173,6 +175,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Unlocks REP claim button",
             tier: 2
         });
+
+        // TODO: We need a building to create/burn REP with dynimic image
 
         districtBuildingConfigs[DistrictBuildingType.AUDIT_SHRINE] = DistrictBuildingConfig({
             name: "Audit Shrine",
