@@ -39,7 +39,7 @@
     margin: var(--spacing-sm) 0;
 }
 
-.build-cost, .unlock-cost {
+.build-cost, .unlock-cost, .upgrade-cost {
     color: var(--text-primary);
     font-size: var(--font-size-sm);
     margin: 0;
@@ -54,6 +54,10 @@
 
 .unlock-cost::before {
     content: '🔓';
+}
+
+.upgrade-cost::before {
+    content: '⬆️';
 }
 
 .building-actions {

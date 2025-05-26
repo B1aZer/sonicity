@@ -121,19 +121,38 @@ export class CityPage extends BasePage {
             const buildingsGrid = tierContent.querySelector('.buildings-grid');
             
             if (buildingsGrid) {
-                // Check which buildings are already built
-                const builtStatuses = await Promise.all(buildingTypes.map(type => this.contracts.districtBuildings.isDistrictBuildingBuilt(type)));
+                // Fetch all building data in parallel
+                const buildingData = await Promise.all(
+                    buildingTypes.map(async (type) => {
+                        const [isBuilt, level] = await Promise.all([
+                            this.contracts.districtBuildings.isDistrictBuildingBuilt(type),
+                            this.contracts.districtBuildings.getBuildingLevel(type)
+                        ]);
+                        return { type, isBuilt, level };
+                    })
+                );
 
                 buildingsGrid.innerHTML = buildingTypes.map((type, index) => {
                     const config = configs[index];
+                    const { isBuilt, level } = buildingData[index];
                     const treasuryBigInt = BigInt(treasury);
                     const unlockCostBigInt = BigInt(config.unlockCost);
                     const isLocked = treasuryBigInt < unlockCostBigInt;
                     const isTierLocked = tier > currentTier;
-                    const isBuilt = builtStatuses[index];
+                    const currentLevel = Number(level);
+                    const canUpgrade = isBuilt && currentLevel < Number(config.maxLevel);
                     
                     // Calculate remaining gold needed
                     const remainingGold = unlockCostBigInt - treasuryBigInt;
+                    
+                    // Calculate upgrade cost if applicable
+                    const upgradeCost = canUpgrade ? BigInt(config.upgradeCost) * BigInt(currentLevel) : BigInt(0);
+                    
+                    // Calculate progress percentage using BigInt arithmetic
+                    const progressPercentage = Number((treasuryBigInt * BigInt(100)) / unlockCostBigInt);
+                    
+                    // Determine if button should be disabled
+                    const isButtonDisabled = isLocked || isTierLocked || (isBuilt && !canUpgrade);
                     
                     return `
                         <div class="building-card ${isLocked || isTierLocked ? 'locked' : ''} ${isBuilt ? 'built' : ''}" 
@@ -147,7 +166,7 @@ export class CityPage extends BasePage {
                                             `<p class="unlock-requirement">Requires Tier ${tier}</p>` :
                                             `<p class="unlock-requirement">Requires ${remainingGold.toString()} more Gold to unlock</p>
                                              <div class="progress-container">
-                                                <div class="progress-bar" style="width: ${Math.min((Number(treasuryBigInt) / Number(unlockCostBigInt)) * 100, 100)}%"></div>
+                                                <div class="progress-bar" style="width: ${Math.min(progressPercentage, 100)}%"></div>
                                              </div>`
                                         }
                                     </div>
@@ -156,11 +175,18 @@ export class CityPage extends BasePage {
                             <h3>${config.name}</h3>
                             <p>${config.description}</p>
                             <div class="building-details">
-                                <p class="build-cost">Build Cost: ${config.buildCost} gold</p>
-                                <p class="unlock-cost">Unlock Cost: ${config.unlockCost} gold</p>
+                                ${isBuilt ? `
+                                    <p class="build-cost">Current Level: ${currentLevel} / ${config.maxLevel}</p>
+                                    ${canUpgrade ? `<p class="upgrade-cost">Upgrade Cost: ${upgradeCost.toString()} gold</p>` : ''}
+                                ` : `
+                                    <p class="build-cost">Build Cost: ${config.buildCost} gold</p>
+                                    <p class="unlock-cost">Unlock Cost: ${config.unlockCost} gold</p>
+                                `}
                             </div>
-                            <button class="building-button" data-building="${type}" type="button" ${isBuilt ? 'disabled' : ''}>
-                                ${isBuilt ? 'Constructed' : `Build ${config.name}`}
+                            <button class="building-button" data-building="${type}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
+                                ${isBuilt ? 
+                                    (canUpgrade ? `Upgrade to Level ${currentLevel + 1}` : 'Max Level') : 
+                                    `Build ${config.name}`}
                             </button>
                         </div>
                     `;
@@ -259,56 +285,86 @@ export class CityPage extends BasePage {
             Logger.info('Checking if building is already built...');
             const isBuilt = await this.contracts.districtBuildings.isDistrictBuildingBuilt(buildingType);
             Logger.info(`Building built status: ${isBuilt}`);
+
             if (isBuilt) {
-                Logger.warn(`Building ${config.name} is already built`);
-                this.modal.error(`${config.name} is already built!`);
-                return;
-            }
+                // Handle upgrade
+                const currentLevel = await this.contracts.districtBuildings.getBuildingLevel(buildingType);
+                if (Number(currentLevel) >= Number(config.maxLevel)) {
+                    Logger.warn(`Building ${config.name} is already at max level`);
+                    this.modal.error(`${config.name} is already at maximum level!`);
+                    return;
+                }
 
-            // Check gold balance
-            Logger.info('Checking player gold balance...');
-            const gold = await this.contracts.gameState.getPlayerGold();
-            Logger.info(`Player gold balance: ${gold}, Required: ${config.buildCost}`);
-            if (Number(gold) < Number(config.buildCost)) {
-                Logger.warn(`Insufficient gold to build ${config.name}. Required: ${config.buildCost}, Available: ${gold}`);
-                this.modal.error(
-                    `Insufficient gold to build ${config.name}!<br>
-                    Required: ${config.buildCost} Gold<br>
-                    Current balance: ${gold} Gold`
-                );
-                return;
-            }
-
-            // Show confirmation dialog
-            Logger.info('Showing build confirmation dialog...');
-            const result = await this.modal.confirm(
-                `Build ${config.name} for ${config.buildCost} Gold?`,
-                { title: 'Confirm Building' }
-            );
-
-            if (result.isConfirmed) {
-                Logger.info('User confirmed building construction');
-                const loadingModal = this.modal.loading('Transaction submitted! Waiting for confirmation...');
+                const upgradeCost = BigInt(config.upgradeCost) * BigInt(currentLevel);
                 
-                try {
-                    Logger.info('Initiating building construction transaction...');
-                    await this.contracts.districtBuildings.buildDistrictBuilding(buildingType);
-                    Logger.info('Building construction transaction successful');
-                    loadingModal.close();
-                    Logger.info('Reloading city data after successful build...');
-                    await this.loadCityData();
-                    this.modal.success(`Successfully built ${config.name}!`);
-                } catch (error) {
-                    loadingModal.close();
-                    Logger.error('Error building district building:', error);
-                    this.modal.error(`Failed to build ${config.name}: ${error.message}`);
+                // Check gold balance for upgrade
+                const gold = await this.contracts.gameState.getPlayerGold();
+                if (BigInt(gold) < upgradeCost) {
+                    Logger.warn(`Insufficient gold to upgrade ${config.name}. Required: ${upgradeCost}, Available: ${gold}`);
+                    this.modal.error(
+                        `Insufficient gold to upgrade ${config.name}!<br>
+                        Required: ${upgradeCost.toString()} Gold<br>
+                        Current balance: ${gold} Gold`
+                    );
+                    return;
+                }
+
+                // Show upgrade confirmation dialog
+                const result = await this.modal.confirm(
+                    `Upgrade ${config.name} to level ${Number(currentLevel) + 1} for ${upgradeCost.toString()} Gold?`,
+                    { title: 'Confirm Upgrade' }
+                );
+
+                if (result.isConfirmed) {
+                    const loadingModal = this.modal.loading('Transaction submitted! Waiting for confirmation...');
+                    try {
+                        await this.contracts.districtBuildings.upgradeDistrictBuilding(buildingType);
+                        loadingModal.close();
+                        await this.loadCityData();
+                        this.modal.success(`Successfully upgraded ${config.name} to level ${Number(currentLevel) + 1}!`);
+                    } catch (error) {
+                        loadingModal.close();
+                        Logger.error('Error upgrading district building:', error);
+                        this.modal.error(`Failed to upgrade ${config.name}: ${error.message}`);
+                    }
                 }
             } else {
-                Logger.info('User cancelled building construction');
+                // Handle initial build
+                // Check gold balance
+                const gold = await this.contracts.gameState.getPlayerGold();
+                if (BigInt(gold) < BigInt(config.buildCost)) {
+                    Logger.warn(`Insufficient gold to build ${config.name}. Required: ${config.buildCost}, Available: ${gold}`);
+                    this.modal.error(
+                        `Insufficient gold to build ${config.name}!<br>
+                        Required: ${config.buildCost} Gold<br>
+                        Current balance: ${gold} Gold`
+                    );
+                    return;
+                }
+
+                // Show build confirmation dialog
+                const result = await this.modal.confirm(
+                    `Build ${config.name} for ${config.buildCost} Gold?`,
+                    { title: 'Confirm Building' }
+                );
+
+                if (result.isConfirmed) {
+                    const loadingModal = this.modal.loading('Transaction submitted! Waiting for confirmation...');
+                    try {
+                        await this.contracts.districtBuildings.buildDistrictBuilding(buildingType);
+                        loadingModal.close();
+                        await this.loadCityData();
+                        this.modal.success(`Successfully built ${config.name}!`);
+                    } catch (error) {
+                        loadingModal.close();
+                        Logger.error('Error building district building:', error);
+                        this.modal.error(`Failed to build ${config.name}: ${error.message}`);
+                    }
+                }
             }
         } catch (error) {
             Logger.error('Error in handleBuildingAction:', error);
-            this.modal.error(`Error building district building: ${error.message}`);
+            this.modal.error(`Error handling building action: ${error.message}`);
         }
     }
 
