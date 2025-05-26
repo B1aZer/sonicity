@@ -80,4 +80,9 @@ export class DistrictBuildingsContract extends BaseContract {
     async getBuildingNames() {
         return await this.call('getBuildingNames');
     }
+
+    async getBuildingLevel(buildingType) {
+        const address = await this.getAddress();
+        return await this.call('getBuildingLevel', address, buildingType);
+    }
 } 
