@@ -44,12 +44,16 @@ export class ScoutGuildPage extends BasePage {
             const signer = await this.contracts.battleSystem.getSigner();
             const address = await signer.getAddress();
 
-            // Load resources
-            const gold = await this.contracts.gameState.getPlayerGold();
-            Logger.info('Scout guild data loaded:', { gold });
+            // Load resources and search parameters
+            const [gold, searchCost] = await Promise.all([
+                this.contracts.gameState.getPlayerGold(),
+                this.contracts.battleSystem.searchCost()
+            ]);
+            Logger.info('Scout guild data loaded:', { gold, searchCost });
 
             // Update resource displays
             this.element.querySelector('#gold-amount').textContent = gold.toString();
+            this.element.querySelector('#search-cost').textContent = searchCost.toString();
 
             // Check search status
             const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
@@ -68,36 +72,46 @@ export class ScoutGuildPage extends BasePage {
         const searchButton = searchSection.querySelector('.search-btn');
         const searchTimer = searchSection.querySelector('.search-timer');
         const opponentInfo = searchSection.querySelector('.opponent-info');
+        const goldAmount = BigInt(this.element.querySelector('#gold-amount').textContent);
+        const searchCost = BigInt(this.element.querySelector('#search-cost').textContent);
 
-        if (searchStatus.active) {
+        // Disable search button if not enough gold
+        if (goldAmount < searchCost) {
+            searchButton.disabled = true;
+            searchButton.title = `Not enough gold. Required: ${searchCost}`;
+        } else {
+            searchButton.disabled = false;
+            searchButton.title = '';
+        }
+
+        if (!searchStatus.completed) {
             searchButton.disabled = true;
             searchButton.textContent = 'Searching...';
             searchTimer.style.display = 'block';
-            searchTimer.textContent = `Time remaining: ${Math.floor(searchStatus.timeRemaining / 60)} minutes`;
+            // Convert BigInt to Number for the calculation
+            const timeRemainingMinutes = Math.floor(Number(searchStatus.timeRemaining) / 60);
+            searchTimer.textContent = `Time remaining: ${timeRemainingMinutes} minutes`;
             opponentInfo.style.display = 'none';
         } else {
-            searchButton.disabled = false;
+            searchButton.disabled = goldAmount < searchCost;
             searchButton.textContent = 'Start Search';
             searchTimer.style.display = 'none';
             
             // Show appropriate message based on search status
-            if (searchStatus.completed) {
+            if (searchStatus.foundOpponent && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
                 opponentInfo.style.display = 'block';
-                if (searchStatus.foundOpponent && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
-                    opponentInfo.innerHTML = `
-                        <h3>Opponent Found!</h3>
-                        <p>Address: ${searchStatus.foundOpponent}</p>
-                    `;
-                } else {
-                    // Get a random message from the array
-                    const randomMessage = SCOUT_GUILD_MESSAGES[Math.floor(Math.random() * SCOUT_GUILD_MESSAGES.length)];
-                    opponentInfo.innerHTML = `
-                        <h3>Search Complete</h3>
-                        <p class="narrative-message">${randomMessage}</p>
-                    `;
-                }
+                opponentInfo.innerHTML = `
+                    <h3>Opponent Found!</h3>
+                    <p>Address: ${searchStatus.foundOpponent}</p>
+                `;
             } else {
-                opponentInfo.style.display = 'none';
+                // Get a random message from the array
+                const randomMessage = SCOUT_GUILD_MESSAGES[Math.floor(Math.random() * SCOUT_GUILD_MESSAGES.length)];
+                opponentInfo.style.display = 'block';
+                opponentInfo.innerHTML = `
+                    <h3>Search Complete</h3>
+                    <p class="narrative-message">${randomMessage}</p>
+                `;
             }
         }
     }
@@ -119,6 +133,10 @@ export class ScoutGuildPage extends BasePage {
 
                 <div class="page-section search-section">
                     <h2>Search for Opponents</h2>
+                    <div class="search-info">
+                        <p>Cost: <span id="search-cost">0</span> gold</p>
+                        <p>Duration: 6 hours</p>
+                    </div>
                     <div class="search-container">
                         <button class="btn btn-primary search-btn">
                             <i class="fas fa-search"></i>
