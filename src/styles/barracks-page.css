@@ -52,6 +52,15 @@
     font-family: var(--font-family);
 }
 
+.troop-count {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    background: var(--bg-dark-secondary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--bg-lighter);
+}
+
 .troop-desc {
     color: var(--text-muted);
     font-size: var(--font-size-sm);
