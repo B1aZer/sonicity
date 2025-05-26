@@ -67,12 +67,24 @@ export class BarracksPage extends BasePage {
                 this.contracts.districtBuildings.getBuildingLevel(4, address) // 4 is BARRACKS type in DistrictBuildingType enum
             ]);
 
+            Logger.info('Barracks data loaded:', { gold, food, barracksLevel });
+
+            // Check if barracks is built
+            const isBarracksBuilt = await this.contracts.districtBuildings.isDistrictBuildingBuilt(4);
+            Logger.info('Barracks built status:', isBarracksBuilt);
+
             // Load troop counts using enum values
             const troopCounts = await Promise.all([
                 this.contracts.battleSystem.playerTroops(address, BattleSystemContract.TROOP_TYPES.INFANTRY),
                 this.contracts.battleSystem.playerTroops(address, BattleSystemContract.TROOP_TYPES.CAVALRY),
                 this.contracts.battleSystem.playerTroops(address, BattleSystemContract.TROOP_TYPES.SIEGE)
             ]);
+
+            Logger.info('Troop counts:', {
+                infantry: troopCounts[0].toString(),
+                cavalry: troopCounts[1].toString(),
+                siege: troopCounts[2].toString()
+            });
 
             // Update UI with troop counts
             this.element.querySelector('#infantry-count').textContent = troopCounts[0].toString();
@@ -87,6 +99,7 @@ export class BarracksPage extends BasePage {
             const troopCards = this.element.querySelectorAll('.troop-card');
             troopCards.forEach((card, index) => {
                 const isLocked = Number(barracksLevel) <= index;
+                Logger.info(`Troop card ${index} locked status:`, { isLocked, barracksLevel });
                 if (isLocked) {
                     card.classList.add('locked');
                     const lockOverlay = document.createElement('div');
@@ -198,6 +211,42 @@ export class BarracksPage extends BasePage {
                 try {
                     // Map troop type string to enum value
                     const troopTypeValue = BattleSystemContract.TROOP_TYPES[troopType];
+                    Logger.info('Training troops:', { troopType, troopTypeValue, amount });
+
+                    // Check if player can train this troop type
+                    const canTrain = await this.contracts.districtBuildings.canTrainTroopType(troopTypeValue);
+                    Logger.info('Can train troop type:', canTrain);
+
+                    if (!canTrain) {
+                        this.modal.error('Cannot train this troop type at current barracks level');
+                        return;
+                    }
+
+                    // Get troop config to check costs
+                    const config = this.troopConfigs[troopType];
+                    Logger.info('Troop config:', config);
+
+                    // Get current resources
+                    const [gold, food] = await Promise.all([
+                        this.contracts.gameState.getPlayerGold(),
+                        this.contracts.gameState.getPlayerFood()
+                    ]);
+                    Logger.info('Current resources:', { gold, food });
+
+                    // Check if player has enough resources
+                    const totalGoldCost = BigInt(config.goldCost) * BigInt(amount);
+                    const totalFoodCost = BigInt(config.foodCost) * BigInt(amount);
+                    Logger.info('Required resources:', { totalGoldCost, totalFoodCost });
+
+                    if (BigInt(gold) < totalGoldCost) {
+                        this.modal.error(`Not enough gold. Required: ${totalGoldCost}, Available: ${gold}`);
+                        return;
+                    }
+                    if (BigInt(food) < totalFoodCost) {
+                        this.modal.error(`Not enough food. Required: ${totalFoodCost}, Available: ${food}`);
+                        return;
+                    }
+
                     await this.contracts.battleSystem.trainTroops(troopTypeValue, amount);
                     await this.loadBarracksData();
                 } catch (error) {

@@ -85,4 +85,9 @@ export class DistrictBuildingsContract extends BaseContract {
         const address = await this.getAddress();
         return await this.call('getBuildingLevel', address, buildingType);
     }
+
+    async canTrainTroopType(troopType) {
+        const address = await this.getAddress();
+        return await this.call('canTrainTroopType', address, troopType);
+    }
 } 
