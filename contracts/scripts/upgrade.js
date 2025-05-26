@@ -35,12 +35,23 @@ async function main() {
   await altarProxy.waitForDeployment();
   console.log("Altar upgraded to:", await altarProxy.getAddress());
 
+  // Upgrade BattleSystem
+  console.log("Upgrading BattleSystem...");
+  const BattleSystem = await ethers.getContractFactory("BattleSystem");
+  const battleSystemProxy = await upgrades.upgradeProxy(addresses.battleSystemProxy, BattleSystem);
+  await battleSystemProxy.waitForDeployment();
+  console.log("BattleSystem upgraded to:", await battleSystemProxy.getAddress());
+
   // Set up contract interactions
   console.log("Setting up contract interactions...");
   
   // Set Altar address in GameState
   console.log("Setting Altar address in GameState...");
   await gameStateProxy.setAltarAddress(await altarProxy.getAddress());
+  
+  // Set BattleSystem address in GameState
+  console.log("Setting BattleSystem address in GameState...");
+  await gameStateProxy.setBattleSystemAddress(await battleSystemProxy.getAddress());
   
   // Set GameState address in DistrictBuildings
   console.log("Setting GameState address in DistrictBuildings...");
@@ -58,6 +69,22 @@ async function main() {
   console.log("Setting GameState address in GridBuildings...");
   await gridBuildingsProxy.setGameStateAddress(await gameStateProxy.getAddress());
 
+  // Set BattleSystem address in GridBuildings
+  console.log("Setting BattleSystem address in GridBuildings...");
+  await gridBuildingsProxy.setBattleSystemAddress(await battleSystemProxy.getAddress());
+
+  // Set GameState address in BattleSystem
+  console.log("Setting GameState address in BattleSystem...");
+  await battleSystemProxy.setGameStateAddress(await gameStateProxy.getAddress());
+
+  // Set DistrictBuildings address in BattleSystem
+  console.log("Setting DistrictBuildings address in BattleSystem...");
+  await battleSystemProxy.setDistrictBuildingsAddress(await districtBuildingsProxy.getAddress());
+
+  // Set GridBuildings address in BattleSystem
+  console.log("Setting GridBuildings address in BattleSystem...");
+  await battleSystemProxy.setGridBuildingsAddress(await gridBuildingsProxy.getAddress());
+
   // Update addresses file
   const newAddresses = {
     ...addresses,
@@ -65,6 +92,7 @@ async function main() {
     districtBuildingsProxy: await districtBuildingsProxy.getAddress(),
     gridBuildingsProxy: await gridBuildingsProxy.getAddress(),
     altarProxy: await altarProxy.getAddress(),
+    battleSystemProxy: await battleSystemProxy.getAddress(),
   };
 
   fs.writeFileSync(

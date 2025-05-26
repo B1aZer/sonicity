@@ -57,6 +57,15 @@ async function main() {
   const altarImplAddress = await altarImpl.getAddress();
   console.log("Altar implementation deployed to:", altarImplAddress);
 
+  // Deploy BattleSystem implementation
+  console.log("Deploying BattleSystem implementation...");
+  const BattleSystem = await ethers.getContractFactory("BattleSystem");
+  const battleSystemImpl = await BattleSystem.deploy();
+  console.log("Waiting for BattleSystem implementation deployment...");
+  await battleSystemImpl.waitForDeployment();
+  const battleSystemImplAddress = await battleSystemImpl.getAddress();
+  console.log("BattleSystem implementation deployed to:", battleSystemImplAddress);
+
   // Deploy GameState proxy
   console.log("Deploying GameState proxy...");
   const gameStateProxy = await upgrades.deployProxy(GameState, [], {
@@ -101,12 +110,27 @@ async function main() {
   const altarProxyAddress = await altarProxy.getAddress();
   console.log("Altar proxy deployed to:", altarProxyAddress);
 
+  // Deploy BattleSystem proxy
+  console.log("Deploying BattleSystem proxy...");
+  const battleSystemProxy = await upgrades.deployProxy(BattleSystem, [], {
+    kind: 'uups',
+    initializer: 'initialize',
+  });
+  console.log("Waiting for BattleSystem proxy deployment...");
+  await battleSystemProxy.waitForDeployment();
+  const battleSystemProxyAddress = await battleSystemProxy.getAddress();
+  console.log("BattleSystem proxy deployed to:", battleSystemProxyAddress);
+
   // Set up contract interactions
   console.log("Setting up contract interactions...");
   
   // Set Altar address in GameState
   console.log("Setting Altar address in GameState...");
   await gameStateProxy.setAltarAddress(altarProxyAddress);
+  
+  // Set BattleSystem address in GameState
+  console.log("Setting BattleSystem address in GameState...");
+  await gameStateProxy.setBattleSystemAddress(battleSystemProxyAddress);
   
   // Approve NFT collections in Altar
   console.log("Approving NFT collections in Altar...");
@@ -133,6 +157,22 @@ async function main() {
   console.log("Setting Altar address in GridBuildings...");
   await gridBuildingsProxy.setAltarAddress(altarProxyAddress);
 
+  // Set BattleSystem address in GridBuildings
+  console.log("Setting BattleSystem address in GridBuildings...");
+  await gridBuildingsProxy.setBattleSystemAddress(battleSystemProxyAddress);
+
+  // Set GameState address in BattleSystem
+  console.log("Setting GameState address in BattleSystem...");
+  await battleSystemProxy.setGameStateAddress(gameStateProxyAddress);
+
+  // Set DistrictBuildings address in BattleSystem
+  console.log("Setting DistrictBuildings address in BattleSystem...");
+  await battleSystemProxy.setDistrictBuildingsAddress(districtBuildingsProxyAddress);
+
+  // Set GridBuildings address in BattleSystem
+  console.log("Setting GridBuildings address in BattleSystem...");
+  await battleSystemProxy.setGridBuildingsAddress(gridBuildingsProxyAddress);
+
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
   console.log("Contract addresses:");
@@ -146,6 +186,8 @@ async function main() {
   console.log("GridBuildings proxy:", gridBuildingsProxyAddress);
   console.log("Altar implementation:", altarImplAddress);
   console.log("Altar proxy:", altarProxyAddress);
+  console.log("BattleSystem implementation:", battleSystemImplAddress);
+  console.log("BattleSystem proxy:", battleSystemProxyAddress);
 
   // Save addresses to a file for frontend use
   const addresses = {
@@ -159,6 +201,8 @@ async function main() {
     gridBuildingsProxy: gridBuildingsProxyAddress,
     altarImpl: altarImplAddress,
     altarProxy: altarProxyAddress,
+    battleSystemImpl: battleSystemImplAddress,
+    battleSystemProxy: battleSystemProxyAddress,
   };
 
   const fs = require('fs');
