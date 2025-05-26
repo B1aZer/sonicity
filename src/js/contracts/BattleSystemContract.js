@@ -3,6 +3,32 @@ import { CONTRACT_ADDRESSES } from '../utils/constants.js';
 import BattleSystemABI from '../../../contracts/artifacts/contracts/BattleSystem.sol/BattleSystem.json';
 
 export class BattleSystemContract extends BaseContract {
+    // Troop type enum values
+    static TROOP_TYPES = {
+        INFANTRY: 0,
+        CAVALRY: 1,
+        SIEGE: 2
+    };
+
+    // Troop type definitions
+    static TROOP_DEFINITIONS = {
+        INFANTRY: {
+            name: 'Infantry',
+            description: 'Base unit for defense and offense',
+            image: '/images/barracks/infantry.png'
+        },
+        CAVALRY: {
+            name: 'Cavalry',
+            description: 'More powerful unit with chance to disable enemy grid buildings',
+            image: '/images/barracks/cavalry.png'
+        },
+        SIEGE: {
+            name: 'Siege',
+            description: 'Best at damaging structures with chance to burn enemy treasury gold',
+            image: '/images/barracks/siege.png'
+        }
+    };
+
     constructor() {
         super(CONTRACT_ADDRESSES.BATTLE_SYSTEM, BattleSystemABI.abi);
     }
@@ -79,7 +105,7 @@ export class BattleSystemContract extends BaseContract {
 
     async troopConfig(troopType) {
         const contract = await this.getContract();
-        return contract.troopConfig(troopType);
+        return contract.troopConfigs(troopType);
     }
 
     async getBattleRecord(battleId) {
@@ -100,5 +126,18 @@ export class BattleSystemContract extends BaseContract {
     async registeredPlayers(index) {
         const contract = await this.getContract();
         return contract.registeredPlayers(index);
+    }
+
+    async getTroopConfig(troopType) {
+        const contract = await this.getContract();
+        const config = await contract.troopConfigs(troopType);
+        return {
+            goldCost: config.goldCost,
+            foodCost: config.foodCost,
+            power: config.power,
+            gridDamageChance: config.gridDamageChance,
+            districtDamageChance: config.districtDamageChance,
+            treasuryBurnChance: config.treasuryBurnChance
+        };
     }
 } 

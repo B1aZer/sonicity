@@ -246,33 +246,3 @@ export const SHOP_ITEMS = [
     image: '/images/shop/cosmetic.png',
   },
 ];
-
-export const TROOP_TYPES = {
-    INFANTRY: {
-        name: 'Infantry',
-        description: 'Base unit for defense and offense',
-        cost: {
-            gold: 100,
-            food: 50
-        },
-        image: '/images/barracks/infantry.png'
-    },
-    CAVALRY: {
-        name: 'Cavalry',
-        description: 'More powerful unit with chance to disable enemy grid buildings',
-        cost: {
-            gold: 200,
-            food: 100
-        },
-        image: '/images/barracks/cavalry.png'
-    },
-    SIEGE: {
-        name: 'Siege',
-        description: 'Best at damaging structures with chance to burn enemy treasury gold',
-        cost: {
-            gold: 300,
-            food: 150
-        },
-        image: '/images/barracks/siege.png'
-    }
-};
