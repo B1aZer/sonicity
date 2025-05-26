@@ -246,3 +246,11 @@ export const SHOP_ITEMS = [
     image: '/images/shop/cosmetic.png',
   },
 ];
+
+export const SCOUT_GUILD_MESSAGES = [
+    "Your scouts returned from the mist, empty-handed. No banners on the horizon.",
+    "The land ahead lies barren. Perhaps tomorrow, enemies will rise.",
+    "Only the wind answered. Your scouts found no worthy foe.",
+    "Their torches flickered. Tracks led to nothing. The trail is cold.",
+    "They wandered far, but no city dared reveal itself."
+];

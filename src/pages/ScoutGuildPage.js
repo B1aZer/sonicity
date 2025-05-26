@@ -1,6 +1,7 @@
 import { BasePage } from './BasePage.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
+import { SCOUT_GUILD_MESSAGES } from '../js/utils/constants.js';
 import '../styles/scout-guild-page.css';
 import '../styles/building.css';
 import '../styles/buttons.css';
@@ -79,12 +80,22 @@ export class ScoutGuildPage extends BasePage {
             searchButton.textContent = 'Start Search';
             searchTimer.style.display = 'none';
             
-            if (searchStatus.foundOpponent) {
+            // Show appropriate message based on search status
+            if (searchStatus.completed) {
                 opponentInfo.style.display = 'block';
-                opponentInfo.innerHTML = `
-                    <h3>Opponent Found!</h3>
-                    <p>Address: ${searchStatus.foundOpponent}</p>
-                `;
+                if (searchStatus.foundOpponent && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
+                    opponentInfo.innerHTML = `
+                        <h3>Opponent Found!</h3>
+                        <p>Address: ${searchStatus.foundOpponent}</p>
+                    `;
+                } else {
+                    // Get a random message from the array
+                    const randomMessage = SCOUT_GUILD_MESSAGES[Math.floor(Math.random() * SCOUT_GUILD_MESSAGES.length)];
+                    opponentInfo.innerHTML = `
+                        <h3>Search Complete</h3>
+                        <p class="narrative-message">${randomMessage}</p>
+                    `;
+                }
             } else {
                 opponentInfo.style.display = 'none';
             }
