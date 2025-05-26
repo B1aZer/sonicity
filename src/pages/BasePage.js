@@ -5,6 +5,7 @@ import { NFTContract } from '../js/contracts/NFTContract.js';
 import { FarmNFTContract } from '../js/contracts/FarmNFTContract.js';
 import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
+import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { appState } from '../js/core/state.js';
@@ -21,7 +22,8 @@ export class BasePage {
             nft: new NFTContract(),
             farmNft: new FarmNFTContract(),
             districtBuildings: new DistrictBuildingsContract(),
-            gridBuildings: new GridBuildingsContract()
+            gridBuildings: new GridBuildingsContract(),
+            battleSystem: new BattleSystemContract()
         };
         
         // Setup wallet event listener
@@ -80,6 +82,10 @@ export class BasePage {
                 }),
                 this.contracts.gridBuildings.initialize().catch(e => {
                     Logger.warn('GridBuildings contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.battleSystem.initialize().catch(e => {
+                    Logger.warn('BattleSystem contract initialization failed:', e);
                     return null;
                 })
             ];
