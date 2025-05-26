@@ -150,11 +150,12 @@ export class BarracksPage extends BasePage {
     }
 
     setupTrainHandlers() {
-        const trainButtons = document.querySelectorAll('.train-btn');
+        const trainButtons = this.element.querySelectorAll('.train-btn');
         trainButtons.forEach(button => {
             button.addEventListener('click', async () => {
                 const troopType = button.getAttribute('data-troop-type');
-                const amount = parseInt(document.getElementById(`${troopType}-amount`).value);
+                const amountInput = this.element.querySelector(`#${troopType.toLowerCase()}-amount`);
+                const amount = parseInt(amountInput.value);
                 
                 if (isNaN(amount) || amount <= 0) {
                     this.showError('Please enter a valid amount');
@@ -163,7 +164,7 @@ export class BarracksPage extends BasePage {
 
                 try {
                     // Map troop type string to enum value
-                    const troopTypeValue = BattleSystemContract.TROOP_TYPES[troopType.toUpperCase()];
+                    const troopTypeValue = BattleSystemContract.TROOP_TYPES[troopType];
                     await this.contracts.battleSystem.trainTroops(troopTypeValue, amount);
                     await this.loadBarracksData();
                 } catch (error) {
