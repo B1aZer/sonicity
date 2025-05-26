@@ -129,7 +129,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             buildCost: 250,
             upgradeCost: 500,    // 500 gold per level
             maxLevel: 3,         // Can be upgraded to level 3
-            description: "Train troops (INFANTRY at level 1, CAVALRY at level 2, SIEGE at level 3)",
+            description: "Train troops",
             tier: 1
         });
 
