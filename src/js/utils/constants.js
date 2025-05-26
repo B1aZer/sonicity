@@ -2,24 +2,24 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0x5081a39b8A5f0E35a8D959395a630b68B74Dd30f", // Will be updated by update-addresses.sh
-    SONICITY_FARM: "0x1fA02b2d6A771842690194Cf62D91bdd92BfE28d", // Will be updated by update-addresses.sh
-    ALTAR: "0x51A1ceB83B83F1985a81C295d1fF28Afef186E02", // Will be updated by update-addresses.sh
-    GAME_STATE: "0x2E2Ed0Cfd3AD2f1d34481277b3204d807Ca2F8c2", // Will be updated by update-addresses.sh
-    DISTRICT_BUILDINGS: "0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD", // Will be updated by update-addresses.sh
-    BATTLE_SYSTEM: "0x0000000000000000000000000000000000000000" // Will be updated by update-addresses.sh
+    SONICITY_NFT: "0x32EEce76C2C2e8758584A83Ee2F522D4788feA0f", // Will be updated by update-addresses.sh
+    SONICITY_FARM: "0x01c1DeF3b91672704716159C9041Aeca392DdFfb", // Will be updated by update-addresses.sh
+    ALTAR: "0x40a42Baf86Fc821f972Ad2aC878729063CeEF403", // Will be updated by update-addresses.sh
+    GAME_STATE: "0x5302E909d1e93e30F05B5D6Eea766363D14F9892", // Will be updated by update-addresses.sh
+    DISTRICT_BUILDINGS: "0x0ed64d01D0B4B655E410EF1441dD677B695639E7", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0x4bf010f1b9beDA5450a8dD702ED602A104ff65EE", // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0x96F3Ce39Ad2BfDCf92C0F6E2C2CAbF83874660Fc" // Will be updated by update-addresses.sh
 };
 
 // Contract names
 export const CONTRACT_NAMES = {
-    SONICITY_NFT: "SonicityNFT",
-    SONICITY_FARM: "SonicityFarm",
-    ALTAR: "Altar",
-    GAME_STATE: "GameState",
-    DISTRICT_BUILDINGS: "DistrictBuildings",
-    GRID_BUILDINGS: "GridBuildings",
-    BATTLE_SYSTEM: "BattleSystem"
+    SONICITY_NFT: "0x32EEce76C2C2e8758584A83Ee2F522D4788feA0f",
+    SONICITY_FARM: "0x01c1DeF3b91672704716159C9041Aeca392DdFfb",
+    ALTAR: "0x40a42Baf86Fc821f972Ad2aC878729063CeEF403",
+    GAME_STATE: "0x5302E909d1e93e30F05B5D6Eea766363D14F9892",
+    DISTRICT_BUILDINGS: "0x0ed64d01D0B4B655E410EF1441dD677B695639E7",
+    GRID_BUILDINGS: "0x4bf010f1b9beDA5450a8dD702ED602A104ff65EE",
+    BATTLE_SYSTEM: "0x96F3Ce39Ad2BfDCf92C0F6E2C2CAbF83874660Fc"
 };
 
 // Contract configuration
