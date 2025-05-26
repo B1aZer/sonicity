@@ -1,68 +1,104 @@
-import { BaseContract } from './BaseContract';
-import { CONTRACT_NAMES } from '../constants';
+import { BaseContract } from './BaseContract.js';
+import { CONTRACT_ADDRESSES } from '../utils/constants.js';
+import BattleSystemABI from '../../../contracts/artifacts/contracts/BattleSystem.sol/BattleSystem.json';
 
 export class BattleSystemContract extends BaseContract {
-    constructor(web3, address) {
-        super(web3, CONTRACT_NAMES.BATTLE_SYSTEM, address);
+    constructor() {
+        super(CONTRACT_ADDRESSES.BATTLE_SYSTEM, BattleSystemABI.abi);
     }
 
     async startSearch() {
-        return this.contract.methods.startSearch().send({ from: this.web3.eth.defaultAccount });
+        const contract = await this.getContract();
+        return contract.startSearch();
     }
 
     async findRandomOpponent() {
-        return this.contract.methods.findRandomOpponent().send({ from: this.web3.eth.defaultAccount });
+        const contract = await this.getContract();
+        return contract.findRandomOpponent();
     }
 
     async checkSearchStatus() {
-        return this.contract.methods.checkSearchStatus().call({ from: this.web3.eth.defaultAccount });
+        const contract = await this.getContract();
+        return contract.checkSearchStatus();
     }
 
     async startBattle(infantry, cavalry, siege) {
-        return this.contract.methods.startBattle(infantry, cavalry, siege).send({ from: this.web3.eth.defaultAccount });
+        const contract = await this.getContract();
+        return contract.startBattle(infantry, cavalry, siege);
     }
 
     async resolveBattle(attacker) {
-        return this.contract.methods.resolveBattle(attacker).send({ from: this.web3.eth.defaultAccount });
+        const contract = await this.getContract();
+        return contract.resolveBattle(attacker);
     }
 
     async trainTroops(troopType, amount) {
-        return this.contract.methods.trainTroops(troopType, amount).send({ from: this.web3.eth.defaultAccount });
+        const contract = await this.getContract();
+        return contract.trainTroops(troopType, amount);
     }
 
     async playerTroops(player, troopType) {
-        return this.contract.methods.playerTroops(player, troopType).call();
+        const contract = await this.getContract();
+        return contract.playerTroops(player, troopType);
     }
 
     async activeBattles(player) {
-        return this.contract.methods.activeBattles(player).call();
+        const contract = await this.getContract();
+        return contract.activeBattles(player);
     }
 
     async battleHistory(index) {
-        return this.contract.methods.battleHistory(index).call();
+        const contract = await this.getContract();
+        return contract.battleHistory(index);
     }
 
     async isRegisteredForMatchmaking(player) {
-        return this.contract.methods.isRegisteredForMatchmaking(player).call();
+        const contract = await this.getContract();
+        return contract.isRegisteredForMatchmaking(player);
     }
 
     async searchCost() {
-        return this.contract.methods.searchCost().call();
+        const contract = await this.getContract();
+        return contract.searchCost();
     }
 
     async searchDuration() {
-        return this.contract.methods.searchDuration().call();
+        const contract = await this.getContract();
+        return contract.searchDuration();
     }
 
     async noOpponentFoundChance() {
-        return this.contract.methods.noOpponentFoundChance().call();
+        const contract = await this.getContract();
+        return contract.noOpponentFoundChance();
     }
 
     async battleDuration() {
-        return this.contract.methods.battleDuration().call();
+        const contract = await this.getContract();
+        return contract.battleDuration();
     }
 
     async troopConfig(troopType) {
-        return this.contract.methods.troopConfig(troopType).call();
+        const contract = await this.getContract();
+        return contract.troopConfig(troopType);
+    }
+
+    async getBattleRecord(battleId) {
+        const contract = await this.getContract();
+        return contract.getBattleRecord(battleId);
+    }
+
+    async findPotentialOpponents() {
+        const contract = await this.getContract();
+        return contract.findPotentialOpponents();
+    }
+
+    async lastBattleTime(player) {
+        const contract = await this.getContract();
+        return contract.lastBattleTime(player);
+    }
+
+    async registeredPlayers(index) {
+        const contract = await this.getContract();
+        return contract.registeredPlayers(index);
     }
 } 
