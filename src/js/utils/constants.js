@@ -7,7 +7,19 @@ export const CONTRACT_ADDRESSES = {
     ALTAR: "0x51A1ceB83B83F1985a81C295d1fF28Afef186E02", // Will be updated by update-addresses.sh
     GAME_STATE: "0x2E2Ed0Cfd3AD2f1d34481277b3204d807Ca2F8c2", // Will be updated by update-addresses.sh
     DISTRICT_BUILDINGS: "0xD8a5a9b31c3C0232E196d518E89Fd8bF83AcAd43", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD" // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD", // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0x0000000000000000000000000000000000000000" // Will be updated by update-addresses.sh
+};
+
+// Contract names
+export const CONTRACT_NAMES = {
+    SONICITY_NFT: "SonicityNFT",
+    SONICITY_FARM: "SonicityFarm",
+    ALTAR: "Altar",
+    GAME_STATE: "GameState",
+    DISTRICT_BUILDINGS: "DistrictBuildings",
+    GRID_BUILDINGS: "GridBuildings",
+    BATTLE_SYSTEM: "BattleSystem"
 };
 
 // Contract configuration
