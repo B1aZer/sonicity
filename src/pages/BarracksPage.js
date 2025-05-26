@@ -60,10 +60,11 @@ export class BarracksPage extends BasePage {
             const signer = await this.contracts.battleSystem.getSigner();
             const address = await signer.getAddress();
 
-            // Load resources
-            const [gold, food] = await Promise.all([
+            // Load resources and barracks level
+            const [gold, food, barracksLevel] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
-                this.contracts.gameState.getPlayerFood()
+                this.contracts.gameState.getPlayerFood(),
+                this.contracts.districtBuildings.getBuildingLevel(4, address) // 4 is BARRACKS type in DistrictBuildingType enum
             ]);
 
             // Load troop counts using enum values
@@ -81,9 +82,33 @@ export class BarracksPage extends BasePage {
             // Update resource displays
             this.element.querySelector('#gold-amount').textContent = gold.toString();
             this.element.querySelector('#food-amount').textContent = food.toString();
+
+            // Update troop card states based on barracks level
+            const troopCards = this.element.querySelectorAll('.troop-card');
+            troopCards.forEach((card, index) => {
+                const isLocked = Number(barracksLevel) <= index;
+                if (isLocked) {
+                    card.classList.add('locked');
+                    const lockOverlay = document.createElement('div');
+                    lockOverlay.className = 'lock-overlay';
+                    lockOverlay.innerHTML = `
+                        <i class="fas fa-lock lock-icon"></i>
+                        <div class="unlock-info">
+                            <p class="unlock-requirement">Requires Barracks Level ${index + 1}</p>
+                        </div>
+                    `;
+                    card.appendChild(lockOverlay);
+                } else {
+                    card.classList.remove('locked');
+                    const existingOverlay = card.querySelector('.lock-overlay');
+                    if (existingOverlay) {
+                        existingOverlay.remove();
+                    }
+                }
+            });
         } catch (error) {
             console.error('Error loading barracks data:', error);
-            this.showError('Failed to load barracks data');
+            this.modal.error('Failed to load barracks data: ' + error.message);
         }
     }
 
@@ -154,11 +179,19 @@ export class BarracksPage extends BasePage {
         trainButtons.forEach(button => {
             button.addEventListener('click', async () => {
                 const troopType = button.getAttribute('data-troop-type');
+                const troopCard = button.closest('.troop-card');
+                
+                // Check if troop type is locked
+                if (troopCard.classList.contains('locked')) {
+                    this.modal.error('This troop type is not available at your current barracks level');
+                    return;
+                }
+
                 const amountInput = this.element.querySelector(`#${troopType.toLowerCase()}-amount`);
                 const amount = parseInt(amountInput.value);
                 
                 if (isNaN(amount) || amount <= 0) {
-                    this.showError('Please enter a valid amount');
+                    this.modal.error('Please enter a valid amount');
                     return;
                 }
 
@@ -169,7 +202,7 @@ export class BarracksPage extends BasePage {
                     await this.loadBarracksData();
                 } catch (error) {
                     console.error('Error training troops:', error);
-                    this.showError('Failed to train troops');
+                    this.modal.error('Failed to train troops: ' + error.message);
                 }
             });
         });
