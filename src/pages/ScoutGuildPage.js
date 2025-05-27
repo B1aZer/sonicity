@@ -45,15 +45,17 @@ export class ScoutGuildPage extends BasePage {
             const address = await signer.getAddress();
 
             // Load resources and search parameters
-            const [gold, searchCost] = await Promise.all([
+            const [gold, searchCost, searchDuration] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
-                this.contracts.battleSystem.searchCost()
+                this.contracts.battleSystem.searchCost(),
+                this.contracts.battleSystem.searchDuration()
             ]);
-            Logger.info('Scout guild data loaded:', { gold, searchCost });
+            Logger.info('Scout guild data loaded:', { gold, searchCost, searchDuration });
 
             // Update resource displays
             this.element.querySelector('#gold-amount').textContent = gold.toString();
             this.element.querySelector('#search-cost').textContent = searchCost.toString();
+            this.element.querySelector('#search-duration').textContent = Math.floor(Number(searchDuration) / 3600); // Convert seconds to hours
 
             // Check search status
             const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
@@ -70,6 +72,7 @@ export class ScoutGuildPage extends BasePage {
     updateSearchUI(searchStatus) {
         const searchSection = this.element.querySelector('.search-section');
         const searchButton = searchSection.querySelector('.search-btn');
+        const checkResultsButton = searchSection.querySelector('.check-results-btn');
         const searchTimer = searchSection.querySelector('.search-timer');
         const opponentInfo = searchSection.querySelector('.opponent-info');
         const goldAmount = BigInt(this.element.querySelector('#gold-amount').textContent);
@@ -85,33 +88,32 @@ export class ScoutGuildPage extends BasePage {
         }
 
         if (!searchStatus.completed) {
+            // Search is in progress
             searchButton.disabled = true;
-            searchButton.textContent = 'Searching...';
+            searchButton.textContent = 'Scouts Deployed...';
+            checkResultsButton.style.display = 'none';
             searchTimer.style.display = 'block';
-            // Convert BigInt to Number for the calculation
             const timeRemainingMinutes = Math.floor(Number(searchStatus.timeRemaining) / 60);
-            searchTimer.textContent = `Time remaining: ${timeRemainingMinutes} minutes`;
+            searchTimer.textContent = `Scouts return in: ${timeRemainingMinutes} minutes`;
             opponentInfo.style.display = 'none';
         } else {
+            // Search is complete
             searchButton.disabled = goldAmount < searchCost;
-            searchButton.textContent = 'Start Search';
+            searchButton.textContent = 'Deploy Scouts';
             searchTimer.style.display = 'none';
             
-            // Show appropriate message based on search status
             if (searchStatus.foundOpponent && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
+                // Opponent was found
+                checkResultsButton.style.display = 'none';
                 opponentInfo.style.display = 'block';
                 opponentInfo.innerHTML = `
-                    <h3>Opponent Found!</h3>
-                    <p>Address: ${searchStatus.foundOpponent}</p>
+                    <h3>Enemy Stronghold Discovered!</h3>
+                    <p>Location: ${searchStatus.foundOpponent}</p>
                 `;
             } else {
-                // Get a random message from the array
-                const randomMessage = SCOUT_GUILD_MESSAGES[Math.floor(Math.random() * SCOUT_GUILD_MESSAGES.length)];
-                opponentInfo.style.display = 'block';
-                opponentInfo.innerHTML = `
-                    <h3>Search Complete</h3>
-                    <p class="narrative-message">${randomMessage}</p>
-                `;
+                // No opponent found yet, show check results button
+                checkResultsButton.style.display = 'block';
+                opponentInfo.style.display = 'none';
             }
         }
     }
@@ -132,15 +134,19 @@ export class ScoutGuildPage extends BasePage {
                 </div>
 
                 <div class="page-section search-section">
-                    <h2>Search for Opponents</h2>
+                    <h2>Scout for Enemies</h2>
                     <div class="search-info">
                         <p>Cost: <span id="search-cost">0</span> gold</p>
-                        <p>Duration: 6 hours</p>
+                        <p>Duration: <span id="search-duration">0</span> hours</p>
                     </div>
                     <div class="search-container">
                         <button class="btn btn-primary search-btn">
                             <i class="fas fa-search"></i>
-                            Start Search
+                            Deploy Scouts
+                        </button>
+                        <button class="btn btn-secondary check-results-btn" style="display: none;">
+                            <i class="fas fa-scroll"></i>
+                            Check Scout Reports
                         </button>
                         <div class="search-timer" style="display: none;"></div>
                         <div class="opponent-info" style="display: none;"></div>
@@ -152,17 +158,39 @@ export class ScoutGuildPage extends BasePage {
 
     setupSearchHandlers() {
         const searchButton = this.element.querySelector('.search-btn');
+        const checkResultsButton = this.element.querySelector('.check-results-btn');
+
         searchButton.addEventListener('click', async () => {
             try {
+                const searchDuration = await this.contracts.battleSystem.searchDuration();
+                const hours = Math.floor(Number(searchDuration) / 3600);
                 await this.contracts.battleSystem.startSearch();
-                this.modal.success('Search started! Finding opponents...');
+                this.modal.success(`Scouts have been deployed! They will return in ${hours} hours.`);
                 await this.loadScoutGuildData();
                 
                 // Start polling for search status
                 this.startSearchPolling();
             } catch (error) {
                 console.error('Error starting search:', error);
-                this.modal.error('Failed to start search: ' + error.message);
+                this.modal.error('Failed to deploy scouts: ' + error.message);
+            }
+        });
+
+        checkResultsButton.addEventListener('click', async () => {
+            try {
+                const opponent = await this.contracts.battleSystem.findRandomOpponent();
+                await this.loadScoutGuildData();
+
+                if (opponent === '0x0000000000000000000000000000000000000000') {
+                    // Get a random message from the array
+                    const randomMessage = SCOUT_GUILD_MESSAGES[Math.floor(Math.random() * SCOUT_GUILD_MESSAGES.length)];
+                    this.modal.info(randomMessage);
+                } else {
+                    this.modal.success('Your scouts have discovered an enemy stronghold!');
+                }
+            } catch (error) {
+                console.error('Error checking scout results:', error);
+                this.modal.error('Failed to check scout reports: ' + error.message);
             }
         });
     }
@@ -177,7 +205,7 @@ export class ScoutGuildPage extends BasePage {
                 const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
                 this.updateSearchUI(searchStatus);
 
-                if (!searchStatus.active) {
+                if (searchStatus.completed) {
                     clearInterval(this.searchTimer);
                     this.searchTimer = null;
                 }
