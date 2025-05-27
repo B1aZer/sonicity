@@ -108,10 +108,20 @@ export class ScoutGuildPage extends BasePage {
                 opponentInfo.style.display = 'block';
                 opponentInfo.innerHTML = `
                     <h3>Enemy Stronghold Discovered!</h3>
-                    <p>Location: ${searchStatus.foundOpponent}</p>
+                    <p>Your scouts have returned with news of an enemy stronghold at location: ${searchStatus.foundOpponent}</p>
+                    <p>Prepare your forces for battle!</p>
+                `;
+            } else if (searchStatus.foundOpponent === '0x0000000000000000000000000000000000000000') {
+                // No opponent found
+                checkResultsButton.style.display = 'none';
+                opponentInfo.style.display = 'block';
+                const randomMessage = SCOUT_GUILD_MESSAGES[Math.floor(Math.random() * SCOUT_GUILD_MESSAGES.length)];
+                opponentInfo.innerHTML = `
+                    <h3>Scout Report</h3>
+                    <p>${randomMessage}</p>
                 `;
             } else {
-                // No opponent found yet, show check results button
+                // Search completed but no results checked yet
                 checkResultsButton.style.display = 'block';
                 opponentInfo.style.display = 'none';
             }
