@@ -956,7 +956,7 @@ describe("BattleSystem", function () {
             
             await expect(
                 battleSystem.connect(player1).findRandomOpponent()
-            ).to.be.revertedWith("Opponent already found");
+            ).to.be.revertedWith("Already attempted to find opponent");
         });
 
         it("Should allow starting new search and reset found opponent", async function () {

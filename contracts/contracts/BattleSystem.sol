@@ -64,6 +64,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 startTime;
         bool active;
         address foundOpponent;  // Store the found opponent
+        bool hasAttemptedFind;  // Track if player has already tried to find an opponent
     }
     mapping(address => SearchState) public playerSearches;
 
@@ -631,7 +632,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         playerSearches[msg.sender] = SearchState({
             startTime: block.timestamp,
             active: true,
-            foundOpponent: address(0)
+            foundOpponent: address(0),
+            hasAttemptedFind: false
         });
 
         emit SearchStarted(msg.sender, block.timestamp);
@@ -654,13 +656,14 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         SearchState memory search = playerSearches[msg.sender];
         require(search.startTime > 0, "No search in progress");
         require(block.timestamp >= search.startTime + searchDuration, "Search not complete");
-        require(search.foundOpponent == address(0), "Opponent already found");
+        require(!search.hasAttemptedFind, "Already attempted to find opponent");
         
         // Get all potential opponents
         address[] memory potentialOpponents = _findPotentialOpponents();
         
         // If no potential opponents, return zero address
         if (potentialOpponents.length == 0) {
+            playerSearches[msg.sender].hasAttemptedFind = true;
             return address(0);
         }
         
@@ -672,6 +675,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         ))) % 100;
         
         if (randomNumber < noOpponentFoundChance) {
+            playerSearches[msg.sender].hasAttemptedFind = true;
             return address(0); // Chance to not find anyone
         }
         
@@ -683,8 +687,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             randomNumber
         ))) % potentialOpponents.length;
         
-        // Store the found opponent
+        // Store the found opponent and mark that we've attempted to find one
         playerSearches[msg.sender].foundOpponent = potentialOpponents[opponentIndex];
+        playerSearches[msg.sender].hasAttemptedFind = true;
         
         return potentialOpponents[opponentIndex];
     }
