@@ -74,7 +74,6 @@ export class ScoutGuildPage extends BasePage {
         const searchButton = searchSection.querySelector('.search-btn');
         const checkResultsButton = searchSection.querySelector('.check-results-btn');
         const searchTimer = searchSection.querySelector('.search-timer');
-        const opponentInfo = searchSection.querySelector('.opponent-info');
         const goldAmount = BigInt(this.element.querySelector('#gold-amount').textContent);
         const searchCost = BigInt(this.element.querySelector('#search-cost').textContent);
 
@@ -95,35 +94,17 @@ export class ScoutGuildPage extends BasePage {
             searchTimer.style.display = 'block';
             const timeRemainingMinutes = Math.floor(Number(searchStatus.timeRemaining) / 60);
             searchTimer.textContent = `Scouts return in: ${timeRemainingMinutes} minutes`;
-            opponentInfo.style.display = 'none';
         } else {
             // Search is complete
             searchButton.disabled = goldAmount < searchCost;
             searchButton.textContent = 'Deploy Scouts';
             searchTimer.style.display = 'none';
             
-            if (searchStatus.foundOpponent && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
-                // Opponent was found
-                checkResultsButton.style.display = 'none';
-                opponentInfo.style.display = 'block';
-                opponentInfo.innerHTML = `
-                    <h3>Enemy Stronghold Discovered!</h3>
-                    <p>Your scouts have returned with news of an enemy stronghold at location: ${searchStatus.foundOpponent}</p>
-                    <p>Prepare your forces for battle!</p>
-                `;
-            } else if (searchStatus.foundOpponent === '0x0000000000000000000000000000000000000000') {
-                // No opponent found
-                checkResultsButton.style.display = 'none';
-                opponentInfo.style.display = 'block';
-                const randomMessage = SCOUT_GUILD_MESSAGES[Math.floor(Math.random() * SCOUT_GUILD_MESSAGES.length)];
-                opponentInfo.innerHTML = `
-                    <h3>Scout Report</h3>
-                    <p>${randomMessage}</p>
-                `;
-            } else {
-                // Search completed but no results checked yet
+            // Show check results button only if search is complete and no opponent has been found yet
+            if (searchStatus.foundOpponent === '0x0000000000000000000000000000000000000000') {
                 checkResultsButton.style.display = 'block';
-                opponentInfo.style.display = 'none';
+            } else {
+                checkResultsButton.style.display = 'none';
             }
         }
     }
@@ -159,7 +140,6 @@ export class ScoutGuildPage extends BasePage {
                             Check Scout Reports
                         </button>
                         <div class="search-timer" style="display: none;"></div>
-                        <div class="opponent-info" style="display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -188,18 +168,42 @@ export class ScoutGuildPage extends BasePage {
 
         checkResultsButton.addEventListener('click', async () => {
             try {
-                const opponent = await this.contracts.battleSystem.findRandomOpponent();
+                Logger.info('Starting to check scout reports...');
+                
+                Logger.info('Calling findRandomOpponent...');
+                const tx = await this.contracts.battleSystem.findRandomOpponent();
+                Logger.info('Transaction sent:', tx.hash);
+                
+                Logger.info('Waiting for transaction to be mined...');
+                await tx.wait();
+                Logger.info('Transaction mined');
+                
+                Logger.info('Reloading scout guild data...');
                 await this.loadScoutGuildData();
+                Logger.info('Scout guild data reloaded');
+
+                // Get the search status to check the result
+                const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
+                Logger.info('Search status after transaction:', searchStatus);
+                const opponent = searchStatus.foundOpponent;
+                Logger.info('Found opponent:', opponent);
 
                 if (opponent === '0x0000000000000000000000000000000000000000') {
+                    Logger.info('No opponent found, showing random scout message');
                     // Get a random message from the array
                     const randomMessage = SCOUT_GUILD_MESSAGES[Math.floor(Math.random() * SCOUT_GUILD_MESSAGES.length)];
-                    this.modal.info(randomMessage);
+                    this.modal.show(randomMessage, { title: 'Scout Report' });
                 } else {
-                    this.modal.success('Your scouts have discovered an enemy stronghold!');
+                    Logger.info('Opponent found:', opponent);
+                    this.modal.success('Enemy Stronghold Discovered!', `Your scouts have returned with news of an enemy stronghold at location: ${opponent}\n\nPrepare your forces for battle!`);
                 }
             } catch (error) {
-                console.error('Error checking scout results:', error);
+                Logger.error('Error checking scout results:', error);
+                Logger.error('Error details:', {
+                    message: error.message,
+                    code: error.code,
+                    stack: error.stack
+                });
                 this.modal.error('Failed to check scout reports: ' + error.message);
             }
         });
