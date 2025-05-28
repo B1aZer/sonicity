@@ -153,7 +153,7 @@ export class GamePage extends BasePage {
                 for (const building of builtDistrictBuildings) {
                     const buildingConfig = BUILDINGS[building.name];
                     if (buildingConfig) {
-                        const placedBuilding = this.game.buildingManager.placeFixedBuilding(
+                        const placedBuilding = await this.game.buildingManager.placeFixedBuilding(
                             building.name,
                             new THREE.Vector3(buildingConfig.position.x, buildingConfig.position.y, buildingConfig.position.z),
                             buildingConfig.rotation

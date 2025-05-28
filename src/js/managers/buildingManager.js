@@ -197,14 +197,25 @@ export class BuildingManager {
         }
     }
 
-    placeFixedBuilding(type, position, rotation) {
+    async placeFixedBuilding(type, position, rotation) {
         try {
             Logger.debug('Attempting to place fixed building', { type, position, rotation });
             
-            // Create building mesh
-            const building = this.createBuildingMesh(type);
+            // Get building level from district contract
+            let level = 1;  // Default level is 1
+            if (this.districtBuildingsContract) {
+                try {
+                    level = await this.districtBuildingsContract.getBuildingLevel(type);
+                    Logger.debug('Got building level from district contract', { type, level });
+                } catch (error) {
+                    Logger.warn('Failed to get building level from district contract, using default level 1', { type, error: error.message });
+                }
+            }
+            
+            // Create building mesh with level
+            const building = this.createBuildingMesh(type, level);
             if (!building) {
-                Logger.error('Failed to create fixed building mesh', { type });
+                Logger.error('Failed to create fixed building mesh', { type, level });
                 return null;
             }
 
@@ -218,7 +229,8 @@ export class BuildingManager {
             Logger.info('Fixed building placed successfully', {
                 type,
                 position,
-                rotation
+                rotation,
+                level
             });
             
             return building;
