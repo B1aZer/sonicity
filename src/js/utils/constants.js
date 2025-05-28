@@ -147,9 +147,9 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/defense_tower',
             levels: {
-                1: { url: 'assets/defense_tower_lvl1.glb' },
-                2: { url: 'assets/defense_tower_lvl2.glb' },
-                3: { url: 'assets/defense_tower_lvl3.glb' }
+                1: { url: 'assets/tower_lvl1.glb' },
+                2: { url: 'assets/tower_lvl2.glb' },
+                3: { url: 'assets/tower_lvl3.glb' }
             }
         }
     },
@@ -165,7 +165,7 @@ export const BUILDINGS = {
             levels: {
                 1: { url: 'assets/barracks_lvl1.glb' },
                 2: { url: 'assets/barracks_lvl2.glb' },
-                3: { url: 'assets/barracks_lvl3.glb' }
+                3: { url: 'assets/barr_lvl3.glb' }
             }
         }
     },
@@ -197,13 +197,20 @@ export const BUILDINGS = {
             }
         }
     },
+    /*
     REP_STATION: {
         name: 'Rep Station',
         size: new THREE.Vector3(15, 15, 15),
         color: 0x20B2AA, // Light Sea Green
         position: { x: -25, y: 0, z: 45 },
         rotation: 0,
-        tier: 2
+        tier: 2,
+        assets: {
+            baseUrl: 'assets/rep_station',
+            levels: {
+                1: { url: 'assets/rep_station.glb' }
+            }
+        }
     },
     COUNCIL_CHAMBER: {
         name: 'Council Chamber',
@@ -211,7 +218,13 @@ export const BUILDINGS = {
         color: 0x800080, // Purple
         position: { x: 25, y: 0, z: 45 },
         rotation: 0,
-        tier: 2
+        tier: 2,
+        assets: {
+            baseUrl: 'assets/council_chamber',
+            levels: {
+                1: { url: 'assets/council_chamber.glb' }
+            }
+        }
     },
     AUDIT_SHRINE: {
         name: 'Audit Shrine',
@@ -219,7 +232,13 @@ export const BUILDINGS = {
         color: 0xFF69B4, // Hot Pink
         position: { x: 0, y: 0, z: 50 },
         rotation: 0,
-        tier: 2
+        tier: 2,
+        assets: {
+            baseUrl: 'assets/audit_shrine',
+            levels: {
+                1: { url: 'assets/audit_shrine.glb' }
+            }
+        }
     },
     FOUNDERS_HALL: {
         name: "Founders' Hall",
@@ -227,7 +246,13 @@ export const BUILDINGS = {
         color: 0x4B0082, // Indigo
         position: { x: -30, y: 0, z: 55 },
         rotation: 0,
-        tier: 3
+        tier: 3,
+        assets: {
+            baseUrl: 'assets/founders_hall',
+            levels: {
+                1: { url: 'assets/founders_hall.glb' }
+            }
+        }
     },
     MINISTRY_OF_MERIT: {
         name: 'Ministry of Merit',
@@ -235,7 +260,13 @@ export const BUILDINGS = {
         color: 0x006400, // Dark Green
         position: { x: 30, y: 0, z: 55 },
         rotation: 0,
-        tier: 3
+        tier: 3,
+        assets: {
+            baseUrl: 'assets/ministry_of_merit',
+            levels: {
+                1: { url: 'assets/ministry_of_merit.glb' }
+            }
+        }
     },
     ARCANE_TOWER: {
         name: 'Arcane Tower',
@@ -243,7 +274,13 @@ export const BUILDINGS = {
         color: 0x00FFFF, // Cyan
         position: { x: -35, y: 0, z: 65 },
         rotation: 0,
-        tier: 4
+        tier: 4,
+        assets: {
+            baseUrl: 'assets/arcane_tower',
+            levels: {
+                1: { url: 'assets/arcane_tower.glb' }
+            }
+        }
     },
     FORTRESS_WALLS: {
         name: 'Fortress Walls',
@@ -251,7 +288,13 @@ export const BUILDINGS = {
         color: 0x808080, // Gray
         position: { x: 35, y: 0, z: 65 },
         rotation: 0,
-        tier: 4
+        tier: 4,
+        assets: {
+            baseUrl: 'assets/fortress_walls',
+            levels: {
+                1: { url: 'assets/fortress_walls.glb' }
+            }
+        }
     },
     BANK: {
         name: 'Bank',
@@ -259,8 +302,15 @@ export const BUILDINGS = {
         color: 0xFFD700, // Gold
         position: { x: 0, y: 0, z: 70 },
         rotation: 0,
-        tier: 4
-    }
+        tier: 4,
+        assets: {
+            baseUrl: 'assets/bank',
+            levels: {
+                1: { url: 'assets/bank.glb' }
+            }
+        }
+    },
+    */
 };
 
 // Helper to get all building types
