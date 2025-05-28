@@ -694,8 +694,7 @@ describe("BattleSystem", function () {
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1750);
             await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 700);
             await districtBuildings.connect(player2).buildDistrictBuilding(4); // BARRACKS
-            await districtBuildings.connect(player2).buildDistrictBuilding(5); // SCOUT_GUILD
-            await districtBuildings.connect(player2).buildDistrictBuilding(6); // CARAVAN
+            await districtBuildings.connect(player2).buildDistrictBuilding(6); // COMMAND_CENTER
 
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
 

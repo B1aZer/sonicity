@@ -117,8 +117,8 @@ export const BUILDINGS = {
         rotation: 0,
         tier: 1
     },
-    CARAVAN: {
-        name: 'Caravan',
+    COMMAND_CENTER: {
+        name: 'Command Center',
         size: new THREE.Vector3(15, 15, 15),
         color: 0xDAA520, // Goldenrod
         position: { x: 15, y: 0, z: 40 },

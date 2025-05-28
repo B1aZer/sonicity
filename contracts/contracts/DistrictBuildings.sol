@@ -25,7 +25,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         DEFENSE_TOWER,
         BARRACKS,
         SCOUT_GUILD,
-        CARAVAN,
+        COMMAND_CENTER,
         REP_STATION,
         COUNCIL_CHAMBER,
         AUDIT_SHRINE,
@@ -143,8 +143,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             tier: 1
         });
 
-        districtBuildingConfigs[DistrictBuildingType.CARAVAN] = DistrictBuildingConfig({
-            name: "Caravan",
+        districtBuildingConfigs[DistrictBuildingType.COMMAND_CENTER] = DistrictBuildingConfig({
+            name: "Command Center",
             unlockCost: 1750,
             buildCost: 250,
             upgradeCost: 0,    // Cannot be upgraded
@@ -547,7 +547,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         names[3] = "DEFENSE_TOWER";
         names[4] = "BARRACKS";
         names[5] = "SCOUT_GUILD";
-        names[6] = "CARAVAN";
+        names[6] = "COMMAND_CENTER";
         names[7] = "REP_STATION";
         names[8] = "COUNCIL_CHAMBER";
         names[9] = "AUDIT_SHRINE";
