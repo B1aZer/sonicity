@@ -639,17 +639,18 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         emit SearchStarted(msg.sender, block.timestamp);
     }
 
-    function checkSearchStatus() external view returns (bool completed, uint256 timeRemaining, address foundOpponent) {
-        SearchState memory search = playerSearches[msg.sender];
+    function checkSearchStatus() external view returns (bool completed, uint256 timeRemaining, address foundOpponent, bool hasAttemptedFind) {
+        SearchState storage search = playerSearches[msg.sender];
         if (!search.active) {
-            return (false, 0, address(0));
+            return (false, 0, address(0), false);
         }
 
-        if (block.timestamp >= search.startTime + searchDuration) {
-            return (true, 0, search.foundOpponent);
+        uint256 elapsed = block.timestamp - search.startTime;
+        if (elapsed >= searchDuration) {
+            return (true, 0, search.foundOpponent, search.hasAttemptedFind);
         }
 
-        return (false, search.startTime + searchDuration - block.timestamp, search.foundOpponent);
+        return (false, searchDuration - elapsed, address(0), search.hasAttemptedFind);
     }
 
     function findRandomOpponent() external returns (address) {
