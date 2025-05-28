@@ -103,6 +103,8 @@ export class ScoutGuildPage extends BasePage {
             // Show check results button only if search is complete and no opponent has been found yet
             if (searchStatus.foundOpponent === '0x0000000000000000000000000000000000000000') {
                 checkResultsButton.style.display = 'block';
+                checkResultsButton.disabled = false;
+                checkResultsButton.title = 'Check scout reports for potential enemies';
             } else {
                 checkResultsButton.style.display = 'none';
             }
@@ -154,6 +156,14 @@ export class ScoutGuildPage extends BasePage {
             try {
                 const searchDuration = await this.contracts.battleSystem.searchDuration();
                 const hours = Math.floor(Number(searchDuration) / 3600);
+                
+                // Check if user already has an active search
+                const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
+                if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
+                    this.modal.info('New Search Required', 'You must start a new search to find another opponent.');
+                    return;
+                }
+                
                 await this.contracts.battleSystem.startSearch();
                 this.modal.success(`Scouts have been deployed! They will return in ${hours} hours.`);
                 await this.loadScoutGuildData();
@@ -170,6 +180,18 @@ export class ScoutGuildPage extends BasePage {
             try {
                 Logger.info('Starting to check scout reports...');
                 
+                // Verify search is complete before proceeding
+                const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
+                if (!searchStatus.completed) {
+                    this.modal.error('Search Not Complete', 'Your scouts are still searching. Please wait for them to return.');
+                    return;
+                }
+
+                if (searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
+                    this.modal.info('Already Found Opponent', 'You have already found an opponent in this search. Start a new search to find another.');
+                    return;
+                }
+                
                 Logger.info('Calling findRandomOpponent...');
                 const tx = await this.contracts.battleSystem.findRandomOpponent();
                 Logger.info('Transaction sent:', tx.hash);
@@ -183,9 +205,9 @@ export class ScoutGuildPage extends BasePage {
                 Logger.info('Scout guild data reloaded');
 
                 // Get the search status to check the result
-                const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
-                Logger.info('Search status after transaction:', searchStatus);
-                const opponent = searchStatus.foundOpponent;
+                const newSearchStatus = await this.contracts.battleSystem.checkSearchStatus();
+                Logger.info('Search status after transaction:', newSearchStatus);
+                const opponent = newSearchStatus.foundOpponent;
                 Logger.info('Found opponent:', opponent);
 
                 if (opponent === '0x0000000000000000000000000000000000000000') {
@@ -204,7 +226,13 @@ export class ScoutGuildPage extends BasePage {
                     code: error.code,
                     stack: error.stack
                 });
-                this.modal.error('Failed to check scout reports: ' + error.message);
+                
+                // Handle specific error messages
+                if (error.message.includes('Already attempted to find opponent')) {
+                    this.modal.error('Search Already Used', 'You have already checked the scout reports for this search. Start a new search to find another opponent.');
+                } else {
+                    this.modal.error('Failed to check scout reports: ' + error.message);
+                }
             }
         });
     }
