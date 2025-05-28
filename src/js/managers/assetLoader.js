@@ -1,19 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { TextureLoader } from 'three/src/loaders/TextureLoader.js';
-
-// Asset mapping using the URLs provided in the environment
-const assetMap = {
-    HOUSE: { url: 'assets/house.glb' },
-    ALTAR: { url: 'assets/altar.glb' },
-    MINE: { url: 'assets/mine.glb' },
-    CITY_HALL: { url: 'assets/cityhall.glb' },
-    SHOP: { url: 'assets/shop.glb' },
-    WORKSHOP: { url: 'assets/workshop.glb' },
-    BARRACKS: { url: 'assets/barracks.glb' },
-    FARM: { url: 'assets/farm2.glb' },
-    SCOUT_GUILD: { url: 'assets/scout_guild.glb' },
-};
+import { BUILDINGS } from '../utils/constants.js';
 
 // Texture paths - using PNG format instead of TGA
 const textureMap = {
@@ -31,7 +19,7 @@ export class AssetLoader {
         this.isLoadingComplete = false;
         this.loadingPromises = {};
         this.textures = {};
-        this.loadPromise = null; // Add a single promise for the entire loading process
+        this.loadPromise = null;
     }
 
     async loadAssets() {
@@ -56,28 +44,34 @@ export class AssetLoader {
                 // Continue loading models even if textures fail
             }
 
-            const buildingTypes = Object.keys(assetMap);
+            const buildingTypes = Object.keys(BUILDINGS);
             const allLoadPromises = [];
 
             for (const type of buildingTypes) {
-                const assetInfo = assetMap[type];
-                const loadPromise = this.loadGLTFModel(type, assetInfo.url)
-                    .then(model => {
-                        if (model) {
-                            this.loadedModels[type] = model;
-                            console.log(`AssetLoader: Successfully loaded and stored model for ${type}`);
-                        } else {
-                            this.loadedModels[type] = null;
-                            console.warn(`AssetLoader: Failed to load model for ${type}, storing null.`);
-                        }
-                    })
-                    .catch(error => {
-                        console.error(`AssetLoader: Error in loadAssets for ${type}:`, error);
-                        this.loadedModels[type] = null;
-                    });
+                const buildingData = BUILDINGS[type];
+                const assetInfo = buildingData.assets;
+                
+                // Load all levels for each building
+                for (const [level, levelInfo] of Object.entries(assetInfo.levels)) {
+                    const modelKey = `${type}_LVL${level}`;
+                    const loadPromise = this.loadGLTFModel(modelKey, levelInfo.url)
+                        .then(model => {
+                            if (model) {
+                                this.loadedModels[modelKey] = model;
+                                console.log(`AssetLoader: Successfully loaded and stored model for ${modelKey}`);
+                            } else {
+                                this.loadedModels[modelKey] = null;
+                                console.warn(`AssetLoader: Failed to load model for ${modelKey}, storing null.`);
+                            }
+                        })
+                        .catch(error => {
+                            console.error(`AssetLoader: Error in loadAssets for ${modelKey}:`, error);
+                            this.loadedModels[modelKey] = null;
+                        });
 
-                this.loadingPromises[type] = loadPromise;
-                allLoadPromises.push(loadPromise);
+                    this.loadingPromises[modelKey] = loadPromise;
+                    allLoadPromises.push(loadPromise);
+                }
             }
 
             try {
@@ -87,7 +81,7 @@ export class AssetLoader {
                 console.log("AssetLoader: isLoadingComplete set to true.");
             } catch (error) {
                 console.error("AssetLoader: An unexpected error occurred during Promise.all:", error);
-                throw error; // Re-throw to handle it in the calling code
+                throw error;
             }
         })();
 

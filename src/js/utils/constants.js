@@ -43,13 +43,27 @@ export const BUILDINGS = {
         name: 'House',
         size: new THREE.Vector3(8, 8, 8),
         color: 0xADD8E6, // Light Blue
-        isGridBuilding: true
+        isGridBuilding: true,
+        tier: 0,
+        assets: {
+            baseUrl: 'assets/house',
+            levels: {
+                1: { url: 'assets/house.glb' }
+            }
+        }
     },
     FARM: {
         name: 'Farm',
         size: new THREE.Vector3(8, 8, 8),
         color: 0x90EE90, // Light Green
-        isGridBuilding: true
+        isGridBuilding: true,
+        tier: 0,
+        assets: {
+            baseUrl: 'assets/farm',
+            levels: {
+                1: { url: 'assets/farm2.glb' }
+            }
+        }
     },
 
     // Fixed district buildings
@@ -59,7 +73,13 @@ export const BUILDINGS = {
         color: 0xB0C4DE, // Light Steel Blue
         position: { x: 0, y: 0, z: 0 }, // Center position
         rotation: 0,
-        tier: 0
+        tier: 0,
+        assets: {
+            baseUrl: 'assets/cityhall',
+            levels: {
+                1: { url: 'assets/cityhall.glb' }
+            }
+        }
     },
     ALTAR: {
         name: 'Altar',
@@ -67,7 +87,13 @@ export const BUILDINGS = {
         color: 0xFFB6C1, // Light Pink
         position: { x: 0, y: 0, z: 0 }, // Center position
         rotation: 0,
-        tier: 0
+        tier: 0,
+        assets: {
+            baseUrl: 'assets/altar',
+            levels: {
+                1: { url: 'assets/altar.glb' }
+            }
+        }
     },
     MINE: {
         name: 'Mine',
@@ -75,7 +101,13 @@ export const BUILDINGS = {
         color: 0xFFFFE0, // Light Yellow
         position: { x: 0, y: 0, z: 0 }, // Center position
         rotation: 0,
-        tier: 0
+        tier: 0,
+        assets: {
+            baseUrl: 'assets/mine',
+            levels: {
+                1: { url: 'assets/mine.glb' }
+            }
+        }
     },
     SHOP: {
         name: 'Shop',
@@ -83,7 +115,13 @@ export const BUILDINGS = {
         color: 0xFFD700, // Gold color
         position: { x: -20, y: 5, z: -35 },
         rotation: 0,
-        tier: 0
+        tier: 0,
+        assets: {
+            baseUrl: 'assets/shop',
+            levels: {
+                1: { url: 'assets/shop.glb' }
+            }
+        }
     },
     WORKSHOP: {
         name: 'Workshop',
@@ -91,7 +129,13 @@ export const BUILDINGS = {
         color: 0xFFD700, // Gold color
         position: { x: 20, y: 0, z: -35 },
         rotation: 0,
-        tier: 0
+        tier: 0,
+        assets: {
+            baseUrl: 'assets/workshop',
+            levels: {
+                1: { url: 'assets/workshop.glb' }
+            }
+        }
     },
     DEFENSE_TOWER: {
         name: 'Defense Tower',
@@ -99,7 +143,15 @@ export const BUILDINGS = {
         color: 0xCD5C5C, // Indian Red
         position: { x: -20, y: 0, z: 35 },
         rotation: 0,
-        tier: 1
+        tier: 1,
+        assets: {
+            baseUrl: 'assets/defense_tower',
+            levels: {
+                1: { url: 'assets/defense_tower_lvl1.glb' },
+                2: { url: 'assets/defense_tower_lvl2.glb' },
+                3: { url: 'assets/defense_tower_lvl3.glb' }
+            }
+        }
     },
     BARRACKS: {
         name: 'Barracks',
@@ -107,7 +159,15 @@ export const BUILDINGS = {
         color: 0x8B4513, // Saddle Brown
         position: { x: 35, y: 0, z: -35 },
         rotation: -Math.PI / 2,
-        tier: 1
+        tier: 1,
+        assets: {
+            baseUrl: 'assets/barracks',
+            levels: {
+                1: { url: 'assets/barracks_lvl1.glb' },
+                2: { url: 'assets/barracks_lvl2.glb' },
+                3: { url: 'assets/barracks_lvl3.glb' }
+            }
+        }
     },
     SCOUT_GUILD: {
         name: 'Scout Guild',
@@ -115,7 +175,13 @@ export const BUILDINGS = {
         color: 0x4682B4, // Steel Blue
         position: { x: 25, y: 0, z: -65 },
         rotation: 0,
-        tier: 1
+        tier: 1,
+        assets: {
+            baseUrl: 'assets/scout_guild',
+            levels: {
+                1: { url: 'assets/scout_guild.glb' }
+            }
+        }
     },
     COMMAND_CENTER: {
         name: 'Command Center',
@@ -123,7 +189,13 @@ export const BUILDINGS = {
         color: 0xDAA520, // Goldenrod
         position: { x: 15, y: 0, z: 40 },
         rotation: 0,
-        tier: 1
+        tier: 1,
+        assets: {
+            baseUrl: 'assets/command_center',
+            levels: {
+                1: { url: 'assets/command_center.glb' }
+            }
+        }
     },
     REP_STATION: {
         name: 'Rep Station',
