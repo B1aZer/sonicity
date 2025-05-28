@@ -185,7 +185,7 @@ export class CityPage extends BasePage {
                             </div>
                             <button class="building-button" data-building="${type}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
                                 ${isBuilt ? 
-                                    (canUpgrade ? `Upgrade to Level ${currentLevel + 1}` : 'Max Level') : 
+                                    (canUpgrade ? `Upgrade to Level ${currentLevel + 1}` : 'Constructed') : 
                                     `Build ${config.name}`}
                             </button>
                         </div>
