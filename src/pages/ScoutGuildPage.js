@@ -86,7 +86,13 @@ export class ScoutGuildPage extends BasePage {
             searchButton.title = '';
         }
 
-        if (!searchStatus.completed) {
+        if (!searchStatus.active) {
+            // No active search
+            searchButton.disabled = goldAmount < searchCost;
+            searchButton.textContent = 'Deploy Scouts';
+            checkResultsButton.style.display = 'none';
+            searchTimer.style.display = 'none';
+        } else if (!searchStatus.completed) {
             // Search is in progress
             searchButton.disabled = true;
             searchButton.textContent = 'Scouts Deployed...';
@@ -100,8 +106,8 @@ export class ScoutGuildPage extends BasePage {
             searchButton.textContent = 'Deploy Scouts';
             searchTimer.style.display = 'none';
             
-            // Show check results button only if search is complete and no opponent has been found yet
-            if (searchStatus.foundOpponent === '0x0000000000000000000000000000000000000000') {
+            // Show check results button only if search is complete, no opponent has been found yet, and hasn't attempted to find one
+            if (searchStatus.foundOpponent === '0x0000000000000000000000000000000000000000' && !searchStatus.hasAttemptedFind) {
                 checkResultsButton.style.display = 'block';
                 checkResultsButton.disabled = false;
                 checkResultsButton.title = 'Check scout reports for potential enemies';

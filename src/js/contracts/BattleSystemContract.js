@@ -45,7 +45,25 @@ export class BattleSystemContract extends BaseContract {
 
     async checkSearchStatus() {
         const contract = await this.getContract();
-        return contract.checkSearchStatus();
+        try {
+            const result = await contract.checkSearchStatus();
+            return {
+                active: result.active,
+                completed: result.completed,
+                timeRemaining: result.timeRemaining,
+                foundOpponent: result.foundOpponent,
+                hasAttemptedFind: result.hasAttemptedFind
+            };
+        } catch (error) {
+            console.error('Error checking search status:', error);
+            return {
+                active: false,
+                completed: false,
+                timeRemaining: 0,
+                foundOpponent: '0x0000000000000000000000000000000000000000',
+                hasAttemptedFind: false
+            };
+        }
     }
 
     async startBattle(infantry, cavalry, siege) {

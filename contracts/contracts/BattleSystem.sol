@@ -66,6 +66,16 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         address foundOpponent;  // Store the found opponent
         bool hasAttemptedFind;  // Track if player has already tried to find an opponent
     }
+
+    // Search status struct for frontend
+    struct SearchStatus {
+        bool active;
+        bool completed;
+        uint256 timeRemaining;
+        address foundOpponent;
+        bool hasAttemptedFind;
+    }
+
     mapping(address => SearchState) public playerSearches;
 
     // Battle history record
@@ -639,18 +649,36 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         emit SearchStarted(msg.sender, block.timestamp);
     }
 
-    function checkSearchStatus() external view returns (bool completed, uint256 timeRemaining, address foundOpponent, bool hasAttemptedFind) {
+    function checkSearchStatus() external view returns (SearchStatus memory) {
         SearchState storage search = playerSearches[msg.sender];
         if (!search.active) {
-            return (false, 0, address(0), false);
+            return SearchStatus({
+                active: false,
+                completed: false,
+                timeRemaining: 0,
+                foundOpponent: address(0),
+                hasAttemptedFind: false
+            });
         }
 
         uint256 elapsed = block.timestamp - search.startTime;
         if (elapsed >= searchDuration) {
-            return (true, 0, search.foundOpponent, search.hasAttemptedFind);
+            return SearchStatus({
+                active: true,
+                completed: true,
+                timeRemaining: 0,
+                foundOpponent: search.foundOpponent,
+                hasAttemptedFind: search.hasAttemptedFind
+            });
         }
 
-        return (false, searchDuration - elapsed, address(0), search.hasAttemptedFind);
+        return SearchStatus({
+            active: true,
+            completed: false,
+            timeRemaining: searchDuration - elapsed,
+            foundOpponent: address(0),
+            hasAttemptedFind: search.hasAttemptedFind
+        });
     }
 
     function findRandomOpponent() external returns (address) {
