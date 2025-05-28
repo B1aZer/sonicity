@@ -141,7 +141,7 @@ export const BUILDINGS = {
         name: 'Defense Tower',
         size: new THREE.Vector3(15, 15, 15),
         color: 0xCD5C5C, // Indian Red
-        position: { x: -20, y: 0, z: 35 },
+        position: { x: -50, y: 0, z: -55 },
         rotation: 0,
         tier: 1,
         assets: {
