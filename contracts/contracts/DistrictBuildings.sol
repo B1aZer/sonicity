@@ -582,23 +582,25 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return string[] Array of building names in the same order as the enum
      */
     function getBuildingNames() public pure returns (string[] memory) {
-        string[] memory names = new string[](16);
-        names[0] = "SHOP";
-        names[1] = "WORKSHOP";
-        names[2] = "OUTPOST";
-        names[3] = "DEFENSE_TOWER";
-        names[4] = "BARRACKS";
-        names[5] = "SCOUT_GUILD";
-        names[6] = "COMMAND_CENTER";
-        names[7] = "REP_STATION";
-        names[8] = "COUNCIL_CHAMBER";
-        names[9] = "AUDIT_SHRINE";
-        names[10] = "FOUNDERS_HALL";
-        names[11] = "MINISTRY_OF_MERIT";
-        names[12] = "ARCANE_TOWER";
-        names[13] = "FORTRESS_WALLS";
-        names[14] = "BANK";
-        names[15] = "ALTAR";
+        string[] memory names = new string[](18);
+        names[0] = "CITY_HALL";
+        names[1] = "ALTAR";
+        names[2] = "MINE";
+        names[3] = "SHOP";
+        names[4] = "WORKSHOP";
+        names[5] = "OUTPOST";
+        names[6] = "DEFENSE_TOWER";
+        names[7] = "BARRACKS";
+        names[8] = "SCOUT_GUILD";
+        names[9] = "COMMAND_CENTER";
+        names[10] = "REP_STATION";
+        names[11] = "COUNCIL_CHAMBER";
+        names[12] = "AUDIT_SHRINE";
+        names[13] = "FOUNDERS_HALL";
+        names[14] = "MINISTRY_OF_MERIT";
+        names[15] = "ARCANE_TOWER";
+        names[16] = "FORTRESS_WALLS";
+        names[17] = "BANK";
         return names;
     }
 
@@ -684,5 +686,10 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             active: true,
             damaged: false
         });
+
+        // Mark core buildings as unlocked
+        unlockedDistrictBuildings[player][DistrictBuildingType.CITY_HALL] = true;
+        unlockedDistrictBuildings[player][DistrictBuildingType.ALTAR] = true;
+        unlockedDistrictBuildings[player][DistrictBuildingType.MINE] = true;
     }
 } 

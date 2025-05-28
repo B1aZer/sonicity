@@ -14,6 +14,8 @@ describe("BattleSystem", function () {
     let player1;
     let player2;
     let player3;
+    let buildingNames;
+    let getBuildingTypeIndex;
 
     beforeEach(async function () {
         [owner, player1, player2, player3] = await ethers.getSigners();
@@ -92,19 +94,25 @@ describe("BattleSystem", function () {
         await gameState.connect(player2).initializePlayer();
         await gameState.connect(player3).initializePlayer();
 
+        // Fetch building names from contract
+        buildingNames = await districtBuildings.getBuildingNames();
+        getBuildingTypeIndex = (name) => buildingNames.findIndex(n => n === name);
+
+        const barracksIndex = getBuildingTypeIndex("BARRACKS");
+
         // Setup initial resources for players and unlock tier 1
         await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1500); // 1000 for tier 1 + 500 for building
 
         // Now build the defense tower for each player
-        await districtBuildings.connect(player1).buildDistrictBuilding(3); // DEFENSE_TOWER
-        // await districtBuildings.connect(player2).buildDistrictBuilding(3); // Do not create defense tower for player2
-        // await districtBuildings.connect(player3).buildDistrictBuilding(3); // DEFENSE_TOWER
+        const defenseTowerIndex = getBuildingTypeIndex("DEFENSE_TOWER");
+        await districtBuildings.connect(player1).buildDistrictBuilding(defenseTowerIndex);
+        // await districtBuildings.connect(player2).buildDistrictBuilding(defenseTowerIndex); // Do not create defense tower for player2
+        // await districtBuildings.connect(player3).buildDistrictBuilding(defenseTowerIndex); // DEFENSE_TOWER
     });
 
     describe("Troop Training", function () {
         beforeEach(async function () {    
-            // Build barracks for player1
-            await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
+            await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
         });
 
         it("should allow players to train infantry", async function () {
@@ -123,7 +131,7 @@ describe("BattleSystem", function () {
         it("should allow players to train cavalry", async function () {
             // Upgrade barracks to level 2 for cavalry
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 500); // 500 gold for upgrade
-            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade BARRACKS to level 2
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex); // Upgrade BARRACKS to level 2
 
             const amount = 3;
             // Ensure resources for cavalry (200 gold, 100 food each)
@@ -139,8 +147,8 @@ describe("BattleSystem", function () {
         it("should allow players to train siege units", async function () {
             // Upgrade barracks to level 3 for siege units
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1500); // 500/1000 gold for each upgrade
-            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade to level 2
-            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade to level 3
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex); // Upgrade to level 2
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex); // Upgrade to level 3
 
             const amount = 2;
             // Ensure resources for siege units (300 gold, 150 food each)
@@ -168,9 +176,9 @@ describe("BattleSystem", function () {
             const siegeCount = 3;
 
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 2500); // 1500 gold for upgrade
-            await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
-            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade BARRACKS to level 2
-            await districtBuildings.connect(player1).upgradeDistrictBuilding(4);
+            await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex); // Upgrade BARRACKS to level 2
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex);
 
             // Infantry: 100 gold, 50 food each
             // Cavalry: 200 gold, 100 food each
@@ -444,9 +452,9 @@ describe("BattleSystem", function () {
             const siegeCount = 3;
 
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 2500); // 1500 gold for upgrade
-            await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
-            await districtBuildings.connect(player1).upgradeDistrictBuilding(4); // Upgrade BARRACKS to level 2
-            await districtBuildings.connect(player1).upgradeDistrictBuilding(4);
+            await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex); // Upgrade BARRACKS to level 2
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex);
             
             // Infantry: 100 gold, 50 food each
             // Cavalry: 200 gold, 100 food each
@@ -539,7 +547,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
-            await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
+            await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
 
             // Register players for matchmaking
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
@@ -587,7 +595,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
-            //await districtBuildings.connect(player2).buildDistrictBuilding(3); // DEFENSE_TOWER
+            //await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex); // DEFENSE_TOWER
 
             // Register players for matchmaking
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
@@ -693,7 +701,7 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1750);
             await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 700);
-            await districtBuildings.connect(player2).buildDistrictBuilding(4); // BARRACKS
+            await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
             await districtBuildings.connect(player2).buildDistrictBuilding(6); // COMMAND_CENTER
 
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
@@ -1039,7 +1047,7 @@ describe("BattleSystem", function () {
         it("Should not allow starting search while in battle", async function () {
 
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 250);
-            await districtBuildings.connect(player1).buildDistrictBuilding(4); // BARRACKS
+            await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
 
             await battleSystem.connect(player1).startSearch();
             
