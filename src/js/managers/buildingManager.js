@@ -44,24 +44,25 @@ export class BuildingManager {
             }
 
             // Get building level from appropriate contract
-            let level = 1;
+            let level = 1;  // Default level is 1
             const buildingData = BUILDINGS[type];
             if (buildingData.isGridBuilding && this.gridBuildingsContract) {
                 try {
-                    const address = await this.gridBuildingsContract.getAddress();
-                    const building = await this.gridBuildingsContract.getBuilding(address, gridPos.x, gridPos.z);
-                    level = Number(building.level);
+                    // TODO: For now, we'll use level 1 since we can't get the building ID from grid position
+                    Logger.debug('Using default level 1 for grid building', { type, gridPos });
                 } catch (error) {
                     Logger.warn('Failed to get building level from grid contract, using default level 1', { type, error: error.message });
                 }
             } else if (this.districtBuildingsContract) {
                 try {
                     level = await this.districtBuildingsContract.getBuildingLevel(type);
+                    Logger.debug('Got building level from district contract', { type, level });
                 } catch (error) {
                     Logger.warn('Failed to get building level from district contract, using default level 1', { type, error: error.message });
                 }
             }
 
+            Logger.debug('Creating building mesh with level', { type, level });
             // Create building mesh with full functionality
             const building = this.createBuildingMesh(type, Number(level));
             if (!building) {
