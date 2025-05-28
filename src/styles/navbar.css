@@ -26,15 +26,8 @@
 
 .nav-container {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-xs);
     height: 40px; /* Ensure consistent height */
-}
-
-.nav-links {
-    display: flex;
-    gap: var(--spacing-md);
-    height: 100%;
 }
 
 .nav-link,
