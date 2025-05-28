@@ -6,6 +6,7 @@ export class BuildingManager {
     constructor(gridManager, gameStateContract, initialMoney, assetLoader) {
         this.gridManager = gridManager;
         this.gameStateContract = gameStateContract;
+        this.districtBuildingsContract = null; // Will be set later
         this.money = initialMoney;
         this.assetLoader = assetLoader;
         this.scene = null;
@@ -23,7 +24,12 @@ export class BuildingManager {
         Logger.debug('BuildingManager scene set', { cellSize });
     }
 
-    placeBuilding(type, position) {
+    setDistrictBuildingsContract(contract) {
+        this.districtBuildingsContract = contract;
+        Logger.debug('DistrictBuildings contract set');
+    }
+
+    async placeBuilding(type, position) {
         try {
             Logger.debug('Attempting to place building', { type, position });
             
@@ -41,10 +47,13 @@ export class BuildingManager {
                 return null;
             }
 
+            // Get building level from district contract
+            const level = await this.districtBuildingsContract.getBuildingLevel(type);
+
             // Create building mesh with full functionality
-            const building = this.createBuildingMesh(type);
+            const building = this.createBuildingMesh(type, Number(level));
             if (!building) {
-                Logger.error('Failed to create building mesh', { type });
+                Logger.error('Failed to create building mesh', { type, level });
                 return null;
             }
 
@@ -74,7 +83,8 @@ export class BuildingManager {
                 isFunctional: true,
                 gridPosition: gridPos,
                 originalColor: new THREE.Color(buildingData.color),
-                noResourceColor: new THREE.Color(0x555555)
+                noResourceColor: new THREE.Color(0x555555),
+                level: Number(level)
             };
             
             // Store building reference
@@ -87,7 +97,8 @@ export class BuildingManager {
                 type,
                 id: buildingObj.id,
                 gridPosition: gridPos,
-                worldPosition: worldPos
+                worldPosition: worldPos,
+                level: Number(level)
             });
             
             return buildingObj;
@@ -97,14 +108,15 @@ export class BuildingManager {
         }
     }
 
-    createBuildingMesh(type) {
+    createBuildingMesh(type, level = 1) {
         try {
-            Logger.debug('Creating building mesh', { type });
+            Logger.debug('Creating building mesh', { type, level });
             const buildingData = BUILDINGS[type];
-            const model = this.assetLoader.getModel(type);
+            const modelKey = `${type}_LVL${level}`;
+            const model = this.assetLoader.getModel(modelKey);
             
             if (model) {
-                Logger.debug('Using 3D model for building', { type });
+                Logger.debug('Using 3D model for building', { type, level, modelKey });
                 const building = model.clone();
                 building.castShadow = true;
                 building.receiveShadow = true;
@@ -112,9 +124,11 @@ export class BuildingManager {
                 // Set userData on the building and all its children
                 const propertyName = `is${type.charAt(0) + type.slice(1).toLowerCase().replace('_', '')}`;
                 building.userData[propertyName] = true;
+                building.userData.level = level;
                 building.traverse((child) => {
                     if (child.isMesh) {
                         child.userData[propertyName] = true;
+                        child.userData.level = level;
                     }
                 });
                 
@@ -127,6 +141,11 @@ export class BuildingManager {
                 const scale = targetSize.x / Math.max(modelSize.x, modelSize.z);
                 building.scale.set(scale, scale, scale);
                 
+                // Center the model on the ground
+                const center = new THREE.Vector3();
+                box.getCenter(center);
+                building.position.y = -center.y * scale;
+                
                 // Add point light for important buildings
                 if (['ALTAR', 'CITY_HALL', 'MINE'].includes(type)) {
                     const pointLight = new THREE.PointLight(0xffffff, 0.7, 4);
@@ -137,7 +156,7 @@ export class BuildingManager {
                 
                 return building;
             } else {
-                Logger.debug('Using fallback cube geometry for building', { type });
+                Logger.debug('Using fallback cube geometry for building', { type, level });
                 // Fallback to cube geometry
                 const geometry = new THREE.BoxGeometry(
                     buildingData.size.x,
@@ -156,11 +175,12 @@ export class BuildingManager {
                 // Set userData on the fallback mesh
                 const propertyName = `is${type.charAt(0) + type.slice(1).toLowerCase().replace('_', '')}`;
                 building.userData[propertyName] = true;
+                building.userData.level = level;
                 
                 return building;
             }
         } catch (error) {
-            Logger.error('Error creating building mesh:', { type, error: error.message });
+            Logger.error('Error creating building mesh:', { type, level, error: error.message });
             return null;
         }
     }
@@ -323,6 +343,50 @@ export class BuildingManager {
                 buildingCount: this.buildings.size,
                 fixedBuildingCount: this.fixedBuildings.size
             });
+        }
+    }
+
+    async upgradeBuilding(buildingKey) {
+        try {
+            const building = this.buildings.get(buildingKey);
+            if (!building) {
+                Logger.warn('Building not found for upgrade', { buildingKey });
+                return false;
+            }
+
+            // Get current level from district contract
+            const currentLevel = await this.districtBuildingsContract.getBuildingLevel(building.type);
+            const newLevel = Number(currentLevel) + 1;
+
+            // Create new mesh for upgraded building
+            const newMesh = this.createBuildingMesh(building.type, newLevel);
+            if (!newMesh) {
+                Logger.error('Failed to create upgraded building mesh', { type: building.type, level: newLevel });
+                return false;
+            }
+
+            // Copy position and rotation from old mesh
+            newMesh.position.copy(building.mesh.position);
+            newMesh.rotation.copy(building.mesh.rotation);
+
+            // Remove old mesh and add new one
+            this.scene.remove(building.mesh);
+            this.scene.add(newMesh);
+
+            // Update building object
+            building.mesh = newMesh;
+            building.userData.level = newLevel;
+
+            Logger.info('Building upgraded successfully', {
+                type: building.type,
+                oldLevel: currentLevel,
+                newLevel: newLevel
+            });
+
+            return true;
+        } catch (error) {
+            Logger.error('Error upgrading building:', { buildingKey, error: error.message });
+            return false;
         }
     }
 }
