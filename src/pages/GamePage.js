@@ -109,17 +109,10 @@ export class GamePage extends BasePage {
             // Calculate positions in a semi-circle around the grid
             const radius = gridRadius + (cellSize * 2); // Increased distance from grid edge
 
-            // Place static buildings first
-            // Place Mine (right side)
-            const minePosition = new THREE.Vector3(
-                radius,  // X position
-                0,
-                0        // Z position
-            );
-            const mine = this.game.buildingManager.placeFixedBuilding('MINE', minePosition, -Math.PI / 2);
-            if (!mine) {
-                Logger.error('Failed to place Mine');
-            }
+            // Get core building levels
+            const cityHallLevel = await this.game.districtBuildingsContract.getBuildingLevel('CITY_HALL');
+            const altarLevel = await this.game.districtBuildingsContract.getBuildingLevel('ALTAR');
+            const mineLevel = await this.game.districtBuildingsContract.getBuildingLevel('MINE');
 
             // Place City Hall (top)
             const cityHallPosition = new THREE.Vector3(
@@ -127,7 +120,7 @@ export class GamePage extends BasePage {
                 0,
                 -radius   // Z position
             );
-            const cityHall = this.game.buildingManager.placeFixedBuilding('CITY_HALL', cityHallPosition, Math.PI);
+            const cityHall = this.game.buildingManager.placeFixedBuilding('CITY_HALL', cityHallPosition, Math.PI, cityHallLevel);
             if (!cityHall) {
                 Logger.error('Failed to place City Hall');
             }
@@ -138,9 +131,20 @@ export class GamePage extends BasePage {
                 0,
                 0         // Z position
             );
-            const altar = this.game.buildingManager.placeFixedBuilding('ALTAR', altarPosition, Math.PI / 2);
+            const altar = this.game.buildingManager.placeFixedBuilding('ALTAR', altarPosition, Math.PI / 2, altarLevel);
             if (!altar) {
                 Logger.error('Failed to place Altar');
+            }
+
+            // Place Mine (right side)
+            const minePosition = new THREE.Vector3(
+                radius,   // X position
+                0,
+                0         // Z position
+            );
+            const mine = this.game.buildingManager.placeFixedBuilding('MINE', minePosition, -Math.PI / 2, mineLevel);
+            if (!mine) {
+                Logger.error('Failed to place Mine');
             }
 
             // Place district buildings

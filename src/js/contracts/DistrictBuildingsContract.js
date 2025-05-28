@@ -11,22 +11,24 @@ export class DistrictBuildingsContract extends BaseContract {
     // Map building type string to contract enum value
     getBuildingTypeEnum(buildingType) {
         const typeMap = {
-            'SHOP': 0,
-            'WORKSHOP': 1,
-            'OUTPOST': 2,
-            'DEFENSE_TOWER': 3,
-            'BARRACKS': 4,
-            'SCOUT_GUILD': 5,
-            'COMMAND_CENTER': 6,
-            'REP_STATION': 7,
-            'COUNCIL_CHAMBER': 8,
-            'AUDIT_SHRINE': 9,
-            'FOUNDERS_HALL': 10,
-            'MINISTRY_OF_MERIT': 11,
-            'ARCANE_TOWER': 12,
-            'FORTRESS_WALLS': 13,
-            'BANK': 14,
-            'ALTAR': 15
+            'CITY_HALL': 0,
+            'ALTAR': 1,
+            'MINE': 2,
+            'SHOP': 3,
+            'WORKSHOP': 4,
+            'OUTPOST': 5,
+            'DEFENSE_TOWER': 6,
+            'BARRACKS': 7,
+            'SCOUT_GUILD': 8,
+            'COMMAND_CENTER': 9,
+            'REP_STATION': 10,
+            'COUNCIL_CHAMBER': 11,
+            'AUDIT_SHRINE': 12,
+            'FOUNDERS_HALL': 13,
+            'MINISTRY_OF_MERIT': 14,
+            'ARCANE_TOWER': 15,
+            'FORTRESS_WALLS': 16,
+            'BANK': 17
         };
         return typeMap[buildingType];
     }
@@ -139,10 +141,25 @@ export class DistrictBuildingsContract extends BaseContract {
             throw new Error(`Invalid building type: ${buildingType}`);
         }
         return await this.call('getBuildingLevel', address, enumValue);
-    }
+            }
 
     async canTrainTroopType(troopType) {
         const address = await this.getAddress();
         return await this.call('canTrainTroopType', address, troopType);
+    }
+
+    // Core Building Management
+    async initializeCoreBuildings() {
+        const address = await this.getAddress();
+        return await this.transact('initializeCoreBuildings', address);
+    }
+
+    async isCoreBuilding(buildingType) {
+        const enumValue = this.getBuildingTypeEnum(buildingType);
+        if (enumValue === undefined) {
+            throw new Error(`Invalid building type: ${buildingType}`);
+        }
+        const configs = await this.call('getAllDistrictBuildingConfigs');
+        return configs[1][enumValue].isCoreBuilding; // configs[1] contains the configs array
     }
 } 

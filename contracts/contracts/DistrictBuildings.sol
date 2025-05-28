@@ -19,6 +19,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
 
     // District Building Types
     enum DistrictBuildingType {
+        CITY_HALL,    // Core building
+        ALTAR,        // Core building
+        MINE,         // Core building
         SHOP,
         WORKSHOP,
         OUTPOST,
@@ -33,8 +36,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         MINISTRY_OF_MERIT,
         ARCANE_TOWER,
         FORTRESS_WALLS,
-        BANK,
-        ALTAR
+        BANK
     }
 
     // District Building configuration
@@ -46,11 +48,12 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         uint8 maxLevel;       // Maximum level for the building
         string description;
         uint8 tier;          // Added tier to the config
+        bool isCoreBuilding; // New field to identify core buildings
     }
 
     // Building state
     struct Building {
-        uint256 level;
+        uint8 level;
         bool active;
         bool damaged;  // New flag to track damage state
     }
@@ -64,7 +67,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     // Events
     event DistrictBuildingUnlocked(address indexed player, DistrictBuildingType buildingType);
     event DistrictBuildingBuilt(address indexed player, DistrictBuildingType buildingType);
-    event DistrictBuildingUpgraded(address indexed player, DistrictBuildingType buildingType, uint8 newLevel);
+    event DistrictBuildingUpgraded(address indexed player, DistrictBuildingType buildingType, uint256 newLevel);
     event DistrictBuildingDamaged(address indexed player, DistrictBuildingType buildingType);
     event DistrictBuildingRepaired(address indexed player, DistrictBuildingType buildingType);
     event GameStateAddressUpdated(address indexed newAddress);
@@ -80,6 +83,40 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         
+        // Initialize core buildings (always available, but can be upgraded)
+        districtBuildingConfigs[DistrictBuildingType.CITY_HALL] = DistrictBuildingConfig({
+            name: "City Hall",
+            unlockCost: 0,           // No unlock cost for core buildings
+            buildCost: 0,            // No build cost for core buildings
+            upgradeCost: 0,       // Cost to upgrade
+            maxLevel: 5,             // Can be upgraded to level 5
+            description: "Central hub for city management",
+            tier: 0,
+            isCoreBuilding: true
+        });
+
+        districtBuildingConfigs[DistrictBuildingType.ALTAR] = DistrictBuildingConfig({
+            name: "Altar",
+            unlockCost: 0,
+            buildCost: 0,
+            upgradeCost: 0,
+            maxLevel: 5,
+            description: "Stake NFTs to generate base Gold",
+            tier: 0,
+            isCoreBuilding: true
+        });
+
+        districtBuildingConfigs[DistrictBuildingType.MINE] = DistrictBuildingConfig({
+            name: "Mine",
+            unlockCost: 0,
+            buildCost: 0,
+            upgradeCost: 0,
+            maxLevel: 5,
+            description: "Mint game NFTs",
+            tier: 0,
+            isCoreBuilding: true
+        });
+
         // Initialize district building configurations
         // Tier 0 Buildings
         districtBuildingConfigs[DistrictBuildingType.SHOP] = DistrictBuildingConfig({
@@ -89,7 +126,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Buy items (REP-gated premium later)",
-            tier: 0
+            tier: 0,
+            isCoreBuilding: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.WORKSHOP] = DistrictBuildingConfig({
@@ -99,7 +137,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Repair buildings",
-            tier: 0
+            tier: 0,
+            isCoreBuilding: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.OUTPOST] = DistrictBuildingConfig({
@@ -109,7 +148,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Early warning system for potential attacks",
-            tier: 0
+            tier: 0,
+            isCoreBuilding: false
         });
 
         // Tier 1 Buildings
@@ -120,7 +160,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 300,  // 300 gold per level
             maxLevel: 5,       // Can be upgraded to level 5
             description: "PvP defense buffs",
-            tier: 1
+            tier: 1,
+            isCoreBuilding: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.BARRACKS] = DistrictBuildingConfig({
@@ -130,7 +171,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 500,    // 500 gold per level
             maxLevel: 3,         // Can be upgraded to level 3
             description: "Train troops",
-            tier: 1
+            tier: 1,
+            isCoreBuilding: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.SCOUT_GUILD] = DistrictBuildingConfig({
@@ -140,7 +182,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Explore PvP targets",
-            tier: 1
+            tier: 1,
+            isCoreBuilding: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.COMMAND_CENTER] = DistrictBuildingConfig({
@@ -150,7 +193,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Deploy troops for raids",
-            tier: 1
+            tier: 1,
+            isCoreBuilding: false
         });
 
         // Tier 2 Buildings
@@ -162,7 +206,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Stake REP to earn revenue",
-            tier: 2
+            tier: 2,
+            isCoreBuilding: false
         });
 
         // TODO: This is engine?
@@ -173,7 +218,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Unlocks REP claim button",
-            tier: 2
+            tier: 2,
+            isCoreBuilding: false
         });
 
         // TODO: We need a building to create/burn REP with dynimic image
@@ -185,7 +231,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Displays REP leaderboard and stats",
-            tier: 2
+            tier: 2,
+            isCoreBuilding: false
         });
 
         // Tier 3 Buildings
@@ -196,7 +243,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Form or join a City",
-            tier: 3
+            tier: 3,
+            isCoreBuilding: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.MINISTRY_OF_MERIT] = DistrictBuildingConfig({
@@ -206,7 +254,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Mints and tracks REP from raids/donations",
-            tier: 3
+            tier: 3,
+            isCoreBuilding: false
         });
 
         // Tier 4 Buildings
@@ -217,7 +266,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "PvP/cooldown buffs",
-            tier: 4
+            tier: 4,
+            isCoreBuilding: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.FORTRESS_WALLS] = DistrictBuildingConfig({
@@ -227,7 +277,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "City-wide defense bonus",
-            tier: 4
+            tier: 4,
+            isCoreBuilding: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.BANK] = DistrictBuildingConfig({
@@ -237,17 +288,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
             description: "Lending or staking Gold for towns",
-            tier: 4
-        });
-
-        districtBuildingConfigs[DistrictBuildingType.ALTAR] = DistrictBuildingConfig({
-            name: "Altar",
-            unlockCost: 20000,
-            buildCost: 300,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Whitelist external NFT collections",
-            tier: 4
+            tier: 4,
+            isCoreBuilding: false
         });
     }
 
@@ -277,7 +319,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return uint8 The number of building types
      */
     function getDistrictBuildingTypeCount() public pure returns (uint8) {
-        return uint8(DistrictBuildingType.ALTAR) + 1;
+        return uint8(DistrictBuildingType.BANK) + 1;
     }
 
     /**
@@ -389,7 +431,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         // Upgrade building
         building.level++;
         
-        emit DistrictBuildingUpgraded(msg.sender, buildingType, uint8(building.level));
+        emit DistrictBuildingUpgraded(msg.sender, buildingType, uint256(building.level));
     }
 
     /**
@@ -592,7 +634,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     }
 
     /**
-     * @dev Get building level
+     * @dev Get building level for a player
      * @param player The address of the player
      * @param buildingType The type of the building
      * @return uint8 The building level
@@ -615,5 +657,32 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         // Level 2: INFANTRY (0) + CAVALRY (1)
         // Level 3: INFANTRY (0) + CAVALRY (1) + SIEGE (2)
         return barracks.level > troopType;
+    }
+
+    /**
+     * @dev Initialize core buildings for a new player
+     * @param player The address of the player
+     */
+    function initializeCoreBuildings(address player) external {
+        require(msg.sender == gameStateAddress, "Only GameState can initialize core buildings");
+        
+        // Initialize core buildings at level 1
+        buildings[player][DistrictBuildingType.CITY_HALL] = Building({
+            level: 1,
+            active: true,
+            damaged: false
+        });
+        
+        buildings[player][DistrictBuildingType.ALTAR] = Building({
+            level: 1,
+            active: true,
+            damaged: false
+        });
+        
+        buildings[player][DistrictBuildingType.MINE] = Building({
+            level: 1,
+            active: true,
+            damaged: false
+        });
     }
 } 

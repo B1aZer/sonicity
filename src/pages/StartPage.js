@@ -65,6 +65,9 @@ export class StartPage extends BasePage {
                         
                         // Initialize player
                         await this.contracts.gameState.initializePlayer();
+                        
+                        // Initialize core buildings
+                        await this.contracts.districtBuildings.initializeCoreBuildings();
                         Logger.info('Player initialization completed');
                     } else {
                         Logger.info('Player already initialized, proceeding to game...');
