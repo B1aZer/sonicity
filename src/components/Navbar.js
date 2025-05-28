@@ -17,7 +17,7 @@ export class Navbar {
                 <div class="nav-container">
                     <div class="nav-links">
                         <a href="/overview" class="nav-link" data-page="overview">Overview</a>
-                        <a href="/mint" class="nav-link" data-page="mint">Mint</a>
+                        <!-- <a href="/mint" class="nav-link" data-page="mint">Mint</a> -->
                     </div>
                     <div id="wallet-button-container" class="wallet-btn-wrapper"></div>
                 </div>
