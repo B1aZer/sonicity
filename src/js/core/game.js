@@ -5,6 +5,8 @@ import { AssetLoader } from '../managers/assetLoader.js';
 import { GridManager } from '../managers/gridManager.js';
 import { SceneManager } from '../managers/sceneManager.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
+import { GridBuildingsContract } from '../contracts/GridBuildingsContract.js';
+import { DistrictBuildingsContract } from '../contracts/DistrictBuildingsContract.js';
 import Logger from '../utils/logger.js';
 
 export class Game {
@@ -31,6 +33,8 @@ export class Game {
         
         // Initialize contracts
         this.gameStateContract = new GameStateContract();
+        this.gridBuildingsContract = new GridBuildingsContract();
+        this.districtBuildingsContract = new DistrictBuildingsContract();
 
         // Get reference to money display
         this.goldDisplay = document.getElementById('gold-amount');
@@ -58,7 +62,14 @@ export class Game {
         await this.assetLoader.loadAssets();
         
         // Now create building manager after assets are loaded
-        this.buildingManager = new BuildingManager(this.gridManager, this.gameStateContract, 0, this.assetLoader);
+        this.buildingManager = new BuildingManager(
+            this.gridManager, 
+            this.gameStateContract, 
+            0, 
+            this.assetLoader,
+            this.gridBuildingsContract,
+            this.districtBuildingsContract
+        );
         this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.assetLoader);
         
         // Set up input handlers

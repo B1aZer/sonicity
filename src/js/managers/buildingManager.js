@@ -3,10 +3,11 @@ import { BUILDINGS } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
 
 export class BuildingManager {
-    constructor(gridManager, gameStateContract, initialMoney, assetLoader) {
+    constructor(gridManager, gameStateContract, initialMoney, assetLoader, gridBuildingsContract = null, districtBuildingsContract = null) {
         this.gridManager = gridManager;
         this.gameStateContract = gameStateContract;
-        this.districtBuildingsContract = null; // Will be set later
+        this.districtBuildingsContract = districtBuildingsContract;
+        this.gridBuildingsContract = gridBuildingsContract;
         this.money = initialMoney;
         this.assetLoader = assetLoader;
         this.scene = null;
@@ -22,11 +23,6 @@ export class BuildingManager {
         this.cellSize = cellSize;
         this.assetLoader = assetLoader;
         Logger.debug('BuildingManager scene set', { cellSize });
-    }
-
-    setDistrictBuildingsContract(contract) {
-        this.districtBuildingsContract = contract;
-        Logger.debug('DistrictBuildings contract set');
     }
 
     async placeBuilding(type, position) {
@@ -47,8 +43,24 @@ export class BuildingManager {
                 return null;
             }
 
-            // Get building level from district contract
-            const level = await this.districtBuildingsContract.getBuildingLevel(type);
+            // Get building level from appropriate contract
+            let level = 1;
+            const buildingData = BUILDINGS[type];
+            if (buildingData.isGridBuilding && this.gridBuildingsContract) {
+                try {
+                    const buildingId = await this.gridBuildingsContract.createBuilding(type);
+                    const building = await this.gridBuildingsContract.getBuilding(buildingId);
+                    level = Number(building.level);
+                } catch (error) {
+                    Logger.warn('Failed to get building level from grid contract, using default level 1', { type, error: error.message });
+                }
+            } else if (this.districtBuildingsContract) {
+                try {
+                    level = await this.districtBuildingsContract.getBuildingLevel(type);
+                } catch (error) {
+                    Logger.warn('Failed to get building level from district contract, using default level 1', { type, error: error.message });
+                }
+            }
 
             // Create building mesh with full functionality
             const building = this.createBuildingMesh(type, Number(level));
@@ -72,7 +84,6 @@ export class BuildingManager {
             this.scene.add(building);
             
             // Create building object with all necessary data
-            const buildingData = BUILDINGS[type];
             const buildingObj = {
                 id: THREE.MathUtils.generateUUID(),
                 type,
