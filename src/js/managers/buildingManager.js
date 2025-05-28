@@ -48,8 +48,8 @@ export class BuildingManager {
             const buildingData = BUILDINGS[type];
             if (buildingData.isGridBuilding && this.gridBuildingsContract) {
                 try {
-                    const buildingId = await this.gridBuildingsContract.createBuilding(type);
-                    const building = await this.gridBuildingsContract.getBuilding(buildingId);
+                    const address = await this.gridBuildingsContract.getAddress();
+                    const building = await this.gridBuildingsContract.getBuilding(address, gridPos.x, gridPos.z);
                     level = Number(building.level);
                 } catch (error) {
                     Logger.warn('Failed to get building level from grid contract, using default level 1', { type, error: error.message });
