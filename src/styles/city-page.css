@@ -41,35 +41,6 @@
     }
 }
 
-/* Status Grid */
-.status-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-}
-
-.status-item {
-    background: var(--bg-light);
-    padding: var(--spacing-md);
-    border-radius: var(--radius-md);
-    border: 1px solid var(--bg-lighter);
-}
-
-.status-label {
-    display: block;
-    color: var(--text-muted);
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--spacing-xs);
-}
-
-.status-value {
-    display: block;
-    color: var(--text-primary);
-    font-size: var(--font-size-lg);
-    font-weight: bold;
-}
-
 /* Donation Section */
 .donation-section {
     margin-top: var(--spacing-lg);
