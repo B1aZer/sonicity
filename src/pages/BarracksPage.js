@@ -249,6 +249,11 @@ export class BarracksPage extends BasePage {
 
                     await this.contracts.battleSystem.trainTroops(troopTypeValue, amount);
                     await this.loadBarracksData();
+                    
+                    // Show success modal with troop details
+                    const troopName = BattleSystemContract.TROOP_DEFINITIONS[troopType].name;
+                    const unitText = amount === 1 ? 'unit' : 'units';
+                    this.modal.success(`Successfully trained ${amount} ${troopName} ${unitText}!`);
                 } catch (error) {
                     console.error('Error training troops:', error);
                     this.modal.error('Failed to train troops: ' + error.message);
