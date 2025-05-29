@@ -347,6 +347,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
         battle.resolved = true;
 
+        // Clear the battle from activeBattles for both players
+        delete activeBattles[battle.attacker];
+        delete activeBattles[battle.defender];
+
         emit BattleRecorded(
             currentBattleId,
             battle.attacker,
