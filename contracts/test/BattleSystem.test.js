@@ -664,10 +664,22 @@ describe("BattleSystem", function () {
         });
 
         it("should apply battle effects (district buildings damage)", async function () {
+
+            await battleSystem.connect(owner).setTroopConfig(
+                2, // SIEGE
+                300, // goldCost
+                150, // foodCost
+                20, // power
+                0, // gridDamageChance (40%)
+                100, // districtDamageChance (30%)
+                0  // treasuryBurnChance (15%)
+            );
+
             // Train troops for player1
             await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
+            
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
             await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
