@@ -100,52 +100,6 @@ export class GamePage extends BasePage {
             if (!this.game.scene || !this.game.assetLoader.isLoadingComplete) {
                 throw new Error('Scene or assets not initialized');
             }
-            
-            // Place the fixed buildings around the grid
-            const gridSize = this.game.gridManager.getGridSize();
-            const cellSize = this.game.gridManager.getCellSize();
-            const gridRadius = (gridSize * cellSize) / 2;
-            
-            // Calculate positions in a semi-circle around the grid
-            const radius = gridRadius + (cellSize * 2); // Increased distance from grid edge
-
-            // Get core building levels
-            const cityHallLevel = await this.game.districtBuildingsContract.getBuildingLevel('CITY_HALL');
-            const altarLevel = await this.game.districtBuildingsContract.getBuildingLevel('ALTAR');
-            const mineLevel = await this.game.districtBuildingsContract.getBuildingLevel('MINE');
-
-            // Place City Hall (top)
-            const cityHallPosition = new THREE.Vector3(
-                0,        // X position
-                0,
-                -radius   // Z position
-            );
-            const cityHall = this.game.buildingManager.placeFixedBuilding('CITY_HALL', cityHallPosition, Math.PI, cityHallLevel);
-            if (!cityHall) {
-                Logger.error('Failed to place City Hall');
-            }
-
-            // Place Altar (left side)
-            const altarPosition = new THREE.Vector3(
-                -radius,  // X position
-                0,
-                0         // Z position
-            );
-            const altar = this.game.buildingManager.placeFixedBuilding('ALTAR', altarPosition, Math.PI / 2, altarLevel);
-            if (!altar) {
-                Logger.error('Failed to place Altar');
-            }
-
-            // Place Mine (right side)
-            const minePosition = new THREE.Vector3(
-                radius,   // X position
-                0,
-                0         // Z position
-            );
-            const mine = this.game.buildingManager.placeFixedBuilding('MINE', minePosition, -Math.PI / 2, mineLevel);
-            if (!mine) {
-                Logger.error('Failed to place Mine');
-            }
 
             // Place district buildings
             try {
@@ -157,10 +111,16 @@ export class GamePage extends BasePage {
                 for (const building of builtDistrictBuildings) {
                     const buildingConfig = BUILDINGS[building.name];
                     if (buildingConfig) {
+                        const position = new THREE.Vector3(
+                            buildingConfig.position.x,
+                            buildingConfig.position.y,
+                            buildingConfig.position.z
+                        );
                         const placedBuilding = await this.game.buildingManager.placeFixedBuilding(
                             building.name,
-                            new THREE.Vector3(buildingConfig.position.x, buildingConfig.position.y, buildingConfig.position.z),
-                            buildingConfig.rotation
+                            position,
+                            buildingConfig.rotation,
+                            building.level
                         );
                         
                         if (!placedBuilding) {
@@ -213,10 +173,10 @@ export class GamePage extends BasePage {
                 let gridX = 0, gridZ = 0;
 
                 // Start from the center and spiral outward
-                const center = Math.floor(gridSize / 2);
-                Logger.info('Starting position search from center:', { center, gridSize });
+                const center = Math.floor(this.game.gridManager.getGridSize() / 2);
+                Logger.info('Starting position search from center:', { center, gridSize: this.game.gridManager.getGridSize() });
                 
-                for (let layer = 0; layer < gridSize; layer++) {
+                for (let layer = 0; layer < this.game.gridManager.getGridSize(); layer++) {
                     for (let i = -layer; i <= layer; i++) {
                         // Check all positions in the current layer
                         const positions = [
