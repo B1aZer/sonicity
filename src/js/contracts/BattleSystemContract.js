@@ -131,6 +131,16 @@ export class BattleSystemContract extends BaseContract {
         return contract.getBattleRecord(battleId);
     }
 
+    async getPlayerBattleHistory(player) {
+        const contract = await this.getContract();
+        return contract.getPlayerBattleHistory(player);
+    }
+
+    async getPlayerBattleCount(player) {
+        const contract = await this.getContract();
+        return contract.getPlayerBattleCount(player);
+    }
+
     async findPotentialOpponents() {
         const contract = await this.getContract();
         return contract.findPotentialOpponents();
