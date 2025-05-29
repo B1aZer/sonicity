@@ -76,21 +76,12 @@ export class CommandCenterPage extends BasePage {
         const statusText = statusSection.querySelector('.status-text');
         const statusDetails = statusSection.querySelector('.status-details');
 
-        if (!searchStatus.active && !searchStatus.completed) {
-            statusText.textContent = 'No Active Search';
+        if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
+            statusText.textContent = 'Opponent Found!';
+            statusDetails.textContent = `Enemy stronghold at: ${searchStatus.foundOpponent}`;
+        } else {
+            statusText.textContent = 'No Opponent';
             statusDetails.textContent = 'Visit the Scout Guild to search for opponents';
-        } else if (searchStatus.active && !searchStatus.completed) {
-            const timeRemainingMinutes = Math.floor(Number(searchStatus.timeRemaining) / 60);
-            statusText.textContent = 'Searching for Opponent';
-            statusDetails.textContent = `Scouts will return in ${timeRemainingMinutes} minutes`;
-        } else if (searchStatus.completed) {
-            if (searchStatus.foundOpponent === '0x0000000000000000000000000000000000000000') {
-                statusText.textContent = 'No Opponent Found';
-                statusDetails.textContent = 'Start a new search at the Scout Guild';
-            } else {
-                statusText.textContent = 'Opponent Found!';
-                statusDetails.textContent = `Enemy stronghold at: ${searchStatus.foundOpponent}`;
-            }
         }
     }
 
