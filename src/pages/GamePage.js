@@ -303,6 +303,10 @@ export class GamePage extends BasePage {
                     Logger.info('Scout Guild clicked');
                     window.history.pushState({}, '', '/scout-guild');
                     window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isCommandcenter) {
+                    Logger.info('Command Center clicked');
+                    window.history.pushState({}, '', '/command-center');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                 }
             }
         });
