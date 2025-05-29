@@ -297,19 +297,15 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         bool attackerWon = battle.attackerPower > battle.defenderPower;
         
         if (attackerWon) {
-            // Calculate treasury burn
-            uint256 treasuryBurnPercent = calculateTreasuryBurn(battle.attackerPower, battle.defenderPower);
-            uint256 treasuryBurned = calculateTreasuryBurnAmount(battle.defender, treasuryBurnPercent);
-            
             // Apply effects
             applyBattleEffects(
                 battle.attacker,
                 battle.defender,
-                treasuryBurned
+                battle.attackerPower,
+                battle.defenderPower
             );
 
             // Update battle state
-            battle.treasuryBurned = treasuryBurned;
             battle.repPoints = calculateRepPoints(battle.attackerPower, battle.defenderPower);
         }
 
@@ -443,7 +439,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     function applyBattleEffects(
         address attacker,
         address defender,
-        uint256 treasuryBurned
+        uint256 attackerPower,
+        uint256 defenderPower
     ) internal {
         BattleEffects memory effects;
         
@@ -453,8 +450,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         // Apply siege effects (district building damage and treasury burn)
         (effects.districtBuildingsDamaged, effects.treasuryBurned) = applySiegeEffects(
             attacker, 
-            defender, 
-            treasuryBurned
+            defender,
+            attackerPower,
+            defenderPower
         );
 
         // Update battle state with effects
@@ -464,7 +462,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         battle.treasuryBurned = effects.treasuryBurned;
 
         // Award REP points for winning the battle
-        effects.repPoints = calculateRepPoints(battle.attackerPower, battle.defenderPower);
+        effects.repPoints = calculateRepPoints(attackerPower, defenderPower);
         (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("earnRep(address,uint256)", attacker, effects.repPoints)
         );
@@ -515,20 +513,23 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     function applySiegeEffects(
         address attacker,
         address defender,
-        uint256 treasuryBurned
-    ) internal returns (uint256 districtBuildingsDamaged, uint256 actualTreasuryBurned) {
+        uint256 attackerPower,
+        uint256 defenderPower
+    ) internal returns (uint256 districtBuildingsDamaged, uint256 treasuryBurned) {
         uint256 siegeCount = playerTroops[attacker][TroopType.SIEGE];
         if (siegeCount == 0) return (0, 0);
 
         // Apply district building damage
         districtBuildingsDamaged = applySiegeBuildingDamage(attacker, defender, siegeCount);
 
-        // Apply treasury burn only if siege units are present
-        if (treasuryBurned > 0) {
-            actualTreasuryBurned = applySiegeTreasuryBurn(attacker, defender, treasuryBurned);
+        // Calculate and apply treasury burn
+        uint256 burnPercent = calculateTreasuryBurn(attackerPower, defenderPower);
+        if (burnPercent > 0) {
+            uint256 burnAmount = calculateTreasuryBurnAmount(defender, burnPercent);
+            treasuryBurned = applySiegeTreasuryBurn(attacker, defender, burnAmount);
         }
 
-        return (districtBuildingsDamaged, actualTreasuryBurned);
+        return (districtBuildingsDamaged, treasuryBurned);
     }
 
     function applySiegeBuildingDamage(
