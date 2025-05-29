@@ -18,6 +18,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     address public altarAddress;
     // Reference to the BattleSystem contract
     address public battleSystemAddress;
+    // Reference to the DistrictBuildings contract
+    address public districtBuildingsAddress;
 
     // Grid Building Types
     enum GridBuildingType {
@@ -61,6 +63,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event AltarAddressUpdated(address indexed newAddress);
     event BuildingRepaired(address indexed player, uint256 buildingId);
     event BattleSystemAddressUpdated(address indexed newAddress);
+    event DistrictBuildingsAddressUpdated(address indexed newAddress);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -129,6 +132,15 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function setBattleSystemAddress(address _battleSystemAddress) external onlyOwner {
         battleSystemAddress = _battleSystemAddress;
         emit BattleSystemAddressUpdated(_battleSystemAddress);
+    }
+
+    /**
+     * @dev Set the DistrictBuildings contract address
+     * @param _districtBuildingsAddress The address of the DistrictBuildings contract
+     */
+    function setDistrictBuildingsAddress(address _districtBuildingsAddress) external onlyOwner {
+        districtBuildingsAddress = _districtBuildingsAddress;
+        emit DistrictBuildingsAddressUpdated(_districtBuildingsAddress);
     }
 
     /**
@@ -537,12 +549,18 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         require(building.damaged, "Building not damaged");
 
+        // Check if player has a workshop
+        (bool success, bytes memory returnData) = districtBuildingsAddress.staticcall(
+            abi.encodeWithSignature("isDistrictBuildingActive(address,uint8)", msg.sender, 4) // 4 is WORKSHOP in DistrictBuildingType enum
+        );
+        require(success && abi.decode(returnData, (bool)), "Workshop required to repair");
+
         // Calculate repair cost (base cost * level)
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         uint256 repairCost = config.upgradeCost * building.level / 2; // Half the upgrade cost per level
         
         // Call GameState to check and deduct gold
-        (bool success, bytes memory returnData) = gameStateAddress.call(
+        (success, returnData) = gameStateAddress.call(
             abi.encodeWithSignature("deductGold(address,uint256)", msg.sender, repairCost)
         );
         if (!success) {

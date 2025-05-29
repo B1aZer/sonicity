@@ -161,6 +161,10 @@ async function main() {
   console.log("Setting BattleSystem address in GridBuildings...");
   await gridBuildingsProxy.setBattleSystemAddress(battleSystemProxyAddress);
 
+  // Set DistrictBuildings address in GridBuildings
+  console.log("Setting DistrictBuildings address in GridBuildings...");
+  await gridBuildingsProxy.setDistrictBuildingsAddress(districtBuildingsProxyAddress);
+
   // Set GameState address in BattleSystem
   console.log("Setting GameState address in BattleSystem...");
   await battleSystemProxy.setGameStateAddress(gameStateProxyAddress);
