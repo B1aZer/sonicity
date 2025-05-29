@@ -64,13 +64,13 @@ export class BarracksPage extends BasePage {
             const [gold, food, barracksLevel] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
                 this.contracts.gameState.getPlayerFood(),
-                this.contracts.districtBuildings.getBuildingLevel(4, address) // 4 is BARRACKS type in DistrictBuildingType enum
+                this.contracts.districtBuildings.getBuildingLevel("Barracks") // Use building name instead of numeric type
             ]);
 
             Logger.info('Barracks data loaded:', { gold, food, barracksLevel });
 
             // Check if barracks is built
-            const isBarracksBuilt = await this.contracts.districtBuildings.isDistrictBuildingBuilt(4);
+            const isBarracksBuilt = await this.contracts.districtBuildings.isDistrictBuildingBuilt("Barracks");
             Logger.info('Barracks built status:', isBarracksBuilt);
 
             // Load troop counts using enum values
