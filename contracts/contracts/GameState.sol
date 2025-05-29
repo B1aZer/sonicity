@@ -110,6 +110,20 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             tier: 0,
             treasury: 0
         });
+
+        // Initialize core buildings for the new player
+        (bool success, bytes memory returnData) = districtBuildingsAddress.call(
+            abi.encodeWithSignature("initializeCoreBuildings(address)", msg.sender)
+        );
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to initialize core buildings");
+        }
     }
 
     // Required by UUPS pattern
