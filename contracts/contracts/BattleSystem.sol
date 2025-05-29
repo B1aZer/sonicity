@@ -56,7 +56,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     mapping(TroopType => TroopConfig) public troopConfigs;
 
     // Constants
-    uint256 public constant BATTLE_DURATION = 24 hours;
+    uint256 public BATTLE_DURATION = 24 hours;
     uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
     uint256 public noOpponentFoundChance;
     uint256 public searchCost; // Cost in gold to start a search
@@ -842,5 +842,14 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function setSearchDuration(uint256 _duration) external onlyOwner {
         searchDuration = _duration;
+    }
+
+    /**
+     * @dev Set the battle duration (only owner)
+     * @param newDuration New battle duration in seconds
+     */
+    function setBattleDuration(uint256 newDuration) external onlyOwner {
+        require(newDuration > 0, "Duration must be greater than 0");
+        BATTLE_DURATION = newDuration;
     }
 } 
