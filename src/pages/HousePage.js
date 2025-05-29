@@ -125,7 +125,7 @@ export class HousePage extends BasePage {
             const loadingModal = this.modal.loading('Collecting gold...');
             
             // Collect gold from all houses in a single transaction
-            const tx = await this.contracts.gridBuildings.collectAllGoldByType(
+            const tx = await this.contracts.gridBuildings.collectResourcesByType(
                 GridBuildingsContract.BuildingType.HOUSE
             );
             await tx;
