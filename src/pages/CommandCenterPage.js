@@ -101,10 +101,15 @@ export class CommandCenterPage extends BasePage {
             deployButton.disabled = true;
         }
 
-        // Set max values for inputs
+        // Set max values for inputs and update display
         infantryInput.max = infantryCount;
         cavalryInput.max = cavalryCount;
         siegeInput.max = siegeCount;
+
+        // Update max-troops display spans
+        deploymentSection.querySelector('#max-infantry').textContent = infantryCount;
+        deploymentSection.querySelector('#max-cavalry').textContent = cavalryCount;
+        deploymentSection.querySelector('#max-siege').textContent = siegeCount;
     }
 
     render() {
