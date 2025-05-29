@@ -128,6 +128,12 @@ export class CityPage extends BasePage {
                 Logger.info(`Got ${buildingTypes.length} buildings for tier ${tier}:`, buildingTypes);
                 Logger.info('Building configs:', configs);
                 
+                // Filter out core buildings
+                const nonCoreBuildings = buildingTypes.filter((type, index) => !configs[index].isCoreBuilding);
+                const nonCoreConfigs = configs.filter(config => !config.isCoreBuilding);
+                
+                Logger.info(`Filtered to ${nonCoreBuildings.length} non-core buildings for tier ${tier}`);
+                
                 const buildingsGrid = tierContent.querySelector('.buildings-grid');
                 if (!buildingsGrid) {
                     Logger.warn(`No buildings grid found for tier ${tier}`);
@@ -136,9 +142,9 @@ export class CityPage extends BasePage {
                 
                 // Fetch all building data in parallel
                 const buildingData = await Promise.all(
-                    buildingTypes.map(async (type) => {
+                    nonCoreBuildings.map(async (type) => {
                         // Get the building name from the config
-                        const buildingName = configs[buildingTypes.indexOf(type)].name;
+                        const buildingName = nonCoreConfigs[nonCoreBuildings.indexOf(type)].name;
                         Logger.info(`Processing building: ${buildingName}`);
                         
                         try {
@@ -155,8 +161,8 @@ export class CityPage extends BasePage {
                     })
                 );
 
-                buildingsGrid.innerHTML = buildingTypes.map((type, index) => {
-                    const config = configs[index];
+                buildingsGrid.innerHTML = nonCoreBuildings.map((type, index) => {
+                    const config = nonCoreConfigs[index];
                     const { isBuilt, level } = buildingData[index];
                     Logger.info(`Rendering building ${config.name}:`, { isBuilt, level, config });
                     
