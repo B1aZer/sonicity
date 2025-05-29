@@ -2,24 +2,24 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0xAdE429ba898c34722e722415D722A70a297cE3a2", // Will be updated by update-addresses.sh
-    SONICITY_FARM: "0x7B4f352Cd40114f12e82fC675b5BA8C7582FC513", // Will be updated by update-addresses.sh
-    ALTAR: "0xD5724171C2b7f0AA717a324626050BD05767e2C6", // Will be updated by update-addresses.sh
-    GAME_STATE: "0xC7143d5bA86553C06f5730c8dC9f8187a621A8D4", // Will be updated by update-addresses.sh
-    DISTRICT_BUILDINGS: "0xc9952Fc93Fa9bE383ccB39008c786b9f94eAc95d", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0xDde063eBe8E85D666AD99f731B4Dbf8C98F29708", // Will be updated by update-addresses.sh
-    BATTLE_SYSTEM: "0x70eE76691Bdd9696552AF8d4fd634b3cF79DD529" // Will be updated by update-addresses.sh
+    SONICITY_NFT: "0xC0BF43A4Ca27e0976195E6661b099742f10507e5", // Will be updated by update-addresses.sh
+    SONICITY_FARM: "0x43cA9bAe8dF108684E5EAaA720C25e1b32B0A075", // Will be updated by update-addresses.sh
+    ALTAR: "0x021DBfF4A864Aa25c51F0ad2Cd73266Fde66199d", // Will be updated by update-addresses.sh
+    GAME_STATE: "0x30426D33a78afdb8788597D5BFaBdADc3Be95698", // Will be updated by update-addresses.sh
+    DISTRICT_BUILDINGS: "0x85495222Fd7069B987Ca38C2142732EbBFb7175D", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0x3abBB0D6ad848d64c8956edC9Bf6f18aC22E1485", // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0x4CF4dd3f71B67a7622ac250f8b10d266Dc5aEbcE" // Will be updated by update-addresses.sh
 };
 
 // Contract names
 export const CONTRACT_NAMES = {
-    SONICITY_NFT: "0xAdE429ba898c34722e722415D722A70a297cE3a2",
-    SONICITY_FARM: "0x7B4f352Cd40114f12e82fC675b5BA8C7582FC513",
-    ALTAR: "0xD5724171C2b7f0AA717a324626050BD05767e2C6",
-    GAME_STATE: "0xC7143d5bA86553C06f5730c8dC9f8187a621A8D4",
-    DISTRICT_BUILDINGS: "0xc9952Fc93Fa9bE383ccB39008c786b9f94eAc95d",
-    GRID_BUILDINGS: "0xDde063eBe8E85D666AD99f731B4Dbf8C98F29708",
-    BATTLE_SYSTEM: "0x70eE76691Bdd9696552AF8d4fd634b3cF79DD529"
+    SONICITY_NFT: "0xC0BF43A4Ca27e0976195E6661b099742f10507e5",
+    SONICITY_FARM: "0x43cA9bAe8dF108684E5EAaA720C25e1b32B0A075",
+    ALTAR: "0x021DBfF4A864Aa25c51F0ad2Cd73266Fde66199d",
+    GAME_STATE: "0x30426D33a78afdb8788597D5BFaBdADc3Be95698",
+    DISTRICT_BUILDINGS: "0x85495222Fd7069B987Ca38C2142732EbBFb7175D",
+    GRID_BUILDINGS: "0x3abBB0D6ad848d64c8956edC9Bf6f18aC22E1485",
+    BATTLE_SYSTEM: "0x4CF4dd3f71B67a7622ac250f8b10d266Dc5aEbcE"
 };
 
 // Contract configuration
@@ -71,8 +71,8 @@ export const BUILDINGS = {
         name: 'City Hall',
         size: new THREE.Vector3(24, 24, 24),
         color: 0xB0C4DE, // Light Steel Blue
-        position: { x: 0, y: 0, z: 0 }, // Center position
-        rotation: 0,
+        position: { x: 0, y: 0, z: -40 }, // Top position
+        rotation: Math.PI,
         tier: 0,
         assets: {
             baseUrl: 'assets/cityhall',
@@ -85,8 +85,8 @@ export const BUILDINGS = {
         name: 'Altar',
         size: new THREE.Vector3(12, 12, 12),
         color: 0xFFB6C1, // Light Pink
-        position: { x: 0, y: 0, z: 0 }, // Center position
-        rotation: 0,
+        position: { x: -40, y: 0, z: 0 }, // Left position
+        rotation: Math.PI / 2,
         tier: 0,
         assets: {
             baseUrl: 'assets/altar',
@@ -99,8 +99,8 @@ export const BUILDINGS = {
         name: 'Mine',
         size: new THREE.Vector3(12, 12, 12),
         color: 0xFFFFE0, // Light Yellow
-        position: { x: 0, y: 0, z: 0 }, // Center position
-        rotation: 0,
+        position: { x: 40, y: 0, z: 0 }, // Right position
+        rotation: -Math.PI / 2,
         tier: 0,
         assets: {
             baseUrl: 'assets/mine',
