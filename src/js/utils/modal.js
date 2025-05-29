@@ -25,6 +25,11 @@ export class Modal {
         return Swal.fire({ ...defaultOptions, ...options });
     }
 
+    // Alias for show method to make it clearer it's for displaying info messages
+    info(content, options = {}) {
+        return this.show(content, options);
+    }
+
     confirm(content, options = {}) {
         const defaultOptions = {
             title: options.title || 'Confirm',
