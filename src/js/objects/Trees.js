@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Logger from '../utils/logger.js';
+import { BUILDINGS } from '../utils/constants.js';
 
 export class Trees {
     constructor(scene, options = {}) {
@@ -14,14 +15,14 @@ export class Trees {
             ...options
         };
         
-        // Define building exclusion zones
-        this.buildingZones = [
-            { x: 0, z: -40, radius: 30 },    // City Hall zone
-            { x: -40, z: 0, radius: 20 },    // Altar zone
-            { x: -20, z: -35, radius: 15 },  // Shop zone
-            { x: 20, z: -35, radius: 15 },   // Workshop zone
-            { x: -20, z: 35, radius: 15 },   // Defense Tower zone
-        ];
+        // Get building exclusion zones from BUILDINGS constant
+        this.buildingZones = Object.values(BUILDINGS)
+            .filter(building => building.position) // Only include buildings with fixed positions
+            .map(building => ({
+                x: building.position.x,
+                z: building.position.z,
+                radius: Math.max(building.size.x, building.size.z) / 2 + 5 // Add 5 units buffer
+            }));
         
         this.treeModels = [
             'assets/tree.glb',
