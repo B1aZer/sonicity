@@ -132,7 +132,7 @@ export class CommandCenterPage extends BasePage {
                 const hours = Math.floor(timeLeft / 3600);
                 const minutes = Math.floor((timeLeft % 3600) / 60);
                 const seconds = timeLeft % 60;
-                battleTimer.textContent = `Time until battle resolution: ${hours}h ${minutes}m ${seconds}s`;
+                battleTimer.textContent = `Time until battle resolution: ${hours}h ${minutes}m`;
             } catch (error) {
                 Logger.error('Error updating battle timer:', error);
             }
@@ -339,14 +339,14 @@ export class CommandCenterPage extends BasePage {
                 await this.contracts.battleSystem.resolveBattle(address);
                 
                 // Get the battle result
-                const battleHistory = await this.contracts.battleSystem.getBattleHistory(address);
+                const battleHistory = await this.contracts.battleSystem.getPlayerBattleHistory(address);
                 const lastBattle = battleHistory[battleHistory.length - 1];
                 const isAttacker = lastBattle.attacker.toLowerCase() === address.toLowerCase();
                 const won = isAttacker ? lastBattle.attackerWon : !lastBattle.attackerWon;
                 
                 // Show appropriate message
                 if (won) {
-                    this.modal.success(`Victory! You won the battle against ${isAttacker ? lastBattle.defender : lastBattle.attacker}!\n\nGold Stolen: ${lastBattle.goldStolen}\nREP Earned: ${lastBattle.repEarned}`);
+                    this.modal.success(`Victory! You won the battle against ${isAttacker ? lastBattle.defender : lastBattle.attacker}!\n\nGold Stolen: ${lastBattle.treasuryBurned}\nREP Earned: ${lastBattle.repPoints}`);
                 } else {
                     this.modal.info(`Defeat! You lost the battle against ${isAttacker ? lastBattle.defender : lastBattle.attacker}.`);
                 }
