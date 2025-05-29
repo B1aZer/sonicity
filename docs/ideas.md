@@ -1,3 +1,11 @@
+- Add a "quick search" option that costs more but completes faster
+- Add troop specialization bonuses (e.g., cavalry could be stronger against infantry)
+- Implement a morale system that affects battle outcomes
+- Include weather effects that influence battle outcomes
+
+- Add a resource protection system (e.g., vaults that protect a portion of resources)
+- Implement resource trading between players
+
 - Radar dome - possible attacks?
 - Iron Curtain	Temporary invulnerability for your treasury
 - Barracks that you buy diffenret units from. Units require additional resource (pp)
