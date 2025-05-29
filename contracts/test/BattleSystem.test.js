@@ -646,7 +646,7 @@ describe("BattleSystem", function () {
             const battle = await battleSystem.activeBattles(player1.address);
 
             console.log("\nBattle Record in q:");
-            console.log("should not apply battle effects (equal power)");
+            console.log("should apply battle effects (grid buildings damage)");
             console.log("----------------------------------------");
             console.log("Attacker:", battle.attacker);
             console.log("Defender:", battle.defender);
