@@ -157,7 +157,7 @@ export class BarracksPage extends BasePage {
                                     <div class="troop-info">
                                         <div class="troop-title-row">
                                             <h3>${troop.name}</h3>
-                                            <span class="troop-count">Owned: <span id="${type.toLowerCase()}-count">0</span></span>
+                                            <span class="troop-count">Trained: <span id="${type.toLowerCase()}-count">0</span></span>
                                         </div>
                                         <div class="troop-desc">${troop.description}</div>
                                         <div class="troop-cost">
