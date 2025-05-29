@@ -16,6 +16,7 @@ describe("BattleSystem", function () {
     let player3;
     let buildingNames;
     let getBuildingTypeIndex;
+    let barracksIndex;
 
     beforeEach(async function () {
         [owner, player1, player2, player3] = await ethers.getSigners();
@@ -98,7 +99,7 @@ describe("BattleSystem", function () {
         buildingNames = await districtBuildings.getBuildingNames();
         getBuildingTypeIndex = (name) => buildingNames.findIndex(n => n === name);
 
-        const barracksIndex = getBuildingTypeIndex("BARRACKS");
+        barracksIndex = getBuildingTypeIndex("BARRACKS");
 
         // Setup initial resources for players and unlock tier 1
         await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1500); // 1000 for tier 1 + 500 for building
