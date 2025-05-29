@@ -1017,6 +1017,38 @@ describe("GridBuildings", function () {
       // Verify exactly 2 buildings were damaged
       expect(damagedCount).to.equal(damageAmount);
     });
+  });
+
+  describe("Workshop Repair Requirements", function () {
+    let houseId;
+    let farmId;
+
+    beforeEach(async function () {
+      // Create a house (tier 0)
+      const houseResult = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      houseId = houseResult.buildingId;
+
+      // Upgrade player to tier 1 using helper
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
+
+      // Verify player is now tier 1
+      const playerState = await gameState.playerState(await player1.getAddress());
+      expect(playerState.tier).to.equal(1);
+
+      // Create a farm (tier 1)
+      const farmResult = await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
+      farmId = farmResult.buildingId;
+
+      // Verify buildings are active and have correct types
+      const house = await gridBuildings.buildings(await player1.getAddress(), houseId);
+      const farm = await gridBuildings.buildings(await player1.getAddress(), farmId);
+      expect(house.buildingType).to.equal(GridBuildingType.HOUSE);
+      expect(house.level).to.equal(1);
+      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.HOUSE)).to.equal(BigInt(2));
+      expect(farm.buildingType).to.equal(GridBuildingType.FARM);
+      expect(farm.level).to.equal(1);
+      expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(2));
+    });
 
     it("Should not allow repairing without a workshop", async function () {
       const player1Address = await player1.getAddress();
