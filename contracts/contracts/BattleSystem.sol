@@ -56,7 +56,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     mapping(TroopType => TroopConfig) public troopConfigs;
 
     // Constants
-    uint256 public BATTLE_DURATION = 24 hours;
+    uint256 public BATTLE_DURATION;
     uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
     uint256 public noOpponentFoundChance;
     uint256 public searchCost; // Cost in gold to start a search
@@ -144,6 +144,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
+
+        // Initialize battle duration
+        BATTLE_DURATION = 24 hours;
 
         // Initialize troop configurations
         troopConfigs[TroopType.INFANTRY] = TroopConfig({
