@@ -255,7 +255,7 @@ describe("DistrictBuildings", function () {
       const initialGold = await gameState.getPlayerGold(player1Address);
       
       // Build workshop first (required for repair)
-      const shopIndex = getBuildingTypeIndex("SHOP");
+      const shopIndex = getBuildingTypeIndex("WORKSHOP");
       await districtBuildings.connect(player1).buildDistrictBuilding(shopIndex);
       
       // Build the defense tower
@@ -305,6 +305,29 @@ describe("DistrictBuildings", function () {
       await expect(
         districtBuildings.connect(player1).repairBuilding(defenseTowerIndex)
       ).to.be.revertedWith("Building not built");
+    });
+
+    it("Should not allow repairing without a workshop", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Ensure player has enough gold for defense tower
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 200);
+      
+      // Build the defense tower
+      const defenseTowerIndex = getBuildingTypeIndex("DEFENSE_TOWER");
+      await districtBuildings.connect(player1).buildDistrictBuilding(defenseTowerIndex);
+      
+      // Damage the defense tower through BattleSystem
+      await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
+
+      // Verify building is damaged
+      const isDamagedBefore = await districtBuildings.isBuildingDamaged(player1Address, defenseTowerIndex);
+      expect(isDamagedBefore).to.be.true;
+
+      // Try to repair without having a workshop
+      await expect(
+        districtBuildings.connect(player1).repairBuilding(defenseTowerIndex)
+      ).to.be.revertedWith("Workshop required to repair");
     });
 
     it("Should not allow damaging tier 0 buildings", async function () {
