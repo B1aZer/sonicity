@@ -125,6 +125,13 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     event SearchStarted(address indexed player, uint256 startTime);
     event SearchCompleted(address indexed player);
 
+    struct BattleEffects {
+        uint256 gridBuildingsDamaged;
+        uint256 districtBuildingsDamaged;
+        uint256 treasuryBurned;
+        uint256 repPoints;
+    }
+
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -438,119 +445,156 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         address defender,
         uint256 treasuryBurned
     ) internal {
-        // Check cavalry for grid building damage
+        BattleEffects memory effects;
+        
+        // Apply cavalry effects (grid building damage)
+        effects.gridBuildingsDamaged = applyCavalryEffects(attacker, defender);
+        
+        // Apply siege effects (district building damage and treasury burn)
+        (effects.districtBuildingsDamaged, effects.treasuryBurned) = applySiegeEffects(
+            attacker, 
+            defender, 
+            treasuryBurned
+        );
+
+        // Update battle state with effects
+        Battle storage battle = activeBattles[attacker];
+        battle.gridBuildingsDamaged += effects.gridBuildingsDamaged;
+        battle.districtBuildingsDamaged += effects.districtBuildingsDamaged;
+        battle.treasuryBurned = effects.treasuryBurned;
+
+        // Award REP points for winning the battle
+        effects.repPoints = calculateRepPoints(battle.attackerPower, battle.defenderPower);
+        (bool success, bytes memory returnData) = gameStateAddress.call(
+            abi.encodeWithSignature("earnRep(address,uint256)", attacker, effects.repPoints)
+        );
+        if (!success) {
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to award REP points");
+        }
+    }
+
+    function applyCavalryEffects(address attacker, address defender) internal returns (uint256) {
         uint256 cavalryCount = playerTroops[attacker][TroopType.CAVALRY];
-        if (cavalryCount > 0) {
-            uint256 damageChance = troopConfigs[TroopType.CAVALRY].gridDamageChance;
-            // Use a more secure random number generation
-            bytes32 cavalryRandomSeed = keccak256(abi.encodePacked(
-                blockhash(block.number - 1),
-                block.timestamp,
-                attacker,
-                defender,
-                "cavalry"
-            ));
-            if (uint256(cavalryRandomSeed) % 100 < damageChance) {
-                // Calculate number of buildings to damage based on cavalry count
-                // 1 building per 5 cavalry, max 3 buildings
-                uint256 buildingsToDamage = (cavalryCount / 5) + 1;
-                if (buildingsToDamage > 3) buildingsToDamage = 3;
-                
-                (bool success, bytes memory returnData) = gridBuildingsAddress.call(
-                    abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
-                );
-                if (!success) {
-                    // If the call failed, decode and propagate the error message
-                    if (returnData.length > 0) {
-                        assembly {
-                            revert(add(returnData, 32), mload(returnData))
-                        }
-                    }
-                    revert("Failed to damage grid building");
+        if (cavalryCount == 0) return 0;
+
+        uint256 damageChance = troopConfigs[TroopType.CAVALRY].gridDamageChance;
+        bytes32 randomSeed = keccak256(abi.encodePacked(
+            blockhash(block.number - 1),
+            block.timestamp,
+            attacker,
+            defender,
+            "cavalry"
+        ));
+
+        if (uint256(randomSeed) % 100 >= damageChance) return 0;
+
+        // Calculate buildings to damage: 1 per 5 cavalry, max 3
+        uint256 buildingsToDamage = (cavalryCount / 5) + 1;
+        if (buildingsToDamage > 3) buildingsToDamage = 3;
+
+        (bool success, bytes memory returnData) = gridBuildingsAddress.call(
+            abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
+        );
+        if (!success) {
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
                 }
-                uint256 actualBuildingsDamaged = abi.decode(returnData, (uint256));
-                activeBattles[attacker].gridBuildingsDamaged += actualBuildingsDamaged;
             }
+            revert("Failed to damage grid building");
         }
 
-        // Check siege for district building damage and treasury burn
+        return abi.decode(returnData, (uint256));
+    }
+
+    function applySiegeEffects(
+        address attacker,
+        address defender,
+        uint256 treasuryBurned
+    ) internal returns (uint256 districtBuildingsDamaged, uint256 actualTreasuryBurned) {
         uint256 siegeCount = playerTroops[attacker][TroopType.SIEGE];
-        if (siegeCount > 0) {
-            // Try to damage district building
-            uint256 damageChance = troopConfigs[TroopType.SIEGE].districtDamageChance;
-            // Use a more secure random number generation
-            bytes32 siegeRandomSeed = keccak256(abi.encodePacked(
-                blockhash(block.number - 1),
-                block.timestamp,
-                attacker,
-                defender,
-                "siege"
-            ));
-            if (uint256(siegeRandomSeed) % 100 < damageChance) {
-                // Calculate number of buildings to damage based on siege count
-                // 1 building per 3 siege, max 2 buildings
-                uint256 buildingsToDamage = (siegeCount / 3) + 1;
-                if (buildingsToDamage > 2) buildingsToDamage = 2;
-                
-                (bool success, bytes memory returnData) = districtBuildingsAddress.call(
-                    abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
-                );
-                if (!success) {
-                    // If the call failed, decode and propagate the error message
-                    if (returnData.length > 0) {
-                        assembly {
-                            revert(add(returnData, 32), mload(returnData))
-                        }
-                    }
-                    revert("Failed to damage district building");
-                }
-                uint256 actualBuildingsDamaged = abi.decode(returnData, (uint256));
-                activeBattles[attacker].districtBuildingsDamaged += actualBuildingsDamaged;
-            }
+        if (siegeCount == 0) return (0, 0);
 
-            // Try to burn treasury
-            if (treasuryBurned > 0) {
-                uint256 burnChance = troopConfigs[TroopType.SIEGE].treasuryBurnChance;
-                // Use a more secure random number generation
-                bytes32 treasuryRandomSeed = keccak256(abi.encodePacked(
-                    blockhash(block.number - 1),
-                    block.timestamp,
-                    attacker,
-                    defender,
-                    "treasury"
-                ));
-                if (uint256(treasuryRandomSeed) % 100 < burnChance) {
-                    (bool success, bytes memory returnData) = gameStateAddress.call(
-                        abi.encodeWithSignature("burnTreasury(address,uint256)", defender, treasuryBurned)
-                    );
-                    if (!success) {
-                        // If the call failed, decode and propagate the error message
-                        if (returnData.length > 0) {
-                            assembly {
-                                revert(add(returnData, 32), mload(returnData))
-                            }
-                        }
-                        revert("Failed to burn treasury");
-                    }
-                }
-            }
+        // Apply district building damage
+        districtBuildingsDamaged = applySiegeBuildingDamage(attacker, defender, siegeCount);
+
+        // Apply treasury burn only if siege units are present
+        if (treasuryBurned > 0) {
+            actualTreasuryBurned = applySiegeTreasuryBurn(attacker, defender, treasuryBurned);
         }
 
-        // Award REP points
-        if (treasuryBurned > 0 || activeBattles[attacker].gridBuildingsDamaged > 0 || activeBattles[attacker].districtBuildingsDamaged > 0) {
-            (bool success, bytes memory returnData) = gameStateAddress.call(
-                abi.encodeWithSignature("earnRep(address,uint256)", attacker, calculateRepPoints(activeBattles[attacker].attackerPower, activeBattles[attacker].defenderPower))
-            );
-            if (!success) {
-                // If the call failed, decode and propagate the error message
-                if (returnData.length > 0) {
-                    assembly {
-                        revert(add(returnData, 32), mload(returnData))
-                    }
+        return (districtBuildingsDamaged, actualTreasuryBurned);
+    }
+
+    function applySiegeBuildingDamage(
+        address attacker,
+        address defender,
+        uint256 siegeCount
+    ) internal returns (uint256) {
+        uint256 damageChance = troopConfigs[TroopType.SIEGE].districtDamageChance;
+        bytes32 randomSeed = keccak256(abi.encodePacked(
+            blockhash(block.number - 1),
+            block.timestamp,
+            attacker,
+            defender,
+            "siege"
+        ));
+
+        if (uint256(randomSeed) % 100 >= damageChance) return 0;
+
+        // Calculate buildings to damage: 1 per 3 siege, max 2
+        uint256 buildingsToDamage = (siegeCount / 3) + 1;
+        if (buildingsToDamage > 2) buildingsToDamage = 2;
+
+        (bool success, bytes memory returnData) = districtBuildingsAddress.call(
+            abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
+        );
+        if (!success) {
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
                 }
-                revert("Failed to award REP points");
             }
+            revert("Failed to damage district building");
         }
+
+        return abi.decode(returnData, (uint256));
+    }
+
+    function applySiegeTreasuryBurn(
+        address attacker,
+        address defender,
+        uint256 treasuryBurned
+    ) internal returns (uint256) {
+        uint256 burnChance = troopConfigs[TroopType.SIEGE].treasuryBurnChance;
+        bytes32 randomSeed = keccak256(abi.encodePacked(
+            blockhash(block.number - 1),
+            block.timestamp,
+            attacker,
+            defender,
+            "treasury"
+        ));
+
+        if (uint256(randomSeed) % 100 >= burnChance) return 0;
+
+        (bool success, bytes memory returnData) = gameStateAddress.call(
+            abi.encodeWithSignature("burnTreasury(address,uint256)", defender, treasuryBurned)
+        );
+        if (!success) {
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to burn treasury");
+        }
+
+        return treasuryBurned;
     }
 
     function registerForMatchmaking() external {
