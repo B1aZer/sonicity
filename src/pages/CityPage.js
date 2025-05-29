@@ -361,6 +361,7 @@ export class CityPage extends BasePage {
                         await this.contracts.districtBuildings.upgradeDistrictBuilding(buildingType);
                         loadingModal.close();
                         await this.loadCityData();
+                        this.setupEventListeners();
                         this.modal.success(`Successfully upgraded ${config.name} to level ${Number(currentLevel) + 1}!`);
                     } catch (error) {
                         loadingModal.close();
@@ -394,6 +395,7 @@ export class CityPage extends BasePage {
                         await this.contracts.districtBuildings.buildDistrictBuilding(buildingType);
                         loadingModal.close();
                         await this.loadCityData();
+                        this.setupEventListeners();
                         this.modal.success(`Successfully built ${config.name}!`);
                     } catch (error) {
                         loadingModal.close();
