@@ -35,6 +35,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 gridBuildingsDamaged;
         uint256 districtBuildingsDamaged;
         uint256 repPoints;
+        uint256 deployedInfantry;  // Add deployed troop counts
+        uint256 deployedCavalry;
+        uint256 deployedSiege;
     }
 
     // Troop costs and effects
@@ -270,7 +273,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             treasuryBurned: 0,
             gridBuildingsDamaged: 0,
             districtBuildingsDamaged: 0,
-            repPoints: 0
+            repPoints: 0,
+            deployedInfantry: infantryCount,  // Store deployed counts
+            deployedCavalry: cavalryCount,
+            deployedSiege: siegeCount
         });
 
         activeBattles[msg.sender] = newBattle;
@@ -477,7 +483,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     function applyCavalryEffects(address attacker, address defender) internal returns (uint256) {
-        uint256 cavalryCount = playerTroops[attacker][TroopType.CAVALRY];
+        Battle storage battle = activeBattles[attacker];
+        uint256 cavalryCount = battle.deployedCavalry;  // Use deployed count instead of total
         if (cavalryCount == 0) return 0;
 
         uint256 damageChance = troopConfigs[TroopType.CAVALRY].gridDamageChance;
@@ -516,7 +523,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 attackerPower,
         uint256 defenderPower
     ) internal returns (uint256 districtBuildingsDamaged, uint256 treasuryBurned) {
-        uint256 siegeCount = playerTroops[attacker][TroopType.SIEGE];
+        Battle storage battle = activeBattles[attacker];
+        uint256 siegeCount = battle.deployedSiege;  // Use deployed count instead of total
         if (siegeCount == 0) return (0, 0);
 
         // Apply district building damage
