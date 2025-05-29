@@ -343,6 +343,33 @@ describe("BattleSystem", function () {
                 battleSystem.connect(player3).startBattle(5, 2, 1)
             ).to.be.revertedWith("No opponent found");
         });
+
+        it("Should not allow starting battle with 0 deployed troops", async function () {
+            // Set up players with enough gold
+            await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+
+            // Start search
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            await tx.wait();
+            
+            // Get opponent using checkSearchStatus
+            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
+            const opponent = searchStatus.foundOpponent;
+
+            // Try to start battle with 0 troops
+            await expect(
+                battleSystem.connect(player1).startBattle(0, 0, 0)
+            ).to.be.revertedWith("Must deploy at least one troop");
+        });
     });
 
     describe("Matchmaking", function () {

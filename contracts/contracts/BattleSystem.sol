@@ -243,6 +243,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(defender != msg.sender, "Cannot attack yourself");
         require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
         require(activeBattles[defender].startTime == 0, "Defender already in a battle");
+        require(infantryCount > 0 || cavalryCount > 0 || siegeCount > 0, "Must deploy at least one troop");
 
         // Clear search state
         playerSearches[msg.sender].active = false;
