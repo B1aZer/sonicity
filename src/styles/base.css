@@ -56,7 +56,7 @@
     --transition-slow: 0.5s ease;
     
     /* Container */
-    --container-max-width: 1440px;
+    --container-max-width: 1024px;
     --container-padding: var(--spacing-xl);
 
     /* Navbar */
