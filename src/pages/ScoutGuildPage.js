@@ -166,7 +166,7 @@ export class ScoutGuildPage extends BasePage {
                 // Check if user already has an active search
                 const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
                 if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
-                    this.modal.info('New Search Required', 'You must start a new search to find another opponent.');
+                    this.modal.info('You must start a new search to find another opponent.', { title: 'New Search Required' });
                     return;
                 }
                 
@@ -189,12 +189,12 @@ export class ScoutGuildPage extends BasePage {
                 // Verify search is complete before proceeding
                 const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
                 if (!searchStatus.completed) {
-                    this.modal.error('Search Not Complete', 'Your scouts are still searching. Please wait for them to return.');
+                    this.modal.error('Your scouts are still searching. Please wait for them to return.', { title: 'Search Not Complete' });
                     return;
                 }
 
                 if (searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
-                    this.modal.info('Already Found Opponent', 'You have already found an opponent in this search. Start a new search to find another.');
+                    this.modal.info('You have already found an opponent in this search. Start a new search to find another.', { title: 'Already Found Opponent' });
                     return;
                 }
                 
@@ -223,7 +223,7 @@ export class ScoutGuildPage extends BasePage {
                     this.modal.show(randomMessage, { title: 'Scout Report' });
                 } else {
                     Logger.info('Opponent found:', opponent);
-                    this.modal.success('Enemy Stronghold Discovered!', `Your scouts have returned with news of an enemy stronghold at location: ${opponent}\n\nPrepare your forces for battle!`);
+                    this.modal.success(`Your scouts have returned with news of an enemy stronghold at location: ${opponent}\n\nPrepare your forces for battle!`, { title: 'Enemy Stronghold Discovered!' });
                 }
             } catch (error) {
                 Logger.error('Error checking scout results:', error);
@@ -235,7 +235,7 @@ export class ScoutGuildPage extends BasePage {
                 
                 // Handle specific error messages
                 if (error.message.includes('Already attempted to find opponent')) {
-                    this.modal.error('Search Already Used', 'You have already checked the scout reports for this search. Start a new search to find another opponent.');
+                    this.modal.error('You have already checked the scout reports for this search. Start a new search to find another opponent.', { title: 'Search Already Used' });
                 } else {
                     this.modal.error('Failed to check scout reports: ' + error.message);
                 }
