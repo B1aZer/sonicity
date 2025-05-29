@@ -173,7 +173,7 @@ export const BUILDINGS = {
         name: 'Scout Guild',
         size: new THREE.Vector3(15, 15, 15),
         color: 0x4682B4, // Steel Blue
-        position: { x: 25, y: 0, z: -65 },
+        position: { x: 15, y: 0, z: -65 },
         rotation: 0,
         tier: 1,
         assets: {
@@ -185,9 +185,9 @@ export const BUILDINGS = {
     },
     COMMAND_CENTER: {
         name: 'Command Center',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(30, 30, 30),
         color: 0xDAA520, // Goldenrod
-        position: { x: 15, y: 0, z: 40 },
+        position: { x: 35, y: 0, z: -55 },
         rotation: 0,
         tier: 1,
         assets: {
