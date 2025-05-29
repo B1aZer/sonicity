@@ -7,7 +7,7 @@ async function main() {
 
     // Get the time to fast forward (in seconds)
     const hours = 1; // Change this to the number of hours you want to fast forward
-    const secondsToAdd = hours * 60 * 60;
+    const secondsToAdd = hours * 60 * 60 * 24;
 
     console.log(`Fast forwarding ${hours} hours (${secondsToAdd} seconds)...`);
 
