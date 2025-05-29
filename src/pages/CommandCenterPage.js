@@ -338,6 +338,12 @@ export class CommandCenterPage extends BasePage {
                 
                 await this.contracts.battleSystem.resolveBattle(address);
                 
+                // Clear the battle timer interval
+                if (this.battleTimerInterval) {
+                    clearInterval(this.battleTimerInterval);
+                    this.battleTimerInterval = null;
+                }
+                
                 // Get the battle result
                 const battleHistory = await this.contracts.battleSystem.getPlayerBattleHistory(address);
                 const lastBattle = battleHistory[battleHistory.length - 1];
