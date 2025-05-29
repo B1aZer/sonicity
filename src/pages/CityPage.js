@@ -112,31 +112,58 @@ export class CityPage extends BasePage {
     }
 
     async updateBuildingCards(currentTier, treasury) {
+        Logger.info('Starting updateBuildingCards with tier:', currentTier, 'treasury:', treasury);
+        
         // Get buildings for each tier
         for (let tier = 0; tier <= 4; tier++) {
+            Logger.info(`Processing tier ${tier}`);
             const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
-            if (!tierContent) continue;
+            if (!tierContent) {
+                Logger.info(`No content found for tier ${tier}, skipping`);
+                continue;
+            }
 
-            const [buildingTypes, configs] = await this.contracts.districtBuildings.getDistrictBuildingsByTier(tier);
-            const buildingsGrid = tierContent.querySelector('.buildings-grid');
-            
-            if (buildingsGrid) {
+            try {
+                const [buildingTypes, configs] = await this.contracts.districtBuildings.getDistrictBuildingsByTier(tier);
+                Logger.info(`Got ${buildingTypes.length} buildings for tier ${tier}:`, buildingTypes);
+                Logger.info('Building configs:', configs);
+                
+                const buildingsGrid = tierContent.querySelector('.buildings-grid');
+                if (!buildingsGrid) {
+                    Logger.warn(`No buildings grid found for tier ${tier}`);
+                    continue;
+                }
+                
                 // Fetch all building data in parallel
                 const buildingData = await Promise.all(
                     buildingTypes.map(async (type) => {
-                        const [isBuilt, level] = await Promise.all([
-                            this.contracts.districtBuildings.isDistrictBuildingBuilt(type),
-                            this.contracts.districtBuildings.getBuildingLevel(type)
-                        ]);
-                        return { type, isBuilt, level };
+                        // Get the building name from the config
+                        const buildingName = configs[buildingTypes.indexOf(type)].name;
+                        Logger.info(`Processing building: ${buildingName}`);
+                        
+                        try {
+                            const [isBuilt, level] = await Promise.all([
+                                this.contracts.districtBuildings.isDistrictBuildingBuilt(buildingName),
+                                this.contracts.districtBuildings.getBuildingLevel(buildingName)
+                            ]);
+                            Logger.info(`Building ${buildingName} - Built: ${isBuilt}, Level: ${level}`);
+                            return { type, isBuilt, level };
+                        } catch (error) {
+                            Logger.error(`Error getting data for building ${buildingName}:`, error);
+                            throw error;
+                        }
                     })
                 );
 
                 buildingsGrid.innerHTML = buildingTypes.map((type, index) => {
                     const config = configs[index];
                     const { isBuilt, level } = buildingData[index];
+                    Logger.info(`Rendering building ${config.name}:`, { isBuilt, level, config });
+                    
                     const treasuryBigInt = BigInt(treasury);
                     const unlockCostBigInt = BigInt(config.unlockCost);
+                    Logger.info(`Building ${config.name} - Treasury: ${treasuryBigInt}, Unlock Cost: ${unlockCostBigInt}`);
+                    
                     const isLocked = treasuryBigInt < unlockCostBigInt;
                     const isTierLocked = tier > currentTier;
                     const currentLevel = Number(level);
@@ -149,7 +176,11 @@ export class CityPage extends BasePage {
                     const upgradeCost = canUpgrade ? BigInt(config.upgradeCost) * BigInt(currentLevel) : BigInt(0);
                     
                     // Calculate progress percentage using BigInt arithmetic
-                    const progressPercentage = Number((treasuryBigInt * BigInt(100)) / unlockCostBigInt);
+                    let progressPercentage = 0;
+                    if (unlockCostBigInt > 0n) {
+                        progressPercentage = Number((treasuryBigInt * BigInt(100)) / unlockCostBigInt);
+                    }
+                    Logger.info(`Building ${config.name} - Progress: ${progressPercentage}%`);
                     
                     // Determine if button should be disabled
                     const isButtonDisabled = isLocked || isTierLocked || (isBuilt && !canUpgrade);
@@ -157,7 +188,7 @@ export class CityPage extends BasePage {
                     return `
                         <div class="building-card ${isLocked || isTierLocked ? 'locked' : ''} ${isBuilt ? 'built' : ''}" 
                              data-required-donation="${config.unlockCost}"
-                             data-building-type="${type}">
+                             data-building-type="${config.name}">
                             ${(isLocked || isTierLocked) ? `
                                 <div class="lock-overlay">
                                     <i class="fas fa-lock lock-icon"></i>
@@ -183,7 +214,7 @@ export class CityPage extends BasePage {
                                     <p class="unlock-cost">Unlock Cost: ${config.unlockCost} gold</p>
                                 `}
                             </div>
-                            <button class="building-button" data-building="${type}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
+                            <button class="building-button" data-building="${config.name}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
                                 ${isBuilt ? 
                                     (canUpgrade ? `Upgrade to Level ${currentLevel + 1}` : 'Constructed') : 
                                     `Build ${config.name}`}
@@ -191,6 +222,9 @@ export class CityPage extends BasePage {
                         </div>
                     `;
                 }).join('');
+            } catch (error) {
+                Logger.error(`Error processing tier ${tier}:`, error);
+                throw error;
             }
         }
     }

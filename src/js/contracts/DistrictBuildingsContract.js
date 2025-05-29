@@ -9,89 +9,58 @@ export class DistrictBuildingsContract extends BaseContract {
     }
 
     // Map building type string to contract enum value
-    getBuildingTypeEnum(buildingType) {
-        const typeMap = {
-            'CITY_HALL': 0,
-            'ALTAR': 1,
-            'MINE': 2,
-            'SHOP': 3,
-            'WORKSHOP': 4,
-            'OUTPOST': 5,
-            'DEFENSE_TOWER': 6,
-            'BARRACKS': 7,
-            'SCOUT_GUILD': 8,
-            'COMMAND_CENTER': 9,
-            'REP_STATION': 10,
-            'COUNCIL_CHAMBER': 11,
-            'AUDIT_SHRINE': 12,
-            'FOUNDERS_HALL': 13,
-            'MINISTRY_OF_MERIT': 14,
-            'ARCANE_TOWER': 15,
-            'FORTRESS_WALLS': 16,
-            'BANK': 17
-        };
-        return typeMap[buildingType];
+    async getBuildingTypeEnum(buildingType) {
+        // Get all building configs from the contract
+        const [buildingTypes, configs] = await this.call('getAllDistrictBuildingConfigs');
+        
+        // Find the index of the building type in the configs
+        const index = configs.findIndex(config => config.name === buildingType);
+        
+        if (index === -1) {
+            throw new Error(`Invalid building type: ${buildingType}`);
+        }
+        
+        return buildingTypes[index];
     }
 
     // Building Management
     async buildDistrictBuilding(buildingType) {
-        const enumValue = this.getBuildingTypeEnum(buildingType);
-        if (enumValue === undefined) {
-            throw new Error(`Invalid building type: ${buildingType}`);
-        }
+        const enumValue = await this.getBuildingTypeEnum(buildingType);
         return await this.transact('buildDistrictBuilding', enumValue);
     }
 
     async upgradeDistrictBuilding(buildingType) {
-        const enumValue = this.getBuildingTypeEnum(buildingType);
-        if (enumValue === undefined) {
-            throw new Error(`Invalid building type: ${buildingType}`);
-        }
+        const enumValue = await this.getBuildingTypeEnum(buildingType);
         return await this.transact('upgradeDistrictBuilding', enumValue);
     }
 
     async repairBuilding(buildingType) {
-        const enumValue = this.getBuildingTypeEnum(buildingType);
-        if (enumValue === undefined) {
-            throw new Error(`Invalid building type: ${buildingType}`);
-        }
+        const enumValue = await this.getBuildingTypeEnum(buildingType);
         return await this.transact('repairBuilding', enumValue);
     }
 
     // Building Information
     async isDistrictBuildingUnlocked(buildingType) {
         const address = await this.getAddress();
-        const enumValue = this.getBuildingTypeEnum(buildingType);
-        if (enumValue === undefined) {
-            throw new Error(`Invalid building type: ${buildingType}`);
-        }
+        const enumValue = await this.getBuildingTypeEnum(buildingType);
         return await this.call('isDistrictBuildingUnlocked', address, enumValue);
     }
 
     async isDistrictBuildingBuilt(buildingType) {
         const address = await this.getAddress();
-        const enumValue = this.getBuildingTypeEnum(buildingType);
-        if (enumValue === undefined) {
-            throw new Error(`Invalid building type: ${buildingType}`);
-        }
+        const enumValue = await this.getBuildingTypeEnum(buildingType);
         return await this.call('isDistrictBuildingBuilt', address, enumValue);
     }
 
     async isDistrictBuildingActive(buildingType) {
         const address = await this.getAddress();
-        const enumValue = this.getBuildingTypeEnum(buildingType);
-        if (enumValue === undefined) {
-            throw new Error(`Invalid building type: ${buildingType}`);
-        }
+        const enumValue = await this.getBuildingTypeEnum(buildingType);
         return await this.call('isDistrictBuildingActive', address, enumValue);
     }
 
     async isBuildingDamaged(buildingType) {
         const address = await this.getAddress();
-        const enumValue = this.getBuildingTypeEnum(buildingType);
-        if (enumValue === undefined) {
-            throw new Error(`Invalid building type: ${buildingType}`);
-        }
+        const enumValue = await this.getBuildingTypeEnum(buildingType);
         return await this.call('isBuildingDamaged', address, enumValue);
     }
 
@@ -136,12 +105,9 @@ export class DistrictBuildingsContract extends BaseContract {
 
     async getBuildingLevel(buildingType) {
         const address = await this.getAddress();
-        const enumValue = this.getBuildingTypeEnum(buildingType);
-        if (enumValue === undefined) {
-            throw new Error(`Invalid building type: ${buildingType}`);
-        }
+        const enumValue = await this.getBuildingTypeEnum(buildingType);
         return await this.call('getBuildingLevel', address, enumValue);
-            }
+    }
 
     async canTrainTroopType(troopType) {
         const address = await this.getAddress();
@@ -155,10 +121,7 @@ export class DistrictBuildingsContract extends BaseContract {
     }
 
     async isCoreBuilding(buildingType) {
-        const enumValue = this.getBuildingTypeEnum(buildingType);
-        if (enumValue === undefined) {
-            throw new Error(`Invalid building type: ${buildingType}`);
-        }
+        const enumValue = await this.getBuildingTypeEnum(buildingType);
         const configs = await this.call('getAllDistrictBuildingConfigs');
         return configs[1][enumValue].isCoreBuilding; // configs[1] contains the configs array
     }
