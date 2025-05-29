@@ -118,7 +118,7 @@ export class BattleSystemContract extends BaseContract {
 
     async battleDuration() {
         const contract = await this.getContract();
-        return contract.battleDuration();
+        return contract.BATTLE_DURATION();
     }
 
     async troopConfig(troopType) {

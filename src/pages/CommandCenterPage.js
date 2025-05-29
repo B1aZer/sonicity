@@ -42,16 +42,18 @@ export class CommandCenterPage extends BasePage {
             const address = await signer.getAddress();
 
             // Load resources, command center level, and troop counts
-            const [gold, commandCenterLevel, infantryCount, cavalryCount, siegeCount, searchStatus] = await Promise.all([
+            const [gold, commandCenterLevel, infantryCount, cavalryCount, siegeCount, searchStatus, activeBattle, battleDuration] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
                 this.contracts.districtBuildings.getBuildingLevel("Command Center"),
                 this.contracts.battleSystem.playerTroops(address, 0), // INFANTRY
                 this.contracts.battleSystem.playerTroops(address, 1), // CAVALRY
                 this.contracts.battleSystem.playerTroops(address, 2),  // SIEGE
-                this.contracts.battleSystem.checkSearchStatus()
+                this.contracts.battleSystem.checkSearchStatus(),
+                this.contracts.battleSystem.activeBattles(address),
+                this.contracts.battleSystem.battleDuration()
             ]);
 
-            Logger.info('Command center data loaded:', { gold, commandCenterLevel, infantryCount, cavalryCount, siegeCount, searchStatus });
+            Logger.info('Command center data loaded:', { gold, commandCenterLevel, infantryCount, cavalryCount, siegeCount, searchStatus, activeBattle, battleDuration });
 
             // Update resource displays
             this.element.querySelector('#gold-amount').textContent = gold.toString();
@@ -61,39 +63,86 @@ export class CommandCenterPage extends BasePage {
             this.element.querySelector('#command-center-level').textContent = commandCenterLevel.toString();
 
             // Update opponent status section
-            this.updateOpponentStatus(searchStatus);
+            this.updateOpponentStatus(searchStatus, activeBattle);
 
             // Update troop deployment section
-            this.updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount);
+            this.updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount, activeBattle);
+
+            // Start battle timer if there's an active battle
+            if (activeBattle.startTime > 0n) {
+                this.startBattleTimer(Number(activeBattle.startTime), Number(battleDuration));
+            }
         } catch (error) {
             Logger.error('Error loading command center data:', error);
             this.modal.error('Failed to load command center data: ' + error.message);
         }
     }
 
-    updateOpponentStatus(searchStatus) {
+    updateOpponentStatus(searchStatus, activeBattle) {
         const statusSection = this.element.querySelector('.opponent-status-section');
         const statusText = statusSection.querySelector('.status-text');
         const statusDetails = statusSection.querySelector('.status-details');
+        const battleTimer = statusSection.querySelector('.battle-timer');
+        const resolveBattleBtn = statusSection.querySelector('.resolve-battle-btn');
 
-        if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
+        if (activeBattle.startTime > 0n) {
+            statusText.textContent = 'Battle in Progress!';
+            const battleTime = new Date(Number(activeBattle.startTime) * 1000);
+            statusDetails.textContent = `Battle started at: ${battleTime.toLocaleString()}`;
+            battleTimer.style.display = 'block';
+            resolveBattleBtn.style.display = 'none';
+        } else if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
             statusText.textContent = 'Opponent Found!';
             statusDetails.textContent = `Enemy stronghold at: ${searchStatus.foundOpponent}`;
+            battleTimer.style.display = 'none';
+            resolveBattleBtn.style.display = 'none';
         } else {
             statusText.textContent = 'No Opponent';
             statusDetails.textContent = 'Visit the Scout Guild to search for opponents';
+            battleTimer.style.display = 'none';
+            resolveBattleBtn.style.display = 'none';
         }
     }
 
-    updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount) {
+    startBattleTimer(battleStartTime, battleDuration) {
+        const battleTimer = this.element.querySelector('.battle-timer');
+        const resolveBattleBtn = this.element.querySelector('.resolve-battle-btn');
+        
+        const updateTimer = () => {
+            const now = Math.floor(Date.now() / 1000);
+            const battleEndTime = battleStartTime + battleDuration;
+            const timeLeft = battleEndTime - now;
+
+            if (timeLeft <= 0) {
+                battleTimer.textContent = 'Battle can be resolved!';
+                battleTimer.style.display = 'none';
+                resolveBattleBtn.style.display = 'block';
+                return;
+            }
+
+            const hours = Math.floor(timeLeft / 3600);
+            const minutes = Math.floor((timeLeft % 3600) / 60);
+            const seconds = timeLeft % 60;
+            battleTimer.textContent = `Time until battle resolution: ${hours}h ${minutes}m ${seconds}s`;
+        };
+
+        // Update immediately and then every second
+        updateTimer();
+        this.battleTimerInterval = setInterval(updateTimer, 1000);
+    }
+
+    updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount, activeBattle) {
         const deploymentSection = this.element.querySelector('.troop-deployment-section');
         const deployButton = deploymentSection.querySelector('.deploy-troops-btn');
         const infantryInput = deploymentSection.querySelector('#deploy-infantry');
         const cavalryInput = deploymentSection.querySelector('#deploy-cavalry');
         const siegeInput = deploymentSection.querySelector('#deploy-siege');
 
-        // Enable/disable deployment section based on search status
-        if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
+        // Enable/disable deployment section based on search status and active battle
+        if (activeBattle.startTime > 0n) {
+            deploymentSection.style.display = 'none';
+            deployButton.disabled = true;
+        } else if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
             deploymentSection.style.display = 'block';
             deployButton.disabled = false;
         } else {
@@ -102,14 +151,14 @@ export class CommandCenterPage extends BasePage {
         }
 
         // Set max values for inputs and update display
-        infantryInput.max = infantryCount;
-        cavalryInput.max = cavalryCount;
-        siegeInput.max = siegeCount;
+        infantryInput.max = Number(infantryCount);
+        cavalryInput.max = Number(cavalryCount);
+        siegeInput.max = Number(siegeCount);
 
         // Update max-troops display spans
-        deploymentSection.querySelector('#max-infantry').textContent = infantryCount;
-        deploymentSection.querySelector('#max-cavalry').textContent = cavalryCount;
-        deploymentSection.querySelector('#max-siege').textContent = siegeCount;
+        deploymentSection.querySelector('#max-infantry').textContent = infantryCount.toString();
+        deploymentSection.querySelector('#max-cavalry').textContent = cavalryCount.toString();
+        deploymentSection.querySelector('#max-siege').textContent = siegeCount.toString();
     }
 
     render() {
@@ -150,10 +199,14 @@ export class CommandCenterPage extends BasePage {
                 </div>
 
                 <div class="page-section opponent-status-section">
-                    <h2>Opponent Status</h2>
+                    <h2>Battle Status</h2>
                     <div class="status-display">
                         <div class="status-text">No Active Search</div>
                         <div class="status-details">Visit the Scout Guild to search for opponents</div>
+                        <div class="battle-timer" style="display: none;"></div>
+                        <button class="btn btn-primary resolve-battle-btn" style="display: none;">
+                            Resolve Battle
+                        </button>
                     </div>
                 </div>
 
@@ -186,6 +239,7 @@ export class CommandCenterPage extends BasePage {
 
     setupEventListeners() {
         const deployButton = this.element.querySelector('.deploy-troops-btn');
+        const resolveBattleBtn = this.element.querySelector('.resolve-battle-btn');
         const infantryInput = this.element.querySelector('#deploy-infantry');
         const cavalryInput = this.element.querySelector('#deploy-cavalry');
         const siegeInput = this.element.querySelector('#deploy-siege');
@@ -215,6 +269,20 @@ export class CommandCenterPage extends BasePage {
             }
         });
 
+        resolveBattleBtn.addEventListener('click', async () => {
+            try {
+                const signer = await this.contracts.gameState.getSigner();
+                const address = await signer.getAddress();
+                
+                await this.contracts.battleSystem.resolveBattle(address);
+                this.modal.success('Battle resolved successfully!');
+                await this.loadCommandCenterData();
+            } catch (error) {
+                Logger.error('Error resolving battle:', error);
+                this.modal.error('Failed to resolve battle: ' + error.message);
+            }
+        });
+
         // Add input validation
         [infantryInput, cavalryInput, siegeInput].forEach(input => {
             input.addEventListener('input', () => {
@@ -236,6 +304,9 @@ export class CommandCenterPage extends BasePage {
     }
 
     unmount() {
+        if (this.battleTimerInterval) {
+            clearInterval(this.battleTimerInterval);
+        }
         this.element.remove();
     }
 } 
