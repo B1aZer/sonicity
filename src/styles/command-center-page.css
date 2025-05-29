@@ -171,3 +171,61 @@
     opacity: 0.7;
     cursor: not-allowed;
 }
+
+.battle-history-section {
+    background: var(--bg-light);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.battle-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.battle-history-item {
+    background: var(--bg-dark-secondary);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.battle-history-item.victory {
+    border-left: 4px solid var(--success-color);
+}
+
+.battle-history-item.defeat {
+    border-left: 4px solid var(--error-color);
+}
+
+.battle-date {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-bottom: 0.5rem;
+}
+
+.battle-result {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.battle-details {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.battle-details > div {
+    margin: 0.25rem 0;
+}
+
+.no-history {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+    background: var(--bg-dark-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}

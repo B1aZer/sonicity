@@ -72,6 +72,9 @@ export class CommandCenterPage extends BasePage {
             if (activeBattle.startTime > 0n) {
                 await this.startBattleTimer(Number(activeBattle.startTime), Number(battleDuration));
             }
+
+            // Load battle history
+            await this.loadBattleHistory();
         } catch (error) {
             Logger.error('Error loading command center data:', error);
             this.modal.error('Failed to load command center data: ' + error.message);
@@ -242,8 +245,58 @@ export class CommandCenterPage extends BasePage {
                         </button>
                     </div>
                 </div>
+
+                <div class="page-section battle-history-section">
+                    <h2>Battle History</h2>
+                    <div class="battle-history-list">
+                        <!-- Battle history items will be added here -->
+                    </div>
+                </div>
             </div>
         `;
+    }
+
+    async loadBattleHistory() {
+        try {
+            const address = await this.contracts.battleSystem.getAddress();
+            const battleHistory = await this.contracts.battleSystem.getPlayerBattleHistory(address);
+            
+            const historyList = this.element.querySelector('.battle-history-list');
+            historyList.innerHTML = '';
+
+            if (battleHistory.length === 0) {
+                historyList.innerHTML = '<div class="no-history">No battles fought yet</div>';
+                return;
+            }
+
+            // Sort battles by timestamp in descending order (newest first)
+            battleHistory.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+
+            battleHistory.forEach(battle => {
+                const battleDate = new Date(Number(battle.timestamp) * 1000);
+                const isAttacker = battle.attacker.toLowerCase() === address.toLowerCase();
+                const won = isAttacker ? battle.attackerWon : !battle.attackerWon;
+                
+                const battleItem = document.createElement('div');
+                battleItem.className = `battle-history-item ${won ? 'victory' : 'defeat'}`;
+                battleItem.innerHTML = `
+                    <div class="battle-date">${battleDate.toLocaleString()}</div>
+                    <div class="battle-result">
+                        ${won ? 'Victory' : 'Defeat'} against ${isAttacker ? battle.defender : battle.attacker}
+                    </div>
+                    <div class="battle-details">
+                        <div>Power: ${battle.attackerPower} vs ${battle.defenderPower}</div>
+                        ${battle.treasuryBurned > 0 ? `<div>Gold Stolen: ${battle.treasuryBurned}</div>` : ''}
+                        ${battle.repPoints > 0 ? `<div>REP Earned: ${battle.repPoints}</div>` : ''}
+                        ${battle.gridBuildingsDamaged > 0 ? `<div>Grid Buildings Damaged: ${battle.gridBuildingsDamaged}</div>` : ''}
+                        ${battle.districtBuildingsDamaged > 0 ? `<div>District Buildings Damaged: ${battle.districtBuildingsDamaged}</div>` : ''}
+                    </div>
+                `;
+                historyList.appendChild(battleItem);
+            });
+        } catch (error) {
+            Logger.error('Error loading battle history:', error);
+        }
     }
 
     setupEventListeners() {
@@ -284,7 +337,20 @@ export class CommandCenterPage extends BasePage {
                 const address = await signer.getAddress();
                 
                 await this.contracts.battleSystem.resolveBattle(address);
-                this.modal.success('Battle resolved successfully!');
+                
+                // Get the battle result
+                const battleHistory = await this.contracts.battleSystem.getBattleHistory(address);
+                const lastBattle = battleHistory[battleHistory.length - 1];
+                const isAttacker = lastBattle.attacker.toLowerCase() === address.toLowerCase();
+                const won = isAttacker ? lastBattle.attackerWon : !lastBattle.attackerWon;
+                
+                // Show appropriate message
+                if (won) {
+                    this.modal.success(`Victory! You won the battle against ${isAttacker ? lastBattle.defender : lastBattle.attacker}!\n\nGold Stolen: ${lastBattle.goldStolen}\nREP Earned: ${lastBattle.repEarned}`);
+                } else {
+                    this.modal.info(`Defeat! You lost the battle against ${isAttacker ? lastBattle.defender : lastBattle.attacker}.`);
+                }
+                
                 await this.loadCommandCenterData();
             } catch (error) {
                 Logger.error('Error resolving battle:', error);
