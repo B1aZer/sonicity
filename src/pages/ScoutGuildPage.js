@@ -165,8 +165,8 @@ export class ScoutGuildPage extends BasePage {
                 
                 // Check if user already has an active search
                 const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
-                if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
-                    this.modal.info('You must start a new search to find another opponent.', { title: 'New Search Required' });
+                if (searchStatus.active && !searchStatus.completed) {
+                    this.modal.info('Your scouts are still searching. Please wait for them to return.', { title: 'Search In Progress' });
                     return;
                 }
                 
