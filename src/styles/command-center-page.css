@@ -85,9 +85,88 @@
     margin-bottom: var(--spacing-xl);
 }
 
-.command-center-page .troops-section {
+.command-center-page .status-section,
+.command-center-page .troops-section,
+.command-center-page .opponent-status-section,
+.command-center-page .troop-deployment-section {
     background: var(--bg-light);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     border: 1px solid var(--bg-lighter);
+}
+
+/* Opponent Status Section */
+.command-center-page .opponent-status-section .status-display {
+    background: var(--bg-dark-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    text-align: center;
+    margin-top: var(--spacing-md);
+    border: 1px solid var(--border-color);
+}
+
+.command-center-page .status-text {
+    font-size: var(--font-size-lg);
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.command-center-page .status-details {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+/* Troop Deployment Section */
+.command-center-page .troop-deployment-section .deployment-form {
+    background: var(--bg-dark-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+    border: 1px solid var(--border-color);
+}
+
+.command-center-page .troop-input-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    gap: var(--spacing-sm);
+}
+
+.command-center-page .troop-input-group label {
+    min-width: 80px;
+    color: var(--text-primary);
+}
+
+.command-center-page .troop-input-group input {
+    width: 80px;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.command-center-page .troop-input-group input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.command-center-page .max-troops {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.command-center-page .deploy-troops-btn {
+    width: 100%;
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-md);
+    font-size: var(--font-size-md);
+    font-weight: bold;
+}
+
+.command-center-page .deploy-troops-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
