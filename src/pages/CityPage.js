@@ -298,15 +298,15 @@ export class CityPage extends BasePage {
             const [buildingTypes, configs] = await this.contracts.districtBuildings.getAllDistrictBuildingConfigs();
             Logger.info('Received building types:', buildingTypes);
             
-            // Find the building config by numeric type
-            const buildingIndex = buildingTypes.findIndex(type => Number(type) === Number(buildingType));
+            // Find the building config by name
+            const buildingIndex = configs.findIndex(config => config.name === buildingType);
             if (buildingIndex === -1) {
                 Logger.error('Building type not found in configs:', buildingType);
                 this.modal.error('Invalid building type');
                 return;
             }
             const config = configs[buildingIndex];
-            Logger.info(`Building config found: ${config.name} (Type: ${buildingType})`);
+            Logger.info(`Building config found: ${config.name} (Type: ${buildingTypes[buildingIndex]})`);
 
             // Check if building is unlocked
             Logger.info('Checking if building is unlocked...');
