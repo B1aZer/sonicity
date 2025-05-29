@@ -104,6 +104,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     mapping(uint256 => BattleRecord) public battleHistory;
     uint256 private nextBattleId;
 
+    // Mapping to track which battles a player was involved in
+    mapping(address => uint256[]) private playerBattles;
+
     // Events
     event BattleStarted(address indexed attacker, address indexed defender, uint256 startTime);
     event BattleResolved(
@@ -333,6 +336,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             districtBuildingsDamaged: battle.districtBuildingsDamaged,
             repPoints: battle.repPoints
         });
+
+        // Add battle to both players' history
+        playerBattles[battle.attacker].push(currentBattleId);
+        playerBattles[battle.defender].push(currentBattleId);
 
         // Update last battle time for both players
         lastBattleTime[battle.attacker] = block.timestamp;
@@ -782,6 +789,31 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function getBattleRecord(uint256 battleId) external view returns (BattleRecord memory) {
         return battleHistory[battleId];
+    }
+
+    /**
+     * @dev Get battle records for a specific player
+     * @param player The address of the player
+     * @return BattleRecord[] Array of battle records where the player was involved
+     */
+    function getPlayerBattleHistory(address player) external view returns (BattleRecord[] memory) {
+        uint256[] storage battleIds = playerBattles[player];
+        BattleRecord[] memory records = new BattleRecord[](battleIds.length);
+        
+        for (uint256 i = 0; i < battleIds.length; i++) {
+            records[i] = battleHistory[battleIds[i]];
+        }
+        
+        return records;
+    }
+
+    /**
+     * @dev Get the number of battles a player has been involved in
+     * @param player The address of the player
+     * @return uint256 Number of battles
+     */
+    function getPlayerBattleCount(address player) external view returns (uint256) {
+        return playerBattles[player].length;
     }
 
     // Admin functions
