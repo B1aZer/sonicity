@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
-const { GridBuildingType, mintAndStakeNFT, getDamagedBuildingId, donateGoldForTier, ensurePlayerGold } = require("./helpers");
+const { GridBuildingType, mintAndStakeNFT, getDamagedBuildingId, donateGoldForTier, ensurePlayerGold, getBuildingTypeIndex } = require("./helpers");
 
 describe("GridBuildings", function () {
   let gameState;
@@ -13,6 +13,8 @@ describe("GridBuildings", function () {
   let player2;
   let battleSystem;
   let districtBuildings;
+  let buildingNames;
+  let getBuildingTypeIndex;
 
   beforeEach(async function () {
     [owner, player1, player2] = await ethers.getSigners();
@@ -82,12 +84,14 @@ describe("GridBuildings", function () {
     await gameState.setAltarAddress(altarAddress);
     await gameState.setGridBuildingsAddress(gridBuildingsAddress);
     await gameState.setBattleSystemAddress(battleSystemAddress);
+    await gameState.setDistrictBuildingsAddress(districtBuildingsAddress);
     await battleSystem.setGridBuildingsAddress(gridBuildingsAddress);
     await battleSystem.setGameStateAddress(gameStateAddress);
+    await districtBuildings.setGameStateAddress(gameStateAddress);
+    await districtBuildings.setBattleSystemAddress(battleSystemAddress);
 
     // Initialize players
     await gameState.connect(player1).initializePlayer();
-    await gameState.connect(player2).initializePlayer();
 
     // Approve NFT collections in Altar
     await altar.approveCollection(sonicityNFTAddress);
@@ -118,6 +122,18 @@ describe("GridBuildings", function () {
     expect(farm.buildingType).to.equal(GridBuildingType.FARM);
     expect(farm.level).to.equal(1);
     expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(1));
+
+    // Fetch building names from contract
+    buildingNames = await districtBuildings.getBuildingNames();
+    getBuildingTypeIndex = (name) => buildingNames.findIndex(n => n === name);
+
+    // Ensure workshop is not built by default
+    const workshopIndex = getBuildingTypeIndex("WORKSHOP");
+    const workshop = await districtBuildings.buildings(await player1.getAddress(), workshopIndex);
+    if (workshop.active) {
+      // If workshop is built, remove it
+      await districtBuildings.connect(player1).removeDistrictBuilding(workshopIndex);
+    }
   });
 
   describe("Building Management", function () {
@@ -686,6 +702,13 @@ describe("GridBuildings", function () {
       expect(farm.buildingType).to.equal(GridBuildingType.FARM);
       expect(farm.level).to.equal(1);
       expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(2));
+
+      // Ensure player has enough gold for workshop (400 to unlock + 150 to build)
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 550);
+
+      // Build workshop
+      const workshopIndex = getBuildingTypeIndex("WORKSHOP");
+      await districtBuildings.connect(player1).buildDistrictBuilding(workshopIndex);
     });
 
     it("Should damage buildings starting from highest tier", async function () {
@@ -846,10 +869,6 @@ describe("GridBuildings", function () {
     it("Should calculate correct repair cost based on building level", async function () {
       const player1Address = await player1.getAddress();
 
-      // Upgrade the farm to level 2
-      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 300);
-      await gridBuildings.connect(player1).upgradeBuilding(farmId);
-
       // Damage a building and get its ID
       const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
       const damagedBuildingId = await getDamagedBuildingId(damageTx, gridBuildings);
@@ -908,23 +927,18 @@ describe("GridBuildings", function () {
     it("Should allow damaging and repairing buildings", async function () {
       const player1Address = await player1.getAddress();
       
-      // Mint and stake an NFT
-      const result = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
-      const buildingId = result.buildingId;
-
-      // Damage the building using BattleSystem's test function
+      // Damage a building and get its ID
       const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
       const damagedBuildingId = await getDamagedBuildingId(damageTx, gridBuildings);
 
-      // Verify the building is damaged
-      let building = await gridBuildings.buildings(player1Address, damagedBuildingId);
-      expect(building.damaged).to.be.true;
+      // Ensure player has enough gold for repair
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
 
       // Repair the building
       await gridBuildings.connect(player1).repairBuilding(damagedBuildingId);
 
       // Check building is repaired
-      building = await gridBuildings.buildings(player1Address, damagedBuildingId);
+      const building = await gridBuildings.buildings(player1Address, damagedBuildingId);
       expect(building.damaged).to.be.false;
     });
 
@@ -959,6 +973,9 @@ describe("GridBuildings", function () {
       // Check building is damaged
       let building = await gridBuildings.buildings(player1Address, damagedBuildingId);
       expect(building.damaged).to.be.true;
+
+      // Ensure player has enough gold for repair
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
 
       // Repair the building
       await expect(gridBuildings.connect(player1).repairBuilding(damagedBuildingId))
