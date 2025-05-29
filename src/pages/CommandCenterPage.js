@@ -70,7 +70,7 @@ export class CommandCenterPage extends BasePage {
 
             // Start battle timer if there's an active battle
             if (activeBattle.startTime > 0n) {
-                this.startBattleTimer(Number(activeBattle.startTime), Number(battleDuration));
+                await this.startBattleTimer(Number(activeBattle.startTime), Number(battleDuration));
             }
         } catch (error) {
             Logger.error('Error loading command center data:', error);
@@ -104,31 +104,40 @@ export class CommandCenterPage extends BasePage {
         }
     }
 
-    startBattleTimer(battleStartTime, battleDuration) {
+    async startBattleTimer(battleStartTime, battleDuration) {
         const battleTimer = this.element.querySelector('.battle-timer');
         const resolveBattleBtn = this.element.querySelector('.resolve-battle-btn');
         
-        const updateTimer = () => {
-            const now = Math.floor(Date.now() / 1000);
-            const battleEndTime = battleStartTime + battleDuration;
-            const timeLeft = battleEndTime - now;
+        const updateTimer = async () => {
+            try {
+                // Get current block timestamp
+                const block = await this.contracts.battleSystem.provider.getBlock("latest");
+                const now = block.timestamp;
+                
+                // Calculate time remaining
+                const startTime = Number(battleStartTime);
+                const duration = Number(battleDuration);
+                const timeLeft = (startTime + duration) - now;
 
-            if (timeLeft <= 0) {
-                battleTimer.textContent = 'Battle can be resolved!';
-                battleTimer.style.display = 'none';
-                resolveBattleBtn.style.display = 'block';
-                return;
+                if (timeLeft <= 0) {
+                    battleTimer.textContent = 'Battle can be resolved!';
+                    battleTimer.style.display = 'none';
+                    resolveBattleBtn.style.display = 'inline-flex';
+                    return;
+                }
+
+                const hours = Math.floor(timeLeft / 3600);
+                const minutes = Math.floor((timeLeft % 3600) / 60);
+                const seconds = timeLeft % 60;
+                battleTimer.textContent = `Time until battle resolution: ${hours}h ${minutes}m ${seconds}s`;
+            } catch (error) {
+                Logger.error('Error updating battle timer:', error);
             }
-
-            const hours = Math.floor(timeLeft / 3600);
-            const minutes = Math.floor((timeLeft % 3600) / 60);
-            const seconds = timeLeft % 60;
-            battleTimer.textContent = `Time until battle resolution: ${hours}h ${minutes}m ${seconds}s`;
         };
 
         // Update immediately and then every second
-        updateTimer();
-        this.battleTimerInterval = setInterval(updateTimer, 1000);
+        await updateTimer();
+        this.battleTimerInterval = setInterval(updateTimer, 5000);
     }
 
     updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount, activeBattle) {

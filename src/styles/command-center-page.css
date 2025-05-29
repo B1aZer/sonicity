@@ -115,6 +115,7 @@
 .command-center-page .status-details {
     color: var(--text-muted);
     font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-md);
 }
 
 /* Troop Deployment Section */
