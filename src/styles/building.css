@@ -11,26 +11,24 @@
     padding: 0;
 }
 
+.buildings-grid-rows .building-card {
+    display: flex;
+    align-items: center;
+    padding: 18px 20px;
+    gap: 18px;
+    border: 1px solid var(--color-secondary);
+    background: radial-gradient(circle at center, var(--bg-dark-secondary), var(--bg-dark));
+    position: relative;
+}
+
 .building-card {
     background: var(--bg-light);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: var(--spacing-md);
     border: 1px solid var(--bg-lighter);
     transition: transform var(--transition-normal);
     position: relative;
     overflow: hidden;
-}
-
-.building-card:hover {
-    transform: translateY(-5px);
-}
-
-.building-card h3 {
-    margin-bottom: var(--spacing-sm);
-    color: var(--color-primary);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
 }
 
 .building-card p {
@@ -147,6 +145,11 @@
 @media (max-width: 768px) {
     .buildings-grid {
         grid-template-columns: 1fr;
+    }
+
+    .buildings-grid-rows .building-card {
+        flex-direction: column;
+        text-align: center;
     }
 
     .building-details {
