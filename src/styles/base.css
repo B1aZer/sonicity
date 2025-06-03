@@ -15,14 +15,14 @@
     
     /* Background Colors */
     --bg-dark: #1a1a1a;
-    --bg-dark-secondary: #232323;
+    --bg-dark-secondary: #2C2C2C;
     --bg-darker: #151515;
-    --bg-light: rgba(255, 255, 255, 0.1);
-    --bg-lighter: rgba(255, 255, 255, 0.2);
+    --bg-light: #F4E7D4;
+    --bg-lighter: #faf8f4;
     
     /* Text Colors */
     --text-primary: #FFF6E0;       /* Light parchment */
-    --text-secondary: rgba(255, 246, 224, 0.8);
+    --text-secondary: #C9A44C;
     --text-muted: rgba(255, 246, 224, 0.6);
 
     /* font family */
@@ -79,7 +79,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: var(--font-family);
-    background-color: var(--bg-dark);
+    background-color: var(--bg-dark-secondary);
     color: var(--text-primary);
     line-height: 1.5;
 }
@@ -94,7 +94,7 @@ body {
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
     margin: 0;
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-family: var(--font-family-headers);
 }
 
