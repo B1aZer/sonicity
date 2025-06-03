@@ -1,12 +1,12 @@
 import { BasePage } from './BasePage.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
-import '../styles/barracks-page.css';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 
 export class BarracksPage extends BasePage {
     constructor() {
         super();
+        import('../styles/barracks-page.css');
         Logger.info('BarracksPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'base-page barracks-page';
@@ -148,7 +148,7 @@ export class BarracksPage extends BasePage {
                         ${Object.entries(BattleSystemContract.TROOP_DEFINITIONS).map(([type, troop]) => {
                             const config = this.troopConfigs[type] || { goldCost: 0, foodCost: 0 };
                             return `
-                                <div class="troop-card">
+                                <div class="building-card">
                                     <div class="troop-image">
                                         <img src="${troop.image}" alt="${troop.name}" />
                                     </div>

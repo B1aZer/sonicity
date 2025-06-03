@@ -91,10 +91,6 @@ class App {
                 this.currentPage = new StartPage();
                 this.currentPage.mount(this.layout.content);
                 break;
-            case 'dashboard':
-                this.currentPage = new DashboardPage();
-                this.currentPage.mount(this.layout.content);
-                break;
             case 'overview':
                 this.currentPage = new GamePage();
                 this.currentPage.mount(this.layout.content);
