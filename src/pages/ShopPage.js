@@ -28,7 +28,7 @@ export class ShopPage extends BasePage {
                 </div>
                 <div class="page-section shop-items-section">
                     <h2>Available Items</h2>
-                    <div class="buildings-grid">
+                    <div class="buildings-grid-rows">
                         ${SHOP_ITEMS.map(item => `
                             <div class="shop-item-card">
                                 <div class="shop-item-image">

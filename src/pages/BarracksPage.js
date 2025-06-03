@@ -144,7 +144,7 @@ export class BarracksPage extends BasePage {
 
                 <div class="page-section troops-section">
                     <h2>Available Troops</h2>
-                    <div class="buildings-grid">
+                    <div class="buildings-grid-rows">
                         ${Object.entries(BattleSystemContract.TROOP_DEFINITIONS).map(([type, troop]) => {
                             const config = this.troopConfigs[type] || { goldCost: 0, foodCost: 0 };
                             return `

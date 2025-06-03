@@ -4,6 +4,13 @@
     gap: var(--spacing-md);
 }
 
+.buildings-grid-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 0;
+}
+
 .building-card {
     background: var(--bg-light);
     border-radius: var(--radius-md);
