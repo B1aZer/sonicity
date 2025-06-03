@@ -11,7 +11,7 @@
 }
 
 .nav-content {
-    max-width: var(--container-max-width);
+    max-width: calc(var(--container-max-width) - 2 * var(--spacing-xl));
     margin: 0 auto;
     display: flex;
     justify-content: space-between;

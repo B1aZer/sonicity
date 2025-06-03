@@ -53,20 +53,6 @@
   position: relative;
 }
 
-.shop-item-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url('/images/textures/parchment-texture.png');
-  background-repeat: repeat;
-  opacity: 0.20;
-  border-radius: var(--radius-lg);
-  pointer-events: none;
-}
-
 .shop-item-image {
   width: 64px;
   height: 64px;
