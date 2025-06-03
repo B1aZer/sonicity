@@ -64,6 +64,15 @@
     margin-bottom: var(--spacing-xl);
     padding: var(--spacing-lg);
     background: radial-gradient(circle at center, var(--bg-dark-secondary), var(--bg-dark));
+    /* 
+    background:
+    linear-gradient(to bottom, rgba(0, 0, 0, 1) 1rem, rgba(255, 255, 255, 0.01) 10rem, transparent 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 1) 1rem, rgba(255, 255, 255, 0.01) 8rem, transparent 100%),
+    linear-gradient(to right, rgba(0, 0, 0, 1) 1rem, rgba(255, 255, 255, 0.01) 8rem, transparent 100%),
+    linear-gradient(to left, rgba(0, 0, 0, 1) 1rem, rgba(255, 255, 255, 0.01) 8rem, transparent 100%);
+    background-repeat: no-repeat;
+    background-position: top, bottom, left, right;
+    */
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
 }
