@@ -89,6 +89,10 @@ npx hardhat run scripts/approveCollection.js --network localhost
 
 - https://www.youtube.com/watch?v=Ol3pexLM6_k&list=PLtzt35QOXmkJ9unmoeA5gXHcscQHJVQpW&index=10
 
+## music
+
+https://www.fab.com/listings/29645efb-1b5a-467a-82eb-3321df823e58
+
 ## Models
 
 - https://www.fab.com/listings/c4c8a84a-6c63-4cf0-9e44-fb99a4c5b367
