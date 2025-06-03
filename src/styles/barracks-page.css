@@ -56,7 +56,6 @@
     font-size: var(--font-size-md);
     color: var(--text-primary);
     margin: 0;
-    font-family: var(--font-family);
 }
 
 .troop-count {

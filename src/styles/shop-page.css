@@ -18,7 +18,6 @@
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.12);
   padding: 0 0 24px 0;
-  font-family: var(--font-family);
 }
 
 .shop-header {
@@ -30,7 +29,6 @@
   font-size: var(--font-size-2xl);
   letter-spacing: 2px;
   margin: 0;
-  font-family: var(--font-family);
 }
 
 .shop-items-container {
@@ -52,6 +50,21 @@
   padding: 18px 20px;
   gap: 18px;
   border: 1.5px solid var(--bg-lighter);
+  position: relative;
+}
+
+.shop-item-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url('/images/textures/parchment-texture.png');
+  background-repeat: repeat;
+  opacity: 0.20;
+  border-radius: var(--radius-lg);
+  pointer-events: none;
 }
 
 .shop-item-image {
@@ -84,7 +97,6 @@
   font-size: var(--font-size-md);
   color: var(--text-primary);
   margin: 0;
-  font-family: var(--font-family);
 }
 
 .shop-item-cost {

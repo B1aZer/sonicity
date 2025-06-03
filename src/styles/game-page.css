@@ -43,8 +43,7 @@
     padding: 15px;
     border-radius: 8px;
     z-index: 10;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
+    font-size: var(--font-size-sm);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 
@@ -79,7 +78,6 @@
     padding: 8px 12px;
     border-radius: 4px;
     cursor: pointer;
-    font-family: Arial, sans-serif;
     font-size: 13px;
     transition: background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
