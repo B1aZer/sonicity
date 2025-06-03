@@ -1,3 +1,30 @@
+/* Buttons */
+/*
+button {
+    background-color: var(--color-primary);
+    color: var(--text-primary);
+    border: var(--border-gold);
+    padding: 8px 16px;
+    font-family: var(--font-family);
+    font-weight: bold;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+button:hover {
+    background-color: var(--color-secondary);
+    color: var(--bg-darker);
+}
+
+button:disabled {
+    background-color: var(--bg-dark-secondary);
+    border-color: var(--text-muted);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+*/
+
 /* Base Button Styles */
 .btn {
     display: inline-flex;

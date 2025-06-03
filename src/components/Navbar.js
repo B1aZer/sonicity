@@ -13,7 +13,7 @@ export class Navbar {
     render() {
         this.element.innerHTML = `
             <div class="nav-content">
-                <div class="nav-brand" id="logo">Sonicity</div>
+                <div class="nav-brand" id="logo">SoniCity</div>
                 <div class="nav-container">
                     <div class="nav-links">
                         <a href="/overview" class="nav-link" data-page="overview">Overview</a>

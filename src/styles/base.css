@@ -5,8 +5,8 @@
     /* Colors */
     --color-primary: #4CAF50;
     --color-primary-dark: #45a049;
-    --color-secondary: #2196F3;
-    --color-secondary-dark: #1976D2;
+    --color-secondary: #C9A44C;
+    --color-secondary-dark: #B08C3A;
     --color-accent: #FFD700;
     --color-danger: #dc3545;
     --color-warning: #ffc107;
@@ -19,13 +19,14 @@
     --bg-lighter: rgba(255, 255, 255, 0.2);
     
     /* Text Colors */
-    --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.8);
-    --text-muted: rgba(255, 255, 255, 0.6);
+    --text-primary: #FFF6E0;       /* Light parchment */
+    --text-secondary: rgba(255, 246, 224, 0.8);
+    --text-muted: rgba(255, 246, 224, 0.6);
 
     /* font family */
     --font-family: 'Roboto', sans-serif;
     --font-family-navbar: monospace;
+    --font-family-header: 'Cinzel', serif;
     --font-family-headers: 'MedievalSharp', cursive;
     
     /* Font Sizes */
@@ -98,7 +99,7 @@ h1, h2, h3, h4, h5, h6 {
 h1 {
     font-size: 2.5rem;
     margin-bottom: var(--spacing-lg);
-    font-family: 'Cinzel', serif;
+    font-family: var(--font-family-header);
 }
 
 h2 {
