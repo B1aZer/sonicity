@@ -30,7 +30,7 @@ export class ShopPage extends BasePage {
                     <h2>Available Items</h2>
                     <div class="buildings-grid-rows">
                         ${SHOP_ITEMS.map(item => `
-                            <div class="shop-item-card">
+                            <div class="building-card">
                                 <div class="shop-item-image">
                                     <img src="${item.image.replace('emergency_help', 'help').replace('production_boost', 'boost').replace('cosmetic_item', 'cosmetic')}" alt="${item.name}" />
                                 </div>

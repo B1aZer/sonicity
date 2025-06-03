@@ -125,7 +125,7 @@ export class BarracksPage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="page-container barracks-container">
+            <div class="page-container">
                 <h1 class="page-title">Barracks</h1>
                 
                 <div class="page-section status-section">
