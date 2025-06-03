@@ -18,6 +18,9 @@
     box-shadow: var(--shadow-lg);
     border: 2px solid var(--color-border);
     margin-bottom: var(--spacing-xl);
+    background-image: url('/images/textures/parchment-texture.png'), linear-gradient(var(--bg-light), var(--bg-dark)); 
+    background-repeat: repeat;
+    background-blend-mode: soft-light;
 }
 
 /* Container width utilities */
