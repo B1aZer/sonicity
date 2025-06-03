@@ -4,12 +4,14 @@
 :root {
     /* Colors */
     --color-primary: #4CAF50;
-    --color-primary-dark: #45a049;
+    --color-primary-dark: #184819;
     --color-secondary: #C9A44C;
-    --color-secondary-dark: #B08C3A;
+    --color-secondary-dark: #685323;
     --color-accent: #FFD700;
     --color-danger: #dc3545;
     --color-warning: #ffc107;
+    --color-border: #EED9A2;
+    --color-border-dark: rgba(103, 99, 90, 0.6);
     
     /* Background Colors */
     --bg-dark: #1a1a1a;
