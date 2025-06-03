@@ -17,9 +17,8 @@
     justify-content: space-between;
     align-items: center;
     padding: var(--spacing-md);
-    background: var(--bg-light);
     border-radius: var(--radius-md);
-    border: 1px solid var(--bg-lighter);
+    border: 1px solid var(--color-secondary);
 }
 
 .status-label {

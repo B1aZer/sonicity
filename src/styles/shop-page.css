@@ -35,7 +35,6 @@
   max-width: 540px;
   margin: 0 auto;
   width: 100%;
-  background: var(--bg-light);
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   display: flex;
@@ -74,7 +73,6 @@
 
 .shop-item-title-row h3 {
   font-size: var(--font-size-md);
-  color: var(--text-primary);
   margin: 0;
 }
 
