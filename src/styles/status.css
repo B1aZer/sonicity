@@ -3,7 +3,6 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-md);
-    background: radial-gradient(circle at center, var(--bg-dark-secondary), var(--bg-dark));
 }
 
 /*
@@ -22,6 +21,7 @@
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     border: 1px solid var(--color-secondary);
+    background: radial-gradient(circle at center, var(--bg-dark-secondary), var(--bg-dark));
 }
 
 .status-label {
