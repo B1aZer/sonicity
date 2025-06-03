@@ -17,7 +17,7 @@ export class ShopPage extends BasePage {
         this.element.innerHTML = `
             <div class="page-container shop-container">
                 <h1 class="page-title">Shop</h1>
-                <div class="page-section status-section">
+                <div class="page-section">
                     <h2>Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
