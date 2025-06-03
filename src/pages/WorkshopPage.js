@@ -1,5 +1,4 @@
 import { BasePage } from './BasePage.js';
-import '../styles/building.css';
 
 export class WorkshopPage extends BasePage {
     constructor() {

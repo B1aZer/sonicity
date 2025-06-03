@@ -145,19 +145,6 @@
   margin-bottom: 4px;
 }
 
-.shop-item-action-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-/* Using the reusable button system */
-.buy-btn {
-  composes: btn btn-primary from './buttons.css';
-  width: 100%;
-}
-
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .shop-container {

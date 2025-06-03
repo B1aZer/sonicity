@@ -3,8 +3,6 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { SCOUT_GUILD_MESSAGES } from '../js/utils/constants.js';
 import '../styles/scout-guild-page.css';
-import '../styles/building.css';
-import '../styles/buttons.css';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 
 export class ScoutGuildPage extends BasePage {

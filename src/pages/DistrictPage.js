@@ -5,8 +5,6 @@ import { Modal } from '../js/utils/modal.js';
 import { BasePage } from './BasePage.js';
 
 import '../styles/district-page.css';
-import '../styles/building.css';
-
 export class DistrictPage extends BasePage {
     constructor() {
         super();

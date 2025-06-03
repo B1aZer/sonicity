@@ -5,7 +5,6 @@ import { Modal } from '../js/utils/modal.js';
 import { BasePage } from './BasePage.js';
 
 import '../styles/city-page.css';
-import '../styles/building.css';
 
 export class CityPage extends BasePage {
     constructor() {

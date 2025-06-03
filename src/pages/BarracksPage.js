@@ -2,8 +2,6 @@ import { BasePage } from './BasePage.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import '../styles/barracks-page.css';
-import '../styles/building.css';
-import '../styles/buttons.css';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 
 export class BarracksPage extends BasePage {

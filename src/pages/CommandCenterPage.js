@@ -2,8 +2,6 @@ import { BasePage } from './BasePage.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import '../styles/command-center-page.css';
-import '../styles/building.css';
-import '../styles/buttons.css';
 
 export class CommandCenterPage extends BasePage {
     constructor() {

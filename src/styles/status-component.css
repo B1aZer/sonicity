@@ -1,5 +1,3 @@
-@import './base.css';
-
 .status-component {
     margin: var(--spacing-md) 0;
     padding: var(--spacing-md);

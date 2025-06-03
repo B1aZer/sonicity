@@ -3,8 +3,6 @@ import { SHOP_ITEMS } from '../js/utils/constants.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import '../styles/shop-page.css';
-import '../styles/building.css';
-import '../styles/buttons.css';
 
 export class ShopPage extends BasePage {
     constructor() {
