@@ -53,7 +53,6 @@ button:disabled {
 .btn-primary:hover:not(:disabled) {
     background: var(--color-secondary);
     /* transform: translateY(-2px); */
-    box-shadow: var(--shadow-md);
     color: var(--color-primary-dark);
 }
 
@@ -65,7 +64,6 @@ button:disabled {
 .btn-secondary:hover:not(:disabled) {
     background: var(--color-secondary-dark);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
 }
 
 .btn-outline {
@@ -77,7 +75,6 @@ button:disabled {
 .btn-outline:hover:not(:disabled) {
     background: var(--bg-light);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
 }
 
 .btn-danger {
@@ -88,7 +85,6 @@ button:disabled {
 .btn-danger:hover:not(:disabled) {
     background: #c82333;
     transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
 }
 
 /* Button Sizes */
