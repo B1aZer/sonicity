@@ -13,10 +13,10 @@
 
 .page-container {
     padding: var(--spacing-xl);
-    background-color: var(--color-secondary-dark);
+    background-color: var(--bg-dark);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-lg);
-    border: 1px solid var(--color-border);
+    border: 2px solid var(--color-border);
     margin-bottom: var(--spacing-xl);
 }
 
@@ -62,7 +62,7 @@
     padding: var(--spacing-lg);
     background-color: var(--bg-dark-secondary);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--bg-lighter);
+    border: 1px solid var(--color-border);
 }
 
 .page-section h2 {
