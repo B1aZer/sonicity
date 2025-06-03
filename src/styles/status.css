@@ -3,6 +3,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-md);
+    background: radial-gradient(circle at center, var(--bg-dark-secondary), var(--bg-dark));
 }
 
 /*

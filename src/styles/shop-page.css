@@ -6,6 +6,7 @@
   padding: 18px 20px;
   gap: 18px;
   border: 1px solid var(--color-secondary);
+  background: radial-gradient(circle at center, var(--bg-dark-secondary), var(--bg-dark));
 }
 
 .shop-item-image {
