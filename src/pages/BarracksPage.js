@@ -155,7 +155,6 @@ export class BarracksPage extends BasePage {
                                     <div class="shop-item-info">
                                         <div class="shop-item-title-row">
                                             <h3>${troop.name}</h3>
-                                            <span class="shop-item-count">Trained: <span id="${type.toLowerCase()}-count">0</span></span>
                                         </div>
                                         <div class="shop-item-desc">${troop.description}</div>
                                         <div class="shop-item-cost">
@@ -167,6 +166,10 @@ export class BarracksPage extends BasePage {
                                                 <i class="fas fa-wheat-awn cost-icon"></i>
                                                 <span class="cost-value">${config.foodCost}</span>
                                             </div>
+                                            <span class="shop-item-stock in-stock">
+                                                <i class="fas fa-check-circle"></i>
+                                                <span id="${type.toLowerCase()}-count">0</span> trained 
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="shop-item-action-row">
