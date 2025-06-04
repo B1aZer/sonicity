@@ -173,7 +173,7 @@ export class BarracksPage extends BasePage {
                                         </div>
                                     </div>
                                     <div class="shop-item-action-row">
-                                        <input type="number" id="${type.toLowerCase()}-amount" min="1" value="1" class="amount-input" />
+                                        <input type="number" id="${type.toLowerCase()}-amount" min="1" value="1" class="input" />
                                         <button class="btn btn-primary train-btn" data-troop-type="${type}">
                                             <i class="fas fa-shield-halved"></i>
                                             Train
