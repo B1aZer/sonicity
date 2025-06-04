@@ -17,12 +17,12 @@
 .building-card p {
     color: var(--text-muted);
     margin-bottom: var(--spacing-sm);
-    font-size: var(--font-size-sm);
 }
 
 .building-details {
     padding: var(--spacing-sm);
     margin: var(--spacing-sm) 0;
+    color: var(--text-muted);
 }
 
 .build-cost, .unlock-cost, .upgrade-cost {

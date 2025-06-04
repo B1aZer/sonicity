@@ -9,7 +9,6 @@ import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { appState } from '../js/core/state.js';
-import '../styles/base-page.css';
 
 export class BasePage {
     constructor() {
