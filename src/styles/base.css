@@ -69,6 +69,11 @@
     --radius-md: 8px;
     --radius-lg: 12px;
     --radius-xl: 16px;
+
+    /* Borders */
+    --border-primary: 2px solid var(--color-border);
+    --border-secondary: 1px solid var(--color-border);
+    --border-tertiary: 1px solid var(--color-secondary);
     
     /* Shadows */
     --shadow-sm: 0 2px 4px var(--color-secondary-dark);
@@ -87,6 +92,9 @@
 
     /* Navbar */
     --navbar-height: 68px;
+
+    /* Cards */
+    --card-bg: radial-gradient(circle at center, var(--bg-dark-secondary), var(--bg-dark));
 }
 
 /* Base Styles */

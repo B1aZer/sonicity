@@ -8,12 +8,11 @@ import { Modal } from '../js/utils/modal.js';
 import { StatusComponent } from '../components/StatusComponent.js';
 import { appState } from '../js/core/state.js';
 
-import '../styles/mint-page.css';
-import '../styles/nft-collection.css';
-
 export class MintPage extends BasePage {
     constructor() {
         super();
+        import('../styles/mint-page.css');
+        import('../styles/nft-collection.css');
         Logger.info('MintPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'base-page mint-page';
