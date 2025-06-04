@@ -1,6 +1,4 @@
-import '../styles/grid-building-page.css';
 import { BasePage } from './BasePage.js';
-import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
@@ -8,9 +6,10 @@ import Logger from '../js/utils/logger.js';
 export class HousePage extends BasePage {
     constructor() {
         super();
+        import('../styles/grid-building-page.css');
         Logger.info('HousePage constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'base-page building-page house-page';
+        this.element.className = 'base-page';
         this.modal = new Modal();
         this.render();
     }
@@ -38,6 +37,7 @@ export class HousePage extends BasePage {
             this.loadHouseData().catch(error => {
                 Logger.error('Error loading house data after wallet update:', error);
             });
+            this.setupEventListeners();
         }
     }
 
@@ -161,11 +161,11 @@ export class HousePage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="page-container container-min-width-800">
+            <div class="page-container">
                 <h1>House Management</h1>
                 
                 <!-- Status Section -->
-                <div class="page-section status-section">
+                <div class="page-section">
                     <h2>House Statistics</h2>
                     <div class="status-grid">
                         <div class="status-item">
@@ -180,13 +180,13 @@ export class HousePage extends BasePage {
                 </div>
 
                 <!-- House Details Section -->
-                <div class="page-section house-details-section">
+                <div class="page-section">
                     <h2>House Details</h2>
-                    <div class="building-info">
-                        <div class="info-card">
+                    <div class="buildings-grid">
+                        <div class="building-card">
                             <h3>Production Rate</h3>
                             <p>Current production rate per house</p>
-                            <div class="info-details">
+                            <div class="building-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Base Rate:</span>
                                     <span class="detail-value">Loading...</span>
@@ -197,10 +197,10 @@ export class HousePage extends BasePage {
                                 </div>
                             </div>
                         </div>
-                        <div class="info-card">
+                        <div class="building-card">
                             <h3>Collection Rules</h3>
                             <p>Collect gold from your houses</p>
-                            <div class="info-details">
+                            <div class="building-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Max Collection:</span>
                                     <span class="detail-value">24 hours</span>
@@ -215,10 +215,10 @@ export class HousePage extends BasePage {
                 </div>
 
                 <!-- Actions Section -->
-                <div class="page-section actions-section">
+                <div class="page-section">
                     <h2>Actions</h2>
-                    <div class="actions-container">
-                        <button class="claim-button" disabled>
+                    <div class="building-actions">
+                        <button class="claim-button btn btn-primary btn-lg" disabled>
                             <span class="button-text">Claim Gold</span>
                         </button>
                     </div>
