@@ -6,10 +6,10 @@ import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 export class BarracksPage extends BasePage {
     constructor() {
         super();
-        import('../styles/barracks-page.css');
+        import('../styles/shop-page.css');
         Logger.info('BarracksPage constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'base-page barracks-page';
+        this.element.className = 'base-page';
         this.modal = new Modal();
         this.troopConfigs = {};
         this.render(); // Render the initial UI
@@ -94,7 +94,7 @@ export class BarracksPage extends BasePage {
             this.element.querySelector('#food-amount').textContent = food.toString();
 
             // Update troop card states based on barracks level
-            const troopCards = this.element.querySelectorAll('.troop-card');
+            const troopCards = this.element.querySelectorAll('.shop-item-card');
             troopCards.forEach((card, index) => {
                 const isLocked = Number(barracksLevel) <= index;
                 Logger.info(`Troop card ${index} locked status:`, { isLocked, barracksLevel });
@@ -128,7 +128,7 @@ export class BarracksPage extends BasePage {
             <div class="page-container">
                 <h1 class="page-title">Barracks</h1>
                 
-                <div class="page-section status-section">
+                <div class="page-section">
                     <h2>Resources</h2>
                     <div class="status-grid">
                         <div class="status-item">
@@ -142,23 +142,23 @@ export class BarracksPage extends BasePage {
                     </div>
                 </div>
 
-                <div class="page-section troops-section">
+                <div class="page-section">
                     <h2>Available Troops</h2>
                     <div class="buildings-grid-rows">
                         ${Object.entries(BattleSystemContract.TROOP_DEFINITIONS).map(([type, troop]) => {
                             const config = this.troopConfigs[type] || { goldCost: 0, foodCost: 0 };
                             return `
-                                <div class="building-card">
-                                    <div class="troop-image">
+                                <div class="shop-item-card">
+                                    <div class="shop-item-image">
                                         <img src="${troop.image}" alt="${troop.name}" />
                                     </div>
-                                    <div class="troop-info">
-                                        <div class="troop-title-row">
+                                    <div class="shop-item-info">
+                                        <div class="shop-item-title-row">
                                             <h3>${troop.name}</h3>
-                                            <span class="troop-count">Trained: <span id="${type.toLowerCase()}-count">0</span></span>
+                                            <span class="shop-item-count">Trained: <span id="${type.toLowerCase()}-count">0</span></span>
                                         </div>
-                                        <div class="troop-desc">${troop.description}</div>
-                                        <div class="troop-cost">
+                                        <div class="shop-item-desc">${troop.description}</div>
+                                        <div class="shop-item-cost">
                                             <div class="cost-item">
                                                 <i class="fas fa-coins cost-icon"></i>
                                                 <span class="cost-value">${config.goldCost}</span>
@@ -169,7 +169,7 @@ export class BarracksPage extends BasePage {
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="troop-action-row">
+                                    <div class="shop-item-action-row">
                                         <input type="number" id="${type.toLowerCase()}-amount" min="1" value="1" class="amount-input" />
                                         <button class="btn btn-primary train-btn" data-troop-type="${type}">
                                             <i class="fas fa-shield-halved"></i>
@@ -190,7 +190,7 @@ export class BarracksPage extends BasePage {
         trainButtons.forEach(button => {
             button.addEventListener('click', async () => {
                 const troopType = button.getAttribute('data-troop-type');
-                const troopCard = button.closest('.troop-card');
+                const troopCard = button.closest('.shop-item-card');
                 
                 // Check if troop type is locked
                 if (troopCard.classList.contains('locked')) {

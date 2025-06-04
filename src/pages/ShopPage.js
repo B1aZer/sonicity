@@ -2,11 +2,11 @@ import { BasePage } from './BasePage.js';
 import { SHOP_ITEMS } from '../js/utils/constants.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
-import '../styles/shop-page.css';
 
 export class ShopPage extends BasePage {
     constructor() {
         super();
+        import('../styles/shop-page.css');
         this.element = document.createElement('div');
         this.element.className = 'base-page';
         this.modal = new Modal();
@@ -15,7 +15,7 @@ export class ShopPage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="page-container shop-container">
+            <div class="page-container">
                 <h1 class="page-title">Shop</h1>
                 <div class="page-section">
                     <h2>Status</h2>
@@ -26,11 +26,11 @@ export class ShopPage extends BasePage {
                         </div>
                     </div>
                 </div>
-                <div class="page-section shop-items-section">
+                <div class="page-section">
                     <h2>Available Items</h2>
                     <div class="buildings-grid-rows">
                         ${SHOP_ITEMS.map(item => `
-                            <div class="building-card">
+                            <div class="shop-item-card">
                                 <div class="shop-item-image">
                                     <img src="${item.image.replace('emergency_help', 'help').replace('production_boost', 'boost').replace('cosmetic_item', 'cosmetic')}" alt="${item.name}" />
                                 </div>
