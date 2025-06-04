@@ -1,14 +1,11 @@
 import Logger from '../js/utils/logger.js';
-import { GameStateContract } from '../js/contracts/GameStateContract.js';
-import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import { BasePage } from './BasePage.js';
-
-import '../styles/city-page.css';
 
 export class CityPage extends BasePage {
     constructor() {
         super();
+        import('../styles/city-page.css');
         Logger.info('CityPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'base-page';

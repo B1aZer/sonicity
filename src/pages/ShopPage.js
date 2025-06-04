@@ -13,6 +13,25 @@ export class ShopPage extends BasePage {
         this.render();
     }
 
+    async onInitialized(walletResult) {
+        Logger.info('ShopPage onInitialized called with wallet:', walletResult);
+        try {
+            this.setupBuyHandlers();
+            Logger.info('Shop page initialized successfully');
+        } catch (error) {
+            Logger.error('Error initializing shop page:', error);
+            this.modal.error('Failed to initialize shop page. Please try refreshing the page.');
+        }
+    }
+
+    updateWalletStatus(address) {
+        Logger.info('Updating wallet status with address:', address);
+        if (address) {
+            // Refresh shop data when wallet changes
+            this.render();
+        }
+    }
+
     render() {
         this.element.innerHTML = `
             <div class="page-container">
