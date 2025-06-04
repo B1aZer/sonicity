@@ -174,19 +174,3 @@
         transform: translateY(0);
     }
 }
-
-/* Building Card Lock Overlay */
-.building-card.locked .lock-overlay {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-sm);
-}
-
-.building-card.locked .lock-overlay p {
-    color: var(--text-primary);
-    font-size: var(--font-size-sm);
-    margin: 0;
-    text-align: center;
-} 
