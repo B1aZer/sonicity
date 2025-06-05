@@ -432,8 +432,28 @@ export class SceneManager {
     }
 
     setupDebugUI() {
-        this.gui = new GUI({ container: document.body });
-        this.gui.hide(); // Hide by default
+        // Create GUI with proper container and styling
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.top = '10px';
+        container.style.right = '10px';
+        container.style.zIndex = '1000';
+        document.body.appendChild(container);
+
+        this.gui = new GUI({ 
+            container: container,
+            width: 300,
+            title: 'Debug Controls'
+        });
+        
+        // Ensure GUI is visible when shown
+        this.gui.domElement.style.position = 'absolute';
+        this.gui.domElement.style.top = '0';
+        this.gui.domElement.style.right = '0';
+        this.gui.domElement.style.zIndex = '1000';
+        
+        // Hide by default
+        this.gui.hide();
 
         // Camera Controls
         const cameraFolder = this.gui.addFolder('Camera');
