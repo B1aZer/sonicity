@@ -5,6 +5,7 @@ import { GrassBlades } from '../objects/GrassBlades.js';
 import { River } from '../objects/River.js';
 import { Trees } from '../objects/Trees.js';
 import { SHOW_PERFORMANCE_MONITOR } from '../utils/constants.js';
+import GUI from 'lil-gui';
 
 export class SceneManager {
     constructor(gridManager) {
@@ -21,6 +22,9 @@ export class SceneManager {
         this.performanceMonitor = null;
         this.birdSound = null;
         this.trees = null;
+        this.gui = null;
+        this.boundOnKeyDown = null;
+        this.boundOnDebugKeyDown = null;
         //this.river = null;
         this.lights = {
             sunLight: null,
@@ -32,7 +36,6 @@ export class SceneManager {
         this.frameCount = 0;
         this.lastTime = performance.now();
         this.fps = 0;
-        this.boundOnKeyDown = null;
     }
 
     /**
@@ -246,6 +249,14 @@ export class SceneManager {
             }
         };
         window.addEventListener('keydown', this.boundOnKeyDown);
+
+        // Debug GUI hotkey
+        this.boundOnDebugKeyDown = (event) => {
+            if (event.key === 'd') {
+                this.toggleDebugGUI();
+            }
+        };
+        window.addEventListener('keydown', this.boundOnDebugKeyDown);
     }
 
     togglePerformanceMonitor() {
@@ -253,6 +264,13 @@ export class SceneManager {
             const isVisible = this.performanceMonitor.style.display !== 'none';
             this.performanceMonitor.style.display = isVisible ? 'none' : 'block';
             Logger.info(`Performance monitor ${isVisible ? 'disabled' : 'enabled'}`);
+        }
+    }
+
+    toggleDebugGUI() {
+        if (this.gui) {
+            this.gui._hidden ? this.gui.show() : this.gui.hide();
+            Logger.info(`Debug GUI ${this.gui._hidden ? 'disabled' : 'enabled'}`);
         }
     }
 
@@ -413,6 +431,97 @@ export class SceneManager {
         );
     }
 
+    setupDebugUI() {
+        this.gui = new GUI({ container: document.body });
+        this.gui.hide(); // Hide by default
+
+        // Camera Controls
+        const cameraFolder = this.gui.addFolder('Camera');
+        cameraFolder.add(this.camera.position, 'x', -200, 200).name('Position X');
+        cameraFolder.add(this.camera.position, 'y', 0, 200).name('Position Y');
+        cameraFolder.add(this.camera.position, 'z', -200, 200).name('Position Z');
+        cameraFolder.add(this.camera, 'fov', 30, 120).name('FOV').onChange(() => {
+            this.camera.updateProjectionMatrix();
+        });
+        cameraFolder.add(this.camera, 'near', 0.1, 10).name('Near').onChange(() => {
+            this.camera.updateProjectionMatrix();
+        });
+        cameraFolder.add(this.camera, 'far', 100, 2000).name('Far').onChange(() => {
+            this.camera.updateProjectionMatrix();
+        });
+
+        // Sun Light
+        if (this.lights.sunLight && this.sun) {
+            const sunFolder = this.gui.addFolder('Sun Light');
+            sunFolder.addColor({ color: this.lights.sunLight.color.getHex() }, 'color')
+                .onChange(value => this.lights.sunLight.color.set(value));
+            sunFolder.add(this.lights.sunLight, 'intensity', 0, 5);
+            sunFolder.add(this.sun.position, 'x', -200, 200);
+            sunFolder.add(this.sun.position, 'y', 0, 200);
+            sunFolder.add(this.sun.position, 'z', -200, 200);
+            sunFolder.add(this.lights.sunLight, 'castShadow').onChange(() => {
+                this.lights.sunLight.shadow.mapSize.width = 2048;
+                this.lights.sunLight.shadow.mapSize.height = 2048;
+                this.lights.sunLight.shadow.camera.updateProjectionMatrix();
+            });
+        }
+
+        // Ambient Light
+        if (this.lights.ambientLight) {
+            const ambientFolder = this.gui.addFolder('Ambient Light');
+            ambientFolder.addColor({ color: this.lights.ambientLight.color.getHex() }, 'color')
+                .onChange(value => this.lights.ambientLight.color.set(value));
+            ambientFolder.add(this.lights.ambientLight, 'intensity', 0, 2);
+        }
+
+        // Hemisphere Light
+        if (this.lights.hemisphereLight) {
+            const hemiFolder = this.gui.addFolder('Hemisphere Light');
+            hemiFolder.addColor({ color: this.lights.hemisphereLight.color.getHex() }, 'color')
+                .onChange(value => this.lights.hemisphereLight.color.set(value));
+            hemiFolder.add(this.lights.hemisphereLight, 'intensity', 0, 2);
+        }
+
+        // Fog
+        if (this.scene && this.scene.fog) {
+            const fogFolder = this.gui.addFolder('Fog');
+            fogFolder.addColor({ color: this.scene.fog.color.getHex() }, 'color')
+                .onChange(value => this.scene.fog.color.set(value));
+            fogFolder.add(this.scene.fog, 'near', 1, 200);
+            fogFolder.add(this.scene.fog, 'far', 10, 1000);
+        }
+
+        // Sky Shader
+        if (this.sky && this.sky.material && this.sky.material.uniforms) {
+            const skyFolder = this.gui.addFolder('Sky');
+            skyFolder.addColor({ value: this.sky.material.uniforms.topColor.value.getHex() }, 'value')
+                .name('Top Color')
+                .onChange(value => this.sky.material.uniforms.topColor.value.set(value));
+            skyFolder.addColor({ value: this.sky.material.uniforms.bottomColor.value.getHex() }, 'value')
+                .name('Bottom Color')
+                .onChange(value => this.sky.material.uniforms.bottomColor.value.set(value));
+            skyFolder.add(this.sky.material.uniforms.exponent, 'value', 0, 2).name('Exponent');
+        }
+
+        // Renderer Settings
+        const rendererFolder = this.gui.addFolder('Renderer');
+        rendererFolder.add(this.renderer, 'toneMappingExposure', 0, 2).name('Exposure');
+        
+        // Shadow Map Controls
+        const shadowMapFolder = rendererFolder.addFolder('Shadow Map');
+        shadowMapFolder.add(this.renderer.shadowMap, 'enabled').name('Enabled');
+        shadowMapFolder.add(this.renderer.shadowMap, 'type', {
+            'Basic': THREE.BasicShadowMap,
+            'PCF': THREE.PCFShadowMap,
+            'PCFSoft': THREE.PCFSoftShadowMap,
+            'VSM': THREE.VSMShadowMap
+        }).name('Type');
+
+        // Grid Helper
+        const gridFolder = this.gui.addFolder('Grid');
+        gridFolder.add(this.gridHelper, 'visible').name('Show Grid');
+    }
+
     /**
      * Sets up the scene
      * @param {HTMLElement} renderDiv - The container element
@@ -491,6 +600,9 @@ export class SceneManager {
             
             // Setup audio
             this.setupAudio();
+
+            // Add debug GUI
+            this.setupDebugUI();
             
             Logger.info('Scene setup complete:', {
                 gridSize: this.gridManager.getGridSize(),
@@ -537,9 +649,18 @@ export class SceneManager {
      * Cleans up resources
      */
     dispose() {
-        // Remove key binding
+        // Remove key bindings
         if (this.boundOnKeyDown) {
             window.removeEventListener('keydown', this.boundOnKeyDown);
+        }
+        if (this.boundOnDebugKeyDown) {
+            window.removeEventListener('keydown', this.boundOnDebugKeyDown);
+        }
+
+        // Dispose of debug GUI
+        if (this.gui) {
+            this.gui.destroy();
+            this.gui = null;
         }
 
         // Remove performance monitor
