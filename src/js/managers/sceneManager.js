@@ -529,7 +529,29 @@ export class SceneManager {
         
         // Shadow Map Controls
         const shadowMapFolder = rendererFolder.addFolder('Shadow Map');
-        shadowMapFolder.add(this.renderer.shadowMap, 'enabled').name('Enabled');
+        shadowMapFolder.add(this.renderer.shadowMap, 'enabled')
+            .name('Enabled')
+            .onChange((value) => {
+                // Update shadow map size when enabling shadows
+                if (value && this.lights.sunLight) {
+                    this.lights.sunLight.shadow.mapSize.width = 2048;
+                    this.lights.sunLight.shadow.mapSize.height = 2048;
+                    this.lights.sunLight.shadow.camera.updateProjectionMatrix();
+                }
+                
+                // Toggle shadows on all objects in the scene
+                this.scene.traverse((object) => {
+                    if (object.isMesh) {
+                        object.castShadow = value;
+                        object.receiveShadow = value;
+                    }
+                });
+
+                // Toggle shadow casting on lights
+                if (this.lights.sunLight) {
+                    this.lights.sunLight.castShadow = value;
+                }
+            });
         shadowMapFolder.add(this.renderer.shadowMap, 'type', {
             'Basic': THREE.BasicShadowMap,
             'PCF': THREE.PCFShadowMap,
