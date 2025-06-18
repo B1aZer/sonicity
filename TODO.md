@@ -1,3 +1,46 @@
+## 3d
+
+- bldnder -> game
+- fix ui
+- economy blaance fun <-> earn
+
+## plan
+
+- blender?
+- or geometry with textures?
+- or what? gui?
+
+## mountains
+
+-  Create a simple 3D mesh (in Blender or with code) shaped like the mountain range, with a hand-painted or gradient texture.
+-  Combine a 3D mesh for the closest mountains with a background image for the farthest peaks.
+
+Base Layer: Painted transparent mountain texture on planes (Option 1)
+
+Middle Layer: Simple flat shaded low-poly mountain geometry (Option 2)
+
+## todo
+
+- tier 2 tawern, dunggeons - adv camp, quests? magic scrolls, tactics c
+- garnizon tier 1
+- 3 set of maps
+
+- new diamon resource
+
+## music
+
+https://www.fab.com/listings/29645efb-1b5a-467a-82eb-3321df823e58
+
+
+- check units dissovled, we need harnizon, or upgrade twoer?
+- house production does nto stop afte 24h
+- wallet change - access page - refactor?
++ price for starting battle/deploy?
++ caravan -> command center
+- other player, what to do?
+- lazy model loading
+- Implement a scouting report system that gives partial information about potential opponents
+
 - Watchtower
 - Slot Vault
 
