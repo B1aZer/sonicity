@@ -4,7 +4,6 @@ import Logger from '../utils/logger.js';
 import { GrassBlades } from '../objects/GrassBlades.js';
 import { River } from '../objects/River.js';
 import { Trees } from '../objects/Trees.js';
-import { Mountain } from '../objects/Mountain.js';
 import { SHOW_PERFORMANCE_MONITOR } from '../utils/constants.js';
 import GUI from 'lil-gui';
 
@@ -23,7 +22,6 @@ export class SceneManager {
         this.performanceMonitor = null;
         this.birdSound = null;
         this.trees = null;
-        this.mountain = null;
         this.gui = null;
         this.boundOnKeyDown = null;
         this.boundOnDebugKeyDown = null;
@@ -475,7 +473,6 @@ export class SceneManager {
         // Sun Light
         if (this.lights.sunLight && this.sun) {
             const sunFolder = this.gui.addFolder('Sun Light');
-            sunFolder.add(this.lights.sunLight, 'visible').name('Enabled');
             sunFolder.addColor({ color: this.lights.sunLight.color.getHex() }, 'color')
                 .onChange(value => this.lights.sunLight.color.set(value));
             sunFolder.add(this.lights.sunLight, 'intensity', 0, 5);
@@ -492,7 +489,6 @@ export class SceneManager {
         // Ambient Light
         if (this.lights.ambientLight) {
             const ambientFolder = this.gui.addFolder('Ambient Light');
-            ambientFolder.add(this.lights.ambientLight, 'visible').name('Enabled');
             ambientFolder.addColor({ color: this.lights.ambientLight.color.getHex() }, 'color')
                 .onChange(value => this.lights.ambientLight.color.set(value));
             ambientFolder.add(this.lights.ambientLight, 'intensity', 0, 2);
@@ -501,23 +497,14 @@ export class SceneManager {
         // Hemisphere Light
         if (this.lights.hemisphereLight) {
             const hemiFolder = this.gui.addFolder('Hemisphere Light');
-            hemiFolder.add(this.lights.hemisphereLight, 'visible').name('Enabled');
             hemiFolder.addColor({ color: this.lights.hemisphereLight.color.getHex() }, 'color')
                 .onChange(value => this.lights.hemisphereLight.color.set(value));
             hemiFolder.add(this.lights.hemisphereLight, 'intensity', 0, 2);
         }
 
-        // Fog Controls
+        // Fog
         if (this.scene && this.scene.fog) {
             const fogFolder = this.gui.addFolder('Fog');
-            fogFolder.add({ enabled: true }, 'enabled').name('Enabled').onChange((enabled) => {
-                if (enabled) {
-                    this.scene.fog = this._lastFog || new THREE.Fog(new THREE.Color(0xcce0ff), 120, 400);
-                } else {
-                    this._lastFog = this.scene.fog;
-                    this.scene.fog = null;
-                }
-            });
             fogFolder.addColor({ color: this.scene.fog.color.getHex() }, 'color')
                 .onChange(value => this.scene.fog.color.set(value));
             fogFolder.add(this.scene.fog, 'near', 1, 200);
@@ -527,7 +514,6 @@ export class SceneManager {
         // Sky Shader
         if (this.sky && this.sky.material && this.sky.material.uniforms) {
             const skyFolder = this.gui.addFolder('Sky');
-            skyFolder.add(this.sky, 'visible').name('Enabled');
             skyFolder.addColor({ value: this.sky.material.uniforms.topColor.value.getHex() }, 'value')
                 .name('Top Color')
                 .onChange(value => this.sky.material.uniforms.topColor.value.set(value));
@@ -541,20 +527,41 @@ export class SceneManager {
         const rendererFolder = this.gui.addFolder('Renderer');
         rendererFolder.add(this.renderer, 'toneMappingExposure', 0, 2).name('Exposure');
         
+        // Shadow Map Controls
+        const shadowMapFolder = rendererFolder.addFolder('Shadow Map');
+        shadowMapFolder.add(this.renderer.shadowMap, 'enabled')
+            .name('Enabled')
+            .onChange((value) => {
+                // Update shadow map size when enabling shadows
+                if (value && this.lights.sunLight) {
+                    this.lights.sunLight.shadow.mapSize.width = 2048;
+                    this.lights.sunLight.shadow.mapSize.height = 2048;
+                    this.lights.sunLight.shadow.camera.updateProjectionMatrix();
+                }
+                
+                // Toggle shadows on all objects in the scene
+                this.scene.traverse((object) => {
+                    if (object.isMesh) {
+                        object.castShadow = value;
+                        object.receiveShadow = value;
+                    }
+                });
+
+                // Toggle shadow casting on lights
+                if (this.lights.sunLight) {
+                    this.lights.sunLight.castShadow = value;
+                }
+            });
+        shadowMapFolder.add(this.renderer.shadowMap, 'type', {
+            'Basic': THREE.BasicShadowMap,
+            'PCF': THREE.PCFShadowMap,
+            'PCFSoft': THREE.PCFSoftShadowMap,
+            'VSM': THREE.VSMShadowMap
+        }).name('Type');
+
         // Grid Helper
         const gridFolder = this.gui.addFolder('Grid');
         gridFolder.add(this.gridHelper, 'visible').name('Show Grid');
-
-        // Mountain Controls
-        if (this.mountain && this.mountain.mesh) {
-            const mountainFolder = this.gui.addFolder('Mountain');
-            mountainFolder.add(this.mountain.mesh.position, 'x', -300, 300).name('Position X');
-            mountainFolder.add(this.mountain.mesh.position, 'y', -50, 100).name('Position Y');
-            mountainFolder.add(this.mountain.mesh.position, 'z', -400, 0).name('Position Z');
-            mountainFolder.add(this.mountain.mesh.material, 'opacity', 0, 1).name('Opacity').onChange((v) => {
-                this.mountain.setOpacity(v);
-            });
-        }
     }
 
     /**
@@ -612,18 +619,6 @@ export class SceneManager {
                 minDistance: 30,
                 maxDistance: 90,
                 scale: 1.2
-            });
-
-            // Create mountain
-            this.mountain = new Mountain(this.scene, {
-                width: 220,
-                height: 70,
-                segments: 128,
-                position: new THREE.Vector3(0, 18, -120),
-                textureUrl: '/images/textures/mountain.png',
-                opacity: 1.0,
-                noiseScale: 0.13,
-                noiseHeight: 16
             });
 
             // Create river
@@ -736,12 +731,6 @@ export class SceneManager {
         if (this.trees) {
             this.trees.dispose();
             this.trees = null;
-        }
-
-        // Dispose of mountain
-        if (this.mountain) {
-            this.mountain.dispose();
-            this.mountain = null;
         }
 
         // Dispose of river
