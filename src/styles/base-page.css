@@ -12,15 +12,114 @@
 } 
 
 .page-container {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-xl) var(--spacing-xxl) var(--spacing-xl) var(--spacing-xxl);
     background-color: var(--bg-dark);
     border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
-    border: 2px solid var(--color-border);
+    
+    /* Remove border-image approach */
+    /* border: 48px solid transparent; */
     margin-bottom: var(--spacing-xl);
     background-image: url('/images/textures/parchment-texture.png'), linear-gradient(var(--bg-light), var(--bg-dark)); 
     background-repeat: repeat;
     background-blend-mode: soft-light;
+    /* background-clip: padding-box; */
+    /* border-image: url('/images/ornament/corner.png') 32 fill / 1px; */
+    position: relative;
+}
+
+/* Ornament Elements */
+.ornament-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 192px;
+    height: 194px;
+    background-image: url('/images/ornament/center-ornament.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.3;
+}
+
+.ornament-header {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 628px;
+    height: 94px;
+    background-image: url('/images/ornament/header-ornament.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.4;
+}
+
+/* Corner ornaments using pseudo-elements */
+.page-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100px;
+    height: 100px;
+    background-image: url('/images/ornament/corner-top-left.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: top left;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.page-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background-image: url('/images/ornament/corner-top-right.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: top right;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Bottom corners using child elements */
+.page-container > *:first-child::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100px;
+    height: 100px;
+    background-image: url('/images/ornament/corner-bottom-left.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom left;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.page-container > *:first-child::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background-image: url('/images/ornament/corner-bottom-right.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: bottom right;
+    pointer-events: none;
+    z-index: 1;
 }
 
 /* Container width utilities */

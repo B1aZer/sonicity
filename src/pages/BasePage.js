@@ -37,6 +37,24 @@ export class BasePage {
         });
     }
 
+    /**
+     * Adds ornament elements to page-container
+     */
+    addOrnamentsToContainer() {
+        const pageContainer = this.element.querySelector('.page-container');
+        if (pageContainer) {
+            // Remove any existing ornaments first to avoid duplicates
+            const existingOrnaments = pageContainer.querySelectorAll('.ornament-center, .ornament-header');
+            existingOrnaments.forEach(el => el.remove());
+            
+            // Add ornament elements to the beginning of page-container
+            pageContainer.insertAdjacentHTML('afterbegin', `
+                <div class="ornament-center"></div>
+                <div class="ornament-header"></div>
+            `);
+        }
+    }
+
     async initialize() {
         try {
             // Check if wallet is already connected from appState
@@ -121,5 +139,11 @@ export class BasePage {
 
     async onWalletConnected(walletResult) {
         // To be implemented by child classes
+    }
+
+    mount(container) {
+        container.appendChild(this.element);
+        // Add ornaments after mounting
+        this.addOrnamentsToContainer();
     }
 } 
