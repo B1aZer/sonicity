@@ -103,10 +103,9 @@ export class HousePage extends BasePage {
             const loadingModal = this.modal.loading('Collecting gold...');
             
             // Collect gold from all houses in a single transaction
-            const tx = await this.contracts.gridBuildings.collectResourcesByType(
+            await this.contracts.gridBuildings.collectResourcesByType(
                 GridBuildingsContract.BuildingType.HOUSE
             );
-            await tx;
             
             // Close loading modal
             loadingModal.close();
@@ -138,6 +137,10 @@ export class HousePage extends BasePage {
         this.element.innerHTML = `
             <div class="page-container">
                 <h1>House Management</h1>
+                <p class="page-description">
+                    <strong>Gold is stored in your vault for 24 hours.</strong> After that, workers rest and production stops until you collect. 
+                    <em>Upgrade your houses to increase production rates and unlock new features.</em>
+                </p>
                 
                 <!-- Status Section -->
                 <div class="page-section">
