@@ -75,7 +75,7 @@
 
 /* Button States */
 .btn:disabled {
-    background: var(--bg-lighter);
+    background: var(--bg-dark-secondary);
     color: var(--text-muted);
     cursor: not-allowed;
     transform: none;
