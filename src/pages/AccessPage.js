@@ -1,6 +1,5 @@
 import { BasePage } from './BasePage.js';
 import { WalletManager, formatAddress } from '../js/utils/wallet.js';
-import '../styles/access-page.css';
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
 
