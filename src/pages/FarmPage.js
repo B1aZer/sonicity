@@ -12,6 +12,15 @@ export class FarmPage extends BasePage {
         this.element = document.createElement('div');
         this.element.className = 'base-page building-page farm-page';
         this.modal = new Modal();
+        
+        // Initialize state
+        this.setState({
+            farmCount: 0,
+            claimableFood: 0,
+            productionRate: 'Loading...',
+            canClaim: false
+        });
+        
         this.render();
     }
 
@@ -34,11 +43,8 @@ export class FarmPage extends BasePage {
 
     updateWalletStatus(address) {
         Logger.info('Updating wallet status with address:', address);
-        if (address) {
-            this.loadFarmData().catch(error => {
-                Logger.error('Error loading farm data after wallet update:', error);
-            });
-        }
+        // This method is called by WalletButton but we don't need to load data here
+        // Data loading is handled by onInitialized which is called once during page setup
     }
 
     async loadFarmData() {
@@ -69,47 +75,19 @@ export class FarmPage extends BasePage {
             const productionRate = buildingConfig.baseProductionRate;
             Logger.info('Current farm production rate:', productionRate.toString());
 
-            // Update UI with farm count
-            const farmCountElement = this.element.querySelector('.farm-count');
-            if (farmCountElement) {
-                farmCountElement.textContent = farms.length.toString();
-                Logger.info('Updated UI with farm count:', farms.length.toString());
-            } else {
-                Logger.warn('Farm count element not found in DOM');
-            }
-
-            // Update UI with production rate
-            const productionRateElements = this.element.querySelectorAll('.detail-value');
-            if (productionRateElements && productionRateElements.length > 0) {
-                productionRateElements[0].textContent = `${productionRate.toString()} food/hour`;
-                Logger.info('Updated UI with production rate:', productionRate.toString());
-            } else {
-                Logger.warn('Production rate element not found in DOM');
-            }
-
             // Get total claimable food directly from contract
             const totalClaimableFood = await this.contracts.gridBuildings.calculateTotalClaimableResources(
                 GridBuildingsContract.BuildingType.FARM
             );
             Logger.info('Total claimable food from contract:', totalClaimableFood.toString());
 
-            // Update UI with claimable food
-            const claimableFoodElement = this.element.querySelector('.claimable-food');
-            if (claimableFoodElement) {
-                claimableFoodElement.textContent = totalClaimableFood.toString();
-                Logger.info('Updated UI with claimable food:', totalClaimableFood.toString());
-            } else {
-                Logger.warn('Claimable food element not found in DOM');
-            }
-
-            // Enable/disable claim button based on claimable food
-            const claimButton = this.element.querySelector('.claim-button');
-            if (claimButton) {
-                claimButton.disabled = totalClaimableFood <= BigInt(0);
-                Logger.info('Updated claim button state:', !claimButton.disabled);
-            } else {
-                Logger.warn('Claim button not found in DOM');
-            }
+            // Update state (this will automatically update UI)
+            this.setState({
+                farmCount: farms.length,
+                claimableFood: totalClaimableFood.toString(),
+                productionRate: `${productionRate.toString()} food/hour`,
+                canClaim: totalClaimableFood > BigInt(0)
+            });
 
         } catch (error) {
             Logger.error('Error loading farm data:', error);
@@ -147,21 +125,22 @@ export class FarmPage extends BasePage {
     setupEventListeners() {
         Logger.info('Setting up event listeners');
         
-        // Add click event listener for claim button
-        const claimButton = this.element.querySelector('.claim-button');
-        if (claimButton) {
-            claimButton.addEventListener('click', () => {
-                this.handleClaimFood().catch(error => {
-                    Logger.error('Error in handleClaimFood:', error);
-                });
+        // Use the new event listener system
+        this.addEventListener('.claim-button', 'click', () => {
+            this.handleClaimFood().catch(error => {
+                Logger.error('Error in handleClaimFood:', error);
             });
-        }
+        });
     }
 
     render() {
         this.element.innerHTML = `
             <div class="page-container container-min-width-800">
                 <h1>Farm Management</h1>
+                <p class="page-description">
+                    <strong>Food sustains your population and fuels your economy.</strong> Farms produce food continuously, but you must collect it regularly. 
+                    <em>Larger farms produce more food and can support bigger cities.</em>
+                </p>
                 
                 <!-- Status Section -->
                 <div class="page-section status-section">
@@ -169,11 +148,11 @@ export class FarmPage extends BasePage {
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Total Farms:</span>
-                            <span class="status-value farm-count">0</span>
+                            <span class="status-value" data-state="farmCount">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Claimable Food:</span>
-                            <span class="status-value claimable-food">0</span>
+                            <span class="status-value" data-state="claimableFood">0</span>
                         </div>
                     </div>
                 </div>
@@ -188,7 +167,7 @@ export class FarmPage extends BasePage {
                             <div class="info-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Base Rate:</span>
-                                    <span class="detail-value">Loading...</span>
+                                    <span class="detail-value" data-state="productionRate">Loading...</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Level Bonus:</span>
@@ -217,7 +196,7 @@ export class FarmPage extends BasePage {
                 <div class="page-section actions-section">
                     <h2>Actions</h2>
                     <div class="actions-container">
-                        <button class="claim-button" disabled>
+                        <button class="claim-button btn btn-primary btn-lg" data-state="canClaim" disabled>
                             <span class="button-text">Claim Food</span>
                         </button>
                     </div>
