@@ -118,7 +118,7 @@ export class AccessPage extends BasePage {
                 
                 <div class="page-section">
                     <h2>Actions</h2>
-                    <div class="access-actions">
+                    <div class="building-actions">
                         <a href="/mint" class="mint-link btn btn-primary btn-lg">
                             <span class="button-text">Go to Mint Page</span>
                         </a>
