@@ -144,11 +144,7 @@ export class DashboardPage extends BasePage {
                     
                     // Create the building
                     Logger.info('Calling createBuilding on contract');
-                    const tx = await this.contracts.gameState.createBuilding(formattedBuildingType);
-                    Logger.info('Transaction sent, waiting for confirmation');
-                    
-                    // Wait for transaction to be mined
-                    const receipt = await tx;
+                    await this.contracts.gameState.createBuilding(formattedBuildingType);
                     Logger.info('Transaction confirmed');
                     
                     // Close loading modal
