@@ -1,7 +1,6 @@
 import '../styles/start-page.css';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
-import { appState } from '../js/core/state.js';
 import { BasePage } from './BasePage.js';
 
 export class StartPage extends BasePage {

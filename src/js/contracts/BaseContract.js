@@ -1,5 +1,4 @@
 import { ethers, JsonRpcProvider, Contract } from 'ethers';
-import { appState } from '../core/state.js';
 
 export class BaseContract {
     constructor(contractAddress, abi) {

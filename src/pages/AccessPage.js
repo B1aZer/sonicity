@@ -1,5 +1,4 @@
-import { appState } from '../js/core/state.js';
-import { formatAddress } from '../js/utils/wallet.js';
+import { WalletManager, formatAddress } from '../js/utils/wallet.js';
 import '../styles/access-page.css';
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
@@ -32,9 +31,8 @@ export class AccessPage {
     }
 
     checkWalletStatus() {
-        const state = appState.getState();
-        if (state.walletConnected && state.currentWallet) {
-            this.updateWalletStatus(state.currentWallet);
+        if (WalletManager.isWalletConnected() && WalletManager.getCurrentWallet()) {
+            this.updateWalletStatus(WalletManager.getCurrentWallet());
             // For demo purposes, automatically verify NFT
             this.simulateNFTVerification();
         }
@@ -42,7 +40,7 @@ export class AccessPage {
     
     simulateNFTVerification() {
         setTimeout(() => {
-            appState.setNFTVerified(true);
+            // NFT verification is now handled by WalletManager
             this.updateNFTStatus('Verified');
             // Redirect to root (map) after verification
             window.history.pushState({}, '', '/');
@@ -70,8 +68,8 @@ export class AccessPage {
     }
 
     render() {
-        const state = appState.getState();
-        const isConnected = state.walletConnected && state.currentWallet;
+        const isConnected = WalletManager.isWalletConnected();
+        const currentWallet = WalletManager.getCurrentWallet();
         
         this.element.innerHTML = `
             <div class="access-container">
@@ -81,7 +79,7 @@ export class AccessPage {
                 <div class="access-status">
                     <div class="status-item">
                         <span class="status-label">Wallet:</span>
-                        <span id="wallet-status" class="status-value">${isConnected ? formatAddress(state.currentWallet) : 'Not Connected'}</span>
+                        <span id="wallet-status" class="status-value">${isConnected ? formatAddress(currentWallet) : 'Not Connected'}</span>
                     </div>
                     <div class="status-item">
                         <span class="status-label">NFT Status:</span>

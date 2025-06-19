@@ -16,7 +16,6 @@ import { WorkshopPage } from '../../pages/WorkshopPage.js';
 import { BarracksPage } from '../../pages/BarracksPage.js';
 import { ScoutGuildPage } from '../../pages/ScoutGuildPage.js';
 import { CommandCenterPage } from '../../pages/CommandCenterPage.js';
-import { appState } from './state.js';
 import { AccessControl } from '../utils/accessControl.js';
 import { Modal } from '../utils/modal.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';

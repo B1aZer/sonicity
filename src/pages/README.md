@@ -1,8 +1,8 @@
-# BasePage Render Refactor - Simplified Approach
+# BasePage Render Refactor - Complete WalletManager Integration
 
 ## Overview
 
-The BasePage has been refactored with a minimal render system that focuses on **fixing the async wallet flow** rather than adding complex guards. The key insight is that the duplicate calls were caused by both BasePage initialization and WalletButton calling `updateWalletStatus()`.
+The BasePage has been refactored with a minimal render system that **completely removes appState** and makes `WalletManager` the **single source of truth** for wallet state. This eliminates the duplicate calls issue and simplifies the architecture significantly.
 
 ## Key Changes
 
@@ -16,11 +16,12 @@ The BasePage has been refactored with a minimal render system that focuses on **
 - Added `removeEventListeners()` for cleanup
 - Prevents duplicate event listeners
 
-### 3. Simplified Wallet Flow
-- **Removed complex initialization guards** - they were masking the real issue
+### 3. Complete WalletManager Integration
+- **Removed appState entirely** - no more dual state management
+- **WalletManager is now the single source of truth** for wallet state
+- **Added state persistence** directly to WalletManager
+- **Added subscription system** to WalletManager
 - **Centralized data loading** in `onInitialized()` only
-- **Simplified `updateWalletStatus()`** - no longer triggers data loading
-- **Single source of truth** for page initialization
 
 ## Root Cause Analysis
 
@@ -29,12 +30,19 @@ The duplicate calls were caused by:
 1. **BasePage.initialize()** → calls `onInitialized()` → calls `loadHouseData()`
 2. **WalletButton.checkInitialConnection()** → calls `updateWalletStatus()` → calls `loadHouseData()`
 
-**Solution**: Make `updateWalletStatus()` a no-op for data loading, let `onInitialized()` handle it once.
+**Solution**: 
+- Made `updateWalletStatus()` a no-op for data loading
+- Let `onInitialized()` handle it once
+- **Removed appState entirely** to eliminate sync issues
 
 ## Usage Example
 
 ### Before (Problematic)
 ```javascript
+// Multiple sources of truth
+const state = appState.getState();
+if (state.walletConnected) { ... }
+
 // Multiple paths calling loadHouseData()
 updateWalletStatus(address) {
     if (address) {
@@ -49,6 +57,9 @@ async onInitialized(walletResult) {
 
 ### After (Fixed)
 ```javascript
+// Single source of truth
+if (WalletManager.isWalletConnected()) { ... }
+
 // Single path for data loading
 updateWalletStatus(address) {
     // No-op - just for UI updates if needed
@@ -75,11 +86,12 @@ Use `data-state` attributes to bind elements to state:
 
 ## Benefits
 
-1. **Simpler Code**: Removed complex guards and flags
-2. **Single Responsibility**: Each method has one clear purpose
-3. **Predictable Flow**: Data loading happens in one place only
-4. **Better Performance**: No duplicate calls or unnecessary checks
+1. **Single Source of Truth**: WalletManager handles all wallet state
+2. **Simpler Architecture**: No more sync between appState and WalletManager
+3. **No Duplicate Calls**: Data loading happens in one place only
+4. **Better Performance**: Fewer state checks and updates
 5. **Easier Debugging**: Clear separation of concerns
+6. **Less Code**: Removed appState complexity entirely
 
 ## Migration Guide
 
@@ -120,6 +132,15 @@ To migrate existing pages:
 
 6. Add `data-state` attributes to HTML elements.
 
+7. **Replace all appState calls with WalletManager**:
+   ```javascript
+   // Instead of: appState.getState().walletConnected
+   // Use: WalletManager.isWalletConnected()
+   
+   // Instead of: appState.getState().currentWallet
+   // Use: WalletManager.getCurrentWallet()
+   ```
+
 ## State Keys
 
 Common state keys used across pages:
@@ -127,9 +148,28 @@ Common state keys used across pages:
 - `gold`, `buildingSlots`, `repPoints` (DashboardPage)
 - `farmCount`, `claimableDiamonds`, `diamondRate` (FarmPage)
 
+## WalletManager API
+
+```javascript
+// State checks
+WalletManager.isWalletConnected()
+WalletManager.getCurrentWallet()
+WalletManager.isNFTVerified()
+
+// State management
+WalletManager.subscribe(listener)
+WalletManager.clearState()
+
+// Connection
+WalletManager.connectWallet()
+WalletManager.disconnectWallet()
+WalletManager.checkExistingConnection()
+```
+
 ## Notes
 
-- **Minimal and focused**: Fixes the actual problem without over-engineering
-- **Async-first**: Respects the async nature of wallet connections
-- **Single source of truth**: Data loading happens in one predictable place
-- **Backward compatible**: Existing pages work with minimal changes 
+- **Complete removal of appState**: No more dual state management
+- **WalletManager is the single source of truth**: All wallet state is centralized
+- **Backward compatible**: Existing pages work with minimal changes
+- **Better performance**: No more state synchronization overhead
+- **Cleaner architecture**: Clear separation between wallet logic and UI state 

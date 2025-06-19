@@ -1,5 +1,4 @@
 import { WalletManager, formatAddress } from '../js/utils/wallet.js';
-import { appState } from '../js/core/state.js';
 import Logger from '../js/utils/logger.js';
 
 export class WalletButton {
@@ -11,8 +10,8 @@ export class WalletButton {
         this.setupEventListeners();
         this.checkInitialConnection();
 
-        // Subscribe to appState changes to re-render the button
-        appState.subscribe(() => {
+        // Subscribe to WalletManager changes to re-render the button
+        WalletManager.subscribe(() => {
             this.render();
         });
     }
@@ -76,7 +75,6 @@ export class WalletButton {
     }
     
     handleSignOut() {
-        appState.clearState();
         WalletManager.disconnectWallet();
         window.location.reload();
     }
@@ -96,29 +94,29 @@ export class WalletButton {
     }
     
     render() {
-        const state = appState.getState();
-        const isConnected = state.walletConnected && state.currentWallet;
+        const isConnected = WalletManager.isWalletConnected();
+        const currentWallet = WalletManager.getCurrentWallet();
         
         if (isConnected) {
             this.element.innerHTML = `
                 <div class="wallet-controls connected">
                     <div class="wallet-status">
                         ${this.getNetworkBadge()}
-                        <span class="wallet-address">${formatAddress(state.currentWallet)}</span>
+                        <span class="wallet-address">${formatAddress(currentWallet)}</span>
                         <div class="wallet-indicator connected"></div>
                         <span class="dropdown-arrow"><i class="fas fa-chevron-down"></i></span>
                     </div>
                     <div class="wallet-dropdown">
                         <div class="dropdown-address">
                             <span class="label">Connected Address</span>
-                            <span class="value full-address">${state.currentWallet}</span>
+                            <span class="value full-address">${currentWallet}</span>
                         </div>
                         <div class="dropdown-actions">
-                            <button class="dropdown-action copy-address" data-address="${state.currentWallet}">
+                            <button class="dropdown-action copy-address" data-address="${currentWallet}">
                                 <i class="action-icon fas fa-copy"></i>
                                 <span>Copy Address</span>
                             </button>
-                            <button class="dropdown-action view-on-explorer" data-address="${state.currentWallet}">
+                            <button class="dropdown-action view-on-explorer" data-address="${currentWallet}">
                                 <i class="action-icon fas fa-external-link-alt"></i>
                                 <span>View on Explorer</span>
                             </button>

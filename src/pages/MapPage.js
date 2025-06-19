@@ -1,7 +1,6 @@
 import '../styles/map-page.css';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
-import { appState } from '../js/core/state.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { BasePage } from './BasePage.js';
 

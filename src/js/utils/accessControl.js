@@ -1,4 +1,4 @@
-import { appState } from '../core/state.js';
+import { WalletManager } from './wallet.js';
 import { Modal } from './modal.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
 import Logger from './logger.js';
@@ -56,7 +56,7 @@ export class AccessControl {
     static async isPlayerInitialized() {
         await this.initialize();
         try {
-            const address = await this.gameState.getAddress();
+            const address = WalletManager.getCurrentWallet();
             const playerState = await this.gameState.call('playerState', address);
             return playerState.buildingSlots > 0;
         } catch (error) {
@@ -69,7 +69,7 @@ export class AccessControl {
      * Check if wallet is connected
      */
     static isWalletConnected() {
-        return appState.getState().walletConnected;
+        return WalletManager.isWalletConnected();
     }
 
     /**

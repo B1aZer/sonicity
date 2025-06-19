@@ -6,7 +6,6 @@ import { ethers } from 'ethers';
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
 import { StatusComponent } from '../components/StatusComponent.js';
-import { appState } from '../js/core/state.js';
 
 export class MintPage extends BasePage {
     constructor() {
@@ -152,8 +151,7 @@ export class MintPage extends BasePage {
     }
 
     render() {
-        const state = appState.getState();
-        const isConnected = state.walletConnected && state.currentWallet;
+        const isConnected = WalletManager.isWalletConnected();
         
         this.element.innerHTML = `
             <div class="page-container">

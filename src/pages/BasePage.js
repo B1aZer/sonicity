@@ -8,7 +8,6 @@ import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js'
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
-import { appState } from '../js/core/state.js';
 
 export class BasePage {
     constructor() {
@@ -43,13 +42,12 @@ export class BasePage {
 
     async initialize() {
         try {
-            // Check if wallet is already connected from appState
-            const state = appState.getState();
-            if (state.walletConnected && state.currentWallet) {
+            // Check if wallet is already connected using WalletManager
+            if (WalletManager.isWalletConnected() && WalletManager.getCurrentWallet()) {
                 await this.initializeContracts();
                 await this.onInitialized({ 
                     success: true, 
-                    address: state.currentWallet 
+                    address: WalletManager.getCurrentWallet() 
                 });
             }
         } catch (error) {
