@@ -156,6 +156,10 @@ export class MintPage extends BasePage {
         this.element.innerHTML = `
             <div class="page-container">
                 <h1>Mint Your Sonicity NFT</h1>
+                <p class="page-description">
+                    <strong>NFTs are the foundation of your Sonicity empire.</strong> Each NFT represents a plot of land that you can build upon. 
+                    <em>Choose your tier wisely - higher tiers unlock more advanced buildings and features.</em>
+                </p>
                 
                 <!-- NFT Type Selector -->
                 <div class="page-section type-selector-section">
