@@ -15,12 +15,4 @@ export class WorkshopPage extends BasePage {
             </div>
         `;
     }
-
-    mount(container) {
-        container.appendChild(this.element);
-    }
-
-    unmount() {
-        this.element.remove();
-    }
 } 

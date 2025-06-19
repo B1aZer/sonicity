@@ -285,17 +285,4 @@ export class DashboardPage extends BasePage {
         `;
     }
 
-    mount(container) {
-        Logger.info('Mounting dashboard page...');
-        container.appendChild(this.element);
-        // Initialize using base class method
-        this.initialize().catch(error => {
-            Logger.error('Error during dashboard initialization:', error);
-            this.modal.error('Failed to initialize dashboard. Please try refreshing the page.');
-        });
-    }
-
-    unmount() {
-        this.element.remove();
-    }
 } 

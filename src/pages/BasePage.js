@@ -37,24 +37,6 @@ export class BasePage {
         });
     }
 
-    /**
-     * Adds ornament elements to page-container
-     */
-    addOrnamentsToContainer() {
-        const pageContainer = this.element.querySelector('.page-container');
-        if (pageContainer) {
-            // Remove any existing ornaments first to avoid duplicates
-            const existingOrnaments = pageContainer.querySelectorAll('.ornament-center, .ornament-header');
-            existingOrnaments.forEach(el => el.remove());
-            
-            // Add ornament elements to the beginning of page-container
-            pageContainer.insertAdjacentHTML('afterbegin', `
-                <div class="ornament-center"></div>
-                <div class="ornament-header"></div>
-            `);
-        }
-    }
-
     async initialize() {
         try {
             // Check if wallet is already connected from appState
@@ -142,8 +124,21 @@ export class BasePage {
     }
 
     mount(container) {
+        console.log('BasePage.mount called');
         container.appendChild(this.element);
-        // Add ornaments after mounting
-        this.addOrnamentsToContainer();
+        console.log('element appended to container');
+        
+        // Initialize the page automatically
+        this.initialize().catch(error => {
+            Logger.error('Error during page initialization:', error);
+            this.modal.error('Failed to initialize page. Please try refreshing the page.');
+        });
+        console.log('initialize called');
+    }
+
+    unmount() {
+        // Default cleanup - just remove the element
+        // Child classes can override this for custom cleanup and call super.unmount()
+        this.element.remove();
     }
 } 

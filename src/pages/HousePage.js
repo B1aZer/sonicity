@@ -225,21 +225,5 @@ export class HousePage extends BasePage {
                 </div>
             </div>
         `;
-        
-        // Remove redundant loadHouseData call since it's handled by onInitialized and updateWalletStatus
-    }
-
-    mount(container) {
-        Logger.info('Mounting house page...');
-        container.appendChild(this.element);
-        // Initialize using base class method
-        this.initialize().catch(error => {
-            Logger.error('Error during house page initialization:', error);
-            this.modal.error('Failed to initialize house page. Please try refreshing the page.');
-        });
-    }
-
-    unmount() {
-        this.element.remove();
     }
 } 

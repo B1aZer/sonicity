@@ -104,12 +104,4 @@ export class ShopPage extends BasePage {
             });
         });
     }
-
-    mount(container) {
-        container.appendChild(this.element);
-    }
-
-    unmount() {
-        this.element.remove();
-    }
 } 

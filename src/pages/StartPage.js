@@ -103,18 +103,4 @@ export class StartPage extends BasePage {
             </div>
         `;
     }
-
-    mount(container) {
-        Logger.info('Mounting start page...');
-        container.appendChild(this.element);
-        // Initialize using base class method
-        this.initialize().catch(error => {
-            Logger.error('Error during start page initialization:', error);
-            this.modal.error('Failed to initialize start page. Please try refreshing the page.');
-        });
-    }
-
-    unmount() {
-        this.element.remove();
-    }
 } 
