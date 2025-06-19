@@ -11,6 +11,15 @@ export class HousePage extends BasePage {
         this.element = document.createElement('div');
         this.element.className = 'base-page';
         this.modal = new Modal();
+        
+        // Initialize state
+        this.setState({
+            houseCount: 0,
+            claimableGold: 0,
+            productionRate: 'Loading...',
+            canClaim: false
+        });
+        
         this.render();
     }
 
@@ -21,6 +30,7 @@ export class HousePage extends BasePage {
             this.modal.error('Please connect your wallet first.');
             return;
         }
+        
         try {
             await this.loadHouseData();
             this.setupEventListeners();
@@ -33,12 +43,8 @@ export class HousePage extends BasePage {
 
     updateWalletStatus(address) {
         Logger.info('Updating wallet status with address:', address);
-        if (address) {
-            this.loadHouseData().catch(error => {
-                Logger.error('Error loading house data after wallet update:', error);
-            });
-            this.setupEventListeners();
-        }
+        // This method is called by WalletButton but we don't need to load data here
+        // Data loading is handled by onInitialized which is called once during page setup
     }
 
     async loadHouseData() {
@@ -69,47 +75,19 @@ export class HousePage extends BasePage {
             const productionRate = buildingConfig.baseProductionRate;
             Logger.info('Current house production rate:', productionRate.toString());
 
-            // Update UI with house count
-            const houseCountElement = this.element.querySelector('.house-count');
-            if (houseCountElement) {
-                houseCountElement.textContent = houses.length.toString();
-                Logger.info('Updated UI with house count:', houses.length.toString());
-            } else {
-                Logger.warn('House count element not found in DOM');
-            }
-
-            // Update UI with production rate
-            const productionRateElements = this.element.querySelectorAll('.detail-value');
-            if (productionRateElements && productionRateElements.length > 0) {
-                productionRateElements[0].textContent = `${productionRate.toString()} gold/hour`;
-                Logger.info('Updated UI with production rate:', productionRate.toString());
-            } else {
-                Logger.warn('Production rate element not found in DOM');
-            }
-
             // Get total claimable gold directly from contract
             const totalClaimableGold = await this.contracts.gridBuildings.calculateTotalClaimableResources(
                 GridBuildingsContract.BuildingType.HOUSE
             );
             Logger.info('Total claimable gold from contract:', totalClaimableGold.toString());
 
-            // Update UI with claimable gold
-            const claimableGoldElement = this.element.querySelector('.claimable-gold');
-            if (claimableGoldElement) {
-                claimableGoldElement.textContent = totalClaimableGold.toString();
-                Logger.info('Updated UI with claimable gold:', totalClaimableGold.toString());
-            } else {
-                Logger.warn('Claimable gold element not found in DOM');
-            }
-
-            // Enable/disable claim button based on claimable gold
-            const claimButton = this.element.querySelector('.claim-button');
-            if (claimButton) {
-                claimButton.disabled = totalClaimableGold <= BigInt(0);
-                Logger.info('Updated claim button state:', !claimButton.disabled);
-            } else {
-                Logger.warn('Claim button not found in DOM');
-            }
+            // Update state (this will automatically update UI)
+            this.setState({
+                houseCount: houses.length,
+                claimableGold: totalClaimableGold.toString(),
+                productionRate: `${productionRate.toString()} gold/hour`,
+                canClaim: totalClaimableGold > BigInt(0)
+            });
 
         } catch (error) {
             Logger.error('Error loading house data:', error);
@@ -148,15 +126,12 @@ export class HousePage extends BasePage {
     setupEventListeners() {
         Logger.info('Setting up event listeners');
         
-        // Add click event listener for claim button
-        const claimButton = this.element.querySelector('.claim-button');
-        if (claimButton) {
-            claimButton.addEventListener('click', () => {
-                this.handleClaimGold().catch(error => {
-                    Logger.error('Error in handleClaimGold:', error);
-                });
+        // Use the new event listener system
+        this.addEventListener('.claim-button', 'click', () => {
+            this.handleClaimGold().catch(error => {
+                Logger.error('Error in handleClaimGold:', error);
             });
-        }
+        });
     }
 
     render() {
@@ -170,11 +145,11 @@ export class HousePage extends BasePage {
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Total Houses:</span>
-                            <span class="status-value house-count">0</span>
+                            <span class="status-value" data-state="houseCount">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Claimable Gold:</span>
-                            <span class="status-value claimable-gold">0</span>
+                            <span class="status-value" data-state="claimableGold">0</span>
                         </div>
                     </div>
                 </div>
@@ -189,7 +164,7 @@ export class HousePage extends BasePage {
                             <div class="building-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Base Rate:</span>
-                                    <span class="detail-value">Loading...</span>
+                                    <span class="detail-value" data-state="productionRate">Loading...</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Level Bonus:</span>
@@ -218,7 +193,7 @@ export class HousePage extends BasePage {
                 <div class="page-section">
                     <h2>Actions</h2>
                     <div class="building-actions">
-                        <button class="claim-button btn btn-primary btn-lg" disabled>
+                        <button class="claim-button btn btn-primary btn-lg" data-state="canClaim" disabled>
                             <span class="button-text">Claim Gold</span>
                         </button>
                     </div>

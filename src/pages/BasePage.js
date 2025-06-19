@@ -25,6 +25,10 @@ export class BasePage {
             battleSystem: new BattleSystemContract()
         };
         
+        // Page state management
+        this.state = {};
+        this.eventListeners = new Map();
+        
         // Setup wallet event listener
         this.setupWalletListener();
     }
@@ -43,7 +47,6 @@ export class BasePage {
             const state = appState.getState();
             if (state.walletConnected && state.currentWallet) {
                 await this.initializeContracts();
-                this.updateWalletStatus(state.currentWallet);
                 await this.onInitialized({ 
                     success: true, 
                     address: state.currentWallet 
@@ -101,7 +104,6 @@ export class BasePage {
         try {
             await this.initializeContracts();
             Logger.debug('BasePage handleWalletConnected called with address:', address);
-            this.updateWalletStatus(address);
             await this.onInitialized({ success: true, address });
         } catch (error) {
             Logger.error('Wallet connection handler error:', error);
@@ -123,6 +125,49 @@ export class BasePage {
         // To be implemented by child classes
     }
 
+    // Minimal render system
+    setState(newState) {
+        const oldState = { ...this.state };
+        this.state = { ...this.state, ...newState };
+        this.updateUI(oldState, this.state);
+    }
+
+    updateUI(oldState, newState) {
+        // Child classes can override this to update specific UI elements
+        // Default implementation updates common patterns
+        this.updateElements(newState);
+    }
+
+    updateElements(state) {
+        // Update elements based on state keys
+        Object.entries(state).forEach(([key, value]) => {
+            const elements = this.element.querySelectorAll(`[data-state="${key}"]`);
+            elements.forEach(element => {
+                if (element.tagName === 'BUTTON') {
+                    element.disabled = value === false || value === 0;
+                } else {
+                    element.textContent = value?.toString() || '';
+                }
+            });
+        });
+    }
+
+    // Event listener management
+    addEventListener(selector, event, handler) {
+        const element = this.element.querySelector(selector);
+        if (element) {
+            element.addEventListener(event, handler);
+            this.eventListeners.set(`${selector}-${event}`, { element, event, handler });
+        }
+    }
+
+    removeEventListeners() {
+        this.eventListeners.forEach(({ element, event, handler }) => {
+            element.removeEventListener(event, handler);
+        });
+        this.eventListeners.clear();
+    }
+
     mount(container) {
         console.log('BasePage.mount called');
         container.appendChild(this.element);
@@ -137,6 +182,9 @@ export class BasePage {
     }
 
     unmount() {
+        // Clean up event listeners
+        this.removeEventListeners();
+        
         // Default cleanup - just remove the element
         // Child classes can override this for custom cleanup and call super.unmount()
         this.element.remove();
