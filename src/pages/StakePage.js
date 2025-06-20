@@ -2,13 +2,12 @@ import { formatAddress } from '../js/utils/wallet.js';
 import Logger from '../js/utils/logger.js';
 import { NFTCard } from '../components/NFTCard.js';
 import { BasePage } from './BasePage.js';
-import './../styles/stake-page.css';
-import './../styles/nft-collection.css';
 import { StatusComponent } from '../components/StatusComponent.js';
 
 export class StakePage extends BasePage {
     constructor() {
         super();
+        import('../styles/nft-collection.css');
         this.container = document.createElement('div');
         this.container.className = 'base-page stake-page';
         this.statusComponent = new StatusComponent();
@@ -48,13 +47,13 @@ export class StakePage extends BasePage {
                 </div>
 
                 <!-- Available NFTs Section -->
-                <div class="page-section nft-section">
+                <div class="page-section status-section">
                     <h2>Your NFTs</h2>
                     <div class="nft-list nft-grid"></div>
                 </div>
 
                 <!-- Staked NFTs Section -->
-                <div class="page-section nft-section">
+                <div class="page-section status-section">
                     <h2>Staked NFTs</h2>
                     <div class="staked-nft-list nft-grid"></div>
                 </div>
