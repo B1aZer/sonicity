@@ -13,7 +13,6 @@
     transition: all var(--transition-normal);
     text-decoration: none;
     text-align: center;
-    min-width: 120px;
     border: 2px solid var(--color-border);
 }
 
@@ -64,13 +63,11 @@
 .btn-sm {
     padding: var(--spacing-xs) var(--spacing-sm);
     font-size: var(--font-size-xs);
-    min-width: 80px;
 }
 
 .btn-lg {
     padding: var(--spacing-md) var(--spacing-xl);
     font-size: var(--font-size-lg);
-    min-width: 160px;
 }
 
 /* Button States */
