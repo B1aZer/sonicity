@@ -34,4 +34,29 @@ export class NFTContract extends BaseContract {
     async ownerOf(tokenId) {
         return await this.call('ownerOf', tokenId);
     }
+
+    async getOwnedNFTs(userAddress) {
+        const balance = await this.balanceOf(userAddress);
+        const ownedNFTs = [];
+        
+        if (balance > 0n) {
+            for (let i = 0; i < balance; i++) {
+                const tokenId = await this.tokenOfOwnerByIndex(userAddress, i);
+                const tokenURI = await this.tokenURI(tokenId);
+                
+                // Fetch and parse metadata JSON
+                const response = await fetch(tokenURI);
+                const metadata = await response.json();
+
+                ownedNFTs.push({
+                    tokenId,
+                    contractAddress: await this.getContractAddress(),
+                    tokenURI,
+                    metadata
+                });
+            }
+        }
+        
+        return ownedNFTs;
+    }
 } 
