@@ -130,6 +130,21 @@ export class BasePage {
         this.updateUI(oldState, this.state);
     }
 
+    // Get loading spinner HTML for local use
+    getLoadingSpinnerHTML(className = '') {
+        return `<div class="loading-spinner ${className}"></div>`;
+    }
+
+    // Get loading container with spinner and text
+    getLoadingContainerHTML(text = 'Loading...', className = '') {
+        return `
+            <div class="loading-container ${className}" style="display: flex; justify-content: center; align-items: center; min-height: 100px;">
+                ${this.getLoadingSpinnerHTML()}
+                <span style="margin-left: 10px; color: var(--text-muted);">${text}</span>
+            </div>
+        `;
+    }
+
     updateUI(oldState, newState) {
         // Child classes can override this to update specific UI elements
         // Default implementation updates common patterns
