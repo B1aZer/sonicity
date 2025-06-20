@@ -1,4 +1,3 @@
-import '../styles/game-page.css';
 import * as THREE from 'three';
 import { Game } from '../js/core/game.js';
 import { LoadingScreen } from '../js/utils/loadingScreen.js';
@@ -12,6 +11,7 @@ import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js'
 export class GamePage extends BasePage {
     constructor() {
         super();
+        import('../styles/game-page.css');
         this.element = document.createElement('div');
         this.element.className = 'game-page';
         this.modal = new Modal();
