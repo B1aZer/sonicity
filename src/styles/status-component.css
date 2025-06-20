@@ -43,19 +43,3 @@
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
 }
-
-.loading-spinner {
-    width: 24px;
-    height: 24px;
-    border: 3px solid var(--bg-lighter);
-    border-top-color: var(--color-primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    flex-shrink: 0;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-} 
