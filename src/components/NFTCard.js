@@ -35,7 +35,7 @@ export class NFTCard {
 
         if (this.options.showStakeButton) {
             return `
-                <button class="stake-button" data-token-id="${tokenId}">
+                <button class="stake-button btn btn-primary btn-lg" data-token-id="${tokenId}">
                     Stake NFT
                 </button>
             `;
@@ -43,7 +43,7 @@ export class NFTCard {
 
         if (this.options.showUnstakeButton) {
             return `
-                <button class="unstake-button" data-token-id="${tokenId}">
+                <button class="unstake-button btn btn-primary btn-lg" data-token-id="${tokenId}">
                     Unstake NFT
                 </button>
             `;
