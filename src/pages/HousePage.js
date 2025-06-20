@@ -41,12 +41,6 @@ export class HousePage extends BasePage {
         }
     }
 
-    updateWalletStatus(address) {
-        Logger.info('Updating wallet status with address:', address);
-        // This method is called by WalletButton but we don't need to load data here
-        // Data loading is handled by onInitialized which is called once during page setup
-    }
-
     async loadHouseData() {
         try {
             Logger.info('Starting to load house data...');

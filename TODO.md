@@ -1,3 +1,42 @@
+## todo
+
+- cleanup ui / refactor
+- move city view
+- make tier 1,2,3
+- release on test net
+- find investment based on fun and visual attraction, but make most of the features locked
+
+## buldings
+
+1:
+- shop
+- workshop
+- outpost
+- defense tower
+
+2:
+- barracks
+- ganizon (not w)
+- scout tower
+- command center
+
+3:
+- tavern (not w)
+- adventure camp (not w)
+- relics building? (NOT W)
+- tactics center
+
+4:
+- engine?
+- marketplae (rep points -> diamonds)
+- mint rep points for gems
+- mint rep points for super  nft (dynamic) gives voting
+
+5: city governance
+6: mega buidlings
+7: seasons
+
+
 ## 3d
 
 - bldnder -> game
@@ -21,7 +60,7 @@ Middle Layer: Simple flat shaded low-poly mountain geometry (Option 2)
 
 ## todo
 
-- tier 2 tawern, dunggeons - adv camp, quests? magic scrolls, tactics c
+- tier 2 tawern (not w), dunggeons - adv camp (not w), quests? magic scrolls, tactics c (working)
 - garnizon tier 1
 - 3 set of maps
 
