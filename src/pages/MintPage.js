@@ -234,9 +234,13 @@ export class MintPage extends BasePage {
                 <div class="page-section owned-nfts-section">
                     <h2>Your NFTs</h2>
                     <div id="owned-nfts" class="owned-nfts">
-                        <div class="loading-spinner">
-                            <div class="spinner"></div>
-                        </div>
+                        ${isConnected ? `
+                            <div class="loading-spinner">
+                                <div class="spinner"></div>
+                            </div>
+                        ` : `
+                            <div class="no-nfts">Please connect your wallet to view your NFTs.</div>
+                        `}
                     </div>
                 </div>
             </div>
