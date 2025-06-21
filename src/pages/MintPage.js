@@ -125,15 +125,6 @@ export class MintPage extends BasePage {
         }
     }
 
-    async onWalletConnected(walletResult) {
-        try {
-            await this.getMintCount();
-            await this.loadUserNFTs();
-        } catch (error) {
-            Logger.error("Error in onWalletConnected:", error);
-        }
-    }
-
     updateTotalPrice() {
         const amountInput = this.element.querySelector('#mint-amount');
         const totalPriceElement = this.element.querySelector('#total-price');
