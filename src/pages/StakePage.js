@@ -3,15 +3,66 @@ import Logger from '../js/utils/logger.js';
 import { NFTCard } from '../components/NFTCard.js';
 import { BasePage } from './BasePage.js';
 import { StatusComponent } from '../components/StatusComponent.js';
+import { Modal } from '../js/utils/modal.js';
 
 export class StakePage extends BasePage {
     constructor() {
         super();
         import('../styles/nft-collection.css');
-        this.container = document.createElement('div');
-        this.container.className = 'base-page stake-page';
+        Logger.info('StakePage constructor called');
+        this.element = document.createElement('div');
+        this.element.className = 'base-page stake-page';
+        this.modal = new Modal();
         this.statusComponent = new StatusComponent();
-        this.container.innerHTML = `
+        
+        // Initialize NFT card components
+        this.unstakedCard = new NFTCard({
+            showStakeButton: true,
+            onStake: (tokenId, collection) => this.stakeNFT(tokenId, collection)
+        });
+        
+        this.stakedCard = new NFTCard({
+            showUnstakeButton: true,
+            onUnstake: (tokenId, collection) => this.unstakeNFT(tokenId, collection)
+        });
+
+        // Store all available NFTs
+        this.availableNFTs = [];
+        
+        this.render();
+    }
+
+    async onInitialized(walletResult) {
+        Logger.info('StakePage onInitialized called with wallet:', walletResult);
+        if (!walletResult || !walletResult.address) {
+            Logger.error('No wallet address provided in onInitialized');
+            this.modal.error('Please connect your wallet first.');
+            return;
+        }
+        
+        try {
+            await this.loadUserNFTs();
+            this.setupEventListeners();
+            Logger.info('Stake page initialized successfully');
+        } catch (error) {
+            Logger.error('Error initializing stake page:', error);
+            this.modal.error('Failed to initialize stake page. Please try refreshing the page.');
+        }
+    }
+
+    setupEventListeners() {
+        Logger.info('Setting up event listeners');
+        
+        // Add event listener for building type selector
+        this.addEventListener('.building-type-select', 'change', () => {
+            this.filterNFTs().catch(error => {
+                Logger.error('Error in filterNFTs:', error);
+            });
+        });
+    }
+
+    render() {
+        this.element.innerHTML = `
             <div class="page-container">
                 <h1>Stake Your NFTs</h1>
 
@@ -59,25 +110,11 @@ export class StakePage extends BasePage {
                 </div>
             </div>
         `;
-        
-        // Initialize NFT card components
-        this.unstakedCard = new NFTCard({
-            showStakeButton: true,
-            onStake: (tokenId, collection) => this.stakeNFT(tokenId, collection)
-        });
-        
-        this.stakedCard = new NFTCard({
-            showUnstakeButton: true,
-            onUnstake: (tokenId, collection) => this.unstakeNFT(tokenId, collection)
-        });
-
-        // Store all available NFTs
-        this.availableNFTs = [];
     }
 
     showStatus(type, message, title = '') {
         const statusElement = this.statusComponent.show(message, type);
-        const pageContainer = this.container.querySelector('.page-container');
+        const pageContainer = this.element.querySelector('.page-container');
         if (pageContainer) {
             // Insert after the first section
             const firstSection = pageContainer.querySelector('.page-section');
@@ -88,23 +125,14 @@ export class StakePage extends BasePage {
             }
         } else {
             // Fallback - append to the container
-            this.container.appendChild(statusElement);
-        }
-    }
-
-    async onInitialized(walletResult) {
-        if (walletResult.success) {
-            await this.loadUserNFTs();
-            // Add event listener for building type selector
-            const buildingTypeSelect = this.container.querySelector('.building-type-select');
-            buildingTypeSelect.addEventListener('change', () => this.filterNFTs());
+            this.element.appendChild(statusElement);
         }
     }
 
     async filterNFTs() {
-        const buildingTypeSelect = this.container.querySelector('.building-type-select');
+        const buildingTypeSelect = this.element.querySelector('.building-type-select');
         const selectedType = buildingTypeSelect.value;
-        const ownedNFTsContainer = this.container.querySelector('.nft-list');
+        const ownedNFTsContainer = this.element.querySelector('.nft-list');
         
         Logger.info('Filtering NFTs for building type:', selectedType);
         
@@ -127,13 +155,13 @@ export class StakePage extends BasePage {
         });
 
         // Update status section with filtered counts
-        const stakedNFTs = this.container.querySelector('.staked-nft-list').children.length;
+        const stakedNFTs = this.element.querySelector('.staked-nft-list').children.length;
         const availableNFTs = filteredNFTs.length;
         const totalNFTs = stakedNFTs + availableNFTs;
 
-        this.container.querySelector('.total-nfts').textContent = totalNFTs;
-        this.container.querySelector('.staked-nfts').textContent = stakedNFTs;
-        this.container.querySelector('.available-nfts').textContent = availableNFTs;
+        this.element.querySelector('.total-nfts').textContent = totalNFTs;
+        this.element.querySelector('.staked-nfts').textContent = stakedNFTs;
+        this.element.querySelector('.available-nfts').textContent = availableNFTs;
 
         if (filteredNFTs.length === 0) {
             ownedNFTsContainer.innerHTML = '<div class="no-nfts">No NFTs available for this building type.</div>';
@@ -153,8 +181,8 @@ export class StakePage extends BasePage {
     async loadUserNFTs() {
         Logger.info('Loading user NFTs in StakePage...');
         try {
-            const ownedNFTsContainer = this.container.querySelector('.nft-list');
-            const stakedNFTsContainer = this.container.querySelector('.staked-nft-list');
+            const ownedNFTsContainer = this.element.querySelector('.nft-list');
+            const stakedNFTsContainer = this.element.querySelector('.staked-nft-list');
             
             // Clear containers first
             ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
@@ -176,7 +204,7 @@ export class StakePage extends BasePage {
             const playerTier = await this.contracts.gameState.getPlayerTier(userAddress);
             
             // Store current selection before updating
-            const buildingTypeSelect = this.container.querySelector('.building-type-select');
+            const buildingTypeSelect = this.element.querySelector('.building-type-select');
             const currentSelection = buildingTypeSelect.value;
             
             // Update building type selector based on tier
@@ -271,7 +299,7 @@ export class StakePage extends BasePage {
         try {
             Logger.info('StakeNFT called with:', { tokenId, collection });
             
-            const buildingTypeSelect = this.container.querySelector('.building-type-select');
+            const buildingTypeSelect = this.element.querySelector('.building-type-select');
             const buildingType = parseInt(buildingTypeSelect.value);
             
             // Step 1: Initial checks
@@ -330,20 +358,5 @@ export class StakePage extends BasePage {
             Logger.error('Error unstaking NFT:', error);
             this.showStatus('error', `Failed to unstake NFT: ${error.message}`, 'Unstaking Failed');
         }
-    }
-
-    mount(container) {
-        Logger.info('Mounting stake page...');
-        container.appendChild(this.container);
-        // Initialize using base class method
-        this.initialize().catch(error => {
-            Logger.error('Error during stake page initialization:', error);
-            this.modal.error('Failed to initialize stake page. Please try refreshing the page.');
-        });
-    }
-
-    unmount() {
-        Logger.info('Unmounting stake page...');
-        this.container.remove();
     }
 } 
