@@ -169,8 +169,8 @@ export class MintPage extends BasePage {
                 <!-- NFT Type Selector -->
                 <div class="page-section type-selector-section">
                     <h2>Select NFT Type</h2>
-                    <div class="type-selector">
-                        <select id="nft-type-selector" class="type-select">
+                    <div class="building-type-selector">
+                        <select id="nft-type-selector" class="building-type-select">
                             <option value="house">House (Tier 0)</option>
                             <option value="farm">Farm (Tier 1)</option>
                             <option value="rep">Rep Station (Tier 2)</option>
@@ -179,7 +179,7 @@ export class MintPage extends BasePage {
                 </div>
                 
                 <!-- Mint Info Section -->
-                <div class="page-section mint-info-section">
+                <div class="page-section status-section">
                     <h2>Mint Information</h2>
                     <div class="mint-info">
                         <div class="info-card">
@@ -212,7 +212,7 @@ export class MintPage extends BasePage {
                 </div>
                 
                 <!-- Actions Section -->
-                <div class="page-section actions-section">
+                <div class="page-section status-section">
                     <h2>Actions</h2>
                     <div class="mint-actions">
                         <button id="mint-button" class="mint-button" ${isConnected ? '' : 'disabled'}>
@@ -223,7 +223,7 @@ export class MintPage extends BasePage {
                 </div>
 
                 <!-- Preview Section -->
-                <div class="page-section preview-section">
+                <div class="page-section status-section">
                     <h2>NFT Preview</h2>
                     <div class="nft-preview">
                         ${this.getPlaceholderHTML()}
@@ -231,9 +231,9 @@ export class MintPage extends BasePage {
                 </div>
 
                 <!-- Your NFTs Section -->
-                <div class="page-section owned-nfts-section">
+                <div class="page-section status-section">
                     <h2>Your NFTs</h2>
-                    <div id="owned-nfts" class="owned-nfts">
+                    <div id="owned-nfts" class="nft-list nft-grid">
                         ${isConnected ? `
                             <div class="loading-spinner">
                                 <div class="spinner"></div>
