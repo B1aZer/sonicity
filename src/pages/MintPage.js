@@ -27,8 +27,6 @@ export class MintPage extends BasePage {
         this.statusComponent = new StatusComponent();
         this.selectedType = 'house'; // Default to house
         this.render();
-        this.setupEventListeners();
-        this.initialize();
     }
 
     setupEventListeners() {
@@ -119,6 +117,7 @@ export class MintPage extends BasePage {
         try {
             await this.getMintCount();
             await this.loadUserNFTs();
+            this.setupEventListeners();
             Logger.info('Mint page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing mint page:', error);
