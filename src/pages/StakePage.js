@@ -11,7 +11,7 @@ export class StakePage extends BasePage {
         import('../styles/nft-collection.css');
         Logger.info('StakePage constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'base-page stake-page';
+        this.element.className = 'base-page';
         this.modal = new Modal();
         this.statusComponent = new StatusComponent();
         
