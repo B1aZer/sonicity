@@ -49,7 +49,7 @@ export class MintPage extends BasePage {
 
         // Mint amount controls
         this.addEventListener('#decrease-amount', 'click', () => {
-            const amountInput = this.element.querySelector('#mint-amount');
+        const amountInput = this.element.querySelector('#mint-amount');
             let currentAmount = parseInt(amountInput.value);
             if (currentAmount > 1) {
                 amountInput.value = currentAmount - 1;
@@ -58,6 +58,7 @@ export class MintPage extends BasePage {
         });
 
         this.addEventListener('#increase-amount', 'click', () => {
+            Logger.debug('Increase amount button clicked');
             const amountInput = this.element.querySelector('#mint-amount');
             let currentAmount = parseInt(amountInput.value);
             const maxAmount = this.selectedType === 'house' ? 10 : 5;
@@ -68,6 +69,7 @@ export class MintPage extends BasePage {
         });
 
         this.addEventListener('#mint-amount', 'change', () => {
+            Logger.debug('Mint amount input changed');
             const amountInput = this.element.querySelector('#mint-amount');
             let currentAmount = parseInt(amountInput.value);
             const maxAmount = this.selectedType === 'house' ? 10 : 5;
@@ -143,8 +145,16 @@ export class MintPage extends BasePage {
 
     showStatus(message, type = 'info') {
         const statusElement = this.statusComponent.show(message, type);
-        const actionsSection = this.element.querySelector('.mint-actions');
-        actionsSection.after(statusElement);
+        const actionsSection = this.element.querySelector('.building-actions');
+        if (actionsSection) {
+            actionsSection.after(statusElement);
+        } else {
+            // Fallback - append to the page container
+            const pageContainer = this.element.querySelector('.page-container');
+            if (pageContainer) {
+                pageContainer.appendChild(statusElement);
+            }
+        }
     }
 
     getPlaceholderHTML() {
