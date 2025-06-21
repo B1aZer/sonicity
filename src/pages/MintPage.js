@@ -109,11 +109,20 @@ export class MintPage extends BasePage {
     }
 
     async onInitialized(walletResult) {
+        Logger.info('MintPage onInitialized called with wallet:', walletResult);
+        if (!walletResult || !walletResult.address) {
+            Logger.error('No wallet address provided in onInitialized');
+            this.modal.error('Please connect your wallet first.');
+            return;
+        }
+        
         try {
             await this.getMintCount();
             await this.loadUserNFTs();
+            Logger.info('Mint page initialized successfully');
         } catch (error) {
-            Logger.error("Error in onInitialized:", error);
+            Logger.error('Error initializing mint page:', error);
+            this.modal.error('Failed to initialize mint page. Please try refreshing the page.');
         }
     }
 
@@ -423,15 +432,5 @@ export class MintPage extends BasePage {
         } finally {
             mintButton.disabled = false;
         }
-    }
-
-    async mount(container) {
-        container.appendChild(this.element);
-        // Initialize contracts when mounting
-        await this.initialize();
-    }
-
-    unmount() {
-        this.element.remove();
     }
 } 
