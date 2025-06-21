@@ -100,13 +100,21 @@ export class StakePage extends BasePage {
                 <!-- Available NFTs Section -->
                 <div class="page-section status-section">
                     <h2>Your NFTs</h2>
-                    <div class="nft-list nft-grid"></div>
+                    <div class="nft-list nft-grid">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Staked NFTs Section -->
                 <div class="page-section status-section">
                     <h2>Staked NFTs</h2>
-                    <div class="staked-nft-list nft-grid"></div>
+                    <div class="staked-nft-list nft-grid">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -184,9 +192,9 @@ export class StakePage extends BasePage {
             const ownedNFTsContainer = this.element.querySelector('.nft-list');
             const stakedNFTsContainer = this.element.querySelector('.staked-nft-list');
             
-            // Clear containers first
-            ownedNFTsContainer.innerHTML = '<div class="loading">Loading your NFTs...</div>';
-            stakedNFTsContainer.innerHTML = '<div class="loading">Loading staked NFTs...</div>';
+            // Clear loading spinners
+            ownedNFTsContainer.innerHTML = '';
+            stakedNFTsContainer.innerHTML = '';
 
             const userAddress = await this.contracts.nft.getAddress();
             const nftAddress = await this.contracts.nft.getContractAddress();
@@ -195,10 +203,6 @@ export class StakePage extends BasePage {
             // Get staked NFTs from both collections
             const stakedNFTs = await this.contracts.altar.getUserStakesByCollection(userAddress, nftAddress);
             const stakedFarmNFTs = await this.contracts.altar.getUserStakesByCollection(userAddress, farmAddress);
-
-            // Clear loading messages
-            ownedNFTsContainer.innerHTML = '';
-            stakedNFTsContainer.innerHTML = '';
 
             // Get player's tier
             const playerTier = await this.contracts.gameState.getPlayerTier(userAddress);
@@ -252,6 +256,11 @@ export class StakePage extends BasePage {
             await processStakedNFTs(stakedNFTs, nftAddress, this.contracts.nft);
             await processStakedNFTs(stakedFarmNFTs, farmAddress, this.contracts.farmNft);
 
+            // Show message if no staked NFTs
+            if (stakedCount === 0) {
+                stakedNFTsContainer.innerHTML = '<div class="no-nfts">No staked NFTs found.</div>';
+            }
+
             // Get all owned NFTs that are not staked
             this.availableNFTs = [];
 
@@ -286,12 +295,23 @@ export class StakePage extends BasePage {
                 }
             }
 
+            // Show message if no available NFTs
+            if (this.availableNFTs.length === 0) {
+                ownedNFTsContainer.innerHTML = '<div class="no-nfts">No NFTs available for staking.</div>';
+            }
+
             // Initial filter of NFTs
             await this.filterNFTs();
 
         } catch (error) {
             Logger.error('Error loading user NFTs:', error);
             this.showStatus('error', 'Failed to load NFTs. Please try again.');
+            
+            // Show error state in containers
+            const ownedNFTsContainer = this.element.querySelector('.nft-list');
+            const stakedNFTsContainer = this.element.querySelector('.staked-nft-list');
+            ownedNFTsContainer.innerHTML = '<div class="error-message">Failed to load NFTs. Please try refreshing the page.</div>';
+            stakedNFTsContainer.innerHTML = '<div class="error-message">Failed to load staked NFTs. Please try refreshing the page.</div>';
         }
     }
 
