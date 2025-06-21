@@ -58,7 +58,6 @@ export class MintPage extends BasePage {
         });
 
         this.addEventListener('#increase-amount', 'click', () => {
-            Logger.debug('Increase amount button clicked');
             const amountInput = this.element.querySelector('#mint-amount');
             let currentAmount = parseInt(amountInput.value);
             const maxAmount = this.selectedType === 'house' ? 10 : 5;
@@ -69,7 +68,6 @@ export class MintPage extends BasePage {
         });
 
         this.addEventListener('#mint-amount', 'change', () => {
-            Logger.debug('Mint amount input changed');
             const amountInput = this.element.querySelector('#mint-amount');
             let currentAmount = parseInt(amountInput.value);
             const maxAmount = this.selectedType === 'house' ? 10 : 5;
