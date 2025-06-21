@@ -1,4 +1,3 @@
-import '../styles/grid-building-page.css';
 import { BasePage } from './BasePage.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
@@ -8,9 +7,10 @@ import Logger from '../js/utils/logger.js';
 export class FarmPage extends BasePage {
     constructor() {
         super();
+        import('../styles/grid-building-page.css');
         Logger.info('FarmPage constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'base-page building-page farm-page';
+        this.element.className = 'base-page';
         this.modal = new Modal();
         
         // Initialize state
@@ -160,11 +160,11 @@ export class FarmPage extends BasePage {
                 <!-- Farm Details Section -->
                 <div class="page-section farm-details-section">
                     <h2>Farm Details</h2>
-                    <div class="building-info">
-                        <div class="info-card">
+                    <div class="buildings-grid">
+                        <div class="building-card">
                             <h3>Production Rate</h3>
                             <p>Current production rate per farm</p>
-                            <div class="info-details">
+                            <div class="building-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Base Rate:</span>
                                     <span class="detail-value" data-state="productionRate">Loading...</span>
@@ -175,10 +175,10 @@ export class FarmPage extends BasePage {
                                 </div>
                             </div>
                         </div>
-                        <div class="info-card">
+                        <div class="building-card">
                             <h3>Collection Rules</h3>
                             <p>Collect food from your farms</p>
-                            <div class="info-details">
+                            <div class="building-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Max Collection:</span>
                                     <span class="detail-value">24 hours</span>
@@ -195,7 +195,7 @@ export class FarmPage extends BasePage {
                 <!-- Actions Section -->
                 <div class="page-section actions-section">
                     <h2>Actions</h2>
-                    <div class="actions-container">
+                    <div class="building-actions">
                         <button class="claim-button btn btn-primary btn-lg" data-state="canClaim" disabled>
                             <span class="button-text">Claim Food</span>
                         </button>
