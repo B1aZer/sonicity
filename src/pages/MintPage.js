@@ -230,8 +230,8 @@ export class MintPage extends BasePage {
                 <!-- Actions Section -->
                 <div class="page-section status-section">
                     <h2>Actions</h2>
-                    <div class="mint-actions">
-                        <button id="mint-button" class="mint-button" ${isConnected ? '' : 'disabled'}>
+                    <div class="building-actions">
+                        <button id="mint-button" class="btn btn-primary btn-lg" ${isConnected ? '' : 'disabled'}>
                             <span class="button-text">Mint NFT</span>
                         </button>
                     </div>
