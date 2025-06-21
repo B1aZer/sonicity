@@ -1,67 +1,4 @@
-.type-selector {
-    display: flex;
-    justify-content: center;
-    margin-top: var(--spacing-md);
-}
 
-.type-select {
-    width: 100%;
-    max-width: 300px;
-    padding: var(--spacing-md);
-    font-size: var(--font-size-md);
-    color: var(--text-primary);
-    background: var(--bg-light);
-    border: 1px solid var(--bg-lighter);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: all var(--transition-normal);
-}
-
-.type-select:hover {
-    border-color: var(--color-primary);
-}
-
-.type-select:focus {
-    outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
-}
-
-.type-select option {
-    padding: var(--spacing-sm);
-    background: var(--bg-light);
-    color: var(--text-primary);
-}
-
-.type-select option:disabled {
-    color: var(--text-muted);
-    background: var(--bg-lighter);
-}
-
-/* Mint Info Section */
-.mint-info {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--spacing-lg);
-}
-
-.info-card {
-    background: var(--bg-lighter);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    border: 1px solid var(--bg-lighter);
-    transition: transform var(--transition-normal);
-}
-
-.info-card:hover {
-    transform: translateY(-5px);
-}
-
-.info-card h3 {
-    color: var(--color-primary);
-    margin-bottom: var(--spacing-sm);
-    font-size: var(--font-size-lg);
-}
 
 /* Progress Bar */
 .mint-progress {
@@ -145,7 +82,7 @@
     font-weight: 500;
 }
 
-/* Actions Section */
+/* 
 .mint-actions {
     display: flex;
     gap: var(--spacing-md);
@@ -187,6 +124,7 @@
     text-align: center;
     flex: 1;
 }
+*/
 
 /* Preview Section */
 .preview-section {
@@ -236,6 +174,7 @@
     border-radius: var(--radius-md);
     margin-bottom: var(--spacing-sm);
 }
+
 
 .nft-details {
     text-align: left;
@@ -290,26 +229,9 @@
     border: 1px solid var(--bg-lighter);
 }
 
-/* Responsive adjustments */
-@media (min-width: 1024px) {
-    .mint-info {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
+
 
 @media (max-width: 768px) {
-    .mint-info {
-        grid-template-columns: 1fr;
-    }
-    
-    .mint-actions {
-        flex-direction: column;
-    }
-    
-    .mint-button {
-        width: 100%;
-    }
-    
     .owned-nfts {
         grid-template-columns: 1fr;
     }
