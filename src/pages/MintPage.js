@@ -30,22 +30,26 @@ export class MintPage extends BasePage {
     }
 
     setupEventListeners() {
-        const mintButton = this.element.querySelector('#mint-button');
-        mintButton.addEventListener('click', () => this.handleMint());
+        Logger.info('Setting up event listeners');
+        
+        // Mint button
+        this.addEventListener('#mint-button', 'click', () => {
+            this.handleMint().catch(error => {
+                Logger.error('Error in handleMint:', error);
+            });
+        });
 
         // NFT type selector
-        const typeSelector = this.element.querySelector('#nft-type-selector');
-        typeSelector.addEventListener('change', (e) => {
+        this.addEventListener('#nft-type-selector', 'change', (e) => {
             this.selectedType = e.target.value;
-            this.updateMintInfo();
+            this.updateMintInfo().catch(error => {
+                Logger.error('Error in updateMintInfo:', error);
+            });
         });
 
         // Mint amount controls
-        const decreaseBtn = this.element.querySelector('#decrease-amount');
-        const increaseBtn = this.element.querySelector('#increase-amount');
-        const amountInput = this.element.querySelector('#mint-amount');
-
-        decreaseBtn.addEventListener('click', () => {
+        this.addEventListener('#decrease-amount', 'click', () => {
+            const amountInput = this.element.querySelector('#mint-amount');
             let currentAmount = parseInt(amountInput.value);
             if (currentAmount > 1) {
                 amountInput.value = currentAmount - 1;
@@ -53,7 +57,8 @@ export class MintPage extends BasePage {
             }
         });
 
-        increaseBtn.addEventListener('click', () => {
+        this.addEventListener('#increase-amount', 'click', () => {
+            const amountInput = this.element.querySelector('#mint-amount');
             let currentAmount = parseInt(amountInput.value);
             const maxAmount = this.selectedType === 'house' ? 10 : 5;
             if (currentAmount < maxAmount) {
@@ -62,7 +67,8 @@ export class MintPage extends BasePage {
             }
         });
 
-        amountInput.addEventListener('change', () => {
+        this.addEventListener('#mint-amount', 'change', () => {
+            const amountInput = this.element.querySelector('#mint-amount');
             let currentAmount = parseInt(amountInput.value);
             const maxAmount = this.selectedType === 'house' ? 10 : 5;
             if (currentAmount < 1) amountInput.value = 1;
@@ -227,7 +233,11 @@ export class MintPage extends BasePage {
                 <!-- Your NFTs Section -->
                 <div class="page-section owned-nfts-section">
                     <h2>Your NFTs</h2>
-                    <div id="owned-nfts" class="owned-nfts"></div>
+                    <div id="owned-nfts" class="owned-nfts">
+                        <div class="loading-spinner">
+                            <div class="spinner"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
@@ -237,6 +247,8 @@ export class MintPage extends BasePage {
         try {
             Logger.info('Loading user NFTs');
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
+            
+            // Clear loading spinner
             ownedNFTsContainer.innerHTML = '<div class="nft-grid"></div>';
             const grid = ownedNFTsContainer.querySelector('.nft-grid');
 
@@ -267,7 +279,7 @@ export class MintPage extends BasePage {
             this.userNFTs = nfts;
             
             if (nfts.length === 0) {
-                ownedNFTsContainer.innerHTML = '<p class="no-nfts">You don\'t own any NFTs yet.</p>';
+                ownedNFTsContainer.innerHTML = '<div class="no-nfts">You don\'t own any NFTs yet.</div>';
             } else {
                 // Add NFT cards to the grid
                 for (const nft of nfts) {
@@ -308,7 +320,7 @@ export class MintPage extends BasePage {
         } catch (error) {
             Logger.error("Error loading user's NFTs:", error);
             const ownedNFTsContainer = this.element.querySelector('#owned-nfts');
-            ownedNFTsContainer.innerHTML = '<p class="error">Error loading your NFTs. Please try again.</p>';
+            ownedNFTsContainer.innerHTML = '<div class="error-message">Error loading your NFTs. Please try again.</div>';
             
             // Only update preview if requested
             if (updatePreview) {
