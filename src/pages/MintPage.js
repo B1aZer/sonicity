@@ -181,30 +181,46 @@ export class MintPage extends BasePage {
                 <!-- Mint Info Section -->
                 <div class="page-section status-section">
                     <h2>Mint Information</h2>
-                    <div class="mint-info">
-                        <div class="info-card">
+                    <div class="buildings-grid">
+                        <div class="building-card">
                             <h3>Collection Progress</h3>
-                            <div class="mint-progress">
-                                <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
-                                </div>
-                                <div class="progress-text">
-                                    <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span>
+                            <p>Current minting progress</p>
+                            <div class="building-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Progress:</span>
+                                    <span class="detail-value">
+                                        <div class="mint-progress">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
+                                            </div>
+                                            <div class="progress-text">
+                                                <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span>
+                                            </div>
+                                        </div>
+                                    </span>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="info-card">
+                        <div class="building-card">
                             <h3>Mint Controls</h3>
-                            <div class="mint-controls">
-                                <div class="mint-amount">
-                                    <button id="decrease-amount" class="amount-button">-</button>
-                                    <input type="number" id="mint-amount" value="1" min="1" max="10">
-                                    <button id="increase-amount" class="amount-button">+</button>
+                            <p>Configure your mint settings</p>
+                            <div class="building-details">
+                                <div class="detail-item">
+                                    <span class="detail-label">Amount:</span>
+                                    <span class="detail-value">
+                                        <div class="mint-amount">
+                                            <button id="decrease-amount" class="amount-button">-</button>
+                                            <input type="number" id="mint-amount" value="1" min="1" max="10">
+                                            <button id="increase-amount" class="amount-button">+</button>
+                                        </div>
+                                    </span>
                                 </div>
-                                
-                                <div class="mint-price">
-                                    <span>Price: <span id="total-price">${this.mintPrice}</span> ETH</span>
+                                <div class="detail-item">
+                                    <span class="detail-label">Price:</span>
+                                    <span class="detail-value">
+                                        <span id="total-price">${this.mintPrice}</span> ETH
+                                    </span>
                                 </div>
                             </div>
                         </div>
