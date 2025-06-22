@@ -1,5 +1,6 @@
 export class StatusComponent {
     constructor() {
+        import('../styles/status-component.css');
         this.element = document.createElement('div');
         this.element.className = 'status-component';
     }
