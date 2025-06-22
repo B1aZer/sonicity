@@ -201,7 +201,6 @@
     margin-top: var(--spacing-md);
     text-align: center;
     font-weight: bold;
-    animation: pulse 2s infinite;
 }
 
 /* TODO: check if this is needed */
