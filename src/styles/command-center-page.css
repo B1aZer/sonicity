@@ -1,3 +1,5 @@
+/* TODO: check if this is needed */
+/*
 .command-center-page .feature-card {
     background: white;
     border-radius: 10px;
@@ -65,15 +67,16 @@
     padding: var(--spacing-lg);
     border: 1px solid var(--bg-lighter);
 }
+*/
 
 /* Opponent Status Section */
 .command-center-page .opponent-status-section .status-display {
-    background: var(--bg-dark-secondary);
+    background: var(--card-bg);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg);
     text-align: center;
     margin-top: var(--spacing-md);
-    border: 1px solid var(--border-color);
+    border: var(--border-tertiary);
 }
 
 .command-center-page .status-text {
@@ -143,12 +146,7 @@
     cursor: not-allowed;
 }
 
-.battle-history-section {
-    background: var(--bg-light);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
+
 
 .battle-history-list {
     display: flex;
@@ -158,18 +156,10 @@
 }
 
 .battle-history-item {
-    background: var(--bg-dark-secondary);
+    background: var(--card-bg);
     border-radius: 8px;
     padding: 1rem;
-    border: 1px solid var(--border-color);
-}
-
-.battle-history-item.victory {
-    border-left: 4px solid var(--success-color);
-}
-
-.battle-history-item.defeat {
-    border-left: 4px solid var(--error-color);
+    border: var(--border-tertiary);
 }
 
 .battle-date {
