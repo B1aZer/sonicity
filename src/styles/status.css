@@ -26,47 +26,6 @@
     color: var(--color-primary);
 }
 
-/* Status Component */
-.status-component {
-    background: var(--bg-light);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    margin: var(--spacing-md) 0;
-    text-align: center;
-    border: 1px solid var(--bg-lighter);
-}
-
-.status-component .loading,
-.status-component .success,
-.status-component .error {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-}
-
-.status-component .step {
-    font-weight: bold;
-    color: var(--color-primary);
-}
-
-.status-component .description {
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
-}
-
-.status-component .title {
-    font-weight: bold;
-    font-size: var(--font-size-lg);
-}
-
-.status-component .success .title {
-    color: var(--color-success);
-}
-
-.status-component .error .title {
-    color: var(--color-danger);
-}
-
 /* locks */
 
 .locked {
