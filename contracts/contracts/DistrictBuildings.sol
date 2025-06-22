@@ -152,21 +152,21 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             isCoreBuilding: false
         });
 
-        // Tier 1 Buildings
         districtBuildingConfigs[DistrictBuildingType.DEFENSE_TOWER] = DistrictBuildingConfig({
             name: "Defense Tower",
-            unlockCost: 1000,
+            unlockCost: 800,
             buildCost: 200,
             upgradeCost: 300,  // 300 gold per level
             maxLevel: 5,       // Can be upgraded to level 5
             description: "PvP defense buffs",
-            tier: 1,
+            tier: 0,
             isCoreBuilding: false
         });
 
+        // Tier 1 Buildings
         districtBuildingConfigs[DistrictBuildingType.BARRACKS] = DistrictBuildingConfig({
             name: "Barracks",
-            unlockCost: 1250,
+            unlockCost: 1000,
             buildCost: 250,
             upgradeCost: 500,    // 500 gold per level
             maxLevel: 3,         // Can be upgraded to level 3
