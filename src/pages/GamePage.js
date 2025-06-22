@@ -41,12 +41,18 @@ export class GamePage extends BasePage {
                 this.contracts.gameState.getPlayerRep(playerAddress)
             ]);
             
+            // TODO: Implement gems and diamonds contract calls
+            const gems = 0; // await this.contracts.gameState.getPlayerGems(playerAddress);
+            const diamonds = 0; // await this.contracts.gameState.getPlayerDiamonds(playerAddress);
+            
             Logger.info('Resource values:', {
                 gold: gold.toString(),
                 food: food.toString(),
                 buildingsBuilt: activeBuildings.length,
                 buildingSlots: buildingSlots.toString(),
-                repPoints: repPoints.toString()
+                repPoints: repPoints.toString(),
+                gems: gems.toString(),
+                diamonds: diamonds.toString()
             });
             
             const goldElement = this.element.querySelector('#gold-amount');
@@ -54,6 +60,8 @@ export class GamePage extends BasePage {
             const buildingSlotsElement = this.element.querySelector('#building-slots');
             const maxBuildingSlotsElement = this.element.querySelector('#max-building-slots');
             const repPointsElement = this.element.querySelector('#rep-points');
+            const gemsElement = this.element.querySelector('#gems-amount');
+            const diamondsElement = this.element.querySelector('#diamonds-amount');
             
             if (goldElement) {
                 goldElement.textContent = gold.toString();
@@ -69,6 +77,12 @@ export class GamePage extends BasePage {
             }
             if (repPointsElement) {
                 repPointsElement.textContent = repPoints.toString();
+            }
+            if (gemsElement) {
+                gemsElement.textContent = gems.toString();
+            }
+            if (diamondsElement) {
+                diamondsElement.textContent = diamonds.toString();
             }
         } catch (error) {
             Logger.error('Error updating resource display:', error);
@@ -321,6 +335,8 @@ export class GamePage extends BasePage {
                 <div id="resource-display">
                     Gold: <span id="gold-amount" style="color: #FFD700; font-weight: bold;">0</span><br>
                     Food: <span id="food-amount" style="color: #90EE90; font-weight: bold;">0</span><br>
+                    Gems: <span id="gems-amount" style="color: #E91E63; font-weight: bold;">0</span><br>
+                    Diamonds: <span id="diamonds-amount" style="color: #00BCD4; font-weight: bold;">0</span><br>
                     Rep Points: <span id="rep-points" style="color: #4CAF50; font-weight: bold;">0</span><br>
                     Building Slots: <span id="building-slots" style="color: #87CEEB; font-weight: bold;">0</span>/<span id="max-building-slots" style="color: #87CEEB; font-weight: bold;">0</span>
                 </div>
