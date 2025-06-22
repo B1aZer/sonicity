@@ -23,14 +23,14 @@
 3:
 - tavern (not w)
 - adventure camp (not w)
-- relics building? (NOT W)
-- tactics center
+- mage tower / relics building? (NOT W)
+- tactics center (not w)
 
 4:
-- engine?
-- marketplae (rep points -> diamonds)
-- mint rep points for gems
-- mint rep points for super  nft (dynamic) gives voting
+- unlocks gems
+- unlocks diamonds
+- unlocks hft
+- forgery upgrades refinery time
 
 5: city governance
 6: mega buidlings
