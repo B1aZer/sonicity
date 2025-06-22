@@ -37,11 +37,9 @@
 .mint-amount {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: left;
     gap: var(--spacing-sm);
-    background: var(--bg-lighter);
     padding: var(--spacing-sm);
-    border-radius: var(--radius-md);
 }
 
 .amount-button {
@@ -49,8 +47,8 @@
     height: 36px;
     border-radius: 18px;
     border: none;
-    background: var(--bg-light);
-    color: var(--text-primary);
+    background: var(--bg-lighter);
+    color: var(--text-secondary);
     font-size: var(--font-size-lg);
     cursor: pointer;
     transition: all var(--transition-normal);
@@ -69,8 +67,8 @@
     height: 36px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--bg-lighter);
-    background: var(--bg-light);
-    color: var(--text-primary);
+    background: var(--bg-lighter);
+    color: var(--text-secondary);
     text-align: center;
     font-size: var(--font-size-md);
 }

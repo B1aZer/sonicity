@@ -192,7 +192,6 @@ export class MintPage extends BasePage {
                     <div class="buildings-grid">
                         <div class="building-card">
                             <h3>Collection Progress</h3>
-                            <p>Current minting progress</p>
                             <div class="building-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Progress:</span>
@@ -212,7 +211,6 @@ export class MintPage extends BasePage {
                         
                         <div class="building-card">
                             <h3>Mint Controls</h3>
-                            <p>Configure your mint settings</p>
                             <div class="building-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Amount:</span>
