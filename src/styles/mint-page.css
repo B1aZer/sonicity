@@ -159,6 +159,7 @@
     margin-bottom: var(--spacing-xs);
 }
 
+/* TODO: check if this is needed */
 .minted-nft {
     display: flex;
     flex-direction: column;
@@ -205,20 +206,7 @@
     animation: pulse 2s infinite;
 }
 
-/* Your NFTs Section */
-.owned-nfts-section {
-    margin-bottom: 0;
-}
-
-.owned-nfts {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--spacing-xl);
-    width: 100%;
-    margin: 0 auto;
-    justify-content: center;
-}
-
+/* TODO: check if this is needed */
 .no-nfts {
     text-align: center;
     color: var(--text-secondary);
@@ -228,11 +216,3 @@
     border-radius: var(--radius-lg);
     border: 1px solid var(--bg-lighter);
 }
-
-
-
-@media (max-width: 768px) {
-    .owned-nfts {
-        grid-template-columns: 1fr;
-    }
-} 
