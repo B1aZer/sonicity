@@ -609,24 +609,26 @@ describe("BattleSystem", function () {
             // Resolve battle and capture debug events
             const resolveTx = await battleSystem.connect(player1).resolveBattle(player1.address);
             
-            const battle = await battleSystem.activeBattles(player1.address);
+            // Get the latest battle record from history instead of activeBattles
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
 
-            console.log("\nBattle Record in q:");
-            console.log("should not apply battle effects (equal power)");
+            console.log("\nBattle Record:");
+            console.log("should apply battle effects (treasury burn, building damage)");
             console.log("----------------------------------------");
-            console.log("Attacker:", battle.attacker);
-            console.log("Defender:", battle.defender);
-            console.log("Start Time:", new Date(Number(battle.startTime) * 1000).toISOString());
-            console.log("Resolved:", battle.resolved);
+            console.log("Attacker:", battleRecord.attacker);
+            console.log("Defender:", battleRecord.defender);
+            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
+            console.log("Attacker Won:", battleRecord.attackerWon);
             console.log("\nPower Levels:");
-            console.log("  Attacker Power:", battle.attackerPower.toString());
-            console.log("  Defender Power:", battle.defenderPower.toString());
+            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
+            console.log("  Defender Power:", battleRecord.defenderPower.toString());
             console.log("----------------------------------------\n");
 
-            expect(battle.repPoints).to.be.gt(0);
-            expect(battle.treasuryBurned).to.be.gt(0);
-            expect(battle.gridBuildingsDamaged).to.be.gt(0);
-            expect(battle.districtBuildingsDamaged).to.be.gt(0);
+            expect(battleRecord.repPoints).to.be.gt(0);
+            expect(battleRecord.treasuryBurned).to.be.gt(0);
+            expect(battleRecord.gridBuildingsDamaged).to.be.gt(0);
+            expect(battleRecord.districtBuildingsDamaged).to.be.gt(0);
         });
 
         it("should apply battle effects (grid buildings damage)", async function () {
@@ -670,24 +672,26 @@ describe("BattleSystem", function () {
             // Resolve battle and capture debug events
             const resolveTx = await battleSystem.connect(player1).resolveBattle(player1.address);
             
-            const battle = await battleSystem.activeBattles(player1.address);
+            // Get the latest battle record from history instead of activeBattles
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
 
-            console.log("\nBattle Record in q:");
+            console.log("\nBattle Record:");
             console.log("should apply battle effects (grid buildings damage)");
             console.log("----------------------------------------");
-            console.log("Attacker:", battle.attacker);
-            console.log("Defender:", battle.defender);
-            console.log("Start Time:", new Date(Number(battle.startTime) * 1000).toISOString());
-            console.log("Resolved:", battle.resolved);
+            console.log("Attacker:", battleRecord.attacker);
+            console.log("Defender:", battleRecord.defender);
+            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
+            console.log("Attacker Won:", battleRecord.attackerWon);
             console.log("\nPower Levels:");
-            console.log("  Attacker Power:", battle.attackerPower.toString());
-            console.log("  Defender Power:", battle.defenderPower.toString());
+            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
+            console.log("  Defender Power:", battleRecord.defenderPower.toString());
             console.log("----------------------------------------\n");
 
-            expect(battle.repPoints).to.be.gt(0);
-            expect(battle.treasuryBurned, "Treasury burn should be 0").to.be.eq(0);
-            expect(battle.gridBuildingsDamaged, "Grid buildings damage should be greater than 0").to.be.gt(0);
-            expect(battle.districtBuildingsDamaged, "District buildings damage should be equal to 0").to.be.eq(0);
+            expect(battleRecord.repPoints).to.be.gt(0);
+            expect(battleRecord.treasuryBurned, "Treasury burn should be 0").to.be.eq(0);
+            expect(battleRecord.gridBuildingsDamaged, "Grid buildings damage should be greater than 0").to.be.gt(0);
+            expect(battleRecord.districtBuildingsDamaged, "District buildings damage should be equal to 0").to.be.eq(0);
         });
 
         it("should apply battle effects (district buildings damage)", async function () {
@@ -743,24 +747,26 @@ describe("BattleSystem", function () {
             // Resolve battle and capture debug events
             const resolveTx = await battleSystem.connect(player1).resolveBattle(player1.address);
             
-            const battle = await battleSystem.activeBattles(player1.address);
+            // Get the latest battle record from history instead of activeBattles
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
 
-            console.log("\nBattle Record in q:");
+            console.log("\nBattle Record:");
             console.log("should not apply battle effects (equal power)");
             console.log("----------------------------------------");
-            console.log("Attacker:", battle.attacker);
-            console.log("Defender:", battle.defender);
-            console.log("Start Time:", new Date(Number(battle.startTime) * 1000).toISOString());
-            console.log("Resolved:", battle.resolved);
+            console.log("Attacker:", battleRecord.attacker);
+            console.log("Defender:", battleRecord.defender);
+            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
+            console.log("Attacker Won:", battleRecord.attackerWon);
             console.log("\nPower Levels:");
-            console.log("  Attacker Power:", battle.attackerPower.toString());
-            console.log("  Defender Power:", battle.defenderPower.toString());
+            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
+            console.log("  Defender Power:", battleRecord.defenderPower.toString());
             console.log("----------------------------------------\n");
 
-            expect(battle.repPoints).to.be.gt(0);
-            expect(battle.treasuryBurned, "Treasury burn should be equal to 0").to.be.eq(0);
-            expect(battle.gridBuildingsDamaged, "Grid buildings damage should be equal to 0").to.be.eq(0);
-            expect(battle.districtBuildingsDamaged, "District buildings damage should be greater than 0").to.be.gt(0);
+            expect(battleRecord.repPoints).to.be.gt(0);
+            expect(battleRecord.treasuryBurned, "Treasury burn should be equal to 0").to.be.eq(0);
+            expect(battleRecord.gridBuildingsDamaged, "Grid buildings damage should be equal to 0").to.be.eq(0);
+            expect(battleRecord.districtBuildingsDamaged, "District buildings damage should be greater than 0").to.be.gt(0);
         });
 
         it("should apply battle effects (only rep points)", async function () {
@@ -845,27 +851,25 @@ describe("BattleSystem", function () {
             // Resolve battle and capture debug events
             const resolveTx = await battleSystem.connect(player1).resolveBattle(player1.address);
             
-            const battle = await battleSystem.activeBattles(player1.address);
+            // Get the latest battle record from history instead of activeBattles
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+
             console.log("\nBattle Record:");
             console.log("should apply battle effects (treasury burn, building damage)");
             console.log("----------------------------------------");
-            console.log("Attacker:", battle.attacker);
-            console.log("Defender:", battle.defender);
-            console.log("Start Time:", new Date(Number(battle.startTime) * 1000).toISOString());
-            console.log("Resolved:", battle.resolved);
+            console.log("Attacker:", battleRecord.attacker);
+            console.log("Defender:", battleRecord.defender);
+            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
+            console.log("Attacker Won:", battleRecord.attackerWon);
             console.log("\nPower Levels:");
-            console.log("  Attacker Power:", battle.attackerPower.toString());
-            console.log("  Defender Power:", battle.defenderPower.toString());
-            console.log("\nBattle Effects:");
-            console.log("  Treasury Burned:", battle.treasuryBurned.toString());
-            console.log("  Grid Buildings Damaged:", battle.gridBuildingsDamaged.toString());
-            console.log("  District Buildings Damaged:", battle.districtBuildingsDamaged.toString());
-            console.log("  REP Points Awarded:", battle.repPoints.toString());
+            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
+            console.log("  Defender Power:", battleRecord.defenderPower.toString());
             console.log("----------------------------------------\n");
 
-            expect(battle.repPoints).to.be.gt(0);
-            expect(battle.gridBuildingsDamaged).to.be.eq(0);
-            expect(battle.districtBuildingsDamaged).to.be.eq(0);
+            expect(battleRecord.repPoints).to.be.gt(0);
+            expect(battleRecord.gridBuildingsDamaged).to.be.eq(0);
+            expect(battleRecord.districtBuildingsDamaged).to.be.eq(0);
         });
 
         it("should not apply battle effects (equal power)", async function () {
@@ -908,36 +912,35 @@ describe("BattleSystem", function () {
 
             await battleSystem.connect(player1).resolveBattle(player1.address);
             
-            const battle = await battleSystem.activeBattles(player1.address);
-            expect(battle.resolved).to.equal(true);
+            // Get the latest battle record from history instead of activeBattles
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
 
             console.log("\nBattle Record:");
             console.log("should resolve battle after duration has passed for player2 without defense tower but with district buildings");
             console.log("----------------------------------------");
-            console.log("Attacker:", battle.attacker);
-            console.log("Defender:", battle.defender);
-            console.log("Start Time:", new Date(Number(battle.startTime) * 1000).toISOString());
-            console.log("Resolved:", battle.resolved);
+            console.log("Attacker:", battleRecord.attacker);
+            console.log("Defender:", battleRecord.defender);
+            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
+            console.log("Attacker Won:", battleRecord.attackerWon);
             console.log("\nPower Levels:");
-            console.log("  Attacker Power:", battle.attackerPower.toString());
-            console.log("  Defender Power:", battle.defenderPower.toString());
+            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
+            console.log("  Defender Power:", battleRecord.defenderPower.toString());
             console.log("\nBattle Effects:");
-            console.log("  Treasury Burned:", battle.treasuryBurned.toString());
-            console.log("  Grid Buildings Damaged:", battle.gridBuildingsDamaged.toString());
-            console.log("  District Buildings Damaged:", battle.districtBuildingsDamaged.toString());
-            console.log("  REP Points Awarded:", battle.repPoints.toString());
+            console.log("  Treasury Burned:", battleRecord.treasuryBurned.toString());
+            console.log("  Grid Buildings Damaged:", battleRecord.gridBuildingsDamaged.toString());
+            console.log("  District Buildings Damaged:", battleRecord.districtBuildingsDamaged.toString());
+            console.log("  REP Points Awarded:", battleRecord.repPoints.toString());
             console.log("----------------------------------------\n");
 
-            expect(battle.treasuryBurned).to.be.eq(0);
-            expect(battle.gridBuildingsDamaged).to.be.eq(0);
-            expect(battle.districtBuildingsDamaged).to.be.eq(0);
+            expect(battleRecord.treasuryBurned).to.be.eq(0);
+            expect(battleRecord.gridBuildingsDamaged).to.be.eq(0);
+            expect(battleRecord.districtBuildingsDamaged).to.be.eq(0);
         });
 
         it("should resolve battle after duration has passed for player2 without district buildings", async function () {
             // Train troops for player1
             await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
-            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
-            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             // Register players for matchmaking
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
@@ -962,8 +965,8 @@ describe("BattleSystem", function () {
             // Start a battle
             await battleSystem.connect(player1).startBattle(
                 5,
-                2,
-                1
+                0,
+                0
             );
 
             // Fast forward time
@@ -972,8 +975,30 @@ describe("BattleSystem", function () {
 
             await battleSystem.connect(player1).resolveBattle(player1.address);
             
-            const battle = await battleSystem.activeBattles(player1.address);
-            expect(battle.resolved).to.equal(true);
+            // Get the latest battle record from history instead of activeBattles
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+
+            console.log("\nBattle Record:");
+            console.log("should resolve battle after duration has passed for player2 without district buildings");
+            console.log("----------------------------------------");
+            console.log("Attacker:", battleRecord.attacker);
+            console.log("Defender:", battleRecord.defender);
+            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
+            console.log("Attacker Won:", battleRecord.attackerWon);
+            console.log("\nPower Levels:");
+            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
+            console.log("  Defender Power:", battleRecord.defenderPower.toString());
+            console.log("\nBattle Effects:");
+            console.log("  Treasury Burned:", battleRecord.treasuryBurned.toString());
+            console.log("  Grid Buildings Damaged:", battleRecord.gridBuildingsDamaged.toString());
+            console.log("  District Buildings Damaged:", battleRecord.districtBuildingsDamaged.toString());
+            console.log("  REP Points Awarded:", battleRecord.repPoints.toString());
+            console.log("----------------------------------------\n");
+
+            expect(battleRecord.repPoints).to.be.gt(0);
+            expect(battleRecord.gridBuildingsDamaged).to.be.eq(0);
+            expect(battleRecord.districtBuildingsDamaged).to.be.eq(0);
         });
 
         it("should resolve battle after duration has passed without grid buildings", async function () {
@@ -1013,8 +1038,30 @@ describe("BattleSystem", function () {
 
             await battleSystem.connect(player1).resolveBattle(player1.address);
             
-            const battle = await battleSystem.activeBattles(player1.address);
-            expect(battle.resolved).to.equal(true);
+            // Get the latest battle record from history instead of activeBattles
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+
+            console.log("\nBattle Record:");
+            console.log("should resolve battle after duration has passed without grid buildings");
+            console.log("----------------------------------------");
+            console.log("Attacker:", battleRecord.attacker);
+            console.log("Defender:", battleRecord.defender);
+            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
+            console.log("Attacker Won:", battleRecord.attackerWon);
+            console.log("\nPower Levels:");
+            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
+            console.log("  Defender Power:", battleRecord.defenderPower.toString());
+            console.log("\nBattle Effects:");
+            console.log("  Treasury Burned:", battleRecord.treasuryBurned.toString());
+            console.log("  Grid Buildings Damaged:", battleRecord.gridBuildingsDamaged.toString());
+            console.log("  District Buildings Damaged:", battleRecord.districtBuildingsDamaged.toString());
+            console.log("  REP Points Awarded:", battleRecord.repPoints.toString());
+            console.log("----------------------------------------\n");
+
+            expect(battleRecord.treasuryBurned).to.be.eq(0);
+            expect(battleRecord.gridBuildingsDamaged).to.be.eq(0);
+            expect(battleRecord.districtBuildingsDamaged).to.be.eq(0);
         });
 
         it("should record battle history after resolution", async function () {
@@ -1054,9 +1101,26 @@ describe("BattleSystem", function () {
 
             await battleSystem.connect(player1).resolveBattle(player1.address);
             
-            const battleRecord = await battleSystem.battleHistory(0);
-            expect(battleRecord.attacker).to.equal(player1.address);
-            expect(battleRecord.defender).to.equal(player2.address);
+            // Get the latest battle record from history instead of activeBattles
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+
+            console.log("\nBattle Record:");
+            console.log("should record battle history after resolution");
+            console.log("----------------------------------------");
+            console.log("Attacker:", battleRecord.attacker);
+            console.log("Defender:", battleRecord.defender);
+            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
+            console.log("Attacker Won:", battleRecord.attackerWon);
+            console.log("\nPower Levels:");
+            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
+            console.log("  Defender Power:", battleRecord.defenderPower.toString());
+            console.log("----------------------------------------\n");
+
+            expect(battleRecord.repPoints).to.be.gt(0);
+            expect(battleRecord.treasuryBurned).to.be.gt(0);
+            expect(battleRecord.gridBuildingsDamaged).to.be.gt(0);
+            expect(battleRecord.districtBuildingsDamaged).to.be.gt(0);
         });
     });
 

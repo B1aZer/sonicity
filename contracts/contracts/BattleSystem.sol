@@ -796,6 +796,14 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     /**
+     * @dev Get the latest battle ID
+     * @return uint256 The latest battle ID (nextBattleId - 1)
+     */
+    function getLatestBattleId() external view returns (uint256) {
+        return nextBattleId > 0 ? nextBattleId - 1 : 0;
+    }
+
+    /**
      * @dev Get battle records for a specific player
      * @param player The address of the player
      * @return BattleRecord[] Array of battle records where the player was involved
