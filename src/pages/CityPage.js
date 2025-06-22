@@ -216,7 +216,7 @@ export class CityPage extends BasePage {
                                     <p class="unlock-cost">Unlock Cost: ${config.unlockCost} gold</p>
                                 `}
                             </div>
-                            <button class="building-button" data-building="${config.name}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
+                            <button class="building-button btn btn-primary" data-building="${config.name}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
                                 ${isBuilt ? 
                                     (canUpgrade ? `Upgrade to Level ${currentLevel + 1}` : 'Constructed') : 
                                     `Build ${config.name}`}
