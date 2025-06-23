@@ -132,7 +132,7 @@ export const BUILDINGS = {
         color: 0xCD5C5C, // Indian Red
         position: { x: -50, y: 0, z: -55 },
         rotation: 0,
-        tier: 1,
+        tier: 0,
         assets: {
             baseUrl: 'assets/defense_tower',
             levels: {
@@ -186,88 +186,157 @@ export const BUILDINGS = {
             }
         }
     },
-    /*
-    REP_STATION: {
-        name: 'Rep Station',
+    OUTPOST: {
+        name: 'Outpost',
         size: new THREE.Vector3(15, 15, 15),
-        color: 0x20B2AA, // Light Sea Green
-        position: { x: -25, y: 0, z: 45 },
+        color: 0x8B4513, // Saddle Brown
+        position: { x: -15, y: 0, z: -65 },
         rotation: 0,
-        tier: 2,
+        tier: 0,
         assets: {
-            baseUrl: 'assets/rep_station',
+            baseUrl: 'assets/outpost',
             levels: {
-                1: { url: 'assets/rep_station.glb' }
+                1: { url: 'assets/outpost.glb' }
             }
         }
     },
-    COUNCIL_CHAMBER: {
-        name: 'Council Chamber',
+    GARRISON: {
+        name: 'Garrison',
         size: new THREE.Vector3(15, 15, 15),
-        color: 0x800080, // Purple
-        position: { x: 25, y: 0, z: 45 },
+        color: 0x696969, // Dim Gray
+        position: { x: 50, y: 0, z: -45 },
         rotation: 0,
-        tier: 2,
+        tier: 1,
         assets: {
-            baseUrl: 'assets/council_chamber',
+            baseUrl: 'assets/garrison',
             levels: {
-                1: { url: 'assets/council_chamber.glb' }
+                1: { url: 'assets/garrison.glb' }
             }
         }
     },
-    AUDIT_SHRINE: {
-        name: 'Audit Shrine',
+    TAVERN: {
+        name: 'Tavern',
         size: new THREE.Vector3(15, 15, 15),
-        color: 0xFF69B4, // Hot Pink
-        position: { x: 0, y: 0, z: 50 },
+        color: 0xD2691E, // Chocolate
+        position: { x: -25, y: 0, z: -75 },
         rotation: 0,
         tier: 2,
         assets: {
-            baseUrl: 'assets/audit_shrine',
+            baseUrl: 'assets/tavern',
             levels: {
-                1: { url: 'assets/audit_shrine.glb' }
+                1: { url: 'assets/tavern.glb' }
             }
         }
     },
-    FOUNDERS_HALL: {
-        name: "Founders' Hall",
+    ADVENTURE_CAMP: {
+        name: 'Adventure Camp',
         size: new THREE.Vector3(15, 15, 15),
-        color: 0x4B0082, // Indigo
-        position: { x: -30, y: 0, z: 55 },
+        color: 0x228B22, // Forest Green
+        position: { x: 25, y: 0, z: -75 },
+        rotation: 0,
+        tier: 2,
+        assets: {
+            baseUrl: 'assets/adventure_camp',
+            levels: {
+                1: { url: 'assets/adventure_camp.glb' }
+            }
+        }
+    },
+    MAGE_TOWER: {
+        name: 'Mage Tower',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x9932CC, // Dark Orchid
+        position: { x: -35, y: 0, z: -85 },
+        rotation: 0,
+        tier: 2,
+        assets: {
+            baseUrl: 'assets/mage_tower',
+            levels: {
+                1: { url: 'assets/mage_tower.glb' }
+            }
+        }
+    },
+    TACTICS_CENTER: {
+        name: 'Tactics Center',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x4169E1, // Royal Blue
+        position: { x: 35, y: 0, z: -85 },
+        rotation: 0,
+        tier: 2,
+        assets: {
+            baseUrl: 'assets/tactics_center',
+            levels: {
+                1: { url: 'assets/tactics_center.glb' }
+            }
+        }
+    },
+    GEM_WORKSHOP: {
+        name: 'Gem Workshop',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0xFF1493, // Deep Pink
+        position: { x: -45, y: 0, z: -95 },
         rotation: 0,
         tier: 3,
         assets: {
-            baseUrl: 'assets/founders_hall',
+            baseUrl: 'assets/gem_workshop',
             levels: {
-                1: { url: 'assets/founders_hall.glb' }
+                1: { url: 'assets/gem_workshop.glb' }
             }
         }
     },
-    MINISTRY_OF_MERIT: {
-        name: 'Ministry of Merit',
+    DIAMOND_VAULT: {
+        name: 'Diamond Vault',
         size: new THREE.Vector3(15, 15, 15),
-        color: 0x006400, // Dark Green
-        position: { x: 30, y: 0, z: 55 },
+        color: 0x00CED1, // Dark Turquoise
+        position: { x: 45, y: 0, z: -95 },
         rotation: 0,
         tier: 3,
         assets: {
-            baseUrl: 'assets/ministry_of_merit',
+            baseUrl: 'assets/diamond_vault',
             levels: {
-                1: { url: 'assets/ministry_of_merit.glb' }
+                1: { url: 'assets/diamond_vault.glb' }
             }
         }
     },
-    ARCANE_TOWER: {
-        name: 'Arcane Tower',
+    ARCANUM_OF_NAMES: {
+        name: 'Arcanum of Names',
         size: new THREE.Vector3(15, 15, 15),
-        color: 0x00FFFF, // Cyan
-        position: { x: -35, y: 0, z: 65 },
+        color: 0xFFD700, // Gold
+        position: { x: 0, y: 0, z: -105 },
+        rotation: 0,
+        tier: 3,
+        assets: {
+            baseUrl: 'assets/arcanum_of_names',
+            levels: {
+                1: { url: 'assets/arcanum_of_names.glb' }
+            }
+        }
+    },
+    REFINERY: {
+        name: 'Refinery',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x32CD32, // Lime Green
+        position: { x: -55, y: 0, z: -105 },
+        rotation: 0,
+        tier: 3,
+        assets: {
+            baseUrl: 'assets/refinery',
+            levels: {
+                1: { url: 'assets/refinery.glb' }
+            }
+        }
+    },
+    COUNCIL_HALL: {
+        name: 'Council Hall',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x8B0000, // Dark Red
+        position: { x: 55, y: 0, z: -105 },
         rotation: 0,
         tier: 4,
         assets: {
-            baseUrl: 'assets/arcane_tower',
+            baseUrl: 'assets/council_hall',
             levels: {
-                1: { url: 'assets/arcane_tower.glb' }
+                1: { url: 'assets/council_hall.glb' }
             }
         }
     },
@@ -275,7 +344,7 @@ export const BUILDINGS = {
         name: 'Fortress Walls',
         size: new THREE.Vector3(15, 15, 15),
         color: 0x808080, // Gray
-        position: { x: 35, y: 0, z: 65 },
+        position: { x: -65, y: 0, z: -115 },
         rotation: 0,
         tier: 4,
         assets: {
@@ -285,21 +354,34 @@ export const BUILDINGS = {
             }
         }
     },
-    BANK: {
-        name: 'Bank',
+    EMBASSY_HOME: {
+        name: 'Embassy Home',
         size: new THREE.Vector3(15, 15, 15),
-        color: 0xFFD700, // Gold
-        position: { x: 0, y: 0, z: 70 },
+        color: 0x4B0082, // Indigo
+        position: { x: 65, y: 0, z: -115 },
         rotation: 0,
         tier: 4,
         assets: {
-            baseUrl: 'assets/bank',
+            baseUrl: 'assets/embassy_home',
             levels: {
-                1: { url: 'assets/bank.glb' }
+                1: { url: 'assets/embassy_home.glb' }
             }
         }
     },
-    */
+    TREASURY_VAULT: {
+        name: 'Treasury Vault',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0xFFD700, // Gold
+        position: { x: 0, y: 0, z: -125 },
+        rotation: 0,
+        tier: 4,
+        assets: {
+            baseUrl: 'assets/treasury_vault',
+            levels: {
+                1: { url: 'assets/treasury_vault.glb' }
+            }
+        }
+    },
 };
 
 // Helper to get all building types
