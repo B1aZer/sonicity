@@ -1,3 +1,7 @@
+## ff
+
+npx hardhat run scripts/fast-forward.js --network localhost
+
 # Sonicity - 3D City Building Game
 
 A 3D city building game where players can construct and manage a city with various buildings and resources.
