@@ -371,7 +371,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Vote and proposals",
             tier: 4,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
 
         districtBuildingConfigs[DistrictBuildingType.FORTRESS_WALLS] = DistrictBuildingConfig({
@@ -383,7 +383,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "City defense bonus",
             tier: 4,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
 
         districtBuildingConfigs[DistrictBuildingType.EMBASSY_HOME] = DistrictBuildingConfig({
@@ -395,7 +395,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Track alliances/wars",
             tier: 4,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
 
         districtBuildingConfigs[DistrictBuildingType.TREASURY_VAULT] = DistrictBuildingConfig({
@@ -407,7 +407,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Hold city revenue",
             tier: 4,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
     }
 
