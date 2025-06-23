@@ -31,10 +31,13 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         COMMAND_CENTER,
         GARRISON,     // New building for staking troops to defend district
         TAVERN,       // Allows to hire heroes
-        COUNCIL_CHAMBER,
-        AUDIT_SHRINE,
-        FOUNDERS_HALL,
-        MINISTRY_OF_MERIT,
+        ADVENTURE_CAMP, // Allows heroes to start adventure - explore map etc
+        MAGE_TOWER,   // Explore relics found on the adventure
+        TACTICS_CENTER, // Allows troops to learn new tactics
+        GEM_WORKSHOP, // Unlocks the ability to turn stored Food into Gems via your grid building
+        DIAMOND_VAULT, // Unlocks the ability to refine stored Food into Diamonds through your grid building
+        ARCANUM_OF_NAMES, // Allows players to store Rep and mint a NFT that reflects their reputation
+        REFINERY,     // Improves processing speed in grid buildings
         ARCANE_TOWER,
         FORTRESS_WALLS,
         BANK
@@ -237,13 +240,13 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         });
 
         // TODO: This is engine?
-        districtBuildingConfigs[DistrictBuildingType.COUNCIL_CHAMBER] = DistrictBuildingConfig({
-            name: "Council Chamber",
+        districtBuildingConfigs[DistrictBuildingType.ADVENTURE_CAMP] = DistrictBuildingConfig({
+            name: "Adventure Camp",
             unlockCost: 3500,
             buildCost: 300,
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
-            description: "Unlocks REP claim button",
+            description: "Allows heroes to start adventure",
             tier: 2,
             isCoreBuilding: false,
             disabled: false
@@ -251,38 +254,74 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
 
         // TODO: We need a building to create/burn REP with dynimic image
 
-        districtBuildingConfigs[DistrictBuildingType.AUDIT_SHRINE] = DistrictBuildingConfig({
-            name: "Audit Shrine",
+        districtBuildingConfigs[DistrictBuildingType.MAGE_TOWER] = DistrictBuildingConfig({
+            name: "Mage Tower",
             unlockCost: 4000,
             buildCost: 250,
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
-            description: "Displays REP leaderboard and stats",
+            description: "Explore relics found on the adventure",
+            tier: 2,
+            isCoreBuilding: false,
+            disabled: false
+        });
+
+        districtBuildingConfigs[DistrictBuildingType.TACTICS_CENTER] = DistrictBuildingConfig({
+            name: "Tactics Center",
+            unlockCost: 4500,
+            buildCost: 300,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
+            description: "Allows troops to learn new tactics",
             tier: 2,
             isCoreBuilding: false,
             disabled: false
         });
 
         // Tier 3 Buildings
-        districtBuildingConfigs[DistrictBuildingType.FOUNDERS_HALL] = DistrictBuildingConfig({
-            name: "Founders' Hall",
+        districtBuildingConfigs[DistrictBuildingType.GEM_WORKSHOP] = DistrictBuildingConfig({
+            name: "Gem Workshop",
             unlockCost: 5000,
             buildCost: 400,
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
-            description: "Form or join a City",
+            description: "Unlocks the ability to turn stored Food into Gems via your grid building",
             tier: 3,
             isCoreBuilding: false,
             disabled: false
         });
 
-        districtBuildingConfigs[DistrictBuildingType.MINISTRY_OF_MERIT] = DistrictBuildingConfig({
-            name: "Ministry of Merit",
+        districtBuildingConfigs[DistrictBuildingType.DIAMOND_VAULT] = DistrictBuildingConfig({
+            name: "Diamond Vault",
             unlockCost: 6000,
             buildCost: 350,
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
-            description: "Mints and tracks REP from raids/donations",
+            description: "Unlocks the ability to refine stored Food into Diamonds through your grid building",
+            tier: 3,
+            isCoreBuilding: false,
+            disabled: false
+        });
+
+        districtBuildingConfigs[DistrictBuildingType.ARCANUM_OF_NAMES] = DistrictBuildingConfig({
+            name: "Arcanum of Names",
+            unlockCost: 7000,
+            buildCost: 450,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
+            description: "Allows players to store Rep and mint a NFT that reflects their reputation",
+            tier: 3,
+            isCoreBuilding: false,
+            disabled: false
+        });
+
+        districtBuildingConfigs[DistrictBuildingType.REFINERY] = DistrictBuildingConfig({
+            name: "Refinery",
+            unlockCost: 8000,
+            buildCost: 500,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
+            description: "Improves processing speed in grid buildings",
             tier: 3,
             isCoreBuilding: false,
             disabled: false
@@ -626,7 +665,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return string[] Array of building names in the same order as the enum
      */
     function getBuildingNames() public pure returns (string[] memory) {
-        string[] memory names = new string[](19);
+        string[] memory names = new string[](22);
         names[0] = "CITY_HALL";
         names[1] = "ALTAR";
         names[2] = "MINE";
@@ -639,13 +678,16 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         names[9] = "COMMAND_CENTER";
         names[10] = "GARRISON";
         names[11] = "TAVERN";
-        names[12] = "COUNCIL_CHAMBER";
-        names[13] = "AUDIT_SHRINE";
-        names[14] = "FOUNDERS_HALL";
-        names[15] = "MINISTRY_OF_MERIT";
-        names[16] = "ARCANE_TOWER";
-        names[17] = "FORTRESS_WALLS";
-        names[18] = "BANK";
+        names[12] = "ADVENTURE_CAMP";
+        names[13] = "MAGE_TOWER";
+        names[14] = "TACTICS_CENTER";
+        names[15] = "GEM_WORKSHOP";
+        names[16] = "DIAMOND_VAULT";
+        names[17] = "ARCANUM_OF_NAMES";
+        names[18] = "REFINERY";
+        names[19] = "ARCANE_TOWER";
+        names[20] = "FORTRESS_WALLS";
+        names[21] = "BANK";
         return names;
     }
 
