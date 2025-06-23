@@ -369,25 +369,25 @@ describe("DistrictBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Ensure player has enough gold for all buildings and donation
-      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 4500);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
       
-      // Donate gold to reach tier 2
-      await gameState.connect(player1).donateGold(2500);
+      // Donate gold to reach tier 3
+      await gameState.connect(player1).donateGold(7000);
       
       // Build multiple buildings of different tiers
       const defenseTowerIndex = getBuildingTypeIndex("DEFENSE_TOWER");
       await districtBuildings.connect(player1).buildDistrictBuilding(defenseTowerIndex);
       const barracksIndex = getBuildingTypeIndex("BARRACKS");
       await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
-      const tavernIndex = getBuildingTypeIndex("TAVERN");
-      await districtBuildings.connect(player1).buildDistrictBuilding(tavernIndex);
+      const arcanumIndex = getBuildingTypeIndex("ARCANUM_OF_NAMES");
+      await districtBuildings.connect(player1).buildDistrictBuilding(arcanumIndex);
       
       // Damage one building
       await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
       
-      // Check that the highest tier building (TAVERN) was damaged
-      const isTavernDamaged = await districtBuildings.isBuildingDamaged(player1Address, tavernIndex);
-      expect(isTavernDamaged).to.be.true;
+      // Check that the highest tier building (ARCANUM_OF_NAMES) was damaged
+      const isArcanumDamaged = await districtBuildings.isBuildingDamaged(player1Address, arcanumIndex);
+      expect(isArcanumDamaged).to.be.true;
       
       // Check that lower tier buildings are not damaged
       const isDefenseTowerDamaged = await districtBuildings.isBuildingDamaged(player1Address, defenseTowerIndex);
@@ -400,18 +400,18 @@ describe("DistrictBuildings", function () {
       const player1Address = await player1.getAddress();
 
       // Ensure player has enough gold for all buildings and donation
-      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 4500);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
       
-      // Donate gold to reach tier 2
-      await gameState.connect(player1).donateGold(2500);
+      // Donate gold to reach tier 3
+      await gameState.connect(player1).donateGold(7000);
 
       // Build multiple buildings
       const defenseTowerIndex = getBuildingTypeIndex("DEFENSE_TOWER");
       await districtBuildings.connect(player1).buildDistrictBuilding(defenseTowerIndex);
       const barracksIndex = getBuildingTypeIndex("BARRACKS");
       await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
-      const tavernIndex = getBuildingTypeIndex("TAVERN");
-      await districtBuildings.connect(player1).buildDistrictBuilding(tavernIndex);
+      const arcanumIndex = getBuildingTypeIndex("ARCANUM_OF_NAMES");
+      await districtBuildings.connect(player1).buildDistrictBuilding(arcanumIndex);
 
       // Get built buildings
       const builtBuildings = await districtBuildings.getBuiltDistrictBuildings(player1Address);
