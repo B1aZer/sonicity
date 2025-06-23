@@ -171,7 +171,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Repair buildings",
             tier: 0,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
 
         districtBuildingConfigs[DistrictBuildingType.OUTPOST] = DistrictBuildingConfig({
@@ -248,7 +248,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Stake troops to defend",
             tier: 1,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
     }
 
@@ -265,7 +265,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Hire heroes",
             tier: 2,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
 
         districtBuildingConfigs[DistrictBuildingType.ADVENTURE_CAMP] = DistrictBuildingConfig({
@@ -277,7 +277,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Start adventures",
             tier: 2,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
 
         districtBuildingConfigs[DistrictBuildingType.MAGE_TOWER] = DistrictBuildingConfig({
@@ -289,7 +289,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Explore relics",
             tier: 2,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
 
         districtBuildingConfigs[DistrictBuildingType.TACTICS_CENTER] = DistrictBuildingConfig({
@@ -301,7 +301,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Learn new tactics",
             tier: 2,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
     }
 
@@ -318,7 +318,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Food to Gems",
             tier: 3,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
 
         districtBuildingConfigs[DistrictBuildingType.DIAMOND_VAULT] = DistrictBuildingConfig({
@@ -327,10 +327,10 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             buildCost: 350,
             upgradeCost: 0,
             maxLevel: 1,
-            description: "Food to Diamonds",
+            description: "Gold to Diamonds",
             tier: 3,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
 
         districtBuildingConfigs[DistrictBuildingType.ARCANUM_OF_NAMES] = DistrictBuildingConfig({
@@ -354,7 +354,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Improve processing speed",
             tier: 3,
             isCoreBuilding: false,
-            disabled: false
+            disabled: true
         });
     }
 
