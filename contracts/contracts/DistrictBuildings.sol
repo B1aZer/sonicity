@@ -171,7 +171,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Repair buildings",
             tier: 0,
             isCoreBuilding: false,
-            disabled: true
+            disabled: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.OUTPOST] = DistrictBuildingConfig({
