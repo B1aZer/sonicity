@@ -414,7 +414,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return uint8 The number of building types
      */
     function getDistrictBuildingTypeCount() public pure returns (uint8) {
-        return uint8(DistrictBuildingType.ARCANE_TOWER) + 1;
+        return uint8(DistrictBuildingType.TREASURY_VAULT) + 1;
     }
 
     /**
@@ -699,7 +699,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         names[17] = "ARCANUM_OF_NAMES";
         names[18] = "REFINERY";
         names[19] = "COUNCIL_HALL";
-        names[20] = "ARCANE_TOWER";
+        names[20] = "FORTRESS_WALLS";
         names[21] = "EMBASSY_HOME";
         names[22] = "TREASURY_VAULT";
         return names;
