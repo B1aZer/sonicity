@@ -76,7 +76,6 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     event DistrictBuildingUpgraded(address indexed player, DistrictBuildingType buildingType, uint256 newLevel);
     event DistrictBuildingDamaged(address indexed player, DistrictBuildingType buildingType);
     event DistrictBuildingRepaired(address indexed player, DistrictBuildingType buildingType);
-    event DistrictBuildingDisabled(DistrictBuildingType buildingType, bool disabled);
     event GameStateAddressUpdated(address indexed newAddress);
     event BattleSystemAddressUpdated(address indexed newAddress);
 
@@ -90,14 +89,33 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         
-        // Initialize core buildings (always available, but can be upgraded)
+        // Initialize all building configurations
+        _initializeBuildingConfigs();
+    }
+
+    /**
+     * @dev Initialize all building configurations
+     */
+    function _initializeBuildingConfigs() internal {
+        _initializeCoreBuildings();
+        _initializeTier0Buildings();
+        _initializeTier1Buildings();
+        _initializeTier2Buildings();
+        _initializeTier3Buildings();
+        _initializeTier4Buildings();
+    }
+
+    /**
+     * @dev Initialize core buildings
+     */
+    function _initializeCoreBuildings() internal {
         districtBuildingConfigs[DistrictBuildingType.CITY_HALL] = DistrictBuildingConfig({
             name: "City Hall",
-            unlockCost: 0,           // No unlock cost for core buildings
-            buildCost: 0,            // No build cost for core buildings
-            upgradeCost: 0,       // Cost to upgrade
-            maxLevel: 5,             // Can be upgraded to level 5
-            description: "Central hub for city management",
+            unlockCost: 0,
+            buildCost: 0,
+            upgradeCost: 0,
+            maxLevel: 5,
+            description: "Central hub",
             tier: 0,
             isCoreBuilding: true,
             disabled: false
@@ -109,7 +127,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             buildCost: 0,
             upgradeCost: 0,
             maxLevel: 5,
-            description: "Stake NFTs to generate base Gold",
+            description: "Stake NFTs for Gold",
             tier: 0,
             isCoreBuilding: true,
             disabled: false
@@ -126,16 +144,19 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             isCoreBuilding: true,
             disabled: false
         });
+    }
 
-        // Initialize district building configurations
-        // Tier 0 Buildings
+    /**
+     * @dev Initialize tier 0 buildings
+     */
+    function _initializeTier0Buildings() internal {
         districtBuildingConfigs[DistrictBuildingType.SHOP] = DistrictBuildingConfig({
             name: "Shop",
             unlockCost: 200,
             buildCost: 100,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Buy items (REP-gated premium later)",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Buy items",
             tier: 0,
             isCoreBuilding: false,
             disabled: false
@@ -145,8 +166,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Workshop",
             unlockCost: 400,
             buildCost: 150,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
+            upgradeCost: 0,
+            maxLevel: 1,
             description: "Repair buildings",
             tier: 0,
             isCoreBuilding: false,
@@ -157,9 +178,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Outpost",
             unlockCost: 300,
             buildCost: 120,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Early warning system for potential attacks",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Early warning system",
             tier: 0,
             isCoreBuilding: false,
             disabled: false
@@ -169,21 +190,25 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Defense Tower",
             unlockCost: 800,
             buildCost: 200,
-            upgradeCost: 300,  // 300 gold per level
-            maxLevel: 5,       // Can be upgraded to level 5
+            upgradeCost: 300,
+            maxLevel: 5,
             description: "PvP defense buffs",
             tier: 0,
             isCoreBuilding: false,
             disabled: false
         });
+    }
 
-        // Tier 1 Buildings
+    /**
+     * @dev Initialize tier 1 buildings
+     */
+    function _initializeTier1Buildings() internal {
         districtBuildingConfigs[DistrictBuildingType.BARRACKS] = DistrictBuildingConfig({
             name: "Barracks",
             unlockCost: 1000,
             buildCost: 250,
-            upgradeCost: 500,    // 500 gold per level
-            maxLevel: 3,         // Can be upgraded to level 3
+            upgradeCost: 500,
+            maxLevel: 3,
             description: "Train troops",
             tier: 1,
             isCoreBuilding: false,
@@ -194,8 +219,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Scout Guild",
             unlockCost: 1500,
             buildCost: 200,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
+            upgradeCost: 0,
+            maxLevel: 1,
             description: "Explore PvP targets",
             tier: 1,
             isCoreBuilding: false,
@@ -206,8 +231,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Command Center",
             unlockCost: 1750,
             buildCost: 250,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
+            upgradeCost: 0,
+            maxLevel: 1,
             description: "Deploy troops for raids",
             tier: 1,
             isCoreBuilding: false,
@@ -218,50 +243,50 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Garrison",
             unlockCost: 2000,
             buildCost: 300,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Stake troops to defend district",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Stake troops to defend",
             tier: 1,
             isCoreBuilding: false,
             disabled: false
         });
+    }
 
-        // Tier 2 Buildings
-        // TODO: This is a grid building
+    /**
+     * @dev Initialize tier 2 buildings
+     */
+    function _initializeTier2Buildings() internal {
         districtBuildingConfigs[DistrictBuildingType.TAVERN] = DistrictBuildingConfig({
             name: "Tavern",
             unlockCost: 3000,
             buildCost: 200,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Allows to hire heroes",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Hire heroes",
             tier: 2,
             isCoreBuilding: false,
             disabled: false
         });
 
-        // TODO: This is engine?
         districtBuildingConfigs[DistrictBuildingType.ADVENTURE_CAMP] = DistrictBuildingConfig({
             name: "Adventure Camp",
             unlockCost: 3500,
             buildCost: 300,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Allows heroes to start adventure",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Start adventures",
             tier: 2,
             isCoreBuilding: false,
             disabled: false
         });
-
-        // TODO: We need a building to create/burn REP with dynimic image
 
         districtBuildingConfigs[DistrictBuildingType.MAGE_TOWER] = DistrictBuildingConfig({
             name: "Mage Tower",
             unlockCost: 4000,
             buildCost: 250,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Explore relics found on the adventure",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Explore relics",
             tier: 2,
             isCoreBuilding: false,
             disabled: false
@@ -271,22 +296,26 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Tactics Center",
             unlockCost: 4500,
             buildCost: 300,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Allows troops to learn new tactics",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Learn new tactics",
             tier: 2,
             isCoreBuilding: false,
             disabled: false
         });
+    }
 
-        // Tier 3 Buildings
+    /**
+     * @dev Initialize tier 3 buildings
+     */
+    function _initializeTier3Buildings() internal {
         districtBuildingConfigs[DistrictBuildingType.GEM_WORKSHOP] = DistrictBuildingConfig({
             name: "Gem Workshop",
             unlockCost: 5000,
             buildCost: 400,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Unlocks the ability to turn stored Food into Gems via your grid building",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Food to Gems",
             tier: 3,
             isCoreBuilding: false,
             disabled: false
@@ -296,9 +325,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Diamond Vault",
             unlockCost: 6000,
             buildCost: 350,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Unlocks the ability to refine stored Food into Diamonds through your grid building",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Food to Diamonds",
             tier: 3,
             isCoreBuilding: false,
             disabled: false
@@ -308,9 +337,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Arcanum of Names",
             unlockCost: 7000,
             buildCost: 450,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Allows players to store Rep and mint a NFT that reflects their reputation",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Store Rep as NFT",
             tier: 3,
             isCoreBuilding: false,
             disabled: false
@@ -320,22 +349,26 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Refinery",
             unlockCost: 8000,
             buildCost: 500,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Improves processing speed in grid buildings",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Improve processing speed",
             tier: 3,
             isCoreBuilding: false,
             disabled: false
         });
+    }
 
-        // Tier 4 Buildings
+    /**
+     * @dev Initialize tier 4 buildings
+     */
+    function _initializeTier4Buildings() internal {
         districtBuildingConfigs[DistrictBuildingType.COUNCIL_HALL] = DistrictBuildingConfig({
             name: "Council Hall",
             unlockCost: 10000,
             buildCost: 500,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Where votes are cast and city-wide proposals begin",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Vote and proposals",
             tier: 4,
             isCoreBuilding: false,
             disabled: false
@@ -345,9 +378,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Fortress Walls",
             unlockCost: 12000,
             buildCost: 500,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "City-wide defense bonus",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "City defense bonus",
             tier: 4,
             isCoreBuilding: false,
             disabled: false
@@ -357,9 +390,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Embassy Home",
             unlockCost: 15000,
             buildCost: 500,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Tracks active alliances, wars, and diplomatic history",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Track alliances/wars",
             tier: 4,
             isCoreBuilding: false,
             disabled: false
@@ -369,9 +402,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             name: "Treasury Vault",
             unlockCost: 20000,
             buildCost: 1000,
-            upgradeCost: 0,    // Cannot be upgraded
-            maxLevel: 1,       // Only level 1
-            description: "Holds game revenue on behalf of the city",
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Hold city revenue",
             tier: 4,
             isCoreBuilding: false,
             disabled: false
@@ -397,16 +430,6 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     function setBattleSystemAddress(address _battleSystemAddress) external onlyOwner {
         battleSystemAddress = _battleSystemAddress;
         emit BattleSystemAddressUpdated(_battleSystemAddress);
-    }
-
-    /**
-     * @dev Disable or enable a district building
-     * @param buildingType The type of building to disable/enable
-     * @param disabled Whether the building should be disabled
-     */
-    function setBuildingDisabled(DistrictBuildingType buildingType, bool disabled) external onlyOwner {
-        districtBuildingConfigs[buildingType].disabled = disabled;
-        emit DistrictBuildingDisabled(buildingType, disabled);
     }
 
     /**
