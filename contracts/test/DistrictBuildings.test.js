@@ -379,15 +379,15 @@ describe("DistrictBuildings", function () {
       await districtBuildings.connect(player1).buildDistrictBuilding(defenseTowerIndex);
       const barracksIndex = getBuildingTypeIndex("BARRACKS");
       await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
-      const repStationIndex = getBuildingTypeIndex("REP_STATION");
-      await districtBuildings.connect(player1).buildDistrictBuilding(repStationIndex);
+      const tavernIndex = getBuildingTypeIndex("TAVERN");
+      await districtBuildings.connect(player1).buildDistrictBuilding(tavernIndex);
       
       // Damage one building
       await battleSystem.connect(owner).testDamageDistrictBuildings(player1Address, 1);
       
-      // Check that the highest tier building (REP_STATION) was damaged
-      const isRepStationDamaged = await districtBuildings.isBuildingDamaged(player1Address, repStationIndex);
-      expect(isRepStationDamaged).to.be.true;
+      // Check that the highest tier building (TAVERN) was damaged
+      const isTavernDamaged = await districtBuildings.isBuildingDamaged(player1Address, tavernIndex);
+      expect(isTavernDamaged).to.be.true;
       
       // Check that lower tier buildings are not damaged
       const isDefenseTowerDamaged = await districtBuildings.isBuildingDamaged(player1Address, defenseTowerIndex);
@@ -410,8 +410,8 @@ describe("DistrictBuildings", function () {
       await districtBuildings.connect(player1).buildDistrictBuilding(defenseTowerIndex);
       const barracksIndex = getBuildingTypeIndex("BARRACKS");
       await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
-      const repStationIndex = getBuildingTypeIndex("REP_STATION");
-      await districtBuildings.connect(player1).buildDistrictBuilding(repStationIndex);
+      const tavernIndex = getBuildingTypeIndex("TAVERN");
+      await districtBuildings.connect(player1).buildDistrictBuilding(tavernIndex);
 
       // Get built buildings
       const builtBuildings = await districtBuildings.getBuiltDistrictBuildings(player1Address);

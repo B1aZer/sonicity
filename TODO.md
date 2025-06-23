@@ -27,10 +27,10 @@
 - tactics center (not w)
 
 4:
-- unlocks gems
-- unlocks diamonds
+- unlocks gems (not w)
+- unlocks diamonds (not w)
 - unlocks hft
-- forgery upgrades refinery time
+- forgery upgrades refinery time (not w)
 
 5: city governance
 6: mega buidlings
