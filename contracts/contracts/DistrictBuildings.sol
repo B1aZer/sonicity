@@ -38,9 +38,10 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         DIAMOND_VAULT, // Unlocks the ability to refine stored Food into Diamonds through your grid building
         ARCANUM_OF_NAMES, // Allows players to store Rep and mint a NFT that reflects their reputation
         REFINERY,     // Improves processing speed in grid buildings
-        ARCANE_TOWER,
-        FORTRESS_WALLS,
-        BANK
+        COUNCIL_HALL, // Where votes are cast and city-wide proposals begin
+        FORTRESS_WALLS, // City-wide defense bonus
+        EMBASSY_HOME, // Tracks active alliances, wars, and diplomatic history
+        TREASURY_VAULT // Holds game revenue on behalf of the city
     }
 
     // District Building configuration
@@ -328,13 +329,13 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         });
 
         // Tier 4 Buildings
-        districtBuildingConfigs[DistrictBuildingType.ARCANE_TOWER] = DistrictBuildingConfig({
-            name: "Arcane Tower",
+        districtBuildingConfigs[DistrictBuildingType.COUNCIL_HALL] = DistrictBuildingConfig({
+            name: "Council Hall",
             unlockCost: 10000,
             buildCost: 500,
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
-            description: "PvP/cooldown buffs",
+            description: "Where votes are cast and city-wide proposals begin",
             tier: 4,
             isCoreBuilding: false,
             disabled: false
@@ -352,13 +353,25 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             disabled: false
         });
 
-        districtBuildingConfigs[DistrictBuildingType.BANK] = DistrictBuildingConfig({
-            name: "Bank",
+        districtBuildingConfigs[DistrictBuildingType.EMBASSY_HOME] = DistrictBuildingConfig({
+            name: "Embassy Home",
             unlockCost: 15000,
-            buildCost: 600,
+            buildCost: 500,
             upgradeCost: 0,    // Cannot be upgraded
             maxLevel: 1,       // Only level 1
-            description: "Lending or staking Gold for towns",
+            description: "Tracks active alliances, wars, and diplomatic history",
+            tier: 4,
+            isCoreBuilding: false,
+            disabled: false
+        });
+
+        districtBuildingConfigs[DistrictBuildingType.TREASURY_VAULT] = DistrictBuildingConfig({
+            name: "Treasury Vault",
+            unlockCost: 20000,
+            buildCost: 1000,
+            upgradeCost: 0,    // Cannot be upgraded
+            maxLevel: 1,       // Only level 1
+            description: "Holds game revenue on behalf of the city",
             tier: 4,
             isCoreBuilding: false,
             disabled: false
@@ -401,7 +414,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return uint8 The number of building types
      */
     function getDistrictBuildingTypeCount() public pure returns (uint8) {
-        return uint8(DistrictBuildingType.BANK) + 1;
+        return uint8(DistrictBuildingType.ARCANE_TOWER) + 1;
     }
 
     /**
@@ -665,7 +678,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      * @return string[] Array of building names in the same order as the enum
      */
     function getBuildingNames() public pure returns (string[] memory) {
-        string[] memory names = new string[](22);
+        string[] memory names = new string[](23);
         names[0] = "CITY_HALL";
         names[1] = "ALTAR";
         names[2] = "MINE";
@@ -685,9 +698,10 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         names[16] = "DIAMOND_VAULT";
         names[17] = "ARCANUM_OF_NAMES";
         names[18] = "REFINERY";
-        names[19] = "ARCANE_TOWER";
-        names[20] = "FORTRESS_WALLS";
-        names[21] = "BANK";
+        names[19] = "COUNCIL_HALL";
+        names[20] = "ARCANE_TOWER";
+        names[21] = "EMBASSY_HOME";
+        names[22] = "TREASURY_VAULT";
         return names;
     }
 
