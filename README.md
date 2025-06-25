@@ -56,12 +56,43 @@ npx hardhat run scripts/approveCollection.js --network localhost
 
 ## Game Controls
 
-- **Left Click**: Place or remove buildings
-- **Right Click + Drag**: Rotate camera
-- **Scroll Wheel**: Zoom in/out
-- **Building Buttons**: Select building type to place
-- **Bulldoze Button**: Remove buildings
-- **Restart Button**: Reset the game
+### Keyboard Shortcuts
+- **`D` key**: Toggle debug GUI (shows camera, lighting, renderer controls)
+- **`P` key**: Toggle performance monitor (shows FPS, GPU info, draw calls)
+
+### Mouse Controls
+- **Left Click**: Click on buildings to navigate to their pages
+- **Right Click + Drag**: Rotate camera around the scene
+- **Scroll Wheel**: Zoom in/out (constrained between 5-100 units)
+- **Middle Mouse + Drag**: Pan camera (if enabled)
+
+### Camera Constraints
+- **Zoom Range**: 5-100 units from target
+- **Rotation**: Limited to prevent going below ground level
+- **Target**: Always looks at City Hall position (0, 0, 0)
+
+### Building Interaction
+- **Click on Mine**: Navigate to mint page
+- **Click on City Hall**: Navigate to dashboard
+- **Click on Altar**: Navigate to altar page
+- **Click on House**: Navigate to house page
+- **Click on Farm**: Navigate to farm page
+- **Click on Shop**: Navigate to shop page
+- **Click on Workshop**: Navigate to workshop page
+- **Click on Barracks**: Navigate to barracks page
+- **Click on Scout Guild**: Navigate to scout guild page
+- **Click on Command Center**: Navigate to command center page
+
+### Debug Controls (when debug GUI is open)
+- **Camera**: Position X/Y/Z, FOV, Near/Far planes
+- **Sun Light**: Color, intensity, position, shadow casting
+- **Ambient Light**: Color, intensity
+- **Hemisphere Light**: Color, intensity
+- **Fog**: Color, near/far distances
+- **Sky**: Top/bottom colors, exponent
+- **Renderer**: Tone mapping exposure
+- **Shadow Map**: Enable/disable, shadow map type
+- **Grid**: Show/hide grid helper
 
 ## Building Types
 
