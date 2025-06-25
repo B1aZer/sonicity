@@ -15,6 +15,9 @@ export class GridBuildingsContract extends BaseContract {
         REP_STATION: 2n
     };
 
+    // Recharge fee constant
+    static RECHARGE_FEE = ethers.parseEther('0.01');
+
     // Building Management
     async createBuilding(buildingType) {
         return await this.transact('createBuilding', buildingType);
@@ -96,5 +99,48 @@ export class GridBuildingsContract extends BaseContract {
     async getBuildingCreationCost(buildingType) {
         const config = await this.getBuildingConfig(buildingType);
         return config.creationCost;
+    }
+
+    // Recharge Functionality
+    async isBuildingAtCap(buildingId) {
+        const address = await this.getAddress();
+        return await this.call('isBuildingAtCap', address, buildingId);
+    }
+
+    async getBuildingsAtCap() {
+        const address = await this.getAddress();
+        return await this.call('getBuildingsAtCap', address);
+    }
+
+    async rechargeBuilding(buildingId) {
+        return await this.transactWithValue('rechargeBuilding', [buildingId], GridBuildingsContract.RECHARGE_FEE);
+    }
+
+    async rechargeBuildings(buildingIds) {
+        const totalFee = GridBuildingsContract.RECHARGE_FEE * BigInt(buildingIds.length);
+        return await this.transactWithValue('rechargeBuildings', [buildingIds], totalFee);
+    }
+
+    async rechargeAllBuildingsAtCap() {
+        const buildingsAtCap = await this.getBuildingsAtCap();
+        if (buildingsAtCap.length === 0) {
+            throw new Error('No buildings at cap to recharge');
+        }
+        const totalFee = GridBuildingsContract.RECHARGE_FEE * BigInt(buildingsAtCap.length);
+        return await this.transactWithValue('rechargeAllBuildingsAtCap', [], totalFee);
+    }
+
+    async getContractBalance() {
+        return await this.call('getContractBalance');
+    }
+
+    // Helper method to get recharge fee for UI display
+    getRechargeFee() {
+        return GridBuildingsContract.RECHARGE_FEE;
+    }
+
+    // Helper method to format recharge fee for display
+    formatRechargeFee() {
+        return ethers.formatEther(GridBuildingsContract.RECHARGE_FEE);
     }
 } 

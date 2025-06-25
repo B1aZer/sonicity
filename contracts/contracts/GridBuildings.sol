@@ -21,6 +21,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Reference to the DistrictBuildings contract
     address public districtBuildingsAddress;
 
+    // Recharge fee in native tokens (0.01 SONIC)
+    uint256 public constant RECHARGE_FEE = 0.01 ether;
+
     // Grid Building Types
     enum GridBuildingType {
         HOUSE,
@@ -64,6 +67,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event BuildingRepaired(address indexed player, uint256 buildingId);
     event BattleSystemAddressUpdated(address indexed newAddress);
     event DistrictBuildingsAddressUpdated(address indexed newAddress);
+    event BuildingRecharged(address indexed player, uint256 buildingId, uint256 fee);
+    event BuildingsRecharged(address indexed player, uint256[] buildingIds, uint256 totalFee);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -588,5 +593,132 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function isBuildingDamaged(address player, uint256 buildingId) public view returns (bool) {
         Building storage building = buildings[player][buildingId];
         return building.damaged;
+    }
+
+    /**
+     * @dev Check if a building is at production cap (24 hours since last collection)
+     * @param player The address of the player
+     * @param buildingId The ID of the building to check
+     * @return bool Whether the building is at production cap
+     */
+    function isBuildingAtCap(address player, uint256 buildingId) public view returns (bool) {
+        Building storage building = buildings[player][buildingId];
+        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+        
+        uint256 timeSinceCollection = block.timestamp - building.lastCollectionTime;
+        return timeSinceCollection >= 24 hours;
+    }
+
+    /**
+     * @dev Get buildings that are at production cap for a player
+     * @param player The address of the player
+     * @return uint256[] Array of building IDs that are at cap
+     */
+    function getBuildingsAtCap(address player) public view returns (uint256[] memory) {
+        uint256[] memory activeBuildings = getActiveBuildings(player);
+        uint256 capCount = 0;
+        
+        // Count buildings at cap
+        for (uint256 i = 0; i < activeBuildings.length; i++) {
+            Building storage building = buildings[player][activeBuildings[i]];
+            if (!building.damaged && (block.timestamp - building.lastCollectionTime) >= 24 hours) {
+                capCount++;
+            }
+        }
+        
+        // Create array of buildings at cap
+        uint256[] memory buildingsAtCap = new uint256[](capCount);
+        uint256 index = 0;
+        
+        for (uint256 i = 0; i < activeBuildings.length; i++) {
+            Building storage building = buildings[player][activeBuildings[i]];
+            if (!building.damaged && (block.timestamp - building.lastCollectionTime) >= 24 hours) {
+                buildingsAtCap[index] = activeBuildings[i];
+                index++;
+            }
+        }
+        
+        return buildingsAtCap;
+    }
+
+    /**
+     * @dev Recharge a building that is at production cap
+     * @param buildingId The ID of the building to recharge
+     */
+    function rechargeBuilding(uint256 buildingId) external payable nonReentrant {
+        require(msg.value == RECHARGE_FEE, "Incorrect fee amount");
+        
+        Building storage building = buildings[msg.sender][buildingId];
+        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+        require(!building.damaged, "Building is damaged");
+        require(isBuildingAtCap(msg.sender, buildingId), "Building is not at production cap");
+        
+        // Reset last collection time to restart production
+        building.lastCollectionTime = block.timestamp;
+        
+        emit BuildingRecharged(msg.sender, buildingId, msg.value);
+    }
+
+    /**
+     * @dev Recharge multiple buildings that are at production cap
+     * @param buildingIds Array of building IDs to recharge
+     */
+    function rechargeBuildings(uint256[] calldata buildingIds) external payable nonReentrant {
+        require(msg.value == RECHARGE_FEE * buildingIds.length, "Incorrect fee amount");
+        require(buildingIds.length > 0, "No buildings specified");
+        
+        uint256 totalFee = 0;
+        for (uint256 i = 0; i < buildingIds.length; i++) {
+            Building storage building = buildings[msg.sender][buildingIds[i]];
+            require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+            require(!building.damaged, "Building is damaged");
+            require(isBuildingAtCap(msg.sender, buildingIds[i]), "Building is not at production cap");
+            
+            // Reset last collection time to restart production
+            building.lastCollectionTime = block.timestamp;
+            
+            totalFee += RECHARGE_FEE;
+        }
+        
+        emit BuildingsRecharged(msg.sender, buildingIds, totalFee);
+    }
+
+    /**
+     * @dev Recharge all buildings at cap for the caller
+     */
+    function rechargeAllBuildingsAtCap() external payable nonReentrant {
+        uint256[] memory buildingsAtCap = getBuildingsAtCap(msg.sender);
+        require(buildingsAtCap.length > 0, "No buildings at cap to recharge");
+        require(msg.value == RECHARGE_FEE * buildingsAtCap.length, "Incorrect fee amount");
+        
+        uint256 totalFee = 0;
+        for (uint256 i = 0; i < buildingsAtCap.length; i++) {
+            Building storage building = buildings[msg.sender][buildingsAtCap[i]];
+            
+            // Reset last collection time to restart production
+            building.lastCollectionTime = block.timestamp;
+            
+            totalFee += RECHARGE_FEE;
+        }
+        
+        emit BuildingsRecharged(msg.sender, buildingsAtCap, totalFee);
+    }
+
+    /**
+     * @dev Withdraw accumulated fees (only owner)
+     */
+    function withdrawFees() external onlyOwner {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No fees to withdraw");
+        
+        (bool success, ) = payable(owner()).call{value: balance}("");
+        require(success, "Failed to withdraw fees");
+    }
+
+    /**
+     * @dev Get contract balance (for fee tracking)
+     */
+    function getContractBalance() external view returns (uint256) {
+        return address(this).balance;
     }
 }

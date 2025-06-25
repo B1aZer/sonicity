@@ -3,6 +3,7 @@ import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js'
 import { AltarContract } from '../js/contracts/AltarContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
+import { ethers } from 'ethers';
 
 export class GridHubPage extends BasePage {
     constructor() {
@@ -41,7 +42,7 @@ export class GridHubPage extends BasePage {
             availableNFTs: [],
             
             // Recharge costs
-            rechargeCost: 50, // SONIC tokens for recharge
+            rechargeCost: '0.01',
             
             // UI states
             canRecharge: false,
@@ -111,28 +112,29 @@ export class GridHubPage extends BasePage {
             const availableNFTs = await this.loadAvailableNFTs(playerAddress);
             
             // Load treasury data (this would need to be implemented in contracts)
-            const treasurySubmitted = 0; // Placeholder - would come from contract
-            const treasuryGoal = 10000; // Placeholder - would come from contract
-            const treasuryProgress = Math.min((treasurySubmitted / treasuryGoal) * 100, 100);
+            const treasurySubmitted = 0;
+            const treasuryGoal = 10000;
+            const treasuryProgress = (treasurySubmitted / treasuryGoal) * 100;
             
             // Update state
             this.setState({
                 totalBuildings: activeBuildingIds.length,
-                damagedBuildings: damagedBuildings,
-                buildingsAtCap: buildingsAtCap,
-                buildingsByTier: buildingsByTier,
-                treasurySubmitted: treasurySubmitted,
-                treasuryGoal: treasuryGoal,
-                treasuryProgress: treasuryProgress,
+                damagedBuildings,
+                buildingsAtCap,
                 playerGold: playerGold.toString(),
                 playerFood: playerFood.toString(),
                 playerRep: playerRep.toString(),
-                stakedNFTs: stakedNFTs,
-                availableNFTs: availableNFTs,
+                buildingsByTier,
+                treasurySubmitted,
+                treasuryGoal,
+                treasuryProgress,
+                canSubmitTreasury: playerGold > 0,
                 canRecharge: buildingsAtCap > 0,
-                canSubmitTreasury: playerGold > 0
+                rechargeCost: this.contracts.gridBuildings.formatRechargeFee(),
+                stakedNFTs,
+                availableNFTs
             });
-
+            
         } catch (error) {
             Logger.error('Error loading grid hub data:', error);
             this.modal.error('Failed to load grid hub data. Please try refreshing the page.');
@@ -170,10 +172,15 @@ export class GridHubPage extends BasePage {
                 return;
             }
             
+            // Get the actual buildings at cap
+            const buildingsAtCap = await this.contracts.gridBuildings.getBuildingsAtCap();
+            const totalFee = this.contracts.gridBuildings.getRechargeFee() * BigInt(buildingsAtCap.length);
+            const formattedFee = this.contracts.gridBuildings.formatRechargeFee();
+            
             // Show confirmation
             const confirmed = await this.modal.confirm(
-                `Recharge all ${this.state.buildingsAtCap} buildings at production cap?<br><br>
-                Cost: ${this.state.rechargeCost} SONIC tokens<br>
+                `Recharge all ${buildingsAtCap.length} buildings at production cap?<br><br>
+                Cost: ${formattedFee} SONIC tokens per building (${ethers.formatEther(totalFee)} total)<br>
                 This will reset production timers and allow immediate collection.`,
                 { title: 'Confirm Recharge' }
             );
@@ -183,8 +190,8 @@ export class GridHubPage extends BasePage {
             // Show loading modal
             const loadingModal = this.modal.loading('Recharging buildings...');
             
-            // This would call the recharge contract function
-            // await this.contracts.gridBuildings.rechargeAllBuildings();
+            // Call the recharge contract function
+            await this.contracts.gridBuildings.rechargeAllBuildingsAtCap();
             
             // Close loading modal
             loadingModal.close();
@@ -193,7 +200,7 @@ export class GridHubPage extends BasePage {
             await this.loadGridHubData();
             
             // Show success message
-            this.modal.success(`Successfully recharged ${this.state.buildingsAtCap} buildings!`);
+            this.modal.success(`Successfully recharged ${buildingsAtCap.length} buildings!`);
             
         } catch (error) {
             Logger.error('Error recharging buildings:', error);

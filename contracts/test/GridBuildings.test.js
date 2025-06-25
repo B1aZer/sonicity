@@ -1104,4 +1104,191 @@ describe("GridBuildings", function () {
       expect(building.damaged).to.be.false;
     });
   });
+
+  describe("Recharge Functionality", function () {
+    it("Should recharge a building at production cap", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Fast forward 48 hours to put building at cap
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Verify building is at cap
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCap).to.be.true;
+
+      // Recharge the building with 0.01 SONIC
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+
+      // Verify building is no longer at cap
+      const isStillAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isStillAtCap).to.be.false;
+
+      // Verify contract received the fee
+      const contractBalance = await gridBuildings.getContractBalance();
+      expect(contractBalance).to.equal(rechargeFee);
+    });
+
+    it("Should recharge multiple buildings at production cap", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create multiple buildings
+      const { buildingId: building1 } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      const { buildingId: building2 } = await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
+      
+      // Fast forward 48 hours to put buildings at cap
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Verify buildings are at cap
+      expect(await gridBuildings.isBuildingAtCap(player1Address, building1)).to.be.true;
+      expect(await gridBuildings.isBuildingAtCap(player1Address, building2)).to.be.true;
+
+      // Recharge both buildings
+      const rechargeFee = ethers.parseEther("0.01");
+      const totalFee = rechargeFee * 2n;
+      await gridBuildings.connect(player1).rechargeBuildings([building1, building2], { value: totalFee });
+
+      // Verify buildings are no longer at cap
+      expect(await gridBuildings.isBuildingAtCap(player1Address, building1)).to.be.false;
+      expect(await gridBuildings.isBuildingAtCap(player1Address, building2)).to.be.false;
+
+      // Verify contract received the fees
+      const contractBalance = await gridBuildings.getContractBalance();
+      expect(contractBalance).to.equal(totalFee);
+    });
+
+    it("Should recharge all buildings at cap", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create one more building (we already have 2 from setup)
+      const { buildingId: building3 } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Fast forward 48 hours to put buildings at cap
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Get buildings at cap
+      const buildingsAtCap = await gridBuildings.getBuildingsAtCap(player1Address);
+      expect(buildingsAtCap.length).to.equal(3);
+
+      // Recharge all buildings at cap
+      const rechargeFee = ethers.parseEther("0.01");
+      const totalFee = rechargeFee * BigInt(buildingsAtCap.length);
+      await gridBuildings.connect(player1).rechargeAllBuildingsAtCap({ value: totalFee });
+
+      // Verify no buildings are at cap
+      const buildingsStillAtCap = await gridBuildings.getBuildingsAtCap(player1Address);
+      expect(buildingsStillAtCap.length).to.equal(0);
+
+      // Verify contract received the fees
+      const contractBalance = await gridBuildings.getContractBalance();
+      expect(contractBalance).to.equal(totalFee);
+    });
+
+    it("Should not allow recharging building not at cap", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Don't fast forward time - building should not be at cap
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCap).to.be.false;
+
+      // Try to recharge - should fail
+      const rechargeFee = ethers.parseEther("0.01");
+      await expect(
+        gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee })
+      ).to.be.revertedWith("Building is not at production cap");
+    });
+
+    it("Should not allow recharging with incorrect fee amount", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Fast forward 48 hours to put building at cap
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Try to recharge with wrong fee - should fail
+      const wrongFee = ethers.parseEther("0.005");
+      await expect(
+        gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: wrongFee })
+      ).to.be.revertedWith("Incorrect fee amount");
+    });
+
+    it("Should not allow recharging damaged building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Damage a building using BattleSystem's test function
+      const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
+      const damagedBuildingId = await getDamagedBuildingId(damageTx, gridBuildings);
+      
+      // Fast forward 48 hours
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Try to recharge damaged building - should fail
+      const rechargeFee = ethers.parseEther("0.01");
+      await expect(
+        gridBuildings.connect(player1).rechargeBuilding(damagedBuildingId, { value: rechargeFee })
+      ).to.be.revertedWith("Building is damaged");
+    });
+
+    it("Should not allow recharging non-existent building", async function () {
+      const rechargeFee = ethers.parseEther("0.01");
+      await expect(
+        gridBuildings.connect(player1).rechargeBuilding(999, { value: rechargeFee })
+      ).to.be.revertedWith("Building does not exist");
+    });
+
+    it("Should allow owner to withdraw fees", async function () {
+      const player1Address = await player1.getAddress();
+      const ownerAddress = await owner.getAddress();
+      
+      // Create and recharge a building to generate fees
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+
+      // Get initial owner balance
+      const initialBalance = await ethers.provider.getBalance(ownerAddress);
+
+      // Owner withdraws fees
+      await gridBuildings.connect(owner).withdrawFees();
+
+      // Verify contract balance is 0
+      const contractBalance = await gridBuildings.getContractBalance();
+      expect(contractBalance).to.equal(0);
+
+      // Verify owner received the fees
+      const finalBalance = await ethers.provider.getBalance(ownerAddress);
+      expect(finalBalance).to.be.gt(initialBalance);
+    });
+
+    it("Should not allow non-owner to withdraw fees", async function () {
+      await expect(
+        gridBuildings.connect(player1).withdrawFees()
+      ).to.be.revertedWithCustomError(gridBuildings, "OwnableUnauthorizedAccount");
+    });
+
+    it("Should get correct recharge fee constant", async function () {
+      const rechargeFee = await gridBuildings.RECHARGE_FEE();
+      expect(rechargeFee).to.equal(ethers.parseEther("0.01"));
+    });
+  });
 }); 
