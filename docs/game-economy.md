@@ -82,17 +82,18 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 
 ### Production Reset System
 
-#### Free Reset (Manual After Cooldown)
+#### Free Reset (NFT Staking/Unstaking)
 - **Trigger**: Building reaches 24-hour production cap
-- **Wait Time**: 6 hours cooldown after last reset
-- **Action**: Player must manually click "Free Reset" button
-- **Cost**: FREE
+- **Action**: Player unstakes and re-stakes the NFT at the Altar
+- **Cost**: FREE (gas fees only)
 - **Result**: Production timer resets, building starts producing again
+- **Note**: This acts as a natural free reset mechanism
 
-#### Premium Reset (Immediate)
+#### Premium Reset (Immediate with SONIC Fee)
 - **Trigger**: Building reaches 24-hour production cap
-- **Wait Time**: Immediate (skip 6h cooldown)
-- **Cost**: 25% of building's daily production from donated treasury gold
+- **Wait Time**: Immediate (skip NFT unstaking process)
+- **Cost**: Small fee in native SONIC tokens
+- **Fee Destination**: Goes to treasury for city development
 - **Result**: Production timer resets immediately
 
 ### Production Rates
@@ -101,10 +102,9 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 - **Rep Station**: 2 rep/hour × building level
 
 ### Reset Cost Examples
-- **House Level 1**: 60 treasury gold (240 daily × 25%)
-- **House Level 3**: 180 treasury gold (720 daily × 25%)
-- **House Level 5**: 300 treasury gold (1200 daily × 25%)
-- **Farm Level 2**: 30 treasury food (120 daily × 25%)
+- **Premium Reset Fee**: Small SONIC token amount (TBD)
+- **Free Reset**: Gas fees for unstaking/re-staking NFT
+- **Note**: Exact SONIC fee amounts to be determined based on economic balance
 
 ## Conversion Mechanics (Tier 2 Pattern)
 
@@ -135,7 +135,6 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 3. **Usage**: 
    - Building construction/upgrades
    - Treasury donations (for tier progression)
-   - Premium production resets (from donated treasury)
    - Staking in Diamond Vault (for diamond conversion)
 
 ### Food Flow
@@ -143,7 +142,6 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 2. **Collection**: Manual collection every 24h max
 3. **Usage**:
    - Troop maintenance
-   - Premium production resets (from donated treasury)
    - Conversion to Gems (when enabled)
 
 ### Reputation Flow
@@ -170,17 +168,18 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 
 ### Treasury Storage
 - **Location**: `playerState[player].treasury` in GameState contract
-- **Source**: Gold donated via `donateGold()` function
-- **Purpose**: Tier progression and premium production resets
+- **Source**: Gold donated via `donateGold()` function + SONIC fees from premium resets
+- **Purpose**: Tier progression and city development funding
 
 ### Treasury Usage
 - **Tier Progression**: Automatic when treasury reaches tier requirements
-- **Premium Resets**: Manual deduction for immediate production resets
+- **City Development**: Funding from SONIC reset fees
 - **Battle System**: Can be burned during PvP battles
 
 ### Treasury Flow
 ```
-Player Gold → donateGold() → Treasury → Premium Resets/Tier Progression
+Player Gold → donateGold() → Treasury → Tier Progression
+Premium Reset SONIC Fees → Treasury → City Development
 ```
 
 ## Governance System (Future)
@@ -207,7 +206,7 @@ Player Gold → donateGold() → Treasury → Premium Resets/Tier Progression
 - **Building Construction**: Gold cost for new buildings
 - **Building Upgrades**: Gold cost for level upgrades
 - **Treasury Donations**: Gold sunk for tier progression
-- **Premium Resets**: Treasury gold used for immediate resets
+- **SONIC Reset Fees**: Native tokens used for immediate resets
 - **Conversion Staking**: Resources locked in district buildings
 - **Reputation Conversion**: Rep sunk for Dynamic NFTs
 
@@ -217,6 +216,7 @@ Player Gold → donateGold() → Treasury → Premium Resets/Tier Progression
 - **NFT Staking**: Building slot bonuses from Altar
 - **Conversion Claims**: Diamonds and production resets
 - **Governance Participation**: Potential rewards for active governance
+- **SONIC Reset Fees**: Revenue from premium resets
 
 ## Future Considerations
 
@@ -246,10 +246,10 @@ Player Gold → donateGold() → Treasury → Premium Resets/Tier Progression
 ## Implementation Notes
 
 ### Production Reset System
-- **Free Reset**: 6h cooldown, manual trigger, no cost
-- **Premium Reset**: Immediate, uses treasury gold, 25% of daily production
-- **Storage**: `playerState[player].treasury` for donated gold
-- **Deduction**: `deductTreasuryForReset()` function in GameState
+- **Free Reset**: NFT unstaking/re-staking at Altar, gas fees only
+- **Premium Reset**: Immediate, uses SONIC tokens, fee goes to treasury
+- **Storage**: SONIC fees collected and sent to treasury
+- **Function**: `resetBuildingProduction()` in GridBuildings contract
 
 ### Dynamic NFT System
 - **Conversion**: Reputation → SVG-based Dynamic NFTs
