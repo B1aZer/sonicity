@@ -1,5 +1,30 @@
 ## todo
 
+- it would be asweome that hero acquire exp, skills, etc and can be traded. But proably making it tooo complex. Lets tick to proto
+
+
+## facts
+
+1. minting nft is FREE
+2. nft can be upgraded, affects rarity. Evolving nfts
+3. we take small fee for recarge, to distribute later
+4. shop only cosmetic items
+
+## todo
+
+- input / racharge
+- middle tunnel - nft , upgrade -> affects rarity (wow) sh!!!!!!!!t
+- output
+
+
+## todo
+
+- shop -> recharge station (tests)
+- adventure -> place adventure starts 24 h -> random relics drops -> recahrge
+- tier 3 conversion ?
+
+## todo
+
 - cleanup ui / refactor
 - move city view
 - make tier 1,2,3
