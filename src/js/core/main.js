@@ -16,6 +16,7 @@ import { WorkshopPage } from '../../pages/WorkshopPage.js';
 import { BarracksPage } from '../../pages/BarracksPage.js';
 import { ScoutGuildPage } from '../../pages/ScoutGuildPage.js';
 import { CommandCenterPage } from '../../pages/CommandCenterPage.js';
+import { GridHubPage } from '../../pages/GridHubPage.js';
 import { AccessControl } from '../utils/accessControl.js';
 import { Modal } from '../utils/modal.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
@@ -140,6 +141,10 @@ class App {
                 break;
             case 'command-center':
                 this.currentPage = new CommandCenterPage();
+                this.currentPage.mount(this.layout.content);
+                break;
+            case 'grid-hub':
+                this.currentPage = new GridHubPage();
                 this.currentPage.mount(this.layout.content);
                 break;
             default:
