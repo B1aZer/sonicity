@@ -6,7 +6,6 @@ import Logger from '../js/utils/logger.js';
 export class HousePage extends BasePage {
     constructor() {
         super();
-        import('../styles/grid-building-page.css');
         Logger.info('HousePage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'base-page';

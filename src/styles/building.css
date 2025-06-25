@@ -25,6 +25,25 @@
     color: var(--text-muted);
 }
 
+/* Detail item styles for building information */
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+}
+
+.detail-label {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+}
+
 .build-cost, .unlock-cost, .upgrade-cost {
     color: var(--text-primary);
     font-size: var(--font-size-sm);

@@ -7,7 +7,6 @@ import Logger from '../js/utils/logger.js';
 export class FarmPage extends BasePage {
     constructor() {
         super();
-        import('../styles/grid-building-page.css');
         Logger.info('FarmPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'base-page';
