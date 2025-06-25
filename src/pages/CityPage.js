@@ -490,10 +490,6 @@ export class CityPage extends BasePage {
                             <span class="status-value gold-amount">Loading...</span>
                         </div>
                     </div>
-                    <div class="tier-progress">
-                        <div class="tier-progress-bar"></div>
-                        <div class="tier-progress-text"></div>
-                    </div>
                 </div>
 
                 <!-- Donation Section -->
@@ -502,6 +498,10 @@ export class CityPage extends BasePage {
                     <div class="donation-form">
                         <input type="number" class="donation-amount" placeholder="Amount to donate">
                         <button class="btn btn-primary">Donate Gold</button>
+                    </div>
+                    <div class="tier-progress">
+                        <div class="tier-progress-bar"></div>
+                        <div class="tier-progress-text"></div>
                     </div>
                 </div>
 
