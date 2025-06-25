@@ -23,7 +23,6 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 ### Tier 0 (Starting Tier)
 **Grid Buildings:**
 - **House**: Produces Gold (10/hour, 24h cap)
-- **Farm**: Produces Food (5/hour, 24h cap)
 
 **District Buildings:**
 - **City Hall**: Core building (always available)
@@ -36,7 +35,7 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 
 ### Tier 1
 **Grid Buildings:**
-- None (Tier 2 grid buildings planned for future)
+- **Farm**: Produces Food (5/hour, 24h cap)
 
 **District Buildings:**
 - **Barracks**: Unlock cost 1000, Build cost 250 (train troops)
@@ -46,7 +45,7 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 
 ### Tier 2
 **Grid Buildings:**
-- **Conversion Building**: Planned - converts Gold to Diamonds (100 gold → 1 diamond over 48h)
+- **Portal/dungeon/map**: Stake map hero to traverse, clsim relics
 
 **District Buildings:**
 - **Tavern**: Unlock cost 3000, Build cost 200 (hire heroes) - DISABLED
@@ -56,7 +55,7 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 
 ### Tier 3
 **Grid Buildings:**
-- **Rep Station**: Produces Reputation (2/hour, 24h cap)
+- **Conversion Building**: Planned - converts Gold to Diamonds (100 gold → 1 diamond over 48h)
 
 **District Buildings:**
 - **Gem Workshop**: Unlock cost 5000, Build cost 400 (Food to Gems) - DISABLED
@@ -65,6 +64,9 @@ Sonicity is a blockchain-based city-building game with a complex resource econom
 - **Refinery**: Unlock cost 8000, Build cost 500 (Improve processing speed) - DISABLED
 
 ### Tier 4
+**Grid Buildings:**
+- **Nftstation**: Revenue sharing
+
 **District Buildings:**
 - **Council Hall**: Unlock cost 10000, Build cost 600 (advanced governance) - DISABLED
 - **Fortress Walls**: Unlock cost 12000, Build cost 700 (defense bonuses) - DISABLED
