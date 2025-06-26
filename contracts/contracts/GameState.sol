@@ -22,6 +22,12 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Reference to the BattleSystem contract
     address public battleSystemAddress;
 
+    // Upgrade level thresholds (in SONIC wei)
+    uint256 public constant UPGRADE_LEVEL_2_THRESHOLD = 0.1 ether;    // 0.1 SONIC for level 2
+    uint256 public constant UPGRADE_LEVEL_3_THRESHOLD = 1 ether;      // 1 SONIC for level 3
+    uint256 public constant UPGRADE_LEVEL_4_THRESHOLD = 10 ether;     // 10 SONIC for level 4
+    uint256 public constant UPGRADE_LEVEL_5_THRESHOLD = 100 ether;    // 100 SONIC for level 5
+
     // Standalone player state
     struct PlayerState {
         uint256 gold;
@@ -30,6 +36,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint256 buildingSlots;
         uint8 tier;
         uint256 treasury;
+        uint256 totalRechargeAmount;  // Track total SONIC recharges for upgrade unlocks
+        uint8 maxUpgradeLevel;        // Track unlocked upgrade level (1-5)
     }
 
     // City state (modified)
@@ -70,6 +78,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event DistrictBuildingsAddressUpdated(address indexed newAddress);
     event GridBuildingsAddressUpdated(address indexed newAddress);
     event TreasuryBurned(address indexed player, uint256 amount);
+    event UpgradeLevelUnlocked(address indexed player, uint8 newLevel, uint256 totalRechargeAmount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -108,7 +117,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             food: 0,
             buildingSlots: 9,
             tier: 0,
-            treasury: 0
+            treasury: 0,
+            totalRechargeAmount: 0,
+            maxUpgradeLevel: 1
         });
 
         // Initialize core buildings for the new player
@@ -470,5 +481,67 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         
         state.treasury -= amount;
         emit TreasuryBurned(player, amount);
+    }
+
+    /**
+     * @dev Track recharge amount and update upgrade level if threshold is met
+     * @param player The address of the player
+     * @param amount The amount of SONIC recharged
+     */
+    function trackRechargeAmount(address player, uint256 amount) external {
+        require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
+        
+        PlayerState storage state = playerState[player];
+        state.totalRechargeAmount += amount;
+        
+        // Check and update upgrade level based on thresholds
+        checkAndUpdateUpgradeLevel(player);
+    }
+
+    /**
+     * @dev Check recharge thresholds and update max upgrade level
+     * @param player The address of the player
+     */
+    function checkAndUpdateUpgradeLevel(address player) internal {
+        PlayerState storage state = playerState[player];
+        uint8 currentMaxLevel = state.maxUpgradeLevel;
+        uint8 newMaxLevel = currentMaxLevel;
+        
+        // Upgrade level thresholds (in SONIC wei)
+        if (state.totalRechargeAmount >= UPGRADE_LEVEL_5_THRESHOLD) {
+            newMaxLevel = 5;  // 100 SONIC for level 5
+        } else if (state.totalRechargeAmount >= UPGRADE_LEVEL_4_THRESHOLD) {
+            newMaxLevel = 4;  // 10 SONIC for level 4
+        } else if (state.totalRechargeAmount >= UPGRADE_LEVEL_3_THRESHOLD) {
+            newMaxLevel = 3;  // 1 SONIC for level 3
+        } else if (state.totalRechargeAmount >= UPGRADE_LEVEL_2_THRESHOLD) {
+            newMaxLevel = 2;  // 0.1 SONIC for level 2
+        } else {
+            newMaxLevel = 1;  // Default level 1
+        }
+        
+        // Update if level increased
+        if (newMaxLevel > currentMaxLevel) {
+            state.maxUpgradeLevel = newMaxLevel;
+            emit UpgradeLevelUnlocked(player, newMaxLevel, state.totalRechargeAmount);
+        }
+    }
+
+    /**
+     * @dev Get the maximum upgrade level a player can reach
+     * @param player The address of the player
+     * @return uint8 The maximum upgrade level (1-5)
+     */
+    function getMaxUpgradeLevel(address player) external view returns (uint8) {
+        return playerState[player].maxUpgradeLevel;
+    }
+
+    /**
+     * @dev Get the total recharge amount for a player
+     * @param player The address of the player
+     * @return uint256 The total SONIC recharged
+     */
+    function getTotalRechargeAmount(address player) external view returns (uint256) {
+        return playerState[player].totalRechargeAmount;
     }
 }

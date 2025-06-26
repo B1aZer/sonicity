@@ -246,11 +246,20 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         require(building.level < config.maxLevel, "Building at max level");
         
+        // Check if player has unlocked the required upgrade level
+        (bool success, bytes memory returnData) = gameStateAddress.call(
+            abi.encodeWithSignature("getMaxUpgradeLevel(address)", msg.sender)
+        );
+        require(success, "Failed to get max upgrade level");
+        uint8 maxUpgradeLevel = abi.decode(returnData, (uint8));
+        
+        require(building.level + 1 <= maxUpgradeLevel, "Upgrade level not unlocked. Recharge more buildings to unlock higher levels.");
+        
         // Calculate upgrade cost
         uint256 upgradeCost = config.upgradeCost * building.level;
         
         // Deduct gold from player
-        (bool success, bytes memory returnData) = gameStateAddress.call(
+        (success, returnData) = gameStateAddress.call(
             abi.encodeWithSignature("deductGold(address,uint256)", msg.sender, upgradeCost)
         );
         if (!success) {
@@ -654,7 +663,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Recharge a building that is at production cap
+     * @dev Recharge a building to refresh production time
      * @param buildingId The ID of the building to recharge
      */
     function rechargeBuilding(uint256 buildingId) external payable nonReentrant {
@@ -663,7 +672,20 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Building storage building = buildings[msg.sender][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         require(!building.damaged, "Building is damaged");
-        require(isBuildingAtCap(msg.sender, buildingId), "Building is not at production cap");
+        
+        // Track recharge amount in GameState
+        (bool success, bytes memory returnData) = gameStateAddress.call(
+            abi.encodeWithSignature("trackRechargeAmount(address,uint256)", msg.sender, msg.value)
+        );
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to track recharge amount");
+        }
         
         // Reset last collection time to restart production
         building.lastCollectionTime = block.timestamp;
@@ -672,7 +694,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Recharge multiple buildings that are at production cap
+     * @dev Recharge multiple buildings to refresh production time
      * @param buildingIds Array of building IDs to recharge
      */
     function rechargeBuildings(uint256[] calldata buildingIds) external payable nonReentrant {
@@ -684,28 +706,42 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             Building storage building = buildings[msg.sender][buildingIds[i]];
             require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
             require(!building.damaged, "Building is damaged");
-            require(isBuildingAtCap(msg.sender, buildingIds[i]), "Building is not at production cap");
             
             // Reset last collection time to restart production
             building.lastCollectionTime = block.timestamp;
             
             totalFee += RECHARGE_FEE;
+        }
+        
+        // Track recharge amount in GameState
+        (bool success, bytes memory returnData) = gameStateAddress.call(
+            abi.encodeWithSignature("trackRechargeAmount(address,uint256)", msg.sender, msg.value)
+        );
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to track recharge amount");
         }
         
         emit BuildingsRecharged(msg.sender, buildingIds, totalFee);
     }
 
     /**
-     * @dev Recharge all buildings at cap for the caller
+     * @dev Recharge all active buildings for the caller
      */
-    function rechargeAllBuildingsAtCap() external payable nonReentrant {
-        uint256[] memory buildingsAtCap = getBuildingsAtCap(msg.sender);
-        require(buildingsAtCap.length > 0, "No buildings at cap to recharge");
-        require(msg.value == RECHARGE_FEE * buildingsAtCap.length, "Incorrect fee amount");
+    function rechargeAllBuildings() external payable nonReentrant {
+        uint256[] memory activeBuildings = getActiveBuildings(msg.sender);
+        require(activeBuildings.length > 0, "No buildings to recharge");
+        require(msg.value == RECHARGE_FEE * activeBuildings.length, "Incorrect fee amount");
         
         uint256 totalFee = 0;
-        for (uint256 i = 0; i < buildingsAtCap.length; i++) {
-            Building storage building = buildings[msg.sender][buildingsAtCap[i]];
+        for (uint256 i = 0; i < activeBuildings.length; i++) {
+            Building storage building = buildings[msg.sender][activeBuildings[i]];
+            require(!building.damaged, "Building is damaged");
             
             // Reset last collection time to restart production
             building.lastCollectionTime = block.timestamp;
@@ -713,7 +749,21 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             totalFee += RECHARGE_FEE;
         }
         
-        emit BuildingsRecharged(msg.sender, buildingsAtCap, totalFee);
+        // Track recharge amount in GameState
+        (bool success, bytes memory returnData) = gameStateAddress.call(
+            abi.encodeWithSignature("trackRechargeAmount(address,uint256)", msg.sender, msg.value)
+        );
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to track recharge amount");
+        }
+        
+        emit BuildingsRecharged(msg.sender, activeBuildings, totalFee);
     }
 
     /**
