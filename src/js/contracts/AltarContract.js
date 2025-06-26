@@ -23,7 +23,12 @@ export class AltarContract extends BaseContract {
         return await this.call('getUserStakesByCollection', user, collection);
     }
 
+    /**
+     * @deprecated Use getStakeDataWithCollection(collection, tokenId) instead
+     * This method only works with the old single-collection system
+     */
     async getStakeData(tokenId) {
+        console.warn('getStakeData is deprecated. Use getStakeDataWithCollection(collection, tokenId) instead.');
         return await this.call('stakes', tokenId);
     }
 
@@ -32,8 +37,14 @@ export class AltarContract extends BaseContract {
         return await this.call('getUserStakes', address);
     }
 
-    async isStaked(tokenId) {
-        const stakeData = await this.getStakeData(tokenId);
+    /**
+     * Check if an NFT is staked
+     * @param {string} collection - The NFT collection address
+     * @param {number|string} tokenId - The token ID
+     * @returns {Promise<boolean>} - Whether the NFT is staked
+     */
+    async isStaked(collection, tokenId) {
+        const stakeData = await this.getStakeDataWithCollection(collection, tokenId);
         return stakeData.isActive;
     }
 
@@ -47,5 +58,30 @@ export class AltarContract extends BaseContract {
 
     async getSonicityNFTAddress() {
         return await this.call('sonicityNFT');
+    }
+
+    /**
+     * Check if an NFT has preserved building data
+     * @param {string} collection - The NFT collection address
+     * @param {number|string} tokenId - The token ID
+     * @returns {Promise<boolean>} - Whether the NFT has preserved building data
+     */
+    async hasPreservedBuildingData(collection, tokenId) {
+        return await this.call('hasPreservedBuildingData', collection, tokenId);
+    }
+
+    /**
+     * Get preserved building data for an NFT
+     * @param {string} collection - The NFT collection address
+     * @param {number|string} tokenId - The token ID
+     * @returns {Promise<Object>} - The preserved building data
+     */
+    async getPreservedBuildingData(collection, tokenId) {
+        const result = await this.call('getPreservedBuildingData', collection, tokenId);
+        return {
+            buildingType: Number(result[0]),
+            level: Number(result[1]),
+            lastUpgradeTime: Number(result[2])
+        };
     }
 } 
