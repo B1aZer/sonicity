@@ -11,7 +11,7 @@ import "./GridBuildings.sol";
 
 /**
  * @title Altar
- * @dev Contract for staking Sonicity NFTs
+ * @dev Contract for staking Sonicity NFTs with building upgrade preservation
  * Uses UUPS upgradeable pattern for future upgrades
  */
 contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
@@ -24,13 +24,17 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     // Mapping of approved NFT collections
     mapping(address => bool) public approvedCollections;
 
-    // Staking data structures
+    // Enhanced staking data structures with building data preservation
     struct Stake {
         uint256 tokenId;
         uint256 stakedAt;
         address owner;
         bool isActive;
-        address collection; // Add collection address to track which NFT contract
+        address collection;
+        // Building data preservation fields
+        GridBuildings.GridBuildingType buildingType;
+        uint256 buildingLevel;      // 0 = no preserved data, >0 = has preserved data
+        uint256 lastUpgradeTime;
     }
 
     // Mapping from token ID to stake data
@@ -50,6 +54,9 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     event NFTUnstaked(address indexed user, uint256 indexed tokenId, uint256 timestamp, address indexed collection);
     event CollectionApproved(address indexed collection);
     event CollectionRemoved(address indexed collection);
+    // New events for building data preservation
+    event BuildingDataPreserved(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint256 level);
+    event BuildingDataRestored(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint256 level);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -98,29 +105,64 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     function stake(uint256 tokenId, GridBuildings.GridBuildingType buildingType, address collection) external nonReentrant {
         require(approvedCollections[collection], "Collection not approved");
         require(IERC721(collection).ownerOf(tokenId) == msg.sender, "Not the NFT owner");
-        require(!stakes[collection][tokenId].isActive, "NFT already staked");
-              
+        
+        // Check if this NFT was previously staked and has preserved building data
+        Stake memory existingStake = stakes[collection][tokenId];
+        
+        if (existingStake.buildingLevel > 0 && !existingStake.isActive) {
+            // Restore building with preserved data
+            uint256 restoredBuildingId = gridBuildings.createBuilding(
+                msg.sender, 
+                existingStake.buildingType, 
+                existingStake.buildingLevel, 
+                existingStake.lastUpgradeTime
+            );
+            
+            // Update stake record to active state, clear preserved data
+            stakes[collection][tokenId] = Stake({
+                tokenId: tokenId,
+                stakedAt: block.timestamp,
+                owner: msg.sender,
+                isActive: true,
+                collection: collection,
+                buildingType: buildingType,  // Use requested building type
+                buildingLevel: 0,            // Clear preserved data
+                lastUpgradeTime: 0           // Clear preserved data
+            });
+            
+            // Update staked building mapping
+            stakedBuilding[collection][tokenId] = restoredBuildingId;
+            
+            emit BuildingDataRestored(collection, tokenId, existingStake.buildingType, existingStake.buildingLevel);
+        } else {
+            // Create new building
+            require(!existingStake.isActive, "NFT already staked");
+            
+            uint256 newBuildingId = gridBuildings.createBuilding(msg.sender, buildingType, 0, 0);
+            
+            // Create new stake record
+            stakes[collection][tokenId] = Stake({
+                tokenId: tokenId,
+                stakedAt: block.timestamp,
+                owner: msg.sender,
+                isActive: true,
+                collection: collection,
+                buildingType: buildingType,
+                buildingLevel: 1,
+                lastUpgradeTime: block.timestamp
+            });
+            
+            // Update staked building mapping
+            stakedBuilding[collection][tokenId] = newBuildingId;
+        }
+        
         // Transfer NFT to this contract
         IERC721(collection).transferFrom(msg.sender, address(this), tokenId);
-        
-        // Update stake data
-        stakes[collection][tokenId] = Stake({
-            tokenId: tokenId,
-            stakedAt: block.timestamp,
-            owner: msg.sender,
-            isActive: true,
-            collection: collection
-        });
-        
-        // Create building through GridBuildings contract
-        uint256 buildingId = gridBuildings.createBuilding(msg.sender, buildingType);
-        
-        // Update staked building mapping
-        stakedBuilding[collection][tokenId] = buildingId;
         
         // Add to user's collection-specific staked tokens
         userStakesByCollection[msg.sender][collection].push(tokenId);
         
+        uint256 buildingId = stakedBuilding[collection][tokenId];
         emit NFTStaked(msg.sender, tokenId, buildingId, collection);
     }
 
@@ -138,8 +180,23 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
             "Staking period not completed"
         );
         
-        // Update stake status
-        stakes[collection][tokenId].isActive = false;
+        // Get building data before removal
+        uint256 buildingId = stakedBuilding[stakeData.collection][tokenId];
+        
+        // Get building data from GridBuildings
+        (GridBuildings.GridBuildingType buildingType, uint256 level, uint256 lastUpgradeTime, , ) = gridBuildings.buildings(msg.sender, buildingId);
+        
+        // Preserve building data (buildingLevel > 0 indicates preserved data)
+        stakes[collection][tokenId] = Stake({
+            tokenId: tokenId,
+            stakedAt: stakeData.stakedAt,
+            owner: msg.sender,
+            isActive: false,
+            collection: collection,
+            buildingType: buildingType,
+            buildingLevel: level,        // This indicates preserved data exists
+            lastUpgradeTime: lastUpgradeTime
+        });
         
         // Remove from user's collection-specific staked tokens
         uint256[] storage userCollectionTokens = userStakesByCollection[msg.sender][stakeData.collection];
@@ -151,8 +208,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
             }
         }
         
-        // Get building ID and remove building
-        uint256 buildingId = stakedBuilding[stakeData.collection][tokenId];
+        // Remove building from GridBuildings
         gridBuildings.removeBuilding(msg.sender, buildingId);
         delete stakedBuilding[stakeData.collection][tokenId];
         
@@ -160,10 +216,12 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         IERC721(stakeData.collection).transferFrom(address(this), msg.sender, tokenId);
         
         emit NFTUnstaked(msg.sender, tokenId, block.timestamp, stakeData.collection);
+        emit BuildingDataPreserved(collection, tokenId, buildingType, level);
     }
 
     /**
      * @dev Get stake data for a specific NFT
+     * @param collection The address of the NFT collection
      * @param tokenId The ID of the NFT
      * @return Stake data
      */
@@ -179,6 +237,31 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
      */
     function getUserStakesByCollection(address user, address collection) external view returns (uint256[] memory) {
         return userStakesByCollection[user][collection];
+    }
+
+    /**
+     * @dev Check if NFT has preserved building data
+     * @param collection The address of the NFT collection
+     * @param tokenId The ID of the NFT
+     * @return bool Whether the NFT has preserved building data
+     */
+    function hasPreservedBuildingData(address collection, uint256 tokenId) external view returns (bool) {
+        return stakes[collection][tokenId].buildingLevel > 0;
+    }
+
+    /**
+     * @dev Get preserved building data for an NFT
+     * @param collection The address of the NFT collection
+     * @param tokenId The ID of the NFT
+     * @return buildingType The type of building that was preserved
+     * @return level The level of the building that was preserved
+     * @return lastUpgradeTime The timestamp of the last upgrade
+     */
+    function getPreservedBuildingData(address collection, uint256 tokenId) 
+        external view returns (GridBuildings.GridBuildingType buildingType, uint256 level, uint256 lastUpgradeTime) {
+        Stake memory stakeData = stakes[collection][tokenId];
+        require(stakeData.buildingLevel > 0, "No preserved building data");
+        return (stakeData.buildingType, stakeData.buildingLevel, stakeData.lastUpgradeTime);
     }
 
     /**

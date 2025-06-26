@@ -196,4 +196,143 @@ describe("Altar", function () {
       expect(stake4.collection).to.equal(result4.nftAddress);
     });
   });
+
+  describe("Building Data Preservation", function () {
+    it("Should preserve building upgrades when unstaking and restore when re-staking", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint and stake an NFT
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+
+      // Fast forward time to collect enough gold for upgrade
+      await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
+      await ethers.provider.send("evm_mine");
+
+      // Collect resources to get gold for upgrade
+      await gridBuildings.connect(player1).collectResources(buildingId);
+
+      // Get building config to check upgrade cost
+      const config = await gridBuildings.buildingConfigs(GridBuildingType.HOUSE);
+      const upgradeCost1 = config.upgradeCost; // Level 1 -> 2: 100 gold
+      const upgradeCost2 = config.upgradeCost * 2n; // Level 2 -> 3: 200 gold
+
+      // Verify player has enough gold for first upgrade
+      const playerGold1 = await gameState.getPlayerGold(player1Address);
+      expect(playerGold1).to.be.gte(upgradeCost1);
+
+      // Upgrade the building to level 2
+      await gridBuildings.connect(player1).upgradeBuilding(buildingId);
+
+      // Collect more resources for second upgrade
+      await ethers.provider.send("evm_increaseTime", [24 * 3600]); // Another 24 hours
+      await ethers.provider.send("evm_mine");
+      await gridBuildings.connect(player1).collectResources(buildingId);
+
+      // Verify player has enough gold for second upgrade
+      const playerGold2 = await gameState.getPlayerGold(player1Address);
+      expect(playerGold2).to.be.gte(upgradeCost2);
+
+      // Upgrade the building to level 3
+      await gridBuildings.connect(player1).upgradeBuilding(buildingId);
+
+      // Verify building is at level 3
+      const building = await gridBuildings.buildings(player1Address, buildingId);
+      expect(building.level).to.equal(3);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]); // 7 days
+      await ethers.provider.send("evm_mine");
+
+      // Unstake the NFT
+      await altar.connect(player1).unstake(nftAddress, tokenId);
+
+      // Check that building data is preserved
+      const hasPreservedData = await altar.hasPreservedBuildingData(nftAddress, tokenId);
+      expect(hasPreservedData).to.be.true;
+
+      // Get preserved building data
+      const preservedData = await altar.getPreservedBuildingData(nftAddress, tokenId);
+      expect(preservedData.buildingType).to.equal(GridBuildingType.HOUSE);
+      expect(preservedData.level).to.equal(3);
+      expect(preservedData.lastUpgradeTime).to.be.gt(0);
+
+      // Verify building was removed from GridBuildings
+      const removedBuilding = await gridBuildings.buildings(player1Address, buildingId);
+      expect(removedBuilding.buildingType).to.equal(BigInt(0));
+      expect(removedBuilding.level).to.equal(0);
+
+      // Re-stake the NFT
+      await sonicityNFT.connect(player1).approve(await altar.getAddress(), tokenId);
+      await altar.connect(player1).stake(tokenId, GridBuildingType.HOUSE, nftAddress);
+
+      // Get the new building ID
+      const newBuildingId = await altar.stakedBuilding(nftAddress, tokenId);
+
+      // Verify building was restored with preserved data
+      const restoredBuilding = await gridBuildings.buildings(player1Address, newBuildingId);
+      expect(restoredBuilding.buildingType).to.equal(GridBuildingType.HOUSE);
+      expect(restoredBuilding.level).to.equal(3);
+      expect(restoredBuilding.lastUpgradeTime).to.equal(preservedData.lastUpgradeTime);
+
+      // Verify preserved data was cleared
+      const hasPreservedDataAfterRestore = await altar.hasPreservedBuildingData(nftAddress, tokenId);
+      expect(hasPreservedDataAfterRestore).to.be.false;
+    });
+
+    it("Should not preserve building data for new NFTs", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint a new NFT
+      const mintTx = await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
+      const mintReceipt = await mintTx.wait();
+      
+      // Get tokenId from Transfer event
+      const transferEvent = mintReceipt.logs
+        .map(log => {
+          try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
+        })
+        .find(e => e && e.name === "Transfer");
+      const tokenId = transferEvent.args.tokenId;
+
+      // Check that new NFT has no preserved data
+      const hasPreservedData = await altar.hasPreservedBuildingData(await sonicityNFT.getAddress(), tokenId);
+      expect(hasPreservedData).to.be.false;
+    });
+
+    it("Should emit correct events for building data preservation", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint and stake an NFT
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+
+      // Upgrade the building
+      await ethers.provider.send("evm_increaseTime", [24 * 3600]);
+      await ethers.provider.send("evm_mine");
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      await gridBuildings.connect(player1).upgradeBuilding(buildingId);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine");
+
+      // Unstake and check for BuildingDataPreserved event
+      const unstakeTx = await altar.connect(player1).unstake(nftAddress, tokenId);
+      const unstakeReceipt = await unstakeTx.wait();
+      
+      const buildingDataPreservedEvent = unstakeReceipt.logs.find(
+        log => log.topics[0] === altar.interface.getEvent("BuildingDataPreserved").topicHash
+      );
+      expect(buildingDataPreservedEvent).to.not.be.undefined;
+
+      // Re-stake and check for BuildingDataRestored event
+      await sonicityNFT.connect(player1).approve(await altar.getAddress(), tokenId);
+      const stakeTx = await altar.connect(player1).stake(tokenId, GridBuildingType.HOUSE, nftAddress);
+      const stakeReceipt = await stakeTx.wait();
+      
+      const buildingDataRestoredEvent = stakeReceipt.logs.find(
+        log => log.topics[0] === altar.interface.getEvent("BuildingDataRestored").topicHash
+      );
+      expect(buildingDataRestoredEvent).to.not.be.undefined;
+    });
+  });
 }); 

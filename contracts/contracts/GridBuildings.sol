@@ -172,11 +172,23 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @dev Create a new building
      * @param player The address of the player for whom to create the building
      * @param buildingType The type of building to create
+     * @param level The level of the building (0 = new building, >0 = restore level)
+     * @param lastUpgradeTime The timestamp of the last upgrade (0 = current time, >0 = preserved time)
      * @return buildingId The ID of the created building
      */
-    function createBuilding(address player, GridBuildingType buildingType) external nonReentrant returns (uint256) {
+    function createBuilding(
+        address player, 
+        GridBuildingType buildingType, 
+        uint256 level, 
+        uint256 lastUpgradeTime
+    ) external nonReentrant returns (uint256) {
         require(msg.sender == altarAddress, "Only Altar can create buildings");
         require(buildingType <= GridBuildingType.REP_STATION, "Invalid building type");
+        
+        // If level is 0, this is a new building; if >0, this is restoring preserved data
+        if (level > 0) {
+            require(lastUpgradeTime > 0, "Invalid upgrade time for restored building");
+        }
         
         // Get player's tier from GameState
         (bool success, bytes memory data) = gameStateAddress.call(
@@ -208,9 +220,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 buildingId = nextBuildingId[player]++;
         buildings[player][buildingId] = Building({
             buildingType: buildingType,
-            level: 1,
-            lastUpgradeTime: block.timestamp,
-            lastCollectionTime: block.timestamp,
+            level: level == 0 ? 1 : level,  // Use level 1 for new buildings, preserved level for restored
+            lastUpgradeTime: lastUpgradeTime == 0 ? block.timestamp : lastUpgradeTime,  // Use current time for new, preserved time for restored
+            lastCollectionTime: block.timestamp, // Always reset collection time
             damaged: false
         });
         
