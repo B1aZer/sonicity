@@ -1,6 +1,40 @@
 ## todo
 
+later maybe it makes sense to remove altar and build dirreclty in hub. build instead of stake
+
+## grid hub
+
+0. global status - building slots / max slots
+
+1. progress bar  - 100 / 1000 / 10000 (s)
+
+tabs
+
+
+
+1. status - resources for current tier
+
+2. buldings for tier, houses count, at cap, damg?
+
+3. buildings:
+
+Level:
+1 / 5
+Production Rate:
+10/hour
+Last Collection:
+49m ago
+Claimable:
+240
+
+ stake - unstake / collect / upgrade / recharge 
+
+
+
+## todo
+
 - it would be asweome that hero acquire exp, skills, etc and can be traded. But proably making it tooo complex. Lets tick to proto
+- remove global styles imports
 
 
 ## facts
