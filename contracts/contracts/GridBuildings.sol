@@ -28,6 +28,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     enum GridBuildingType {
         HOUSE,
         FARM,
+        DIAMOND_STATION,
         REP_STATION
     }
 
@@ -99,13 +100,22 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             tier: 1
         });
 
+        buildingConfigs[GridBuildingType.DIAMOND_STATION] = GridBuildingConfig({
+            name: "Diamond Station",
+            baseProductionRate: 1,   // 1 diamond per hour (example)
+            upgradeCost: 500,        // 500 gold to upgrade (example)
+            maxLevel: 5,
+            description: "Produces diamonds",
+            tier: 2
+        });
+
         buildingConfigs[GridBuildingType.REP_STATION] = GridBuildingConfig({
             name: "Rep Station",
             baseProductionRate: 2,   // 2 rep per hour
             upgradeCost: 200,        // 200 gold to upgrade
             maxLevel: 5,
             description: "Produces reputation",
-            tier: 2
+            tier: 3
         });
     }
 
