@@ -641,14 +641,14 @@ describe("GridBuildings", function () {
         // Collect resources to get gold for upgrade
         await gridBuildings.connect(player1).collectResources(buildingId); // Collect from house
 
-        // Recharge building to unlock level 2
-        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+        // Recharge farm to unlock level 2
+        await gridBuildings.connect(player1).rechargeBuilding(farmId, { value: ethers.parseEther("0.01") });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
         
-        // Recharge 9 more times to reach 0.1 SONIC total and unlock level 2
+        // Recharge 9 more times to reach 0.1 SONIC total and unlock level 2 for the farm
         for (let i = 0; i < 9; i++) {
-          await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+          await gridBuildings.connect(player1).rechargeBuilding(farmId, { value: ethers.parseEther("0.01") });
           await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
           await ethers.provider.send("evm_mine");
         }

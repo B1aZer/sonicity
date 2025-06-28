@@ -246,9 +246,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         require(building.level < config.maxLevel, "Building at max level");
         
-        // Check if player has unlocked the required upgrade level
+        // Check if player has unlocked the required upgrade level for this building type
         (bool success, bytes memory returnData) = gameStateAddress.call(
-            abi.encodeWithSignature("getMaxUpgradeLevel(address)", msg.sender)
+            abi.encodeWithSignature("getMaxUpgradeLevel(address,uint8)", msg.sender, uint8(building.buildingType))
         );
         require(success, "Failed to get max upgrade level");
         uint8 maxUpgradeLevel = abi.decode(returnData, (uint8));
@@ -673,9 +673,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         require(!building.damaged, "Building is damaged");
         
-        // Track recharge amount in GameState
+        // Track recharge amount in GameState with building type
         (bool success, bytes memory returnData) = gameStateAddress.call(
-            abi.encodeWithSignature("trackRechargeAmount(address,uint256)", msg.sender, msg.value)
+            abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, msg.value, uint8(building.buildingType))
         );
         if (!success) {
             // If the call failed, decode and propagate the error message
@@ -713,9 +713,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             totalFee += RECHARGE_FEE;
         }
         
-        // Track recharge amount in GameState
+        // Track recharge amount in GameState (for simplicity, track as HOUSE type for bulk operations)
         (bool success, bytes memory returnData) = gameStateAddress.call(
-            abi.encodeWithSignature("trackRechargeAmount(address,uint256)", msg.sender, msg.value)
+            abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, msg.value, 0)
         );
         if (!success) {
             // If the call failed, decode and propagate the error message
@@ -749,9 +749,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             totalFee += RECHARGE_FEE;
         }
         
-        // Track recharge amount in GameState
+        // Track recharge amount in GameState (for simplicity, track as HOUSE type for bulk operations)
         (bool success, bytes memory returnData) = gameStateAddress.call(
-            abi.encodeWithSignature("trackRechargeAmount(address,uint256)", msg.sender, msg.value)
+            abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, msg.value, 0)
         );
         if (!success) {
             // If the call failed, decode and propagate the error message

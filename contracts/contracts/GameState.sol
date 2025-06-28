@@ -36,8 +36,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint256 buildingSlots;
         uint8 tier;
         uint256 treasury;
-        uint256 totalRechargeAmount;  // Track total SONIC recharges for upgrade unlocks
-        uint8 maxUpgradeLevel;        // Track unlocked upgrade level (1-5)
+        mapping(uint8 => uint256) totalRechargeAmountByType;  // Track total SONIC recharges per building type
+        mapping(uint8 => uint8) maxUpgradeLevelByType;        // Track unlocked upgrade level per building type (1-3)
     }
 
     // City state (modified)
@@ -111,16 +111,18 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function initializePlayer() external {
         require(playerState[msg.sender].buildingSlots == 0, "Player already initialized");
         
-        playerState[msg.sender] = PlayerState({
-            gold: 0,
-            rep: 0,
-            food: 0,
-            buildingSlots: 9,
-            tier: 0,
-            treasury: 0,
-            totalRechargeAmount: 0,
-            maxUpgradeLevel: 1
-        });
+        PlayerState storage state = playerState[msg.sender];
+        state.gold = 0;
+        state.rep = 0;
+        state.food = 0;
+        state.buildingSlots = 9;
+        state.tier = 0;
+        state.treasury = 0;
+        
+        // Initialize mappings (they default to 0, but we can set them explicitly if needed)
+        state.maxUpgradeLevelByType[0] = 1; // HOUSE starts at level 1
+        state.maxUpgradeLevelByType[1] = 1; // FARM starts at level 1
+        state.maxUpgradeLevelByType[2] = 1; // REP_STATION starts at level 1
 
         // Initialize core buildings for the new player
         (bool success, bytes memory returnData) = districtBuildingsAddress.call(
@@ -487,61 +489,82 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @dev Track recharge amount and update upgrade level if threshold is met
      * @param player The address of the player
      * @param amount The amount of SONIC recharged
+     * @param buildingType The type of building being recharged (0=HOUSE, 1=FARM, 2=REP_STATION)
      */
-    function trackRechargeAmount(address player, uint256 amount) external {
+    function trackRechargeAmount(address player, uint256 amount, uint8 buildingType) external {
         require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
+        require(buildingType <= 2, "Invalid building type"); // 0=HOUSE, 1=FARM, 2=REP_STATION
         
         PlayerState storage state = playerState[player];
-        state.totalRechargeAmount += amount;
+        state.totalRechargeAmountByType[buildingType] += amount;
         
         // Check and update upgrade level based on thresholds
-        checkAndUpdateUpgradeLevel(player);
+        checkAndUpdateUpgradeLevel(player, buildingType);
     }
 
     /**
      * @dev Check recharge thresholds and update max upgrade level
      * @param player The address of the player
+     * @param buildingType The type of building
      */
-    function checkAndUpdateUpgradeLevel(address player) internal {
+    function checkAndUpdateUpgradeLevel(address player, uint8 buildingType) internal {
         PlayerState storage state = playerState[player];
-        uint8 currentMaxLevel = state.maxUpgradeLevel;
+        uint8 currentMaxLevel = state.maxUpgradeLevelByType[buildingType];
         uint8 newMaxLevel = currentMaxLevel;
         
-        // Upgrade level thresholds (in SONIC wei)
-        if (state.totalRechargeAmount >= UPGRADE_LEVEL_5_THRESHOLD) {
-            newMaxLevel = 5;  // 100 SONIC for level 5
-        } else if (state.totalRechargeAmount >= UPGRADE_LEVEL_4_THRESHOLD) {
-            newMaxLevel = 4;  // 10 SONIC for level 4
-        } else if (state.totalRechargeAmount >= UPGRADE_LEVEL_3_THRESHOLD) {
-            newMaxLevel = 3;  // 1 SONIC for level 3
-        } else if (state.totalRechargeAmount >= UPGRADE_LEVEL_2_THRESHOLD) {
-            newMaxLevel = 2;  // 0.1 SONIC for level 2
+        // Upgrade level thresholds (in SONIC wei) - now only 3 levels
+        if (state.totalRechargeAmountByType[buildingType] >= UPGRADE_LEVEL_3_THRESHOLD) {
+            newMaxLevel = 3;  // 0.1 SONIC for level 3
+        } else if (state.totalRechargeAmountByType[buildingType] >= UPGRADE_LEVEL_2_THRESHOLD) {
+            newMaxLevel = 2;  // 0.01 SONIC for level 2
         } else {
             newMaxLevel = 1;  // Default level 1
         }
         
         // Update if level increased
         if (newMaxLevel > currentMaxLevel) {
-            state.maxUpgradeLevel = newMaxLevel;
-            emit UpgradeLevelUnlocked(player, newMaxLevel, state.totalRechargeAmount);
+            state.maxUpgradeLevelByType[buildingType] = newMaxLevel;
+            emit UpgradeLevelUnlocked(player, newMaxLevel, state.totalRechargeAmountByType[buildingType]);
         }
     }
 
     /**
-     * @dev Get the maximum upgrade level a player can reach
+     * @dev Get the maximum upgrade level a player can reach for a specific building type
      * @param player The address of the player
-     * @return uint8 The maximum upgrade level (1-5)
+     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=REP_STATION)
+     * @return uint8 The maximum upgrade level (1-3)
      */
-    function getMaxUpgradeLevel(address player) external view returns (uint8) {
-        return playerState[player].maxUpgradeLevel;
+    function getMaxUpgradeLevel(address player, uint8 buildingType) external view returns (uint8) {
+        require(buildingType <= 2, "Invalid building type");
+        return playerState[player].maxUpgradeLevelByType[buildingType];
     }
 
     /**
-     * @dev Get the total recharge amount for a player
+     * @dev Get the total recharge amount for a player for a specific building type
+     * @param player The address of the player
+     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=REP_STATION)
+     * @return uint256 The total SONIC recharged for this building type
+     */
+    function getTotalRechargeAmount(address player, uint8 buildingType) external view returns (uint256) {
+        require(buildingType <= 2, "Invalid building type");
+        return playerState[player].totalRechargeAmountByType[buildingType];
+    }
+
+    /**
+     * @dev Get the maximum upgrade level a player can reach (backward compatibility)
+     * @param player The address of the player
+     * @return uint8 The maximum upgrade level (1-3)
+     */
+    function getMaxUpgradeLevel(address player) external view returns (uint8) {
+        return playerState[player].maxUpgradeLevelByType[0]; // Default to HOUSE type
+    }
+
+    /**
+     * @dev Get the total recharge amount for a player (backward compatibility)
      * @param player The address of the player
      * @return uint256 The total SONIC recharged
      */
     function getTotalRechargeAmount(address player) external view returns (uint256) {
-        return playerState[player].totalRechargeAmount;
+        return playerState[player].totalRechargeAmountByType[0]; // Default to HOUSE type
     }
 }
