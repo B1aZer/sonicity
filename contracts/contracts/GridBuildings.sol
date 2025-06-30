@@ -45,7 +45,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Building state
     struct Building {
         GridBuildingType buildingType;
-        uint256 level;
+        uint8 level;
         uint256 lastUpgradeTime;
         uint256 lastCollectionTime;
         bool damaged;  // Only keep damaged flag
@@ -180,22 +180,17 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /**
      * @dev Create a new building
-     * @param player The address of the player for whom to create the building
+     * @param player The address of the player
      * @param buildingType The type of building to create
-     * @param level The level of the building (0 = new building, >0 = restore level)
-     * @param lastUpgradeTime The timestamp of the last upgrade (0 = current time, >0 = preserved time)
+     * @param level The level of the building (0 for new, preserved for restored)
+     * @param lastUpgradeTime The last upgrade time (0 for new, preserved for restored)
      * @return buildingId The ID of the created building
      */
-    function createBuilding(
-        address player, 
-        GridBuildingType buildingType, 
-        uint256 level, 
-        uint256 lastUpgradeTime
-    ) external nonReentrant returns (uint256) {
+    function createBuilding(address player, GridBuildingType buildingType, uint8 level, uint256 lastUpgradeTime) external returns (uint256) {
         require(msg.sender == altarAddress, "Only Altar can create buildings");
         require(buildingType <= GridBuildingType.REP_STATION, "Invalid building type");
         
-        // If level is 0, this is a new building; if >0, this is restoring preserved data
+        // Validate level for restored buildings
         if (level > 0) {
             require(lastUpgradeTime > 0, "Invalid upgrade time for restored building");
         }
@@ -232,7 +227,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             buildingType: buildingType,
             level: level == 0 ? 1 : level,  // Use level 1 for new buildings, preserved level for restored
             lastUpgradeTime: lastUpgradeTime == 0 ? block.timestamp : lastUpgradeTime,  // Use current time for new, preserved time for restored
-            lastCollectionTime: block.timestamp, // Always reset collection time
+            lastCollectionTime: 0, // Buildings start with no production - must be recharged to start producing
             damaged: false
         });
         
@@ -298,6 +293,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Building storage building = buildings[msg.sender][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         require(!building.damaged, "Building is damaged");
+        require(building.lastCollectionTime > 0, "Building has not been recharged yet");
         
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         
@@ -340,6 +336,20 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 }
                 revert("Failed to add food");
             }
+        } else if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
+            // Handle diamond production - you may need to add earnDiamonds function to GameState
+            (bool success, bytes memory returnData) = gameStateAddress.call(
+                abi.encodeWithSignature("earnDiamonds(address,uint256)", msg.sender, amount)
+            );
+            if (!success) {
+                // If the call failed, decode and propagate the error message
+                if (returnData.length > 0) {
+                    assembly {
+                        revert(add(returnData, 32), mload(returnData))
+                    }
+                }
+                revert("Failed to add diamonds");
+            }
         } else if (building.buildingType == GridBuildingType.REP_STATION) {
             (bool success, bytes memory returnData) = gameStateAddress.call(
                 abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
@@ -372,6 +382,11 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         for (uint256 i = 0; i < buildingIds.length; i++) {
             Building storage building = buildings[msg.sender][buildingIds[i]];
             if (building.buildingType == buildingType) {
+                // Skip buildings that have never been recharged
+                if (building.lastCollectionTime == 0) {
+                    continue;
+                }
+                
                 GridBuildingConfig memory config = buildingConfigs[building.buildingType];
                 
                 // Calculate time passed since last collection
@@ -413,6 +428,20 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                         }
                         revert("Failed to add food");
                     }
+                } else if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
+                    // Handle diamond production - you may need to add earnDiamonds function to GameState
+                    (bool success, bytes memory returnData) = gameStateAddress.call(
+                        abi.encodeWithSignature("earnDiamonds(address,uint256)", msg.sender, amount)
+                    );
+                    if (!success) {
+                        // If the call failed, decode and propagate the error message
+                        if (returnData.length > 0) {
+                            assembly {
+                                revert(add(returnData, 32), mload(returnData))
+                            }
+                        }
+                        revert("Failed to add diamonds");
+                    }
                 } else if (building.buildingType == GridBuildingType.REP_STATION) {
                     (bool success, bytes memory returnData) = gameStateAddress.call(
                         abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
@@ -445,6 +474,11 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function calculateClaimableResources(address player, uint256 buildingId) external view returns (uint256) {
         Building storage building = buildings[player][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+        
+        // If building has never been recharged, no production
+        if (building.lastCollectionTime == 0) {
+            return 0;
+        }
         
         // Calculate time passed since last collection
         uint256 timePassed = block.timestamp - building.lastCollectionTime;
@@ -636,6 +670,11 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Building storage building = buildings[player][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         
+        // If building has never been recharged, it's not at cap
+        if (building.lastCollectionTime == 0) {
+            return false;
+        }
+        
         uint256 timeSinceCollection = block.timestamp - building.lastCollectionTime;
         return timeSinceCollection >= 24 hours;
     }
@@ -652,7 +691,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Count buildings at cap
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[player][activeBuildings[i]];
-            if (!building.damaged && (block.timestamp - building.lastCollectionTime) >= 24 hours) {
+            if (!building.damaged && building.lastCollectionTime > 0 && (block.timestamp - building.lastCollectionTime) >= 24 hours) {
                 capCount++;
             }
         }
@@ -663,7 +702,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[player][activeBuildings[i]];
-            if (!building.damaged && (block.timestamp - building.lastCollectionTime) >= 24 hours) {
+            if (!building.damaged && building.lastCollectionTime > 0 && (block.timestamp - building.lastCollectionTime) >= 24 hours) {
                 buildingsAtCap[index] = activeBuildings[i];
                 index++;
             }

@@ -33,7 +33,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         address collection;
         // Building data preservation fields
         GridBuildings.GridBuildingType buildingType;
-        uint256 buildingLevel;      // 0 = no preserved data, >0 = has preserved data
+        uint8 buildingLevel;      // 0 = no preserved data, >0 = has preserved data
         uint256 lastUpgradeTime;
     }
 
@@ -55,8 +55,8 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     event CollectionApproved(address indexed collection);
     event CollectionRemoved(address indexed collection);
     // New events for building data preservation
-    event BuildingDataPreserved(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint256 level);
-    event BuildingDataRestored(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint256 level);
+    event BuildingDataPreserved(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint8 level);
+    event BuildingDataRestored(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint8 level);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -184,7 +184,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         uint256 buildingId = stakedBuilding[stakeData.collection][tokenId];
         
         // Get building data from GridBuildings
-        (GridBuildings.GridBuildingType buildingType, uint256 level, uint256 lastUpgradeTime, , ) = gridBuildings.buildings(msg.sender, buildingId);
+        (GridBuildings.GridBuildingType buildingType, uint8 level, uint256 lastUpgradeTime, , ) = gridBuildings.buildings(msg.sender, buildingId);
         
         // Preserve building data (buildingLevel > 0 indicates preserved data)
         stakes[collection][tokenId] = Stake({
@@ -258,7 +258,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
      * @return lastUpgradeTime The timestamp of the last upgrade
      */
     function getPreservedBuildingData(address collection, uint256 tokenId) 
-        external view returns (GridBuildings.GridBuildingType buildingType, uint256 level, uint256 lastUpgradeTime) {
+        external view returns (GridBuildings.GridBuildingType buildingType, uint8 level, uint256 lastUpgradeTime) {
         Stake memory stakeData = stakes[collection][tokenId];
         require(stakeData.buildingLevel > 0, "No preserved building data");
         return (stakeData.buildingType, stakeData.buildingLevel, stakeData.lastUpgradeTime);

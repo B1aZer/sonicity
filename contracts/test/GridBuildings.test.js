@@ -1133,7 +1133,10 @@ describe("GridBuildings", function () {
     it("Should recharge a building at production cap", async function () {
       const player1Address = await player1.getAddress();
       
-      // Create a building
+      // Count initial contract balance (from any previous recharges)
+      const initialBalance = await gridBuildings.getContractBalance();
+
+      // Create a building (this will do 1 initial recharge)
       const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       
       // Fast forward 48 hours to put building at cap
@@ -1152,15 +1155,19 @@ describe("GridBuildings", function () {
       const isStillAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
       expect(isStillAtCap).to.be.false;
 
-      // Verify contract received the fee
+      // There are 2 recharges for this building (1 from helper, 1 from this test)
+      // Add to any initial contract balance
       const contractBalance = await gridBuildings.getContractBalance();
-      expect(contractBalance).to.equal(rechargeFee);
+      expect(contractBalance).to.equal(initialBalance + rechargeFee * 2n);
     });
 
     it("Should recharge multiple buildings at production cap", async function () {
       const player1Address = await player1.getAddress();
       
-      // Create multiple buildings
+      // Count initial contract balance
+      const initialBalance = await gridBuildings.getContractBalance();
+
+      // Create multiple buildings (each will do 1 initial recharge)
       const { buildingId: building1 } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       const { buildingId: building2 } = await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
       
@@ -1181,15 +1188,18 @@ describe("GridBuildings", function () {
       expect(await gridBuildings.isBuildingAtCap(player1Address, building1)).to.be.false;
       expect(await gridBuildings.isBuildingAtCap(player1Address, building2)).to.be.false;
 
-      // Verify contract received the fees
+      // There are 2 initial recharges (1 per building) + 2 from this test
       const contractBalance = await gridBuildings.getContractBalance();
-      expect(contractBalance).to.equal(totalFee);
+      expect(contractBalance).to.equal(initialBalance + rechargeFee * 4n);
     });
 
     it("Should recharge all buildings at cap", async function () {
       const player1Address = await player1.getAddress();
       
-      // Create one more building (we already have 2 from setup)
+      // Count initial contract balance
+      const initialBalance = await gridBuildings.getContractBalance();
+
+      // Create one more building (each will do 1 initial recharge)
       const { buildingId: building3 } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       
       // Fast forward 48 hours to put buildings at cap
@@ -1209,9 +1219,9 @@ describe("GridBuildings", function () {
       const buildingsStillAtCap = await gridBuildings.getBuildingsAtCap(player1Address);
       expect(buildingsStillAtCap.length).to.equal(0);
 
-      // Verify contract received the fees
+      // There are 3 initial recharges (1 per building) + 3 from this test
       const contractBalance = await gridBuildings.getContractBalance();
-      expect(contractBalance).to.equal(totalFee);
+      expect(contractBalance).to.equal(initialBalance + rechargeFee * 6n);
     });
 
     it("Should recharge building not at cap to refresh production time", async function () {
@@ -1330,7 +1340,7 @@ describe("GridBuildings", function () {
     it("Should unlock upgrade levels based on recharge amounts", async function () {
       const player1Address = await player1.getAddress();
       
-      // Mint and stake an NFT for a house
+      // Mint and stake an NFT for a house (1 initial recharge)
       const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       
       // Fast forward time to make building reach cap
@@ -1341,8 +1351,8 @@ describe("GridBuildings", function () {
       let maxLevel = await gameState.getMaxUpgradeLevel(player1Address);
       expect(maxLevel).to.equal(1);
       
-      // Recharge building 10 times with 0.01 SONIC each (total 0.1 SONIC to unlock level 2)
-      for (let i = 0; i < 10; i++) {
+      // Recharge building 9 more times with 0.01 SONIC each (total 0.1 SONIC to unlock level 2)
+      for (let i = 0; i < 9; i++) {
         await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
@@ -1352,7 +1362,7 @@ describe("GridBuildings", function () {
       maxLevel = await gameState.getMaxUpgradeLevel(player1Address);
       expect(maxLevel).to.equal(2);
       
-      // Check total recharge amount
+      // Check total recharge amount (should be 0.1 SONIC: 1 from helper + 9 from test = 10 * 0.01)
       let totalRecharge = await gameState.getTotalRechargeAmount(player1Address);
       expect(totalRecharge).to.equal(ethers.parseEther("0.1"));
       
@@ -1367,7 +1377,7 @@ describe("GridBuildings", function () {
       maxLevel = await gameState.getMaxUpgradeLevel(player1Address);
       expect(maxLevel).to.equal(3);
       
-      // Check total recharge amount
+      // Check total recharge amount (should be 1 SONIC: 1 from helper + 9 + 90 = 100 * 0.01)
       totalRecharge = await gameState.getTotalRechargeAmount(player1Address);
       expect(totalRecharge).to.equal(ethers.parseEther("1"));
     });
@@ -1414,15 +1424,15 @@ describe("GridBuildings", function () {
     it("Should track recharge amounts correctly for multiple recharges", async function () {
       const player1Address = await player1.getAddress();
       
-      // Mint and stake an NFT for a house
+      // Mint and stake an NFT for a house (1 initial recharge)
       const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       
       // Fast forward time to make building reach cap
       await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
       await ethers.provider.send("evm_mine");
       
-      // Multiple small recharges (10 recharges of 0.01 each = 0.1 total)
-      for (let i = 0; i < 10; i++) {
+      // Multiple small recharges (9 recharges of 0.01 each = 0.09 total + 0.01 from helper = 0.1)
+      for (let i = 0; i < 9; i++) {
         await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");

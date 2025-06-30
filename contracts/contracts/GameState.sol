@@ -33,6 +33,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint256 gold;
         uint256 rep;
         uint256 food;
+        uint256 diamonds;
         uint256 buildingSlots;
         uint8 tier;
         uint256 treasury;
@@ -79,6 +80,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event GridBuildingsAddressUpdated(address indexed newAddress);
     event TreasuryBurned(address indexed player, uint256 amount);
     event UpgradeLevelUnlocked(address indexed player, uint8 newLevel, uint256 totalRechargeAmount);
+    event DiamondsEarned(address indexed player, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -115,6 +117,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         state.gold = 0;
         state.rep = 0;
         state.food = 0;
+        state.diamonds = 0;
         state.buildingSlots = 9;
         state.tier = 0;
         state.treasury = 0;
@@ -122,7 +125,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         // Initialize mappings (they default to 0, but we can set them explicitly if needed)
         state.maxUpgradeLevelByType[0] = 1; // HOUSE starts at level 1
         state.maxUpgradeLevelByType[1] = 1; // FARM starts at level 1
-        state.maxUpgradeLevelByType[2] = 1; // REP_STATION starts at level 1
+        state.maxUpgradeLevelByType[2] = 1; // DIAMOND_STATION starts at level 1
+        state.maxUpgradeLevelByType[3] = 1; // REP_STATION starts at level 1
 
         // Initialize core buildings for the new player
         (bool success, bytes memory returnData) = districtBuildingsAddress.call(
@@ -299,6 +303,17 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Earn diamonds (can only be called by GridBuildings)
+     * @param player The address of the player
+     * @param amount The amount of diamonds to earn
+     */
+    function earnDiamonds(address player, uint256 amount) external {
+        require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
+        playerState[player].diamonds += amount;
+        emit DiamondsEarned(player, amount);
+    }
+
+    /**
      * @dev Update building slots from Altar staking
      * @param player The address of the player
      * @param newSlots The new number of slots
@@ -343,6 +358,15 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function getPlayerRep(address player) external view returns (uint256) {
         return playerState[player].rep;
+    }
+
+    /**
+     * @dev Get player's diamonds balance
+     * @param player The address of the player
+     * @return uint256 Player's diamonds balance
+     */
+    function getPlayerDiamonds(address player) external view returns (uint256) {
+        return playerState[player].diamonds;
     }
 
     /**

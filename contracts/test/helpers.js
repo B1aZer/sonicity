@@ -64,8 +64,13 @@ async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
     }
     
     const buildingCreatedEvent = gridBuildings.interface.parseLog(buildingCreatedLog);
+    const buildingId = Number(buildingCreatedEvent.args.buildingId);
+
+    // Immediately recharge the building so production starts
+    await gridBuildings.connect(player).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+
     return {
-        buildingId: Number(buildingCreatedEvent.args.buildingId),
+        buildingId: buildingId,
         tokenId: tokenId,
         nftAddress: nftAddress
     };
