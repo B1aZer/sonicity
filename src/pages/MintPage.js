@@ -217,7 +217,7 @@ export class MintPage extends BasePage {
                                     <span class="detail-value">
                                         <div class="mint-amount">
                                             <button id="decrease-amount" class="amount-button">-</button>
-                                            <input type="number" id="mint-amount" value="1" min="1" max="10">
+                                            <input type="number" id="mint-amount" value="1" min="1" max="10" class="input input-sm">
                                             <button id="increase-amount" class="amount-button">+</button>
                                         </div>
                                     </span>

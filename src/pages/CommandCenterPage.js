@@ -1,11 +1,12 @@
 import { BasePage } from './BasePage.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
-import '../styles/command-center-page.css';
+
 
 export class CommandCenterPage extends BasePage {
     constructor() {
         super();
+        import('../styles/command-center-page.css');
         Logger.info('CommandCenterPage constructor called');
         this.element = document.createElement('div');
         this.element.className = 'base-page command-center-page';
@@ -225,17 +226,17 @@ export class CommandCenterPage extends BasePage {
                     <div class="deployment-form">
                         <div class="troop-input-group">
                             <label for="deploy-infantry">Infantry:</label>
-                            <input type="number" id="deploy-infantry" min="0" value="0">
+                            <input type="number" id="deploy-infantry" min="0" value="0" class="input input-sm">
                             <span class="max-troops">/ <span id="max-infantry">0</span></span>
                         </div>
                         <div class="troop-input-group">
                             <label for="deploy-cavalry">Cavalry:</label>
-                            <input type="number" id="deploy-cavalry" min="0" value="0">
+                            <input type="number" id="deploy-cavalry" min="0" value="0" class="input input-sm">
                             <span class="max-troops">/ <span id="max-cavalry">0</span></span>
                         </div>
                         <div class="troop-input-group">
                             <label for="deploy-siege">Siege:</label>
-                            <input type="number" id="deploy-siege" min="0" value="0">
+                            <input type="number" id="deploy-siege" min="0" value="0" class="input input-sm">
                             <span class="max-troops">/ <span id="max-siege">0</span></span>
                         </div>
                         <button class="btn btn-primary deploy-troops-btn" disabled>
