@@ -207,13 +207,11 @@ export class StakePage extends BasePage {
                 <h3>Recharge ${tierNames[tier]}${buildingCount !== 1 ? 's' : ''}</h3>
                 <div class="donation-form" style="margin-top:16px; align-items: center;">
                     <input type="number" class="input input-lg donation-amount" min="1" max="${buildingCount}" value="${rechargeDefault}" />
-                    <button class="btn btn-primary btn-md">Recharge</button>
+                    <button class="btn btn-primary btn-md recharge-tier-btn">Recharge</button>
                 </div>
-                <div class="tier-progress" title="${progress.current} / ${progress.next} recharge" style="flex:1; min-width:120px; margin-left:16px;">
-                    <div class="tier-progress-bar" style="width:${progress.percent}%"></div>
-                    <div class="tier-progress-text" style="margin-left: 0.5em;">Progress to next upgrade: ${progress.percent}%</div>
+                <div class="progress-container" title="${progress.current} / ${progress.next} recharge">
+                    <div class="progress-bar" style="width:${progress.percent}%"></div>
                 </div>
-               
             </div>
         `;
         // Claim all section
