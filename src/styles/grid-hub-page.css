@@ -1,0 +1,497 @@
+/* Grid Hub Page Styles - Reusing existing patterns */
+
+/* Page Description */
+.page-description {
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.6;
+}
+
+/* Status Grid - Reusing from existing patterns */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.status-label {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+.status-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: var(--font-size-lg);
+}
+
+/* Tier Progress - Reusing from city-page.css */
+.tier-progress {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-lighter);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: var(--spacing-md);
+    position: relative;
+    cursor: help;
+}
+
+.tier-progress-bar {
+    height: 100%;
+    background: var(--color-primary);
+    transition: width 0.3s ease;
+}
+
+.tier-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.1) 0%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.1) 100%
+    );
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+.tier-progress-text {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-top: var(--spacing-sm);
+    text-align: center;
+}
+
+/* Recharge Section */
+.recharge-section {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    margin-top: var(--spacing-lg);
+}
+
+.recharge-info {
+    margin-bottom: var(--spacing-md);
+}
+
+.recharge-info p {
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-sm);
+}
+
+.recharge-info p:last-child {
+    margin-bottom: 0;
+}
+
+/* Tier Tabs - Reusing from city-page.css */
+.tier-tabs-section {
+    margin-top: var(--spacing-lg);
+}
+
+.tier-tabs {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--bg-lighter);
+    padding-bottom: var(--spacing-sm);
+}
+
+.tier-tab {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-light);
+    border: 1px solid var(--bg-lighter);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    color: var(--text-muted);
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.tier-tab:hover:not(.empty) {
+    background: var(--bg-lighter);
+    color: var(--text-primary);
+}
+
+.tier-tab.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.tier-tab.empty {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--bg-lighter);
+}
+
+.tier-tab.empty:hover {
+    background: var(--bg-lighter);
+    color: var(--text-muted);
+}
+
+.tier-count {
+    background: var(--color-secondary);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+}
+
+.tier-tab.active .tier-count {
+    background: white;
+    color: var(--color-primary);
+}
+
+/* Tier Status */
+.tier-status {
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing-lg);
+}
+
+.tier-status .status-item {
+    background: transparent;
+    border: none;
+    padding: var(--spacing-sm) 0;
+}
+
+.tier-status .status-item:not(:last-child) {
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Tier Content - Reusing from city-page.css */
+.tier-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.tier-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Buildings Grid */
+.buildings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+/* Building Cards - Reusing from existing patterns */
+.building-card {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    border: 2px solid var(--border-color);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.building-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.building-card.normal {
+    border-color: var(--color-success);
+}
+
+.building-card.damaged {
+    border-color: var(--color-danger);
+    background: linear-gradient(135deg, var(--card-bg) 0%, rgba(220, 53, 69, 0.1) 100%);
+}
+
+.building-card.at-cap {
+    border-color: var(--color-warning);
+    background: linear-gradient(135deg, var(--card-bg) 0%, rgba(255, 193, 7, 0.1) 100%);
+}
+
+/* Building Header */
+.building-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.building-icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    flex-shrink: 0;
+}
+
+.building-info {
+    flex: 1;
+}
+
+.building-info h3 {
+    margin: 0 0 var(--spacing-xs) 0;
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+}
+
+.building-description {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Building Status */
+.building-status {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+}
+
+.building-status.normal {
+    color: var(--color-success);
+}
+
+.building-status.damaged {
+    color: var(--color-danger);
+}
+
+.building-status.at-cap {
+    color: var(--color-warning);
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.status-text {
+    font-weight: 500;
+}
+
+/* Building Details */
+.building-details {
+    margin-bottom: var(--spacing-md);
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-xs) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-item:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.detail-value {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+}
+
+/* Building Actions */
+.building-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.building-button {
+    flex: 1;
+    min-width: 80px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-align: center;
+}
+
+.building-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.building-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Button Styles - Reusing from existing patterns */
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--color-primary-dark);
+}
+
+.btn-secondary {
+    background: var(--color-secondary);
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--color-secondary-dark);
+}
+
+.btn-warning {
+    background: var(--color-warning);
+    color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: var(--color-warning-dark);
+}
+
+.btn-info {
+    background: var(--color-info);
+    color: white;
+}
+
+.btn-info:hover:not(:disabled) {
+    background: var(--color-info-dark);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-muted);
+}
+
+.empty-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.empty-state h3 {
+    margin: 0 0 var(--spacing-sm) 0;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .tier-tabs {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .tier-tab {
+        border-radius: var(--radius-md);
+        justify-content: center;
+    }
+
+    .tier-tab.active {
+        border-radius: var(--radius-md);
+    }
+
+    .buildings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .building-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .building-actions {
+        flex-direction: column;
+    }
+
+    .building-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .building-card {
+        padding: var(--spacing-md);
+    }
+
+    .building-icon {
+        font-size: 2rem;
+        width: 50px;
+        height: 50px;
+    }
+
+    .building-info h3 {
+        font-size: var(--font-size-md);
+    }
+}

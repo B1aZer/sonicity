@@ -6,7 +6,7 @@ import { DashboardPage } from '../../pages/DashboardPage.js';
 import { StartPage } from '../../pages/StartPage.js';
 import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
-import { StakePage } from '../../pages/StakePage.js';
+import { StakePage } from '../../pages/StakeHubPage.js';
 import { HousePage } from '../../pages/HousePage.js';
 import { FarmPage } from '../../pages/FarmPage.js';
 import { CityPage } from '../../pages/CityPage.js';
