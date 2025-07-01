@@ -65,6 +65,12 @@
     font-size: var(--font-size-xs);
 }
 
+.btn-md {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+    height: 44px;
+}
+
 .btn-lg {
     padding: var(--spacing-md) var(--spacing-xl);
     font-size: var(--font-size-lg);

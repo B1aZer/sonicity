@@ -206,8 +206,8 @@ export class StakePage extends BasePage {
             <div class="page-section tier-progress-section">
                 <h3>Recharge ${tierNames[tier]}${buildingCount !== 1 ? 's' : ''}</h3>
                 <div class="donation-form" style="margin-top:16px; align-items: center;">
-                    <input type="number" class="input input-lg recharge-amount" min="1" max="${buildingCount}" value="${rechargeDefault}" />
-                    <button class="btn btn-primary recharge-tier-btn">Recharge</button>
+                    <input type="number" class="input input-lg donation-amount" min="1" max="${buildingCount}" value="${rechargeDefault}" />
+                    <button class="btn btn-primary btn-md">Recharge</button>
                 </div>
                 <div class="tier-progress" title="${progress.current} / ${progress.next} recharge" style="flex:1; min-width:120px; margin-left:16px;">
                     <div class="tier-progress-bar" style="width:${progress.percent}%"></div>
@@ -220,7 +220,7 @@ export class StakePage extends BasePage {
         const actionsSection = `
             <div class="page-section tier-actions-section">
                 <h3>${tierNames[tier]} Actions</h3>
-                <button class="btn btn-primary claim-all-btn">Claim All</button>
+                <button class="btn btn-primary btn-md">Claim All</button>
             </div>
         `;
         // --- Buildings grid ---
