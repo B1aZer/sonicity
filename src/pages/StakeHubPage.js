@@ -57,13 +57,33 @@ export class StakePage extends BasePage {
                     <h2>Grid Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
-                            <span class="status-label">Slots:</span>
-                            <span class="status-value slots-value">0/0</span>
+                            <span class="status-label">Buildings Constructed:</span>
+                            <span class="status-value buildings-constructed-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Slots Available:</span>
+                            <span class="status-value slots-available-value">0</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- NFT Status Section -->
+                <div class="page-section nft-status-section">
+                    <h2>NFT Status</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Total NFTs:</span>
+                            <span class="status-value total-nfts-value">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Total Staked:</span>
                             <span class="status-value total-staked-value">0</span>
                         </div>
+                    </div>
+                </div>
+                <!-- Buildings Status Section -->
+                <div class="page-section buildings-status-section">
+                    <h2>Buildings Status</h2>
+                    <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">At Cap:</span>
                             <span class="status-value at-cap-value">0</span>
@@ -142,7 +162,9 @@ export class StakePage extends BasePage {
     }
 
     updateStatusSection() {
-        this.element.querySelector('.slots-value').textContent = `${this.state.usedSlots}/${this.state.totalSlots}`;
+        this.element.querySelector('.buildings-constructed-value').textContent = this.state.usedSlots;
+        this.element.querySelector('.slots-available-value').textContent = this.state.totalSlots - this.state.usedSlots;
+        this.element.querySelector('.total-nfts-value').textContent = this.state.availableNFTs.length;
         this.element.querySelector('.total-staked-value').textContent = this.state.totalStaked;
         this.element.querySelector('.at-cap-value').textContent = this.state.atCap;
         this.element.querySelector('.damaged-value').textContent = this.state.damaged;
