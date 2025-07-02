@@ -343,9 +343,9 @@ export class StakePage extends BasePage {
                         <div class="detail-item"><span class="detail-label">Cap Progress:</span><span class="detail-value"><div class="tier-progress" style="height:8px;"><div class="tier-progress-bar" style="width:${progress}%"></div></div></span></div>
                     </div>
                     <div class="building-actions">
-                        <button class="building-button btn-info recharge-btn" ${item.damaged ? 'disabled' : ''}>Recharge</button>
-                        <button class="building-button btn-primary upgrade-btn" ${item.damaged ? 'disabled' : ''}>Upgrade</button>
-                        <button class="building-button btn-warning unstake-btn">Unstake</button>
+                        <button class="btn btn-secondary recharge-btn" ${item.damaged ? 'disabled' : ''}>Recharge</button>
+                        <button class="btn btn-primary upgrade-btn" ${item.damaged ? 'disabled' : ''}>Upgrade</button>
+                        <button class="btn btn-danger unstake-btn">Unstake</button>
                     </div>
                 </div>
             `;
