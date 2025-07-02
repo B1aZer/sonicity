@@ -4,6 +4,8 @@ import { NFTCard } from '../components/NFTCard.js';
 import { BasePage } from './BasePage.js';
 import { StatusComponent } from '../components/StatusComponent.js';
 import { Modal } from '../js/utils/modal.js';
+import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
+import { ethers } from 'ethers';
 
 export class StakePage extends BasePage {
     constructor() {
@@ -190,6 +192,7 @@ export class StakePage extends BasePage {
         const buildingCount = tierStatus.count;
         // Recharge input default
         const rechargeDefault = buildingCount;
+        const rechargePrice = ethers.formatEther(GridBuildingsContract.RECHARGE_FEE);
         // Status section (like CityPage)
         const tierNames = ['House', 'Farm', 'Rep Station'];
         const statusSection = `
@@ -207,7 +210,11 @@ export class StakePage extends BasePage {
                 <h3>Recharge ${tierNames[tier]}${buildingCount !== 1 ? 's' : ''}</h3>
                 <div class="donation-form" style="margin-top:16px; align-items: center;">
                     <input type="number" class="input input-lg donation-amount" min="1" max="${buildingCount}" value="${rechargeDefault}" />
-                    <button class="btn btn-primary btn-md recharge-tier-btn">Recharge</button>
+                    <button class="btn btn-primary btn-md recharge-tier-btn">
+                        <i class="fas fa-bolt"></i>
+                        <span class="recharge-price">${rechargePrice}</span>
+                        <span class="recharge-currency">Sonic</span>
+                    </button>
                 </div>
                 <div class="progress-container" title="${progress.current} / ${progress.next} recharge">
                     <div class="progress-bar" style="width:${progress.percent}%"></div>
