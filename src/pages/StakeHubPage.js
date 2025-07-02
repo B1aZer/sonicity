@@ -98,10 +98,19 @@ export class StakePage extends BasePage {
                 </div>
                 <!-- Tier Tabs -->
                 <div class="page-section tier-tabs-section">
-                    <div class="tier-tabs">
-                        <button class="tier-tab active" data-tier="0">Tier 0 (Houses)<span class="tier-count">0</span></button>
-                        <button class="tier-tab" data-tier="1">Tier 1 (Farms)<span class="tier-count">0</span></button>
-                        <button class="tier-tab" data-tier="2">Tier 2 (Rep Stations)<span class="tier-count">0</span></button>
+                    <div class="tabs">
+                        <button class="tab active" data-tier="0">
+                            <span class="tab-label">Tier 0 (Houses)</span>
+                            <span class="tab-count">0</span>
+                        </button>
+                        <button class="tab" data-tier="1">
+                            <span class="tab-label">Tier 1 (Farms)</span>
+                            <span class="tab-count">0</span>
+                        </button>
+                        <button class="tab" data-tier="2">
+                            <span class="tab-label">Tier 2 (Rep Stations)</span>
+                            <span class="tab-count">0</span>
+                        </button>
                     </div>
                     <div class="tier-content active" data-tier="0"><div class="buildings-grid"></div></div>
                     <div class="tier-content" data-tier="1"><div class="buildings-grid"></div></div>
@@ -113,10 +122,10 @@ export class StakePage extends BasePage {
 
     setupEventListeners() {
         // Tier tab switching
-        const tierTabs = this.element.querySelectorAll('.tier-tab');
+        const tierTabs = this.element.querySelectorAll('.tab');
         tierTabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                this.element.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
+                this.element.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 this.element.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
                 tab.classList.add('active');
                 const tier = tab.dataset.tier;
@@ -174,10 +183,15 @@ export class StakePage extends BasePage {
 
     updateTierTabs() {
         for (let tier = 0; tier <= 2; tier++) {
-            const tab = this.element.querySelector(`.tier-tab[data-tier="${tier}"]`);
+            const tab = this.element.querySelector(`.tab[data-tier="${tier}"]`);
             const count = this.state.byTier[tier].length;
-            tab.querySelector('.tier-count').textContent = count;
+            tab.querySelector('.tab-count').textContent = count;
             tab.disabled = count === 0;
+            if (count === 0) {
+                tab.classList.add('locked');
+            } else {
+                tab.classList.remove('locked');
+            }
         }
     }
 
@@ -211,9 +225,9 @@ export class StakePage extends BasePage {
                 <div class="donation-form" style="margin-top:16px; align-items: center;">
                     <input type="number" class="input input-lg donation-amount" min="1" max="${buildingCount}" value="${rechargeDefault}" />
                     <button class="btn btn-primary btn-md recharge-tier-btn">
-                        <i class="fas fa-bolt"></i>
-                        <span class="recharge-price">${rechargePrice}</span>
-                        <span class="recharge-currency">Sonic</span>
+                        <i class="fas fa-bolt"></i> Recharge
+                        <!-- <span class="recharge-price">${rechargePrice}</span>
+                        <span class="recharge-currency">Sonic</span> -->
                     </button>
                 </div>
                 <div class="progress-container" title="${progress.current} / ${progress.next} recharge">
