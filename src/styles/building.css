@@ -159,11 +159,6 @@
     background: var(--bg-lighter);
 }
 
-.tab.locked:hover {
-    background: var(--bg-lighter);
-    color: var(--text-muted);
-}
-
 .tab.locked::after {
     content: '🔒';
     position: absolute;

@@ -87,7 +87,7 @@ export class StakePage extends BasePage {
                     <h2>Buildings Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
-                            <span class="status-label">At Cap:</span>
+                            <span class="status-label">Capped:</span>
                             <span class="status-value at-cap-value">0</span>
                         </div>
                         <div class="status-item">
@@ -137,24 +137,28 @@ export class StakePage extends BasePage {
     }
 
     async loadUserData() {
-        // Load slots, staked, cap, damaged, available NFTs, and group by tier
-        // This is a simplified version; you may need to adapt contract calls
         const userAddress = await this.contracts.nft.getAddress();
-        // Assume getSlotInfo, getStakedBuildings, getAvailableNFTs are implemented
-        // You may need to adapt this to your actual contract API
-        const [usedSlots, totalSlots] = [3, 5]; // TODO: Replace with contract call
+        let usedSlots = 0, totalSlots = 0;
+        try {
+            const stakedBuildings = await this.getStakedBuildings(userAddress);
+            usedSlots = stakedBuildings.length;
+            totalSlots = usedSlots + 2;
+        } catch (e) {
+            usedSlots = 0;
+            totalSlots = 0;
+        }
         const stakedBuildings = await this.getStakedBuildings(userAddress);
         const availableNFTs = await this.getAvailableNFTs(userAddress);
-        // Group by tier
+        // Group by buildingType (0: House, 1: Farm, 2: Rep Station)
         const byTier = { 0: [], 1: [], 2: [] };
         let atCap = 0, damaged = 0;
         stakedBuildings.forEach(b => {
-            byTier[b.tier].push(b);
+            byTier[b.buildingType]?.push(b);
             if (b.isAtCap) atCap++;
             if (b.damaged) damaged++;
         });
         availableNFTs.forEach(nft => {
-            byTier[nft.tier].push(nft);
+            byTier[nft.tier]?.push(nft);
         });
         this.state = {
             ...this.state,
@@ -282,9 +286,8 @@ export class StakePage extends BasePage {
     }
 
     async claimAllInTier(tier) {
-        // Call contract to claim all resources for this tier
-        this.showStatus('loading', 'Claiming resources...');
         try {
+            this.showStatus('loading', 'Claiming resources...');
             await this.contracts.gridBuildings.collectResourcesByType(tier);
             this.showStatus('success', 'Resources claimed!');
             await this.loadUserData();
@@ -294,20 +297,15 @@ export class StakePage extends BasePage {
     }
 
     async rechargeNInTier(tier, n) {
-        // Find N staked buildings in this tier, prioritize at cap, then oldest
-        const items = this.state.byTier[tier].filter(i => i.isStaked && !i.damaged);
-        // At cap first
-        const atCap = items.filter(b => b.isAtCap);
-        const notAtCap = items.filter(b => !b.isAtCap);
-        // Sort notAtCap by lastCollection (oldest first, dummy: as string)
-        notAtCap.sort((a, b) => (a.lastCollection || '').localeCompare(b.lastCollection || ''));
-        const selected = [...atCap, ...notAtCap].slice(0, n);
-        if (selected.length === 0) {
-            this.showStatus('error', 'No buildings to recharge');
-            return;
-        }
-        this.showStatus('loading', `Recharging ${selected.length} building(s)...`);
         try {
+            this.showStatus('loading', `Recharging ${n} building(s)...`);
+            // Find N staked buildings in this tier, prioritize at cap, then oldest
+            const items = this.state.byTier[tier].filter(i => i.isStaked && !i.damaged);
+            const atCap = items.filter(b => b.isAtCap);
+            const notAtCap = items.filter(b => !b.isAtCap);
+            notAtCap.sort((a, b) => (a.lastCollection || '').localeCompare(b.lastCollection || ''));
+            const selected = [...atCap, ...notAtCap].slice(0, n);
+            if (selected.length === 0) throw new Error('No buildings to recharge');
             await this.contracts.gridBuildings.rechargeBuildings(selected.map(b => b.id));
             this.showStatus('success', 'Buildings recharged!');
             await this.loadUserData();
@@ -321,14 +319,19 @@ export class StakePage extends BasePage {
             // Staked building card (GridHub style)
             const statusClass = item.damaged ? 'damaged' : item.isAtCap ? 'at-cap' : 'normal';
             const statusText = item.damaged ? 'Damaged' : item.isAtCap ? 'At Cap' : 'Operating';
-            const progress = Math.min(100, Math.floor((item.collected / item.cap) * 100));
+            const progress = 0; // You can calculate progress if you have cap/collected info
+            // Map buildingType to name/icon
+            const tierNames = ['House', 'Farm', 'Rep Station'];
+            const icons = ['🏠', '🌾', '⭐'];
+            const name = tierNames[item.buildingType] || 'Building';
+            const icon = icons[item.buildingType] || '🏗️';
             return `
                 <div class="building-card ${statusClass}" data-building-id="${item.id}">
                     <div class="building-header">
-                        <div class="building-icon">${this.getBuildingIcon(item.tier)}</div>
+                        <div class="building-icon">${icon}</div>
                         <div class="building-info">
-                            <h3>${item.name}</h3>
-                            <p class="building-description">${item.description || ''}</p>
+                            <h3>${name} #${item.id}</h3>
+                            <p class="building-description">Level ${item.level}</p>
                         </div>
                         <div class="building-status ${statusClass}">
                             <span class="status-indicator"></span>
@@ -336,11 +339,10 @@ export class StakePage extends BasePage {
                         </div>
                     </div>
                     <div class="building-details">
-                        <div class="detail-item"><span class="detail-label">Level:</span><span class="detail-value">${item.level} / ${item.maxLevel}</span></div>
-                        <div class="detail-item"><span class="detail-label">Production Rate:</span><span class="detail-value">${item.productionRate}/hr</span></div>
-                        <div class="detail-item"><span class="detail-label">Last Collection:</span><span class="detail-value">${item.lastCollection || 'N/A'}</span></div>
+                        <div class="detail-item"><span class="detail-label">Level:</span><span class="detail-value">${item.level}</span></div>
+                        <div class="detail-item"><span class="detail-label">Last Upgrade:</span><span class="detail-value">${item.lastUpgradeTime ? new Date(item.lastUpgradeTime * 1000).toLocaleString() : 'N/A'}</span></div>
+                        <div class="detail-item"><span class="detail-label">Last Collection:</span><span class="detail-value">${item.lastCollectionTime ? new Date(item.lastCollectionTime * 1000).toLocaleString() : 'N/A'}</span></div>
                         <div class="detail-item"><span class="detail-label">Claimable:</span><span class="detail-value">${item.claimable || 0}</span></div>
-                        <div class="detail-item"><span class="detail-label">Cap Progress:</span><span class="detail-value"><div class="tier-progress" style="height:8px;"><div class="tier-progress-bar" style="width:${progress}%"></div></div></span></div>
                     </div>
                     <div class="building-actions">
                         <button class="btn btn-secondary recharge-btn" ${item.damaged ? 'disabled' : ''}>Recharge</button>
@@ -401,55 +403,120 @@ export class StakePage extends BasePage {
         }
     }
 
-    // Dummy implementations for demo; replace with real contract calls
+    // --- Replace dummy implementations below with real contract calls ---
     async getStakedBuildings(userAddress) {
-        // Return array of {id, tier, name, level, maxLevel, productionRate, lastCollection, claimable, cap, collected, isAtCap, damaged, isStaked, description}
-        return [
-            { id: 1, tier: 0, name: 'House #1', level: 2, maxLevel: 5, productionRate: 10, lastCollection: '2h ago', claimable: 20, cap: 100, collected: 40, isAtCap: false, damaged: false, isStaked: true, description: 'A cozy house.' },
-            { id: 2, tier: 1, name: 'Farm #1', level: 1, maxLevel: 5, productionRate: 15, lastCollection: '1h ago', claimable: 10, cap: 100, collected: 80, isAtCap: true, damaged: false, isStaked: true, description: 'A productive farm.' },
-            { id: 3, tier: 2, name: 'Rep Station #1', level: 1, maxLevel: 3, productionRate: 5, lastCollection: '5h ago', claimable: 0, cap: 50, collected: 50, isAtCap: true, damaged: true, isStaked: true, description: 'A rep station.' }
-        ];
+        console.log('[DEBUG] getStakedBuildings for address:', userAddress);
+        const buildingIds = await this.contracts.gridBuildings.getActiveBuildings(userAddress);
+        console.log('[DEBUG] getActiveBuildings returned:', buildingIds);
+        const buildings = [];
+        for (const id of buildingIds) {
+            const b = await this.contracts.gridBuildings.getBuilding(userAddress, id);
+            console.log(`[DEBUG] Building for id ${id}:`, b);
+            // Map struct fields to named properties
+            const building = {
+                id,
+                buildingType: Number(b[0]),
+                level: Number(b[1]),
+                lastUpgradeTime: Number(b[2]),
+                lastCollectionTime: Number(b[3]),
+                damaged: b[4],
+                isStaked: true
+            };
+            // Add extra info for UI
+            building.isAtCap = await this.contracts.gridBuildings.isBuildingAtCap(id);
+            building.claimable = Number(await this.contracts.gridBuildings.calculateClaimableResources(id));
+            buildings.push(building);
+        }
+        console.log('[DEBUG] Final buildings array:', buildings);
+        return buildings;
     }
+
     async getAvailableNFTs(userAddress) {
-        // Return array of {tokenId, tier, metadata, contractAddress, isStaked: false}
-        return [
-            { tokenId: 101, tier: 0, metadata: { name: 'House NFT', image: '/images/house-nft.jpg', description: 'Stake to build a house.' }, contractAddress: '0x...', isStaked: false },
-            { tokenId: 102, tier: 1, metadata: { name: 'Farm NFT', image: '/images/farm-nft.jpg', description: 'Stake to build a farm.' }, contractAddress: '0x...', isStaked: false }
-        ];
+        // Get unstaked NFTs from both contracts
+        const nftContracts = [this.contracts.nft, this.contracts.farmNft];
+        const available = [];
+        for (const contract of nftContracts) {
+            const balance = await contract.balanceOf(userAddress);
+            for (let i = 0; i < balance; i++) {
+                const tokenId = await contract.tokenOfOwnerByIndex(userAddress, i);
+                // Check if staked
+                let isStaked = false;
+                try {
+                    isStaked = await this.contracts.altar.isStaked(await contract.getContractAddress(), tokenId);
+                } catch (e) {}
+                if (isStaked) continue;
+                const tokenURI = await contract.tokenURI(tokenId);
+                let metadata = {};
+                try {
+                    const response = await fetch(tokenURI);
+                    metadata = await response.json();
+                } catch (e) {}
+                // Determine tier from metadata or contract type
+                let tier = 0;
+                if (contract === this.contracts.farmNft) tier = 1;
+                if (metadata.name && metadata.name.toLowerCase().includes('rep')) tier = 2;
+                available.push({
+                    tokenId,
+                    tier,
+                    metadata,
+                    contractAddress: await contract.getContractAddress(),
+                    isStaked: false
+                });
+            }
+        }
+        return available;
     }
 
     // --- Action handlers ---
     async stakeNFT(tokenId, collection) {
-        // TODO: Implement staking logic
-        this.showStatus('loading', 'Staking NFT...');
-        setTimeout(() => {
+        try {
+            this.showStatus('loading', 'Staking NFT...');
+            // Determine tier from UI or NFT
+            let tier = 0;
+            if (collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()) tier = 1;
+            // Approve NFT transfer
+            const altarAddress = await this.contracts.altar.getContractAddress();
+            const nftContract = collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()
+                ? this.contracts.farmNft
+                : this.contracts.nft;
+            await nftContract.approve(altarAddress, tokenId);
+            // Stake NFT
+            await this.contracts.altar.stake(tokenId, tier, collection);
             this.showStatus('success', 'NFT staked!');
-            this.loadUserData();
-        }, 1000);
+            await this.loadUserData();
+        } catch (e) {
+            this.showStatus('error', e.message || 'Failed to stake NFT');
+        }
     }
     async unstakeNFT(tokenId, collection) {
-        // TODO: Implement unstaking logic
-        this.showStatus('loading', 'Unstaking NFT...');
-        setTimeout(() => {
+        try {
+            this.showStatus('loading', 'Unstaking NFT...');
+            await this.contracts.altar.unstake(collection, tokenId);
             this.showStatus('success', 'NFT unstaked!');
-            this.loadUserData();
-        }, 1000);
+            await this.loadUserData();
+        } catch (e) {
+            this.showStatus('error', e.message || 'Failed to unstake NFT');
+        }
     }
     async rechargeBuilding(item) {
-        // TODO: Implement recharge logic
-        this.showStatus('loading', 'Recharging building...');
-        setTimeout(() => {
+        try {
+            this.showStatus('loading', 'Recharging building...');
+            await this.contracts.gridBuildings.rechargeBuilding(item.id);
             this.showStatus('success', 'Building recharged!');
-            this.loadUserData();
-        }, 1000);
+            await this.loadUserData();
+        } catch (e) {
+            this.showStatus('error', e.message || 'Failed to recharge building');
+        }
     }
     async upgradeBuilding(item) {
-        // TODO: Implement upgrade logic
-        this.showStatus('loading', 'Upgrading building...');
-        setTimeout(() => {
+        try {
+            this.showStatus('loading', 'Upgrading building...');
+            await this.contracts.gridBuildings.upgradeBuilding(item.id);
             this.showStatus('success', 'Building upgraded!');
-            this.loadUserData();
-        }, 1000);
+            await this.loadUserData();
+        } catch (e) {
+            this.showStatus('error', e.message || 'Failed to upgrade building');
+        }
     }
 
     showStatus(type, message, title = '') {

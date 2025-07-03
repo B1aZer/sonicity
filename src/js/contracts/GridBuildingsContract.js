@@ -45,8 +45,16 @@ export class GridBuildingsContract extends BaseContract {
     }
 
     // Building Information
-    async getBuilding(buildingId) {
-        const address = await this.getAddress();
+    async getBuilding(addressOrId, maybeId) {
+        // Support both (buildingId) and (address, buildingId)
+        let address, buildingId;
+        if (maybeId !== undefined) {
+            address = addressOrId;
+            buildingId = maybeId;
+        } else {
+            address = await this.getAddress();
+            buildingId = addressOrId;
+        }
         return await this.call('getBuilding', address, buildingId);
     }
 
@@ -54,8 +62,8 @@ export class GridBuildingsContract extends BaseContract {
         return await this.call('getBuildingConfig', buildingType);
     }
 
-    async getActiveBuildings() {
-        const address = await this.getAddress();
+    async getActiveBuildings(address) {
+        if (!address) address = await this.getAddress();
         return await this.call('getActiveBuildings', address);
     }
 
