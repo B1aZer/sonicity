@@ -76,6 +76,57 @@
     font-weight: 500;
 }
 
+/* Building Progress */
+.building-progress {
+    padding: var(--spacing-sm);
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-sm);
+}
+
+.progress-label {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.progress-time {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.progress-container {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-light);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    border-radius: var(--radius-sm);
+    transition: width 0.3s ease;
+}
+
+.progress-bar-normal {
+    background: linear-gradient(90deg, var(--color-success), #4ade80);
+}
+
+.progress-bar-at-cap {
+    background: linear-gradient(90deg, var(--color-warning), #fbbf24);
+}
+
+.progress-bar-damaged {
+    background: linear-gradient(90deg, var(--color-danger), #ef4444);
+}
+
 .building-actions {
     display: flex;
     gap: var(--spacing-sm);

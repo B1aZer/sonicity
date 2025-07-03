@@ -321,12 +321,49 @@ export class StakePage extends BasePage {
             // Staked building card (GridHub style)
             const statusClass = item.damaged ? 'damaged' : item.isAtCap ? 'at-cap' : 'normal';
             const statusText = item.damaged ? 'Damaged' : item.isAtCap ? 'At Cap' : 'Operating';
-            const progress = 0; // You can calculate progress if you have cap/collected info
+            
             // Map buildingType to name/icon
             const tierNames = ['House', 'Farm', 'Rep Station'];
             const icons = ['🏠', '🌾', '⭐'];
             const name = tierNames[item.buildingType] || 'Building';
             const icon = icons[item.buildingType] || '🏗️';
+            
+            // Format production rate
+            const productionRate = item.productionRate || 0;
+            const resourceType = item.buildingType === 0 ? 'Gold' : item.buildingType === 1 ? 'Food' : 'Rep';
+            
+            // Format progress information
+            const progressPercent = item.progressPercent || 0;
+            
+            // Calculate time remaining with proper bounds checking
+            let hoursRemaining = 0;
+            let minutesRemaining = 0;
+            
+            if (!item.isAtCap && item.progressCurrent !== undefined) {
+                const timeRemaining = Math.max(0, (24 * 3600) - item.progressCurrent);
+                hoursRemaining = Math.floor(timeRemaining / 3600);
+                minutesRemaining = Math.floor((timeRemaining % 3600) / 60);
+                
+                // Debug logging
+                console.log(`[DEBUG] Building ${item.id} progress calculation:`, {
+                    progressCurrent: item.progressCurrent,
+                    timeRemaining,
+                    hoursRemaining,
+                    minutesRemaining,
+                    isAtCap: item.isAtCap
+                });
+            }
+            
+            // Determine progress bar color based on status
+            let progressBarClass = '';
+            if (item.damaged) {
+                progressBarClass = 'progress-bar-damaged';
+            } else if (item.isAtCap) {
+                progressBarClass = 'progress-bar-at-cap';
+            } else {
+                progressBarClass = 'progress-bar-normal';
+            }
+            
             return `
                 <div class="building-card ${statusClass}" data-building-id="${item.id}">
                     <div class="building-header">
@@ -342,9 +379,17 @@ export class StakePage extends BasePage {
                     </div>
                     <div class="building-details">
                         <div class="detail-item"><span class="detail-label">Level:</span><span class="detail-value">${item.level}</span></div>
-                        <div class="detail-item"><span class="detail-label">Last Upgrade:</span><span class="detail-value">${item.lastUpgradeTime ? new Date(item.lastUpgradeTime * 1000).toLocaleString() : 'N/A'}</span></div>
-                        <div class="detail-item"><span class="detail-label">Last Collection:</span><span class="detail-value">${item.lastCollectionTime ? new Date(item.lastCollectionTime * 1000).toLocaleString() : 'N/A'}</span></div>
+                        <div class="detail-item"><span class="detail-label">Production Rate:</span><span class="detail-value">${productionRate} ${resourceType}/hr</span></div>
                         <div class="detail-item"><span class="detail-label">Claimable:</span><span class="detail-value">${item.claimable || 0}</span></div>
+                        <div class="building-progress">
+                            <div class="progress-info">
+                                <span class="progress-label">Production Progress</span>
+                                <span class="progress-time">${item.isAtCap ? 'At Cap' : `${hoursRemaining}h ${minutesRemaining}m remaining`}</span>
+                            </div>
+                            <div class="progress-container" title="${Math.floor(item.progressCurrent / 3600)}h / 24h production">
+                                <div class="progress-bar ${progressBarClass}" style="width:${progressPercent}%"></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="building-actions">
                         <button class="btn btn-secondary recharge-btn" ${item.damaged ? 'disabled' : ''}>Recharge</button>
@@ -389,7 +434,13 @@ export class StakePage extends BasePage {
         if (item.isStaked) {
             card.querySelector('.recharge-btn')?.addEventListener('click', () => this.rechargeBuilding(item));
             card.querySelector('.upgrade-btn')?.addEventListener('click', () => this.upgradeBuilding(item));
-            card.querySelector('.unstake-btn')?.addEventListener('click', () => this.unstakeNFT(item.tokenId, item.contractAddress));
+            card.querySelector('.unstake-btn')?.addEventListener('click', () => {
+                if (item.tokenId && item.contractAddress) {
+                    this.unstakeNFT(item.tokenId, item.contractAddress);
+                } else {
+                    this.showStatus('error', 'Cannot unstake: NFT information not found');
+                }
+            });
         } else {
             card.querySelector('.stake-btn')?.addEventListener('click', () => this.stakeNFT(item.tokenId, item.contractAddress));
         }
@@ -424,9 +475,80 @@ export class StakePage extends BasePage {
                 damaged: b[4],
                 isStaked: true
             };
+            
+            // Get building configuration for production rate and other details
+            const config = await this.contracts.gridBuildings.getBuildingConfig(building.buildingType);
+            building.config = {
+                name: config.name,
+                baseProductionRate: Number(config.baseProductionRate),
+                upgradeCost: Number(config.upgradeCost),
+                maxLevel: Number(config.maxLevel),
+                description: config.description,
+                tier: Number(config.tier)
+            };
+            
+            // Calculate production rate (base rate * level)
+            building.productionRate = building.config.baseProductionRate * building.level;
+            
             // Add extra info for UI
             building.isAtCap = await this.contracts.gridBuildings.isBuildingAtCap(id);
             building.claimable = Number(await this.contracts.gridBuildings.calculateClaimableResources(id));
+            
+            // Calculate progress towards 24-hour cap
+            if (building.lastCollectionTime > 0) {
+                const currentTime = Math.floor(Date.now() / 1000);
+                const timeSinceCollection = Math.max(0, currentTime - building.lastCollectionTime);
+                const maxTime = 24 * 3600; // 24 hours in seconds
+                building.progressCurrent = Math.min(timeSinceCollection, maxTime);
+                building.progressMax = maxTime;
+                building.progressPercent = Math.min((building.progressCurrent / building.progressMax) * 100, 100);
+                
+                // Debug logging
+                console.log(`[DEBUG] Building ${id} progress calculation:`, {
+                    lastCollectionTime: building.lastCollectionTime,
+                    currentTime: currentTime,
+                    timeSinceCollection,
+                    progressCurrent: building.progressCurrent,
+                    progressPercent: building.progressPercent,
+                    isAtCap: building.isAtCap
+                });
+            } else {
+                building.progressCurrent = 0;
+                building.progressMax = 24 * 3600;
+                building.progressPercent = 0;
+                console.log(`[DEBUG] Building ${id} has no collection time, progress set to 0`);
+            }
+            
+            // Get NFT information from altar contract
+            // We need to find which NFT is staked to this building
+            // Check both NFT contracts
+            const nftContracts = [this.contracts.nft, this.contracts.farmNft];
+            for (const contract of nftContracts) {
+                try {
+                    const contractAddress = await contract.getContractAddress();
+                    const userStakes = await this.contracts.altar.getUserStakesByCollection(userAddress, contractAddress);
+                    
+                    for (const tokenId of userStakes) {
+                        const stakedBuildingId = await this.contracts.altar.getStakedBuilding(contractAddress, tokenId);
+                        if (Number(stakedBuildingId) === id) {
+                            building.tokenId = Number(tokenId);
+                            building.contractAddress = contractAddress;
+                            break;
+                        }
+                    }
+                    if (building.tokenId) break; // Found the NFT
+                } catch (e) {
+                    console.warn(`Error checking contract ${contract}:`, e);
+                }
+            }
+            
+            // If we couldn't find NFT info, log it for debugging
+            if (!building.tokenId) {
+                console.warn(`Could not find NFT information for building ${id}`);
+                building.tokenId = null;
+                building.contractAddress = null;
+            }
+            
             buildings.push(building);
         }
         console.log('[DEBUG] Final buildings array:', buildings);
