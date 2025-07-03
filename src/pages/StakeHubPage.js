@@ -365,16 +365,6 @@ export class StakePage extends BasePage {
                 minutesRemaining = Math.floor((timeRemaining % 3600) / 60);
             }
             
-            // Determine progress bar color based on status
-            let progressBarClass = '';
-            if (item.damaged) {
-                progressBarClass = 'progress-bar-damaged';
-            } else if (item.isAtCap) {
-                progressBarClass = 'progress-bar-at-cap';
-            } else {
-                progressBarClass = 'progress-bar-normal';
-            }
-            
             return `
                 <div class="building-card ${statusClass}" data-building-id="${item.id}">
                     <div class="building-header">
@@ -398,7 +388,7 @@ export class StakePage extends BasePage {
                                 <span class="progress-time">${item.isAtCap ? 'At Cap' : `${hoursRemaining}h ${minutesRemaining}m remaining`}</span>
                             </div>
                             <div class="progress-container" title="${Math.floor(item.progressCurrent / 3600)}h / 24h production">
-                                <div class="progress-bar ${progressBarClass}" style="width:${progressPercent}%"></div>
+                                <div class="progress-bar" style="width:${progressPercent}%"></div>
                             </div>
                         </div>
                     </div>

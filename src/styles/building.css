@@ -7,7 +7,7 @@
 .building-card {
     background: var(--card-bg);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-md);
+    padding: var(--spacing-lg);
     border: 1px solid var(--color-secondary);
     transition: transform var(--transition-normal);
     position: relative;
