@@ -47,8 +47,7 @@
     height: 36px;
     border-radius: 18px;
     border: none;
-    background: var(--bg-lighter);
-    color: var(--text-secondary);
+    background: var(--color-secondary);
     font-size: var(--font-size-lg);
     cursor: pointer;
     transition: all var(--transition-normal);
@@ -67,9 +66,9 @@
     height: 36px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--bg-lighter);
-    background: var(--bg-lighter);
-    color: var(--text-secondary);
+    background: var(--color-secondary);
     text-align: center;
+    color: var(--bg-darker);
     font-size: var(--font-size-md);
 }
 
@@ -209,7 +208,4 @@
     color: var(--text-secondary);
     font-size: var(--font-size-md);
     padding: var(--spacing-xl);
-    background: var(--bg-lighter);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--bg-lighter);
 }

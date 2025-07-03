@@ -13,7 +13,7 @@ export class StakePage extends BasePage {
         import('../styles/stake-hub-page.css');
         Logger.info('StakePage (GridHub style) constructor called');
         this.element = document.createElement('div');
-        this.element.className = 'base-page';
+        this.element.className = 'base-page stake-hub-page';
         this.modal = new Modal();
         this.statusComponent = new StatusComponent();
         this.state = {
