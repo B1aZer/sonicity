@@ -350,7 +350,11 @@ export class StakePage extends BasePage {
                 </div>
             `;
         } else {
-            // Unstaked NFT card (match original logic)
+            // Unstaked NFT card (now styled like staked)
+            const statusClass = 'unstaked';
+            const statusText = 'Unstaked';
+            const tokenId = item.tokenId ? item.tokenId : '-';
+            const contract = item.contractAddress ? item.contractAddress : '-';
             return `
                 <div class="building-card" data-nft-id="${item.tokenId}">
                     <div class="building-header">
@@ -359,10 +363,18 @@ export class StakePage extends BasePage {
                             <h3>${item.metadata?.name || 'NFT'}</h3>
                             <p class="building-description">${item.metadata?.description || ''}</p>
                         </div>
+                        <div class="building-status ${statusClass}">
+                            <span class="status-indicator"></span>
+                            <span class="status-text">${statusText}</span>
+                        </div>
                     </div>
                     <div class="nft-image"><img src="${item.metadata?.image}" onerror="this.src='/images/placeholder.jpg'" alt="NFT" /></div>
+                    <div class="building-details">
+                        <div class="detail-item"><span class="detail-label">Token ID:</span><span class="detail-value">${tokenId}</span></div>
+                        <div class="detail-item"><span class="detail-label">Contract:</span><span class="detail-value">${contract}</span></div>
+                    </div>
                     <div class="building-actions">
-                        <button class="building-button btn-primary stake-btn">Stake</button>
+                        <button class="btn btn-primary stake-btn">Stake</button>
                     </div>
                 </div>
             `;
