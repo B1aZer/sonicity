@@ -8,10 +8,11 @@
     background: var(--card-bg);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
-    border: 1px solid var(--color-secondary);
+    border: var(--border-secondary);
     transition: transform var(--transition-normal);
     position: relative;
     overflow: hidden;
+    box-shadow: var(--shadow-md);
 }
 
 .building-card p {
