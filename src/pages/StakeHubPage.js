@@ -289,18 +289,30 @@ export class StakePage extends BasePage {
 
     async claimAllInTier(tier) {
         try {
-            this.showStatus('loading', 'Claiming resources...');
+            // Show loading modal
+            const loadingModal = this.modal.loading('Claiming resources...');
+            
             await this.contracts.gridBuildings.collectResourcesByType(tier);
-            this.showStatus('success', 'Resources claimed!');
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data
             await this.loadUserData();
+            
+            // Show success modal
+            this.modal.success('Resources claimed successfully!', { title: 'Resources Collected!' });
         } catch (e) {
-            this.showStatus('error', e.message || 'Failed to claim resources');
+            Logger.error('Error claiming resources:', e);
+            this.modal.error(e.message || 'Failed to claim resources', { title: 'Collection Failed' });
         }
     }
 
     async rechargeNInTier(tier, n) {
         try {
-            this.showStatus('loading', `Recharging ${n} building(s)...`);
+            // Show loading modal
+            const loadingModal = this.modal.loading(`Recharging ${n} building(s)...`);
+            
             // Find N staked buildings in this tier, prioritize at cap, then oldest
             const items = this.state.byTier[tier].filter(i => i.isStaked && !i.damaged);
             const atCap = items.filter(b => b.isAtCap);
@@ -308,11 +320,20 @@ export class StakePage extends BasePage {
             notAtCap.sort((a, b) => (a.lastCollection || '').localeCompare(b.lastCollection || ''));
             const selected = [...atCap, ...notAtCap].slice(0, n);
             if (selected.length === 0) throw new Error('No buildings to recharge');
+            
             await this.contracts.gridBuildings.rechargeBuildings(selected.map(b => b.id));
-            this.showStatus('success', 'Buildings recharged!');
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data
             await this.loadUserData();
+            
+            // Show success modal
+            this.modal.success('Buildings recharged successfully!', { title: 'Buildings Recharged!' });
         } catch (e) {
-            this.showStatus('error', e.message || 'Failed to recharge buildings');
+            Logger.error('Error recharging buildings:', e);
+            this.modal.error(e.message || 'Failed to recharge buildings', { title: 'Recharge Failed' });
         }
     }
 
@@ -438,7 +459,7 @@ export class StakePage extends BasePage {
                 if (item.tokenId && item.contractAddress) {
                     this.unstakeNFT(item.tokenId, item.contractAddress);
                 } else {
-                    this.showStatus('error', 'Cannot unstake: NFT information not found');
+                    this.modal.error('Cannot unstake: NFT information not found', { title: 'Missing NFT Data' });
                 }
             });
         } else {
@@ -610,67 +631,104 @@ export class StakePage extends BasePage {
     // --- Action handlers ---
     async stakeNFT(tokenId, collection) {
         try {
-            this.showStatus('loading', 'Staking NFT...');
+            // Show loading modal
+            const loadingModal = this.modal.loading('Staking NFT...');
+            
             // Determine tier from UI or NFT
             let tier = 0;
             if (collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()) tier = 1;
+            
             // Approve NFT transfer
             const altarAddress = await this.contracts.altar.getContractAddress();
             const nftContract = collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()
                 ? this.contracts.farmNft
                 : this.contracts.nft;
             await nftContract.approve(altarAddress, tokenId);
+            
             // Stake NFT
             await this.contracts.altar.stake(tokenId, tier, collection);
-            this.showStatus('success', 'NFT staked!');
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data
             await this.loadUserData();
+            
+            // Show success modal
+            this.modal.success('NFT staked successfully!', { title: 'NFT Staked!' });
         } catch (e) {
-            this.showStatus('error', e.message || 'Failed to stake NFT');
+            Logger.error('Error staking NFT:', e);
+            this.modal.error(e.message || 'Failed to stake NFT', { title: 'Staking Failed' });
         }
     }
+    
     async unstakeNFT(tokenId, collection) {
         try {
-            // Show loading status
-            this.showStatus('loading', 'Unstaking NFT...', 'Unstaking');
+            // Show loading modal
+            const loadingModal = this.modal.loading('Unstaking NFT...');
             
             // Unstake NFT
             await this.contracts.altar.unstake(collection, tokenId);
             
+            // Close loading modal
+            loadingModal.close();
+            
             // Reload data
-            this.showStatus('loading', 'Updating data...', 'Updating');
             await this.loadUserData();
             
-            // Show success status
-            this.showStatus('success', 'NFT unstaked successfully!', 'Unstaking Complete');
+            // Show success modal
+            this.modal.success('NFT unstaked successfully!', { title: 'NFT Unstaked!' });
         } catch (error) {
             Logger.error('Error unstaking NFT:', error);
             
             // Check for specific error patterns
             if (error.message && error.message.includes('missing revert data')) {
-                this.showStatus('error', 'Cannot unstake yet: NFT must be staked for at least 7 days before unstaking.', 'Unstaking Failed');
+                this.modal.error('Cannot unstake yet: NFT must be staked for at least 7 days before unstaking.', { title: 'Cannot Unstake Yet' });
             } else {
-                this.showStatus('error', `Failed to unstake NFT: ${error.message}`, 'Unstaking Failed');
+                this.modal.error(`Failed to unstake NFT: ${error.message}`, { title: 'Unstaking Failed' });
             }
         }
     }
+    
     async rechargeBuilding(item) {
         try {
-            this.showStatus('loading', 'Recharging building...');
+            // Show loading modal
+            const loadingModal = this.modal.loading('Recharging building...');
+            
             await this.contracts.gridBuildings.rechargeBuilding(item.id);
-            this.showStatus('success', 'Building recharged!');
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data
             await this.loadUserData();
+            
+            // Show success modal
+            this.modal.success('Building recharged successfully!', { title: 'Building Recharged!' });
         } catch (e) {
-            this.showStatus('error', e.message || 'Failed to recharge building');
+            Logger.error('Error recharging building:', e);
+            this.modal.error(e.message || 'Failed to recharge building', { title: 'Recharge Failed' });
         }
     }
+    
     async upgradeBuilding(item) {
         try {
-            this.showStatus('loading', 'Upgrading building...');
+            // Show loading modal
+            const loadingModal = this.modal.loading('Upgrading building...');
+            
             await this.contracts.gridBuildings.upgradeBuilding(item.id);
-            this.showStatus('success', 'Building upgraded!');
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data
             await this.loadUserData();
+            
+            // Show success modal
+            this.modal.success('Building upgraded successfully!', { title: 'Building Upgraded!' });
         } catch (e) {
-            this.showStatus('error', e.message || 'Failed to upgrade building');
+            Logger.error('Error upgrading building:', e);
+            this.modal.error(e.message || 'Failed to upgrade building', { title: 'Upgrade Failed' });
         }
     }
 
