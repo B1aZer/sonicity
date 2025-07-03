@@ -213,6 +213,8 @@ export class StakePage extends BasePage {
         const rechargePrice = ethers.formatEther(GridBuildingsContract.RECHARGE_FEE);
         // Status section (like CityPage)
         const tierNames = ['House', 'Farm', 'Rep Station'];
+        const tierNamesPlural = ['Houses', 'Farms', 'Rep Stations'];
+        const rechargeHeader = buildingCount === 1 ? `Recharge ${tierNames[tier]}` : `Recharge ${tierNamesPlural[tier]}`;
         const statusSection = `
             <div class="page-section tier-status-section">
                 <h3>${tierNames[tier]} Status</h3>
@@ -225,7 +227,7 @@ export class StakePage extends BasePage {
         // Progress + recharge section (input, button, progress bar in a row)
         const progressSection = `
             <div class="page-section tier-progress-section">
-                <h3>Recharge ${tierNames[tier]}${buildingCount !== 1 ? 's' : ''}</h3>
+                <h3>${rechargeHeader}</h3>
                 <div class="donation-form" style="margin-top:16px; align-items: center;">
                     <input type="number" class="input input-lg donation-amount" min="1" max="${buildingCount}" value="${rechargeDefault}" />
                     <button class="btn btn-primary btn-md recharge-tier-btn">
