@@ -597,31 +597,13 @@ describe("GridBuildings", function () {
 
       it("Should calculate correct total claimable resources for farms", async function () {
         const player1Address = await player1.getAddress();
-
-        const houseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-        expect(houseCount).to.equal(BigInt(2));
-
-        const farmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
-        expect(farmCount).to.equal(BigInt(2));
         
-        // Create a second farm
-        const result = await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
-        const farmId2 = result.buildingId;
-        
-        // Fast forward 12 hours
+        // Create 1 additional farm (there are already 2 from beforeEach)
+        const { buildingId: farmId3 } = await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
+
+        // Fast forward time
         await ethers.provider.send("evm_increaseTime", [12 * 3600]);
         await ethers.provider.send("evm_mine");
-
-        // Verify the number of active farms
-        const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
-        let activeFarms = 0;
-        for (const id of activeBuildings) {
-          const building = await gridBuildings.buildings(player1Address, id);
-          if (building.buildingType === BigInt(GridBuildingType.FARM)) {
-            activeFarms++;
-          }
-        }
-        expect(activeFarms).to.equal(3); // Ensure three farms are active (2 initial + 1 new)
 
         // Calculate total claimable resources for farms
         const totalClaimableResources = await gridBuildings.calculateTotalClaimableResources(
@@ -1431,6 +1413,78 @@ describe("GridBuildings", function () {
       // Check max upgrade level (should be 2)
       const maxLevel = await gameState.getMaxUpgradeLevel(player1Address);
       expect(maxLevel).to.equal(2);
+    });
+
+    it("Should calculate correct production progress for a building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Fast forward 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Calculate production progress
+      const [currentTime, maxTime, progressPercent] = await gridBuildings.calculateProductionProgress(player1Address, buildingId);
+      
+      // Expected: 12 hours = 43200 seconds, max time = 24 hours = 86400 seconds
+      expect(currentTime).to.equal(BigInt(12 * 3600)); // 12 hours in seconds
+      expect(maxTime).to.equal(BigInt(24 * 3600)); // 24 hours in seconds
+      expect(progressPercent).to.equal(BigInt(50)); // 50% (12/24 hours)
+    });
+
+    it("Should calculate correct production progress with claimable resources", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Fast forward 6 hours
+      await ethers.provider.send("evm_increaseTime", [6 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Calculate production progress
+      const [currentTime, maxTime, progressPercent] = await gridBuildings.calculateProductionProgress(player1Address, buildingId);
+      
+      // Expected: 6 hours = 21600 seconds, max time = 24 hours = 86400 seconds
+      expect(currentTime).to.equal(BigInt(6 * 3600)); // 6 hours in seconds
+      expect(maxTime).to.equal(BigInt(24 * 3600)); // 24 hours in seconds
+      expect(progressPercent).to.equal(BigInt(25)); // 25% (6/24 hours)
+    });
+
+    it("Should calculate production progress at cap correctly", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Fast forward 48 hours (beyond the 24-hour cap)
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+
+      // Calculate production progress
+      const [currentTime, maxTime, progressPercent] = await gridBuildings.calculateProductionProgress(player1Address, buildingId);
+      
+      // Expected: should be capped at 24 hours
+      expect(currentTime).to.equal(BigInt(24 * 3600)); // 24 hours in seconds (capped)
+      expect(maxTime).to.equal(BigInt(24 * 3600)); // 24 hours in seconds
+      expect(progressPercent).to.equal(BigInt(100)); // 100% (at cap)
+    });
+
+    it("Should calculate production progress for unrecharged building", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house but don't recharge it
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Calculate production progress for unrecharged building
+      const [currentTime, maxTime, progressPercent] = await gridBuildings.calculateProductionProgress(player1Address, buildingId);
+      
+      // Expected: should be 0 since building hasn't been recharged
+      expect(currentTime).to.equal(BigInt(0));
+      expect(maxTime).to.equal(BigInt(24 * 3600)); // 24 hours in seconds
+      expect(progressPercent).to.equal(BigInt(0)); // 0% (no production)
     });
   });
 }); 

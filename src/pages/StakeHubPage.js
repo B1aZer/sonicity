@@ -359,20 +359,10 @@ export class StakePage extends BasePage {
             // Calculate time remaining with proper bounds checking
             let hoursRemaining = 0;
             let minutesRemaining = 0;
-            
-            if (!item.isAtCap && item.progressCurrent !== undefined) {
-                const timeRemaining = Math.max(0, (24 * 3600) - item.progressCurrent);
+            if (!item.isAtCap && item.progressCurrent !== undefined && item.progressMax !== undefined) {
+                const timeRemaining = Math.max(0, item.progressMax - item.progressCurrent);
                 hoursRemaining = Math.floor(timeRemaining / 3600);
                 minutesRemaining = Math.floor((timeRemaining % 3600) / 60);
-                
-                // Debug logging
-                console.log(`[DEBUG] Building ${item.id} progress calculation:`, {
-                    progressCurrent: item.progressCurrent,
-                    timeRemaining,
-                    hoursRemaining,
-                    minutesRemaining,
-                    isAtCap: item.isAtCap
-                });
             }
             
             // Determine progress bar color based on status
@@ -514,31 +504,12 @@ export class StakePage extends BasePage {
             // Add extra info for UI
             building.isAtCap = await this.contracts.gridBuildings.isBuildingAtCap(id);
             building.claimable = Number(await this.contracts.gridBuildings.calculateClaimableResources(id));
-            
-            // Calculate progress towards 24-hour cap
-            if (building.lastCollectionTime > 0) {
-                const currentTime = Math.floor(Date.now() / 1000);
-                const timeSinceCollection = Math.max(0, currentTime - building.lastCollectionTime);
-                const maxTime = 24 * 3600; // 24 hours in seconds
-                building.progressCurrent = Math.min(timeSinceCollection, maxTime);
-                building.progressMax = maxTime;
-                building.progressPercent = Math.min((building.progressCurrent / building.progressMax) * 100, 100);
-                
-                // Debug logging
-                console.log(`[DEBUG] Building ${id} progress calculation:`, {
-                    lastCollectionTime: building.lastCollectionTime,
-                    currentTime: currentTime,
-                    timeSinceCollection,
-                    progressCurrent: building.progressCurrent,
-                    progressPercent: building.progressPercent,
-                    isAtCap: building.isAtCap
-                });
-            } else {
-                building.progressCurrent = 0;
-                building.progressMax = 24 * 3600;
-                building.progressPercent = 0;
-                console.log(`[DEBUG] Building ${id} has no collection time, progress set to 0`);
-            }
+
+            // Use contract method for production progress
+            const [progressCurrent, progressMax, progressPercent] = await this.contracts.gridBuildings.calculateProductionProgress(id);
+            building.progressCurrent = Number(progressCurrent);
+            building.progressMax = Number(progressMax);
+            building.progressPercent = Number(progressPercent);
             
             // Get NFT information from altar contract
             // We need to find which NFT is staked to this building

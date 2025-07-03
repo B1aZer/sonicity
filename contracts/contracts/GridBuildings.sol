@@ -832,4 +832,38 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function getContractBalance() external view returns (uint256) {
         return address(this).balance;
     }
+
+    /**
+     * @dev Calculate production progress for a building
+     * @param player The address of the player
+     * @param buildingId The ID of the building to calculate for
+     * @return currentTime The current production time in seconds
+     * @return maxTime The maximum production time (24 hours) in seconds
+     * @return progressPercent The progress percentage (0-100)
+     */
+    function calculateProductionProgress(address player, uint256 buildingId) external view returns (uint256 currentTime, uint256 maxTime, uint256 progressPercent) {
+        Building storage building = buildings[player][buildingId];
+        require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+        
+        maxTime = 24 hours; // 24 hours in seconds
+        
+        // If building has never been recharged, no production
+        if (building.lastCollectionTime == 0) {
+            return (0, maxTime, 0);
+        }
+        
+        // Calculate time passed since last collection
+        uint256 timePassed = block.timestamp - building.lastCollectionTime;
+        if (timePassed > maxTime) {
+            timePassed = maxTime;
+        }
+        
+        // The current production time is simply the time passed since last collection
+        currentTime = timePassed;
+        
+        // Calculate progress percentage
+        progressPercent = (currentTime * 100) / maxTime;
+        
+        return (currentTime, maxTime, progressPercent);
+    }
 }

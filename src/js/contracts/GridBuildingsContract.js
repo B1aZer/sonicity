@@ -151,4 +151,10 @@ export class GridBuildingsContract extends BaseContract {
     formatRechargeFee() {
         return ethers.formatEther(GridBuildingsContract.RECHARGE_FEE);
     }
+
+    // Production Progress
+    async calculateProductionProgress(buildingId) {
+        const address = await this.getAddress();
+        return await this.call('calculateProductionProgress', address, buildingId);
+    }
 } 
