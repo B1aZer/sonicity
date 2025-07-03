@@ -55,8 +55,8 @@
 }
 
 .btn-danger:hover:not(:disabled) {
-    background: #c82333;
-    color: var(--color-border);
+    background: var(--color-darker);
+    color: var(--color-danger);
 }
 
 /* Button Sizes */

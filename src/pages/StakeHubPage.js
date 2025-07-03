@@ -393,7 +393,7 @@ export class StakePage extends BasePage {
                         </div>
                     </div>
                     <div class="building-actions">
-                        <button class="btn btn-secondary recharge-btn" ${item.damaged ? 'disabled' : ''}>Recharge</button>
+                        <button class="btn btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}>Recharge</button>
                         <button class="btn btn-primary upgrade-btn" ${item.damaged ? 'disabled' : ''}>Upgrade</button>
                         <button class="btn btn-danger unstake-btn">Unstake</button>
                     </div>
