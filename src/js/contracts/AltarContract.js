@@ -84,4 +84,14 @@ export class AltarContract extends BaseContract {
             lastUpgradeTime: Number(result[2])
         };
     }
+
+    /**
+     * Get the building ID for a staked NFT
+     * @param {string} collection - The NFT collection address
+     * @param {number|string} tokenId - The token ID
+     * @returns {Promise<number>} - The building ID
+     */
+    async getStakedBuilding(collection, tokenId) {
+        return await this.call('stakedBuilding', collection, tokenId);
+    }
 } 

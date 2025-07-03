@@ -523,16 +523,26 @@ export class StakePage extends BasePage {
             // We need to find which NFT is staked to this building
             // Check both NFT contracts
             const nftContracts = [this.contracts.nft, this.contracts.farmNft];
+            console.log(`[DEBUG] Looking for NFT info for building ${id}`);
+            
             for (const contract of nftContracts) {
                 try {
                     const contractAddress = await contract.getContractAddress();
+                    console.log(`[DEBUG] Checking contract: ${contractAddress}`);
+                    
                     const userStakes = await this.contracts.altar.getUserStakesByCollection(userAddress, contractAddress);
+                    console.log(`[DEBUG] User stakes for ${contractAddress}:`, userStakes);
                     
                     for (const tokenId of userStakes) {
                         const stakedBuildingId = await this.contracts.altar.getStakedBuilding(contractAddress, tokenId);
-                        if (Number(stakedBuildingId) === id) {
+                        console.log(`[DEBUG] Token ${tokenId} is staked to building ${stakedBuildingId}`);
+                        console.log(`[DEBUG] Comparing: Number(${stakedBuildingId}) === Number(${id})`);
+                        console.log(`[DEBUG] Values: ${Number(stakedBuildingId)} === ${Number(id)}`);
+                        
+                        if (Number(stakedBuildingId) === Number(id)) {
                             building.tokenId = Number(tokenId);
                             building.contractAddress = contractAddress;
+                            console.log(`[DEBUG] Found NFT! Token ${tokenId} from ${contractAddress} is staked to building ${id}`);
                             break;
                         }
                     }
@@ -545,6 +555,12 @@ export class StakePage extends BasePage {
             // If we couldn't find NFT info, log it for debugging
             if (!building.tokenId) {
                 console.warn(`Could not find NFT information for building ${id}`);
+                console.log(`[DEBUG] Building ${id} details:`, {
+                    buildingType: building.buildingType,
+                    level: building.level,
+                    lastCollectionTime: building.lastCollectionTime,
+                    isAtCap: building.isAtCap
+                });
                 building.tokenId = null;
                 building.contractAddress = null;
             }
@@ -614,12 +630,27 @@ export class StakePage extends BasePage {
     }
     async unstakeNFT(tokenId, collection) {
         try {
-            this.showStatus('loading', 'Unstaking NFT...');
+            // Show loading status
+            this.showStatus('loading', 'Unstaking NFT...', 'Unstaking');
+            
+            // Unstake NFT
             await this.contracts.altar.unstake(collection, tokenId);
-            this.showStatus('success', 'NFT unstaked!');
+            
+            // Reload data
+            this.showStatus('loading', 'Updating data...', 'Updating');
             await this.loadUserData();
-        } catch (e) {
-            this.showStatus('error', e.message || 'Failed to unstake NFT');
+            
+            // Show success status
+            this.showStatus('success', 'NFT unstaked successfully!', 'Unstaking Complete');
+        } catch (error) {
+            Logger.error('Error unstaking NFT:', error);
+            
+            // Check for specific error patterns
+            if (error.message && error.message.includes('missing revert data')) {
+                this.showStatus('error', 'Cannot unstake yet: NFT must be staked for at least 7 days before unstaking.', 'Unstaking Failed');
+            } else {
+                this.showStatus('error', `Failed to unstake NFT: ${error.message}`, 'Unstaking Failed');
+            }
         }
     }
     async rechargeBuilding(item) {
