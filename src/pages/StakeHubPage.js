@@ -245,7 +245,7 @@ export class StakePage extends BasePage {
         const actionsSection = `
             <div class="page-section tier-actions-section">
                 <h3>${tierNames[tier]} Actions</h3>
-                <button class="btn btn-primary btn-md">Claim All</button>
+                <button class="btn btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
             </div>
         `;
         // --- Buildings grid ---
@@ -394,6 +394,7 @@ export class StakePage extends BasePage {
                     </div>
                     <div class="building-actions">
                         <button class="btn btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Recharge</button>
+                                                <button class="btn btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
                         <button class="btn btn-primary upgrade-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-arrow-up"></i> Upgrade</button>
                         <button class="btn btn-danger unstake-btn"><i class="fas fa-sign-out-alt"></i> Unstake</button>
                     </div>
@@ -435,6 +436,7 @@ export class StakePage extends BasePage {
         if (item.isStaked) {
             card.querySelector('.recharge-btn')?.addEventListener('click', () => this.rechargeBuilding(item));
             card.querySelector('.upgrade-btn')?.addEventListener('click', () => this.upgradeBuilding(item));
+            card.querySelector('.claim-btn')?.addEventListener('click', () => this.claimBuilding(item));
             card.querySelector('.unstake-btn')?.addEventListener('click', () => {
                 if (item.tokenId && item.contractAddress) {
                     this.unstakeNFT(item.tokenId, item.contractAddress);
@@ -690,6 +692,27 @@ export class StakePage extends BasePage {
         } catch (e) {
             Logger.error('Error upgrading building:', e);
             this.modal.error(e.message || 'Failed to upgrade building', { title: 'Upgrade Failed' });
+        }
+    }
+
+    async claimBuilding(item) {
+        try {
+            // Show loading modal
+            const loadingModal = this.modal.loading('Claiming resources...');
+            
+            await this.contracts.gridBuildings.collectResources(item.id);
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data
+            await this.loadUserData();
+            
+            // Show success modal
+            this.modal.success('Resources claimed successfully!', { title: 'Resources Collected!' });
+        } catch (e) {
+            Logger.error('Error claiming resources:', e);
+            this.modal.error(e.message || 'Failed to claim resources', { title: 'Collection Failed' });
         }
     }
 
