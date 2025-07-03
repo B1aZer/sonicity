@@ -91,4 +91,20 @@ export class BaseContract {
             throw error;
         }
     }
+
+    // Helper method to handle contract transactions with value (e.g., for payable functions)
+    async transactWithValue(method, args, value) {
+        const contract = await this.getContract();
+        try {
+            console.log(`Attempting to call ${method} with args:`, args, 'and value:', value);
+            const tx = await contract[method](...args, { value });
+            console.log(`Transaction sent:`, tx.hash);
+            const receipt = await tx.wait();
+            console.log(`Transaction mined:`, receipt);
+            return receipt;
+        } catch (error) {
+            console.error(`Error in transaction ${method}:`, error);
+            throw error;
+        }
+    }
 } 
