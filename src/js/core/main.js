@@ -55,9 +55,6 @@ class App {
     async handleRoute(page = window.location.pathname.slice(1) || '') {
         Logger.info('Handling route:', page);
         
-        // Update music manager with new page
-        musicManager.updatePage(page);
-        
         // Clean up current page
         if (this.currentPage) {
             this.currentPage.unmount();
@@ -92,6 +89,9 @@ class App {
             }
         }
 
+        // Update music manager with new page - only after all checks and possible redirects
+        musicManager.updatePage(page);
+        
         // Create and mount new page
         switch (page) {
             case '':
