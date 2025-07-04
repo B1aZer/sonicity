@@ -96,7 +96,7 @@ export class StartPage extends BasePage {
         this.element.innerHTML = `
             <div class="start-container">
                 <img src="/images/Start.png" alt="Start Game" class="start-image" />
-                <button class="start-button" disabled>
+                <button class="start-button btn btn-lg btn-primary" disabled>
                     Connect Wallet
                 </button>
             </div>
