@@ -73,7 +73,7 @@ export class StakePage extends BasePage {
                     <h2>NFT Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
-                            <span class="status-label">Total NFTs:</span>
+                            <span class="status-label">Total Unstaked:</span>
                             <span class="status-value total-nfts-value">0</span>
                         </div>
                         <div class="status-item">
