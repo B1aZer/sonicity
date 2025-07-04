@@ -27,6 +27,7 @@ export class MintPage extends BasePage {
         this.nftCard = new NFTCard();
         this.statusComponent = new StatusComponent();
         this.selectedType = 'house'; // Default to house
+        
         this.render();
     }
 
@@ -122,6 +123,23 @@ export class MintPage extends BasePage {
         }
         
         try {
+            // Check if wallet is connected and update button accordingly
+            const isConnected = WalletManager.isWalletConnected();
+            Logger.info('Wallet connection status in onInitialized:', isConnected);
+            
+            const mintButton = this.element.querySelector('#mint-button');
+            if (mintButton) {
+                if (isConnected) {
+                    mintButton.disabled = false;
+                    mintButton.removeAttribute('title');
+                    Logger.info('Mint button enabled in onInitialized');
+                } else {
+                    mintButton.disabled = true;
+                    mintButton.setAttribute('title', 'Please connect your wallet to mint NFTs. You\'ll need ETH to pay for gas fees and minting costs.');
+                    Logger.info('Mint button disabled in onInitialized');
+                }
+            }
+            
             await this.getMintCount();
             await this.loadUserNFTs();
             this.setupEventListeners();
