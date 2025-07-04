@@ -245,7 +245,7 @@ export class StakePage extends BasePage {
         const actionsSection = `
             <div class="page-section tier-actions-section">
                 <h3>${tierNames[tier]} Actions</h3>
-                <button class="btn btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
+                <button class="btn btn-md btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
             </div>
         `;
         // --- Buildings grid ---
@@ -393,10 +393,10 @@ export class StakePage extends BasePage {
                         </div>
                     </div>
                     <div class="building-actions">
-                        <button class="btn btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Recharge</button>
-                                                <button class="btn btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
-                        <button class="btn btn-primary upgrade-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-arrow-up"></i> Upgrade</button>
-                        <button class="btn btn-danger unstake-btn"><i class="fas fa-sign-out-alt"></i> Unstake</button>
+                        <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Recharge</button>
+                        <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
+                        <button class="btn btn-full btn-primary upgrade-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-arrow-up"></i> Upgrade</button>
+                        <button class="btn btn-full btn-danger unstake-btn"><i class="fas fa-sign-out-alt"></i> Unstake</button>
                     </div>
                 </div>
             `;
@@ -425,7 +425,7 @@ export class StakePage extends BasePage {
                         <div class="detail-item"><span class="detail-label">Contract:</span><span class="detail-value">${contract}</span></div>
                     </div>
                     <div class="building-actions">
-                        <button class="btn btn-primary stake-btn">Stake</button>
+                        <button class="btn btn-full btn-primary stake-btn">Stake</button>
                     </div>
                 </div>
             `;

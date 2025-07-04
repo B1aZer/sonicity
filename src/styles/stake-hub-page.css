@@ -6,6 +6,13 @@
     margin-top: var(--spacing-sm);
 }
 
+/* Buildings Grid - Specific to stake hub page */
+.stake-hub-page .buildings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+}
+
 /* Building Header */
 .building-header {
     display: flex;
@@ -136,6 +143,11 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+    .stake-hub-page .buildings-grid {
+        grid-template-columns: 1fr;
+        max-width: none;
+    }
+    
     .building-header {
         flex-direction: column;
         text-align: center;
