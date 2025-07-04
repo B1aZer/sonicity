@@ -350,12 +350,10 @@ export class BuildingManager {
 
     update(deltaTime) {
         this.updateTimer += deltaTime;
+        
         if (this.updateTimer >= this.updateInterval) {
             this.updateTimer = 0;
-            Logger.debug('BuildingManager update cycle completed', { 
-                buildingCount: this.buildings.size,
-                fixedBuildingCount: this.fixedBuildings.size
-            });
+            // Add any periodic updates here if needed
         }
     }
 
@@ -401,5 +399,63 @@ export class BuildingManager {
             Logger.error('Error upgrading building:', { buildingKey, error: error.message });
             return false;
         }
+    }
+
+    /**
+     * Dispose of all resources
+     */
+    dispose() {
+        Logger.info('BuildingManager: Starting disposal');
+        
+        // Remove all buildings from scene
+        if (this.scene) {
+            this.buildings.forEach(building => {
+                if (building.mesh) {
+                    this.scene.remove(building.mesh);
+                    // Dispose of geometry and materials
+                    if (building.mesh.geometry) {
+                        building.mesh.geometry.dispose();
+                    }
+                    if (building.mesh.material) {
+                        if (Array.isArray(building.mesh.material)) {
+                            building.mesh.material.forEach(material => material.dispose());
+                        } else {
+                            building.mesh.material.dispose();
+                        }
+                    }
+                }
+            });
+            
+            this.fixedBuildings.forEach(building => {
+                if (building.mesh) {
+                    this.scene.remove(building.mesh);
+                    // Dispose of geometry and materials
+                    if (building.mesh.geometry) {
+                        building.mesh.geometry.dispose();
+                    }
+                    if (building.mesh.material) {
+                        if (Array.isArray(building.mesh.material)) {
+                            building.mesh.material.forEach(material => material.dispose());
+                        } else {
+                            building.mesh.material.dispose();
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Clear collections
+        this.buildings.clear();
+        this.fixedBuildings.clear();
+        
+        // Clear references
+        this.scene = null;
+        this.assetLoader = null;
+        this.gridManager = null;
+        this.gameStateContract = null;
+        this.districtBuildingsContract = null;
+        this.gridBuildingsContract = null;
+        
+        Logger.info('BuildingManager: Disposal completed');
     }
 }

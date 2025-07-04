@@ -1,11 +1,13 @@
 import '../styles/navbar.css';
 import { WalletButton } from './WalletButton.js';
+import { MusicToggle } from './MusicToggle.js';
 
 export class Navbar {
     constructor() {
         this.element = document.createElement('nav');
         this.element.className = 'navbar';
         this.walletButton = new WalletButton();
+        this.musicToggle = new MusicToggle();
         this.render();
         this.setupEventListeners();
     }
@@ -19,10 +21,19 @@ export class Navbar {
                         <a href="/overview" class="nav-link" data-page="overview">Overview</a>
                         <!-- <a href="/mint" class="nav-link" data-page="mint">Mint</a> -->
                     </div>
-                    <div id="wallet-button-container" class="wallet-btn-wrapper"></div>
+                    <div class="nav-controls">
+                        <div id="music-toggle-container"></div>
+                        <div id="wallet-button-container" class="wallet-btn-wrapper"></div>
+                    </div>
                 </div>
             </div>
         `;
+
+        // Mount music toggle
+        const musicContainer = this.element.querySelector('#music-toggle-container');
+        if (musicContainer) {
+            musicContainer.appendChild(this.musicToggle.element);
+        }
 
         // Mount wallet button
         const walletContainer = this.element.querySelector('#wallet-button-container');

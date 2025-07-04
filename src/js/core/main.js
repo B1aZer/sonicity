@@ -21,6 +21,7 @@ import { AccessControl } from '../utils/accessControl.js';
 import { Modal } from '../utils/modal.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
 import { WalletManager } from '../utils/wallet.js';
+import { musicManager } from '../managers/musicManager.js';
 import Logger from '../utils/logger.js';
 
 class App {
@@ -34,6 +35,9 @@ class App {
     }
 
     init() {
+        // Initialize music manager
+        musicManager.init();
+        
         // Mount layout
         this.layout.mount(this.container);
 
@@ -50,6 +54,9 @@ class App {
 
     async handleRoute(page = window.location.pathname.slice(1) || '') {
         Logger.info('Handling route:', page);
+        
+        // Update music manager with new page
+        musicManager.updatePage(page);
         
         // Clean up current page
         if (this.currentPage) {

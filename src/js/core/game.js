@@ -8,6 +8,7 @@ import { GameStateContract } from '../contracts/GameStateContract.js';
 import { GridBuildingsContract } from '../contracts/GridBuildingsContract.js';
 import { DistrictBuildingsContract } from '../contracts/DistrictBuildingsContract.js';
 import Logger from '../utils/logger.js';
+import { musicManager } from '../managers/musicManager.js';
 
 export class Game {
     constructor(renderDiv) {
@@ -58,6 +59,9 @@ export class Game {
         this.groundPlane = groundPlane;
         this.gridHelper = gridHelper;
         
+        // Initialize music manager with camera for 3D audio
+        musicManager.init(this.camera);
+        
         // Load assets first
         await this.assetLoader.loadAssets();
         
@@ -89,12 +93,21 @@ export class Game {
     }
 
     start() {
+        if (this.isRunning) {
+            Logger.warn('Game is already running');
+            return;
+        }
+        
         this.isRunning = true;
+        this.clock.start();
         this.animate();
+        Logger.info('Game started');
     }
 
     stop() {
         this.isRunning = false;
+        this.clock.stop();
+        Logger.info('Game stopped');
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
             this.animationFrameId = null;
@@ -148,54 +161,42 @@ export class Game {
     }
 
     updateUI() {
-        // Get money from contract (default to 0 if not implemented yet)
-        const money = this.gameStateContract.getMoney?.() ?? 0;
         // Update gold display
         if (this.goldDisplay) {
-            this.goldDisplay.textContent = money;
+            this.goldDisplay.textContent = this.gameStateContract.getGold() || 0;
         }
     }
 
-    // --- Game Reset Logic ---
     restartGame() {
-        console.log("Game: restartGame() method entered.");
+        Logger.info("Game: Restarting game");
         
-        // 1. Clear Buildings
-        // Make a copy of the array because removeBuilding modifies it
-        const buildingsToRemove = [...this.buildingManager.buildings];
-        buildingsToRemove.forEach(building => {
-            this.buildingManager.removeBuilding(building);
-        });
-        // Ensure the buildings array is definitely empty
-        this.buildingManager.buildings = [];
-        
-        // 2. Reset Logical Grid
-        this.grid = Array(this.gridSize).fill(null).map(() => Array(this.gridSize).fill(null));
-        
-        // 3. Update UI to reflect reset state
-        this.updateUI();
-        
-        console.log("Game: restartGame() method finished successfully.");
-    }
-
-    // Add dispose method to clean up resources when switching pages
-    dispose() {
-        console.log("Game: dispose() method called");
-        
-        // Stop game loop
+        // Stop current game
         this.stop();
         
-        // Remove event listeners
-        if (this.inputHandler) {
-            this.inputHandler.dispose();
+        // Clear scene
+        if (this.scene) {
+            while(this.scene.children.length > 0) { 
+                this.scene.remove(this.scene.children[0]); 
+            }
         }
         
-        // Clean up buildings
+        // Reset game state
+        this.isRunning = false;
+        this.grid = [];
+        
+        // Reinitialize
+        this.init();
+    }
+
+    dispose() {
+        Logger.info("Game: Starting disposal");
+        
+        // Stop the game loop
+        this.stop();
+        
+        // Dispose of building manager
         if (this.buildingManager) {
-            const buildingsToRemove = [...this.buildingManager.buildings];
-            buildingsToRemove.forEach(building => {
-                this.buildingManager.removeBuilding(building);
-            });
+            this.buildingManager.dispose();
         }
         
         // Dispose of scene manager
@@ -204,6 +205,7 @@ export class Game {
         // Clear references
         this.buildingManager = null;
         this.inputHandler = null;
+        this.sceneManager = null;
         
         console.log("Game: dispose() method completed");
     }
