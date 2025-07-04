@@ -8,13 +8,16 @@ import { BasePage } from './BasePage.js';
 import { BUILDINGS } from '../js/utils/constants.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 
+import('../styles/game-page.css');
+
+
 export class GamePage extends BasePage {
     constructor() {
         super();
-        import('../styles/game-page.css');
-        this.element = document.createElement('div');
+        Logger.info('GamePage constructor called');
         this.element.className = 'game-page';
-        this.modal = new Modal();
+        this.game = null;
+        this.resourceUpdateInterval = null;
         this.render();
         this.setupGame();
     }

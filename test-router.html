@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Router Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            margin: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Router Test</h1>
+    
+    <div class="test-section">
+        <h3>Navigation Tests</h3>
+        <button onclick="testNavigate('/')">Navigate to Start</button>
+        <button onclick="testNavigate('/access')">Navigate to Access</button>
+        <button onclick="testNavigate('/mint')">Navigate to Mint</button>
+        <button onclick="testNavigate('/overview')">Navigate to Overview</button>
+        <button onclick="testNavigate('/city')">Navigate to City</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Cache Tests</h3>
+        <button onclick="testCache()">Test Page Caching</button>
+        <button onclick="clearCache()">Clear Cache</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Access Control Tests</h3>
+        <button onclick="testAccessControl()">Test Access Control</button>
+        <button onclick="simulateWalletConnect()">Simulate Wallet Connect</button>
+        <button onclick="simulateWalletDisconnect()">Simulate Wallet Disconnect</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>Logs</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script type="module">
+        import { Router } from './src/js/core/router.js';
+        
+        // Create a mock container
+        const container = document.createElement('div');
+        container.id = 'app-container';
+        document.body.appendChild(container);
+        
+        // Create router instance
+        const router = new Router(container);
+        
+        // Mock logger
+        const originalLog = console.log;
+        const originalInfo = console.info;
+        const originalError = console.error;
+        
+        function log(message) {
+            const logElement = document.getElementById('log');
+            logElement.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            log('LOG: ' + args.join(' '));
+            originalLog.apply(console, args);
+        };
+        
+        console.info = function(...args) {
+            log('INFO: ' + args.join(' '));
+            originalInfo.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            log('ERROR: ' + args.join(' '));
+            originalError.apply(console, args);
+        };
+        
+        // Test functions
+        window.testNavigate = async function(path) {
+            log(`Testing navigation to: ${path}`);
+            try {
+                await router.navigate(path);
+                log(`Navigation successful to: ${path}`);
+            } catch (error) {
+                log(`Navigation failed: ${error.message}`);
+            }
+        };
+        
+        window.testCache = function() {
+            log(`Cache size: ${router.pageCache.size}`);
+            log(`Cached routes: ${Array.from(router.pageCache.keys()).join(', ')}`);
+        };
+        
+        window.clearCache = function() {
+            router.clearCache();
+            log('Cache cleared');
+        };
+        
+        window.testAccessControl = async function() {
+            log('Testing access control...');
+            const routes = ['', 'access', 'mint', 'overview', 'city'];
+            for (const route of routes) {
+                const result = await router.checkAccess(route);
+                log(`${route}: ${result.allowed ? 'ALLOWED' : 'DENIED'} (${result.reason || 'N/A'})`);
+            }
+        };
+        
+        window.simulateWalletConnect = function() {
+            log('Simulating wallet connection...');
+            // Mock wallet connection
+            window.dispatchEvent(new CustomEvent('walletConnected', {
+                detail: { address: '0x1234567890abcdef' }
+            }));
+        };
+        
+        window.simulateWalletDisconnect = function() {
+            log('Simulating wallet disconnection...');
+            // Mock wallet disconnection
+            window.dispatchEvent(new CustomEvent('walletDisconnected'));
+        };
+        
+        // Initial log
+        log('Router test initialized');
+    </script>
+</body>
+</html> 
