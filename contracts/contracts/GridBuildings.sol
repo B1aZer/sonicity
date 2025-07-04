@@ -47,7 +47,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         GridBuildingType buildingType;
         uint8 level;
         uint256 lastUpgradeTime;
-        uint256 lastCollectionTime;
+        uint256 lastRechargeTime;    // When building was last recharged (started production)
+        uint256 lastCollectionTime;  // When resources were last collected
         bool damaged;  // Only keep damaged flag
     }
 
@@ -227,6 +228,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             buildingType: buildingType,
             level: level == 0 ? 1 : level,  // Use level 1 for new buildings, preserved level for restored
             lastUpgradeTime: lastUpgradeTime == 0 ? block.timestamp : lastUpgradeTime,  // Use current time for new, preserved time for restored
+            lastRechargeTime: 0, // Buildings start with no production - must be recharged to start producing
             lastCollectionTime: 0, // Buildings start with no production - must be recharged to start producing
             damaged: false
         });
@@ -293,12 +295,12 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Building storage building = buildings[msg.sender][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         require(!building.damaged, "Building is damaged");
-        require(building.lastCollectionTime > 0, "Building has not been recharged yet");
+        require(building.lastRechargeTime > 0, "Building has not been recharged yet");
         
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         
-        // Calculate time passed since last collection
-        uint256 timePassed = block.timestamp - building.lastCollectionTime;
+        // Calculate time passed since last recharge (production time)
+        uint256 timePassed = block.timestamp - building.lastRechargeTime;
         if (timePassed > 24 hours) {
             timePassed = 24 hours;
         }
@@ -306,7 +308,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Calculate resources to collect
         uint256 amount = (config.baseProductionRate * timePassed * building.level) / 1 hours;
         
-        // Update last collection time
+        // Update last collection time (when we collected resources)
         building.lastCollectionTime = block.timestamp;
         
         // Add resources to player based on building type
@@ -383,14 +385,14 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             Building storage building = buildings[msg.sender][buildingIds[i]];
             if (building.buildingType == buildingType) {
                 // Skip buildings that have never been recharged
-                if (building.lastCollectionTime == 0) {
+                if (building.lastRechargeTime == 0) {
                     continue;
                 }
                 
                 GridBuildingConfig memory config = buildingConfigs[building.buildingType];
                 
-                // Calculate time passed since last collection
-                uint256 timePassed = block.timestamp - building.lastCollectionTime;
+                // Calculate time passed since last recharge (production time)
+                uint256 timePassed = block.timestamp - building.lastRechargeTime;
                 if (timePassed > 24 hours) {
                     timePassed = 24 hours;
                 }
@@ -398,7 +400,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 // Calculate resources to collect
                 uint256 amount = (config.baseProductionRate * timePassed * building.level) / 1 hours;
                 
-                // Update last collection time
+                // Update last collection time (when we collected resources)
                 building.lastCollectionTime = block.timestamp;
                 
                 // Add resources to player based on building type
@@ -476,12 +478,12 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         
         // If building has never been recharged, no production
-        if (building.lastCollectionTime == 0) {
+        if (building.lastRechargeTime == 0) {
             return 0;
         }
         
-        // Calculate time passed since last collection
-        uint256 timePassed = block.timestamp - building.lastCollectionTime;
+        // Calculate time passed since last recharge (production time)
+        uint256 timePassed = block.timestamp - building.lastRechargeTime;
         if (timePassed > 24 hours) {
             timePassed = 24 hours;
         }
@@ -671,12 +673,12 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         
         // If building has never been recharged, it's not at cap
-        if (building.lastCollectionTime == 0) {
+        if (building.lastRechargeTime == 0) {
             return false;
         }
         
-        uint256 timeSinceCollection = block.timestamp - building.lastCollectionTime;
-        return timeSinceCollection >= 24 hours;
+        uint256 timeSinceRecharge = block.timestamp - building.lastRechargeTime;
+        return timeSinceRecharge >= 24 hours;
     }
 
     /**
@@ -691,7 +693,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Count buildings at cap
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[player][activeBuildings[i]];
-            if (!building.damaged && building.lastCollectionTime > 0 && (block.timestamp - building.lastCollectionTime) >= 24 hours) {
+            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= 24 hours) {
                 capCount++;
             }
         }
@@ -702,7 +704,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[player][activeBuildings[i]];
-            if (!building.damaged && building.lastCollectionTime > 0 && (block.timestamp - building.lastCollectionTime) >= 24 hours) {
+            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= 24 hours) {
                 buildingsAtCap[index] = activeBuildings[i];
                 index++;
             }
@@ -736,8 +738,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             revert("Failed to track recharge amount");
         }
         
-        // Reset last collection time to restart production
-        building.lastCollectionTime = block.timestamp;
+        // Reset last recharge time to restart production
+        building.lastRechargeTime = block.timestamp;
         
         emit BuildingRecharged(msg.sender, buildingId, msg.value);
     }
@@ -756,8 +758,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
             require(!building.damaged, "Building is damaged");
             
-            // Reset last collection time to restart production
-            building.lastCollectionTime = block.timestamp;
+            // Reset last recharge time to restart production
+            building.lastRechargeTime = block.timestamp;
             
             totalFee += RECHARGE_FEE;
         }
@@ -792,8 +794,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             Building storage building = buildings[msg.sender][activeBuildings[i]];
             require(!building.damaged, "Building is damaged");
             
-            // Reset last collection time to restart production
-            building.lastCollectionTime = block.timestamp;
+            // Reset last recharge time to restart production
+            building.lastRechargeTime = block.timestamp;
             
             totalFee += RECHARGE_FEE;
         }
@@ -848,17 +850,17 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         maxTime = 24 hours; // 24 hours in seconds
         
         // If building has never been recharged, no production
-        if (building.lastCollectionTime == 0) {
+        if (building.lastRechargeTime == 0) {
             return (0, maxTime, 0);
         }
         
-        // Calculate time passed since last collection
-        uint256 timePassed = block.timestamp - building.lastCollectionTime;
+        // Calculate time passed since last recharge (production time)
+        uint256 timePassed = block.timestamp - building.lastRechargeTime;
         if (timePassed > maxTime) {
             timePassed = maxTime;
         }
         
-        // The current production time is simply the time passed since last collection
+        // The current production time is simply the time passed since last recharge
         currentTime = timePassed;
         
         // Calculate progress percentage
