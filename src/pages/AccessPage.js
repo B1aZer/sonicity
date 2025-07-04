@@ -19,13 +19,13 @@ export class AccessPage extends BasePage {
         });
         
         this.render();
+        this.setupEventListeners();
     }
 
     async onInitialized(walletResult) {
         Logger.info('AccessPage onInitialized called with wallet:', walletResult);
         try {
             await this.loadAccessData();
-            this.setupEventListeners();
             Logger.info('Access page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing access page:', error);
@@ -87,11 +87,15 @@ export class AccessPage extends BasePage {
     setupEventListeners() {
         Logger.info('Setting up event listeners');
         
-        // Use the new event listener system
-        this.addEventListener('.mint-link', 'click', (e) => {
-            e.preventDefault();
-            this.handleMintPageNavigation();
-        });
+        // Use standard addEventListener for the mint link
+        const mintLink = this.element.querySelector('.mint-link');
+        
+        if (mintLink) {
+            mintLink.addEventListener('click', (e) => {
+                Logger.info('Navigating to mint page');
+                this.handleMintPageNavigation();
+            });
+        }
     }
 
     render() {
@@ -119,9 +123,9 @@ export class AccessPage extends BasePage {
                 <div class="page-section">
                     <h2>Actions</h2>
                     <div class="building-actions">
-                        <a href="/mint" class="mint-link btn btn-primary btn-lg">
+                        <button class="mint-link btn btn-primary btn-lg">
                             <span class="button-text">Go to Mint Page</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
