@@ -368,7 +368,12 @@ export class StakePage extends BasePage {
             return `
                 <div class="building-card ${statusClass}" data-building-id="${item.id}">
                     <div class="building-header">
-                        <div class="building-icon">${icon}</div>
+                        <div class="building-icon">
+                            ${item.metadata?.image ? 
+                                `<img src="${item.metadata.image}" onerror="this.src='/images/placeholder.jpg'" alt="NFT" />` : 
+                                icon
+                            }
+                        </div>
                         <div class="building-info">
                             <h3>${name} #${item.id}</h3>
                             <p class="building-description">Level ${item.level}</p>
@@ -405,11 +410,15 @@ export class StakePage extends BasePage {
             const statusClass = 'unstaked';
             const statusText = 'Unstaked';
             const tokenId = item.tokenId ? item.tokenId : '-';
-            const contract = item.contractAddress ? item.contractAddress : '-';
             return `
                 <div class="building-card" data-nft-id="${item.tokenId}">
                     <div class="building-header">
-                        <div class="building-icon">${this.getBuildingIcon(item.tier)}</div>
+                        <div class="building-icon">
+                            ${item.metadata?.image ? 
+                                `<img src="${item.metadata.image}" onerror="this.src='/images/placeholder.jpg'" alt="NFT" />` : 
+                                this.getBuildingIcon(item.tier)
+                            }
+                        </div>
                         <div class="building-info">
                             <h3>${item.metadata?.name || 'NFT'}</h3>
                             <p class="building-description">${item.metadata?.description || ''}</p>
@@ -419,10 +428,8 @@ export class StakePage extends BasePage {
                             <span class="status-text">${statusText}</span>
                         </div>
                     </div>
-                    <div class="nft-image"><img src="${item.metadata?.image}" onerror="this.src='/images/placeholder.jpg'" alt="NFT" /></div>
                     <div class="building-details">
                         <div class="detail-item"><span class="detail-label">Token ID:</span><span class="detail-value">${tokenId}</span></div>
-                        <div class="detail-item"><span class="detail-label">Contract:</span><span class="detail-value">${contract}</span></div>
                     </div>
                     <div class="building-actions">
                         <button class="btn btn-full btn-primary stake-btn">Stake</button>
@@ -527,6 +534,17 @@ export class StakePage extends BasePage {
                             building.tokenId = Number(tokenId);
                             building.contractAddress = contractAddress;
                             console.log(`[DEBUG] Found NFT! Token ${tokenId} from ${contractAddress} is staked to building ${id}`);
+                            
+                            // Fetch NFT metadata for the image
+                            try {
+                                const tokenURI = await contract.tokenURI(tokenId);
+                                const response = await fetch(tokenURI);
+                                building.metadata = await response.json();
+                            } catch (e) {
+                                console.warn(`Failed to fetch metadata for token ${tokenId}:`, e);
+                                building.metadata = {};
+                            }
+                            
                             break;
                         }
                     }
