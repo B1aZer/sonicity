@@ -1,5 +1,3 @@
-
-
 /* Progress Bar */
 .mint-progress {
     margin-top: var(--spacing-md);
@@ -39,7 +37,6 @@
     align-items: center;
     justify-content: left;
     gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
 }
 
 .amount-button {

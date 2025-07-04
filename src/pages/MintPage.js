@@ -192,25 +192,6 @@ export class MintPage extends BasePage {
                     <h2>Mint Information</h2>
                     <div class="buildings-grid">
                         <div class="building-card">
-                            <h3>Collection Progress</h3>
-                            <div class="building-details">
-                                <div class="detail-item">
-                                    <span class="detail-label">Progress:</span>
-                                    <span class="detail-value">
-                                        <div class="mint-progress">
-                                            <div class="progress-bar">
-                                                <div class="progress-fill" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
-                                            </div>
-                                            <div class="progress-text">
-                                                <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span>
-                                            </div>
-                                        </div>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="building-card">
                             <h3>Mint Controls</h3>
                             <div class="building-details">
                                 <div class="detail-item">
@@ -228,6 +209,17 @@ export class MintPage extends BasePage {
                                     <span class="detail-value">
                                         <span id="total-price">${this.mintPrice}</span> ETH
                                     </span>
+                                </div>
+                                <div class="building-progress">
+                                    <div class="progress-info">
+                                        <span class="progress-label">Collection Progress</span>
+                                        <span class="progress-time">
+                                            <span id="tokens-minted">${this.tokensMinted}</span> / <span id="max-supply">${this.maxSupply}</span>
+                                        </span>
+                                    </div>
+                                    <div class="progress-container">
+                                        <div class="progress-bar" style="width: ${(this.tokensMinted / this.maxSupply) * 100}%"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -372,10 +364,10 @@ export class MintPage extends BasePage {
             }
             
             // Update progress bar
-            const progressFill = this.element.querySelector('.progress-fill');
-            if (progressFill) {
+            const progressBar = this.element.querySelector('.progress-bar');
+            if (progressBar) {
                 const maxSupply = this.selectedType === 'house' ? this.maxSupply : this.farmMaxSupply;
-                progressFill.style.width = `${(this.tokensMinted / maxSupply) * 100}%`;
+                progressBar.style.width = `${(this.tokensMinted / maxSupply) * 100}%`;
             }
         } catch (error) {
             Logger.error("Error getting mint count:", error);
