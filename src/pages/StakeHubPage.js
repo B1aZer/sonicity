@@ -359,10 +359,21 @@ export class StakePage extends BasePage {
             // Calculate time remaining with proper bounds checking
             let hoursRemaining = 0;
             let minutesRemaining = 0;
-            if (!item.isAtCap && item.progressCurrent !== undefined && item.progressMax !== undefined) {
-                const timeRemaining = Math.max(0, item.progressMax - item.progressCurrent);
-                hoursRemaining = Math.floor(timeRemaining / 3600);
-                minutesRemaining = Math.floor((timeRemaining % 3600) / 60);
+            let progressText = 'At Cap';
+            
+            // Check if building has been charged (lastCollectionTime > 0)
+            const hasBeenCharged = item.lastCollectionTime && item.lastCollectionTime > 0;
+            
+            if (!item.isAtCap) {
+                if (hasBeenCharged && item.progressCurrent !== undefined && item.progressMax !== undefined && item.progressMax > 0) {
+                    const timeRemaining = Math.max(0, item.progressMax - item.progressCurrent);
+                    hoursRemaining = Math.floor(timeRemaining / 3600);
+                    minutesRemaining = Math.floor((timeRemaining % 3600) / 60);
+                    progressText = `${hoursRemaining}h ${minutesRemaining}m remaining`;
+                } else {
+                    // Building hasn't been charged yet
+                    progressText = 'Not Charged';
+                }
             }
             
             return `
@@ -390,7 +401,7 @@ export class StakePage extends BasePage {
                         <div class="building-progress">
                             <div class="progress-info">
                                 <span class="progress-label">Production Progress</span>
-                                <span class="progress-time">${item.isAtCap ? 'At Cap' : `${hoursRemaining}h ${minutesRemaining}m remaining`}</span>
+                                <span class="progress-time">${progressText}</span>
                             </div>
                             <div class="progress-container" title="${Math.floor(item.progressCurrent / 3600)}h / 24h production">
                                 <div class="progress-bar" style="width:${progressPercent}%"></div>
