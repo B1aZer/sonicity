@@ -37,12 +37,19 @@ class App {
         Logger.info('App handling route:', path);
         
         try {
-            // Update music manager with new page
-            const route = this.router.getRouteFromPath(path);
-            musicManager.updatePage(route);
+            // Get the current route before navigation
+            const currentRoute = this.router.getCurrentRoute();
             
             // Navigate using router
             await this.router.navigate(path);
+            
+            // Get the new route after navigation
+            const newRoute = this.router.getCurrentRoute();
+            
+            // Only update music if we actually navigated to a different page
+            if (currentRoute !== newRoute) {
+                musicManager.updatePage(newRoute);
+            }
         } catch (error) {
             Logger.error('Error handling route:', error);
             // Fallback to access page on error
