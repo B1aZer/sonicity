@@ -46,7 +46,7 @@
     width: 36px;
     height: 36px;
     border-radius: 18px;
-    border: none;
+    border: 2px solid var(--color-border);
     background: var(--color-secondary);
     font-size: var(--font-size-lg);
     cursor: pointer;
@@ -64,8 +64,7 @@
 #mint-amount {
     width: 60px;
     height: 36px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--bg-lighter);
+    border-radius: var(--radius-lg);
     background: var(--color-secondary);
     text-align: center;
     color: var(--bg-darker);
