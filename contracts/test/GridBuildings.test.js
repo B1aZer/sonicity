@@ -1336,7 +1336,7 @@ describe("GridBuildings", function () {
       await ethers.provider.send("evm_mine");
       
       // Check initial max upgrade level (should be 1)
-      let maxLevel = await gameState.getMaxUpgradeLevel(player2Address);
+      let maxLevel = await gameState.getMaxUpgradeLevel(player2Address, GridBuildingType.HOUSE);
       expect(maxLevel).to.equal(1);
       
       // Recharge building 9 more times with 0.01 SONIC each (total 0.1 SONIC to unlock level 2)
@@ -1344,13 +1344,13 @@ describe("GridBuildings", function () {
         await gridBuildings.connect(player2).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
-        let maxLevelStep = await gameState.getMaxUpgradeLevel(player2Address);
-        let totalRechargeStep = await gameState.getTotalRechargeAmount(player2Address);
+        let maxLevelStep = await gameState.getMaxUpgradeLevel(player2Address, GridBuildingType.HOUSE);
+        let totalRechargeStep = await gameState.getTotalRechargeAmount(player2Address, GridBuildingType.HOUSE);
       }
       
       // Check max upgrade level after 0.1 SONIC total recharge
-      maxLevel = await gameState.getMaxUpgradeLevel(player2Address);
-      let totalRecharge = await gameState.getTotalRechargeAmount(player2Address);
+      maxLevel = await gameState.getMaxUpgradeLevel(player2Address, GridBuildingType.HOUSE);
+      let totalRecharge = await gameState.getTotalRechargeAmount(player2Address, GridBuildingType.HOUSE);
       expect(maxLevel).to.equal(2);
     });
 
@@ -1408,10 +1408,10 @@ describe("GridBuildings", function () {
       }
       // The total recharge tracked includes all previous recharges from the test setup
       // Based on debug output, the actual total is 0.19 SONIC
-      const totalRecharge = await gameState.getTotalRechargeAmount(player1Address);
+      const totalRecharge = await gameState.getTotalRechargeAmount(player1Address, GridBuildingType.HOUSE);
       expect(totalRecharge).to.equal(ethers.parseEther("0.19"));
       // Check max upgrade level (should be 2)
-      const maxLevel = await gameState.getMaxUpgradeLevel(player1Address);
+      const maxLevel = await gameState.getMaxUpgradeLevel(player1Address, GridBuildingType.HOUSE);
       expect(maxLevel).to.equal(2);
     });
 

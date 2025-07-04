@@ -116,17 +116,17 @@
 .progress-container {
     width: 100%;
     height: 8px;
-    background: var(--bg-light);
+    background: var(--bg-lighter);
     border-radius: var(--radius-sm);
     overflow: hidden;
-    position: relative;
+    margin-top: var(--spacing-xs);
 }
 
 .progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+    background: var(--color-primary);
+    transition: width var(--transition-normal);
     border-radius: var(--radius-sm);
-    transition: width 0.3s ease;
 }
 
 .progress-bar-normal {

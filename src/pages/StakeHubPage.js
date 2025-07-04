@@ -124,14 +124,14 @@ export class StakePage extends BasePage {
         // Tier tab switching
         const tierTabs = this.element.querySelectorAll('.tab');
         tierTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
+            tab.addEventListener('click', async () => {
                 this.element.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 this.element.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
                 tab.classList.add('active');
                 const tier = tab.dataset.tier;
                 this.element.querySelector(`.tier-content[data-tier="${tier}"]`).classList.add('active');
                 this.state.selectedTier = Number(tier);
-                this.renderTierContent(Number(tier));
+                await this.renderTierContent(Number(tier));
             });
         });
     }
@@ -199,48 +199,70 @@ export class StakePage extends BasePage {
         }
     }
 
-    renderTierContent(tier) {
+    async renderTierContent(tier) {
         const grid = this.element.querySelector(`.tier-content[data-tier="${tier}"] .buildings-grid`);
         const items = this.state.byTier[tier];
         const staked = items.filter(i => i.isStaked);
+        
+        // Get upgrade progress for this tier
+        const upgradeProgress = await this.contracts.gameState.getUpgradeProgress(tier);
+        const formattedProgress = this.contracts.gameState.formatUpgradeProgress(upgradeProgress);
+        
         // --- Per-Tier Section ---
         const tierStatus = this.getTierStatus(tier, staked);
-        const progress = this.getTierProgress(tier, staked);
         const claimable = tierStatus.claimable.toLocaleString();
         const buildingCount = tierStatus.count;
+        
         // Recharge input default
         const rechargeDefault = buildingCount;
         const rechargePrice = ethers.formatEther(GridBuildingsContract.RECHARGE_FEE);
+        
         // Status section (like CityPage)
         const tierNames = ['House', 'Farm', 'Rep Station'];
         const tierNamesPlural = ['Houses', 'Farms', 'Rep Stations'];
-        const rechargeHeader = buildingCount === 1 ? `Recharge ${tierNames[tier]}` : `Recharge ${tierNamesPlural[tier]}`;
+        const rechargeHeader = buildingCount === 1 ? `Charge ${tierNames[tier]}` : `Charge ${tierNamesPlural[tier]}`;
+        
+        // Format upgrade progress for display
+        let upgradeStatusText = '';
+        if (formattedProgress.isMaxLevel) {
+            upgradeStatusText = 'Maximum level reached';
+        } else {
+            upgradeStatusText = ''; // Remove redundant text, progress bar shows the info
+        }
+        
         const statusSection = `
             <div class="page-section tier-status-section">
                 <h3>${tierNames[tier]} Status</h3>
                 <div class="status-grid">
                     <div class="status-item"><span class="status-label">Buildings:</span><span class="status-value">${buildingCount}</span></div>
                     <div class="status-item"><span class="status-label">Claimable:</span><span class="status-value">${claimable}</span></div>
+                    <div class="status-item"><span class="status-label">Max Level:</span><span class="status-value">${formattedProgress.currentLevel}</span></div>
                 </div>
             </div>
         `;
+        
         // Progress + recharge section (input, button, progress bar in a row)
         const progressSection = `
             <div class="page-section tier-progress-section">
                 <h3>${rechargeHeader}</h3>
                 <div class="donation-form" style="margin-top:16px; align-items: center;">
-                    <input type="number" class="input input-lg donation-amount" min="1" max="${buildingCount}" value="${rechargeDefault}" />
+                    <input type="number" class="input input-lg recharge-amount" min="1" max="${buildingCount}" value="${rechargeDefault}" />
                     <button class="btn btn-primary btn-md recharge-tier-btn">
                         <i class="fas fa-bolt"></i> Charge
-                        <!-- <span class="recharge-price">${rechargePrice}</span>
-                        <span class="recharge-currency">Sonic</span> -->
                     </button>
                 </div>
-                <div class="progress-container" title="${progress.current} / ${progress.next} charge">
-                    <div class="progress-bar" style="width:${progress.percent}%"></div>
+                <div class="upgrade-info" style="margin-top: 16px;">
+                    ${formattedProgress.isMaxLevel ? `
+                        <div class="upgrade-status">${upgradeStatusText}</div>
+                    ` : `
+                        <div class="progress-container" title="Upgrade progress: ${formattedProgress.formattedCurrent} / ${formattedProgress.formattedNext} SONIC">
+                            <div class="progress-bar upgrade-progress" style="width:${formattedProgress.progressPercent}%"></div>
+                        </div>
+                    `}
                 </div>
             </div>
         `;
+        
         // Claim all section
         const actionsSection = `
             <div class="page-section tier-actions-section">
@@ -248,20 +270,24 @@ export class StakePage extends BasePage {
                 <button class="btn btn-md btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
             </div>
         `;
+        
         // --- Buildings grid ---
         if (!items || items.length === 0) {
             grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🏗️</div><h3>No Buildings or NFTs in this tier</h3></div>`;
         } else {
             grid.innerHTML = items.map(item => this.renderCard(item)).join('');
         }
+        
         // Render status, progress/recharge, and actions sections above grid
         grid.insertAdjacentHTML('beforebegin', statusSection + progressSection + actionsSection);
+        
         // Attach event listeners for action buttons
         if (items && items.length > 0) {
             Array.from(grid.children).forEach((card, i) => {
                 this.attachCardListeners(card, items[i]);
             });
         }
+        
         // Attach per-tier action listeners
         const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
         tierContent.querySelector('.claim-all-btn')?.addEventListener('click', () => this.claimAllInTier(tier));
@@ -277,14 +303,6 @@ export class StakePage extends BasePage {
         let claimable = 0;
         staked.forEach(b => { claimable += b.claimable || 0; });
         return { count: staked.length, claimable };
-    }
-
-    getTierProgress(tier, staked) {
-        // Dummy: use sum of collected/cap for all buildings in tier
-        let current = 0, next = 0;
-        staked.forEach(b => { current += b.collected || 0; next += b.cap || 0; });
-        const percent = next > 0 ? Math.floor((current / next) * 100) : 0;
-        return { current, next, percent };
     }
 
     async claimAllInTier(tier) {
@@ -376,6 +394,27 @@ export class StakePage extends BasePage {
                 }
             }
             
+            // Get upgrade information from item (will be populated by getStakedBuildings)
+            const upgradeInfo = item.upgradeInfo;
+            const canUpgrade = upgradeInfo?.canUpgrade || false;
+            const upgradeCost = upgradeInfo?.upgradeCost || 0n;
+            const maxLevel = upgradeInfo?.maxLevel || 1;
+            const currentLevel = item.level || 0;
+            
+            // Format upgrade button text and determine if disabled
+            let upgradeButtonText = 'Upgrade';
+            let upgradeDisabled = item.damaged || !canUpgrade;
+            
+            if (upgradeCost > 0n) {
+                const costInSonic = this.contracts.gridBuildings.formatUpgradeCost(upgradeCost);
+                upgradeButtonText = `Upgrade (${costInSonic} SONIC)`;
+            }
+            
+            if (currentLevel >= maxLevel) {
+                upgradeButtonText = 'Max Level';
+                upgradeDisabled = true;
+            }
+            
             return `
                 <div class="building-card ${statusClass}" data-building-id="${item.id}">
                     <div class="building-header">
@@ -387,7 +426,7 @@ export class StakePage extends BasePage {
                         </div>
                         <div class="building-info">
                             <h3>${name} #${item.id}</h3>
-                            <p class="building-description">Level ${item.level}</p>
+                            <p class="building-description">Level ${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}</p>
                         </div>
                         <div class="building-status ${statusClass}">
                             <span class="status-indicator"></span>
@@ -395,7 +434,7 @@ export class StakePage extends BasePage {
                         </div>
                     </div>
                     <div class="building-details">
-                        <div class="detail-item"><span class="detail-label">Level:</span><span class="detail-value">${item.level}</span></div>
+                        <div class="detail-item"><span class="detail-label">Level:</span><span class="detail-value">${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}</span></div>
                         <div class="detail-item"><span class="detail-label">Production Rate:</span><span class="detail-value">${productionRate} ${resourceType}/hr</span></div>
                         <div class="detail-item"><span class="detail-label">Claimable:</span><span class="detail-value">${item.claimable || 0}</span></div>
                         <div class="building-progress">
@@ -411,7 +450,7 @@ export class StakePage extends BasePage {
                     <div class="building-actions">
                         <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Charge</button>
                         <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
-                        <button class="btn btn-full btn-primary upgrade-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-arrow-up"></i> Upgrade</button>
+                        <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''}><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
                         <button class="btn btn-full btn-danger unstake-btn"><i class="fas fa-sign-out-alt"></i> Unstake</button>
                     </div>
                 </div>
@@ -534,6 +573,22 @@ export class StakePage extends BasePage {
             building.progressCurrent = Number(progressCurrent);
             building.progressMax = Number(progressMax);
             building.progressPercent = Number(progressPercent);
+            
+            // Get upgrade info for this building
+            try {
+                building.upgradeInfo = await this.contracts.gridBuildings.getBuildingUpgradeInfo(id);
+            } catch (e) {
+                console.warn(`Could not get upgrade info for building ${id}:`, e);
+                building.upgradeInfo = {
+                    canUpgrade: false,
+                    currentLevel: building.level,
+                    maxLevel: 1,
+                    upgradeCost: 0n,
+                    errorMessage: 'Failed to get upgrade information',
+                    buildingType: building.buildingType,
+                    damaged: building.damaged
+                };
+            }
             
             // Get NFT information from altar contract
             // We need to find which NFT is staked to this building
@@ -726,8 +781,28 @@ export class StakePage extends BasePage {
     
     async upgradeBuilding(item) {
         try {
-            // Show loading modal
-            const loadingModal = this.modal.loading('Upgrading building...');
+            // Get upgrade info first to show appropriate error messages
+            let upgradeInfo = null;
+            try {
+                upgradeInfo = await this.contracts.gridBuildings.getBuildingUpgradeInfo(item.id);
+            } catch (e) {
+                console.warn(`Could not get upgrade info for building ${item.id}:`, e);
+            }
+            
+            // Check if upgrade is possible and show specific error if not
+            if (upgradeInfo && !upgradeInfo.canUpgrade) {
+                this.modal.error(upgradeInfo.errorMessage || 'Cannot upgrade building', { title: 'Upgrade Not Available' });
+                return;
+            }
+            
+            // Show loading modal with upgrade cost if available
+            let loadingMessage = 'Upgrading building...';
+            if (upgradeInfo && upgradeInfo.upgradeCost) {
+                const costInSonic = this.contracts.gridBuildings.formatUpgradeCost(upgradeInfo.upgradeCost);
+                loadingMessage = `Upgrading building (${costInSonic} SONIC)...`;
+            }
+            
+            const loadingModal = this.modal.loading(loadingMessage);
             
             await this.contracts.gridBuildings.upgradeBuilding(item.id);
             
@@ -741,7 +816,20 @@ export class StakePage extends BasePage {
             this.modal.success('Building upgraded successfully!', { title: 'Building Upgraded!' });
         } catch (e) {
             Logger.error('Error upgrading building:', e);
-            this.modal.error(e.message || 'Failed to upgrade building', { title: 'Upgrade Failed' });
+            
+            // Show specific error messages based on common failure reasons
+            let errorMessage = e.message || 'Failed to upgrade building';
+            if (errorMessage.includes('Insufficient SONIC balance')) {
+                errorMessage = 'Insufficient SONIC balance for upgrade';
+            } else if (errorMessage.includes('Cannot upgrade')) {
+                errorMessage = 'Building cannot be upgraded at this time';
+            } else if (errorMessage.includes('maximum level')) {
+                errorMessage = 'Building is already at maximum level';
+            } else if (errorMessage.includes('Upgrade level not unlocked')) {
+                errorMessage = 'Upgrade level not unlocked. Charge more buildings to unlock higher levels.';
+            }
+            
+            this.modal.error(errorMessage, { title: 'Upgrade Failed' });
         }
     }
 

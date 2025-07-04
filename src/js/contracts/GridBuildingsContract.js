@@ -157,4 +157,108 @@ export class GridBuildingsContract extends BaseContract {
         const address = await this.getAddress();
         return await this.call('calculateProductionProgress', address, buildingId);
     }
+
+    // Building Upgrade Information
+    async getBuildingUpgradeInfo(buildingId) {
+        try {
+            const address = await this.getAddress();
+            const building = await this.getBuilding(address, buildingId);
+            const config = await this.getBuildingConfig(building.buildingType);
+            
+            // Get max upgrade level from GameState
+            const gameState = await this.getGameStateContract();
+            const maxLevel = await gameState.getMaxUpgradeLevel(Number(building.buildingType));
+            
+            const currentLevel = Number(building.level);
+            const canUpgrade = currentLevel < maxLevel && !building.damaged;
+            
+            // Calculate upgrade cost
+            const upgradeCost = canUpgrade ? config.upgradeCost * BigInt(currentLevel + 1) : 0n;
+            
+            // Check if player has enough gold
+            const playerGold = await gameState.getPlayerGold();
+            const hasEnoughGold = playerGold >= upgradeCost;
+            
+            // Determine error message
+            let errorMessage = '';
+            if (!canUpgrade) {
+                if (currentLevel >= 3) {
+                    errorMessage = 'Building is already at maximum level';
+                } else if (currentLevel >= maxLevel) {
+                    errorMessage = 'Upgrade level not unlocked';
+                } else if (building.damaged) {
+                    errorMessage = 'Building is damaged';
+                }
+            } else if (!hasEnoughGold) {
+                errorMessage = 'Insufficient SONIC balance';
+            }
+            
+            return {
+                canUpgrade: canUpgrade && hasEnoughGold,
+                currentLevel,
+                maxLevel,
+                upgradeCost,
+                errorMessage,
+                buildingType: Number(building.buildingType),
+                damaged: building.damaged
+            };
+        } catch (error) {
+            console.error('Error getting building upgrade info:', error);
+            return {
+                canUpgrade: false,
+                currentLevel: 0,
+                maxLevel: 1,
+                upgradeCost: 0n,
+                errorMessage: 'Failed to get upgrade information',
+                buildingType: 0,
+                damaged: false
+            };
+        }
+    }
+
+    // Helper function to get GameState contract reference
+    async getGameStateContract() {
+        const { GameStateContract } = await import('./GameStateContract.js');
+        return new GameStateContract();
+    }
+
+    // Helper function to format upgrade cost for UI
+    formatUpgradeCost(upgradeCost) {
+        if (!upgradeCost || upgradeCost === 0n) return '0';
+        return ethers.formatEther(upgradeCost);
+    }
+
+    // Helper function to check if building can be upgraded
+    async canUpgradeBuilding(buildingId) {
+        const upgradeInfo = await this.getBuildingUpgradeInfo(buildingId);
+        return upgradeInfo.canUpgrade;
+    }
+
+    // Helper function to get building status for UI
+    async getBuildingStatus(buildingId) {
+        try {
+            const address = await this.getAddress();
+            const building = await this.getBuilding(address, buildingId);
+            const isAtCap = await this.isBuildingAtCap(buildingId);
+            
+            return {
+                damaged: building.damaged,
+                isAtCap,
+                level: Number(building.level),
+                buildingType: Number(building.buildingType),
+                lastCollectionTime: Number(building.lastCollectionTime),
+                lastUpgradeTime: Number(building.lastUpgradeTime)
+            };
+        } catch (error) {
+            console.error('Error getting building status:', error);
+            return {
+                damaged: false,
+                isAtCap: false,
+                level: 0,
+                buildingType: 0,
+                lastCollectionTime: 0,
+                lastUpgradeTime: 0
+            };
+        }
+    }
 } 

@@ -575,20 +575,41 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Get the maximum upgrade level a player can reach (backward compatibility)
+     * @dev Get progress towards next upgrade level for a building type
      * @param player The address of the player
-     * @return uint8 The maximum upgrade level (1-3)
+     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=REP_STATION)
+     * @return currentAmount Current recharge amount
+     * @return nextThreshold Amount needed for next level
+     * @return progressPercent Progress percentage (0-100)
+     * @return currentLevel Current max upgrade level
      */
-    function getMaxUpgradeLevel(address player) external view returns (uint8) {
-        return playerState[player].maxUpgradeLevelByType[0]; // Default to HOUSE type
-    }
-
-    /**
-     * @dev Get the total recharge amount for a player (backward compatibility)
-     * @param player The address of the player
-     * @return uint256 The total SONIC recharged
-     */
-    function getTotalRechargeAmount(address player) external view returns (uint256) {
-        return playerState[player].totalRechargeAmountByType[0]; // Default to HOUSE type
+    function getUpgradeProgress(address player, uint8 buildingType) external view returns (
+        uint256 currentAmount,
+        uint256 nextThreshold,
+        uint8 progressPercent,
+        uint8 currentLevel
+    ) {
+        require(buildingType <= 2, "Invalid building type");
+        
+        PlayerState storage state = playerState[player];
+        currentAmount = state.totalRechargeAmountByType[buildingType];
+        currentLevel = state.maxUpgradeLevelByType[buildingType];
+        
+        if (currentLevel >= 3) {
+            // Already at max level
+            nextThreshold = 0;
+            progressPercent = 100;
+        } else if (currentLevel == 2) {
+            // Progressing to level 3
+            nextThreshold = UPGRADE_LEVEL_3_THRESHOLD;
+            uint256 progress = currentAmount >= UPGRADE_LEVEL_2_THRESHOLD ? 
+                currentAmount - UPGRADE_LEVEL_2_THRESHOLD : 0;
+            uint256 required = UPGRADE_LEVEL_3_THRESHOLD - UPGRADE_LEVEL_2_THRESHOLD;
+            progressPercent = required > 0 ? uint8((progress * 100) / required) : 0;
+        } else {
+            // Progressing to level 2
+            nextThreshold = UPGRADE_LEVEL_2_THRESHOLD;
+            progressPercent = uint8((currentAmount * 100) / UPGRADE_LEVEL_2_THRESHOLD);
+        }
     }
 }
