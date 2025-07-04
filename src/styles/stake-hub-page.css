@@ -113,10 +113,6 @@
     font-weight: 600;
 }
 
-.stake-hub-page .progress-container {
-    margin-top: var(--spacing-xs);
-}
-
 .progress-bar-normal {
     background: linear-gradient(90deg, var(--color-success), #4ade80);
 }
