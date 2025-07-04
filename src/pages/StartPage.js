@@ -1,4 +1,3 @@
-import '../styles/start-page.css';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { BasePage } from './BasePage.js';
@@ -7,6 +6,7 @@ export class StartPage extends BasePage {
     constructor() {
         super();
         Logger.info('StartPage constructor called');
+        import('../styles/start-page.css');
         this.element = document.createElement('div');
         this.element.className = 'start-page';
         this.modal = new Modal();
