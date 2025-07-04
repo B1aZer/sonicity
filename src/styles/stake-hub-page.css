@@ -68,7 +68,7 @@
 }
 
 .building-status.normal {
-    color: var(--color-success);
+    color: var(--color-primary);
 }
 
 .building-status.damaged {

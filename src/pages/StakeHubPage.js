@@ -358,8 +358,15 @@ export class StakePage extends BasePage {
     renderCard(item) {
         if (item.isStaked) {
             // Staked building card (GridHub style)
-            const statusClass = item.damaged ? 'damaged' : item.isAtCap ? 'at-cap' : 'normal';
-            const statusText = item.damaged ? 'Damaged' : item.isAtCap ? 'At Cap' : 'Operating';
+            let statusClass = item.damaged ? 'damaged' : item.isAtCap ? 'at-cap' : 'normal';
+            let statusText = item.damaged ? 'Damaged' : item.isAtCap ? 'At Cap' : 'Operating';
+            
+            // Check if building has been charged (lastCollectionTime > 0)
+            const hasBeenCharged = item.lastCollectionTime && item.lastCollectionTime > 0;
+            if (!item.damaged && !item.isAtCap && !hasBeenCharged) {
+                statusText = 'Idle';
+                statusClass = 'not-charged';
+            }
             
             // Map buildingType to name/icon
             const tierNames = ['House', 'Farm', 'Rep Station'];
@@ -378,9 +385,6 @@ export class StakePage extends BasePage {
             let hoursRemaining = 0;
             let minutesRemaining = 0;
             let progressText = 'At Cap';
-            
-            // Check if building has been charged (lastCollectionTime > 0)
-            const hasBeenCharged = item.lastCollectionTime && item.lastCollectionTime > 0;
             
             if (!item.isAtCap) {
                 if (hasBeenCharged && item.progressCurrent !== undefined && item.progressMax !== undefined && item.progressMax > 0) {
