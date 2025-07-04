@@ -4,7 +4,7 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { ethers } from 'ethers';
 
-import('../styles/grid-hub-page.css');
+//import('../styles/grid-hub-page.css');
 
 export class GridHubPage extends BasePage {
     constructor() {
