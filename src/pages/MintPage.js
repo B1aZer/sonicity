@@ -230,7 +230,7 @@ export class MintPage extends BasePage {
                 <div class="page-section status-section">
                     <h2>Actions</h2>
                     <div class="building-actions">
-                        <button id="mint-button" class="btn btn-primary btn-lg" ${isConnected ? '' : 'disabled'}>
+                        <button id="mint-button" class="btn btn-primary btn-lg" ${isConnected ? '' : 'disabled'} ${!isConnected ? 'title="Please connect your wallet to mint NFTs. You\'ll need ETH to pay for gas fees and minting costs."' : ''}>
                             <span class="button-text">Mint NFT</span>
                         </button>
                     </div>
