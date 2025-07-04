@@ -11,9 +11,15 @@ export class MusicManager {
 
         this.listener = null;
         this.currentMusic = null;
+        this.nextMusic = null; // For crossfade
         this.musicVolume = 0.5;
         this.audioLoader = new THREE.AudioLoader();
         this.currentPage = null; // Track current page
+        
+        // Crossfade settings
+        this.crossfadeDuration = 2.0; // seconds
+        this.isCrossfading = false;
+        this.fadeInterval = null;
         
         // Load settings from localStorage
         this.loadSettings();
@@ -149,7 +155,7 @@ export class MusicManager {
     }
 
     /**
-     * Play a specific track
+     * Play a specific track with crossfade
      * @param {string} trackKey - The track key to play
      */
     playTrack(trackKey) {
@@ -166,31 +172,27 @@ export class MusicManager {
 
         console.log('MusicManager playTrack - starting to load track:', trackKey);
 
-        // Stop current music if playing
-        if (this.currentMusic) {
-            this.currentMusic.stop();
-            this.currentMusic = null;
+        // If we're already crossfading, stop the current crossfade
+        if (this.isCrossfading) {
+            this.stopCrossfade();
         }
 
-        // Create new audio
-        this.currentMusic = new THREE.Audio(this.listener);
+        // Create new audio for crossfade
+        this.nextMusic = new THREE.Audio(this.listener);
         
         this.audioLoader.load(
             track.path,
             (buffer) => {
                 try {
-                    console.log('MusicManager playTrack - audio loaded, setting isPlaying to true');
-                    this.currentMusic.setBuffer(buffer);
-                    this.currentMusic.setLoop(true);
-                    this.currentMusic.setVolume(this.musicVolume);
-                    this.currentMusic.play();
-                    this.currentTrack = trackKey;
-                    // Only set isPlaying if it's not already true (from toggleMusic)
-                    if (!this.isPlaying) {
-                        this.isPlaying = true;
-                    }
-                    console.log('MusicManager playTrack - isPlaying set to:', this.isPlaying);
-                    Logger.info(`Playing music: ${track.name}`);
+                    console.log('MusicManager playTrack - audio loaded, starting crossfade');
+                    this.nextMusic.setBuffer(buffer);
+                    this.nextMusic.setLoop(true);
+                    this.nextMusic.setVolume(0); // Start at 0 volume
+                    this.nextMusic.play();
+                    
+                    // Start crossfade
+                    this.startCrossfade(trackKey);
+                    
                 } catch (error) {
                     console.log('MusicManager playTrack - error playing music:', error);
                     this.isPlaying = false;
@@ -209,10 +211,104 @@ export class MusicManager {
     }
 
     /**
+     * Start crossfade between current and next track
+     * @param {string} trackKey - The new track key
+     */
+    startCrossfade(trackKey) {
+        if (!this.nextMusic) return;
+        
+        this.isCrossfading = true;
+        const track = this.tracks[trackKey];
+        
+        // Set up fade interval
+        const fadeSteps = 60; // 60 steps over crossfade duration
+        const fadeStepDuration = this.crossfadeDuration * 1000 / fadeSteps; // milliseconds
+        let currentStep = 0;
+        
+        this.fadeInterval = setInterval(() => {
+            currentStep++;
+            const progress = currentStep / fadeSteps;
+            
+            // Fade out current music
+            if (this.currentMusic) {
+                const currentVolume = this.musicVolume * (1 - progress);
+                this.currentMusic.setVolume(currentVolume);
+            }
+            
+            // Fade in next music
+            const nextVolume = this.musicVolume * progress;
+            this.nextMusic.setVolume(nextVolume);
+            
+            // When crossfade is complete
+            if (currentStep >= fadeSteps) {
+                this.completeCrossfade(trackKey);
+            }
+        }, fadeStepDuration);
+        
+        Logger.info(`Starting crossfade to: ${track.name}`);
+    }
+
+    /**
+     * Complete the crossfade
+     * @param {string} trackKey - The new track key
+     */
+    completeCrossfade(trackKey) {
+        // Stop the fade interval
+        if (this.fadeInterval) {
+            clearInterval(this.fadeInterval);
+            this.fadeInterval = null;
+        }
+        
+        // Stop and clean up old music
+        if (this.currentMusic) {
+            this.currentMusic.stop();
+            this.currentMusic = null;
+        }
+        
+        // Set new music as current
+        this.currentMusic = this.nextMusic;
+        this.nextMusic = null;
+        this.currentTrack = trackKey;
+        this.isCrossfading = false;
+        
+        // Ensure volume is set correctly
+        this.currentMusic.setVolume(this.musicVolume);
+        
+        // Only set isPlaying if it's not already true (from toggleMusic)
+        if (!this.isPlaying) {
+            this.isPlaying = true;
+        }
+        
+        const track = this.tracks[trackKey];
+        Logger.info(`Crossfade completed: ${track.name}`);
+    }
+
+    /**
+     * Stop current crossfade
+     */
+    stopCrossfade() {
+        if (this.fadeInterval) {
+            clearInterval(this.fadeInterval);
+            this.fadeInterval = null;
+        }
+        
+        if (this.nextMusic) {
+            this.nextMusic.stop();
+            this.nextMusic = null;
+        }
+        
+        this.isCrossfading = false;
+    }
+
+    /**
      * Stop music
      */
     stopMusic() {
         console.log('MusicManager stopMusic - before stop isPlaying:', this.isPlaying);
+        
+        // Stop any ongoing crossfade
+        this.stopCrossfade();
+        
         if (this.currentMusic) {
             this.currentMusic.stop();
             this.currentMusic = null;
@@ -289,11 +385,21 @@ export class MusicManager {
      */
     dispose() {
         this.stopMusic();
+        this.stopCrossfade();
         if (this.listener) {
             this.listener = null;
         }
         this.isInitialized = false;
         Logger.info('Music manager disposed');
+    }
+
+    /**
+     * Set the crossfade duration
+     * @param {number} duration - Duration in seconds (default: 2.0)
+     */
+    setCrossfadeDuration(duration) {
+        this.crossfadeDuration = Math.max(0.5, Math.min(5.0, duration)); // Clamp between 0.5 and 5 seconds
+        Logger.info(`Crossfade duration set to: ${this.crossfadeDuration}s`);
     }
 }
 
