@@ -20,7 +20,12 @@ export class Router {
     constructor(container) {
         this.container = container;
         this.currentPage = null;
-        this.pageCache = new Map();
+        // TODO: Page caching disabled for now to ensure reliable page state management
+        // To re-enable caching later:
+        // 1. Uncomment: this.pageCache = new Map();
+        // 2. Add pages to cache in getPageInstance()
+        // 3. Consider excluding complex pages (3D, heavy resources) from caching
+        // this.pageCache = new Map();
         this.game = null;
         
         // Pages that don't require wallet connection
@@ -128,16 +133,10 @@ export class Router {
     }
 
     /**
-     * Get or create page instance (with caching)
+     * Get or create page instance (no caching for now)
      */
     async getPageInstance(route) {
-        // Check cache first
-        if (this.pageCache.has(route)) {
-            Logger.info('Using cached page instance for:', route);
-            return this.pageCache.get(route);
-        }
-
-        // Create new page instance
+        // Create new page instance (caching disabled for reliability)
         const PageClass = this.routeMap[route];
         if (!PageClass) {
             Logger.error('Unknown route:', route);
@@ -147,9 +146,6 @@ export class Router {
         Logger.info('Creating new page instance for:', route);
         const pageInstance = new PageClass();
         pageInstance.route = route; // Add route property for identification
-        
-        // Cache the instance
-        this.pageCache.set(route, pageInstance);
         
         return pageInstance;
     }
@@ -172,24 +168,6 @@ export class Router {
             // Unmount current page
             this.currentPage.unmount();
             this.currentPage = null;
-        }
-    }
-
-    /**
-     * Clear page cache (useful for logout or major state changes)
-     */
-    clearCache() {
-        Logger.info('Clearing page cache');
-        this.pageCache.clear();
-    }
-
-    /**
-     * Clear cache for specific route
-     */
-    clearCacheForRoute(route) {
-        if (this.pageCache.has(route)) {
-            Logger.info('Clearing cache for route:', route);
-            this.pageCache.delete(route);
         }
     }
 
