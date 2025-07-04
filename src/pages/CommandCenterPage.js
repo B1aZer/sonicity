@@ -8,9 +8,9 @@ export class CommandCenterPage extends BasePage {
         super();
         import('../styles/command-center-page.css');
         Logger.info('CommandCenterPage constructor called');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page command-center-page';
-        this.modal = new Modal();
+        
         this.render();
     }
 

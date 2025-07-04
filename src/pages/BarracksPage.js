@@ -8,9 +8,9 @@ export class BarracksPage extends BasePage {
         super();
         import('../styles/shop-page.css');
         Logger.info('BarracksPage constructor called');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page';
-        this.modal = new Modal();
+        
         this.troopConfigs = {};
         this.render(); // Render the initial UI
     }

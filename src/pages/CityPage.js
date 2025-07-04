@@ -7,9 +7,9 @@ export class CityPage extends BasePage {
         super();
         import('../styles/city-page.css');
         Logger.info('CityPage constructor called');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page';
-        this.modal = new Modal();
+        
         this.render();
     }
 

@@ -8,9 +8,9 @@ export class MapPage extends BasePage {
     constructor() {
         super();
         Logger.info('MapPage constructor called');
-        this.element = document.createElement('div');
+        
         this.element.className = 'map-page';
-        this.modal = new Modal();
+        
         this.gameStateContract = new GameStateContract();
         this.render();
     }

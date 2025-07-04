@@ -7,9 +7,7 @@ export class StartPage extends BasePage {
         super();
         Logger.info('StartPage constructor called');
         import('../styles/start-page.css');
-        this.element = document.createElement('div');
         this.element.className = 'start-page';
-        this.modal = new Modal();
         this.render();
     }
 

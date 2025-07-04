@@ -8,9 +8,9 @@ export class WorkshopPage extends BasePage {
     constructor() {
         super();
         Logger.info('WorkshopPage constructor called');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page';
-        this.modal = new Modal();
+        
         
         // Initialize state
         this.setState({

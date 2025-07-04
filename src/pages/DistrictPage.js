@@ -9,9 +9,9 @@ export class DistrictPage extends BasePage {
     constructor() {
         super();
         Logger.info('DistrictPage constructor called');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page';
-        this.modal = new Modal();
+        
         this.render();
     }
 

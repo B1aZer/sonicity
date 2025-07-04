@@ -10,9 +10,9 @@ export class DashboardPage extends BasePage {
         Logger.info('DashboardPage constructor called');
         // Dynamically load styles
         import('../styles/dashboard-page.css');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page';
-        this.modal = new Modal();
+        
         this.render();
     }
 

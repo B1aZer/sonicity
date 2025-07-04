@@ -13,7 +13,6 @@ export class MintPage extends BasePage {
         import('../styles/mint-page.css');
         import('../styles/nft-collection.css');
         Logger.info('MintPage constructor called');
-        this.element = document.createElement('div');
         this.element.className = 'base-page mint-page';
         this.tokensMinted = 0;
         this.maxSupply = CONTRACT_CONFIG.MAX_SUPPLY;
@@ -21,7 +20,6 @@ export class MintPage extends BasePage {
         this.farmMaxSupply = CONTRACT_CONFIG.FARM_MAX_SUPPLY;
         this.farmMintPrice = CONTRACT_CONFIG.FARM_MINT_PRICE;
         this.lastMintedTokenId = null;
-        this.modal = new Modal();
         this.userNFTs = [];
         this.nftCard = new NFTCard();
         this.statusComponent = new StatusComponent();

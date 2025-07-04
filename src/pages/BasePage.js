@@ -28,6 +28,10 @@ export class BasePage {
         this.state = {};
         this.eventListeners = new Map();
         
+        // Create the main element
+        this.element = document.createElement('div');
+        this.element.className = 'base-page';
+        
         // Setup wallet event listener
         this.setupWalletListener();
     }
@@ -182,24 +186,34 @@ export class BasePage {
     }
 
     mount(container) {
-        console.log('BasePage.mount called');
+        Logger.info(`BasePage.mount called for ${this.constructor.name}`);
+        
+        // Check if already mounted
+        if (this.element.parentNode) {
+            Logger.info('Element already mounted, skipping');
+            return;
+        }
+        
+        // Append to container
         container.appendChild(this.element);
-        console.log('element appended to container');
+        Logger.info('Element appended to container');
         
         // Initialize the page automatically
         this.initialize().catch(error => {
             Logger.error('Error during page initialization:', error);
             this.modal.error('Failed to initialize page. Please try refreshing the page.');
         });
-        console.log('initialize called');
     }
 
     unmount() {
+        Logger.info(`BasePage.unmount called for ${this.constructor.name}`);
+        
         // Clean up event listeners
         this.removeEventListeners();
         
-        // Default cleanup - just remove the element
-        // Child classes can override this for custom cleanup and call super.unmount()
-        this.element.remove();
+        // Remove the element from DOM if it exists
+        if (this.element && this.element.parentNode) {
+            this.element.parentNode.removeChild(this.element);
+        }
     }
 } 

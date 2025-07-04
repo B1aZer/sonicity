@@ -9,9 +9,9 @@ export class GridHubPage extends BasePage {
         super();
         import('../styles/grid-hub-page.css');
         Logger.info('GridHubPage constructor called');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page';
-        this.modal = new Modal();
+        
         
         // Initialize state
         this.setState({

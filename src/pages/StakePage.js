@@ -10,9 +10,9 @@ export class StakePage extends BasePage {
         super();
         import('../styles/nft-collection.css');
         Logger.info('StakePage constructor called');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page';
-        this.modal = new Modal();
+        
         this.statusComponent = new StatusComponent();
         
         // Initialize NFT card components

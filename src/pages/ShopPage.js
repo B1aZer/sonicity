@@ -7,9 +7,9 @@ export class ShopPage extends BasePage {
     constructor() {
         super();
         import('../styles/shop-page.css');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page';
-        this.modal = new Modal();
+        
         this.render();
     }
 

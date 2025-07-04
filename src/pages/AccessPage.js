@@ -7,9 +7,7 @@ export class AccessPage extends BasePage {
     constructor() {
         super();
         Logger.info('AccessPage constructor called');
-        this.element = document.createElement('div');
         this.element.className = 'base-page';
-        this.modal = new Modal();
         
         // Initialize state
         this.setState({

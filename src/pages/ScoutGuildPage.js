@@ -9,9 +9,9 @@ export class ScoutGuildPage extends BasePage {
     constructor() {
         super();
         Logger.info('ScoutGuildPage constructor called');
-        this.element = document.createElement('div');
+        
         this.element.className = 'base-page scout-guild-page';
-        this.modal = new Modal();
+        
         this.searchTimer = null;
         this.render();
     }
