@@ -51,6 +51,12 @@ export class AssetLoader {
                 const buildingData = BUILDINGS[type];
                 const assetInfo = buildingData.assets;
                 
+                // Skip buildings that don't have assets defined (models not yet implemented)
+                if (!assetInfo) {
+                    console.log(`AssetLoader: Skipping ${type} - no assets defined (model not yet implemented)`);
+                    continue;
+                }
+                
                 // Load all levels for each building
                 for (const [level, levelInfo] of Object.entries(assetInfo.levels)) {
                     const modelKey = `${type}_LVL${level}`;

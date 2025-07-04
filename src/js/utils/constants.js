@@ -193,12 +193,7 @@ export const BUILDINGS = {
         position: { x: -15, y: 0, z: -65 },
         rotation: 0,
         tier: 0,
-        assets: {
-            baseUrl: 'assets/outpost',
-            levels: {
-                1: { url: 'assets/outpost.glb' }
-            }
-        }
+        assets: null, // Model not yet implemented
     },
     GARRISON: {
         name: 'Garrison',
@@ -207,12 +202,7 @@ export const BUILDINGS = {
         position: { x: 50, y: 0, z: -45 },
         rotation: 0,
         tier: 1,
-        assets: {
-            baseUrl: 'assets/garrison',
-            levels: {
-                1: { url: 'assets/garrison.glb' }
-            }
-        }
+        assets: null,
     },
     TAVERN: {
         name: 'Tavern',
@@ -221,12 +211,7 @@ export const BUILDINGS = {
         position: { x: -25, y: 0, z: -75 },
         rotation: 0,
         tier: 2,
-        assets: {
-            baseUrl: 'assets/tavern',
-            levels: {
-                1: { url: 'assets/tavern.glb' }
-            }
-        }
+        assets: null, // Model not yet implemented
     },
     ADVENTURE_CAMP: {
         name: 'Adventure Camp',
@@ -235,12 +220,7 @@ export const BUILDINGS = {
         position: { x: 25, y: 0, z: -75 },
         rotation: 0,
         tier: 2,
-        assets: {
-            baseUrl: 'assets/adventure_camp',
-            levels: {
-                1: { url: 'assets/adventure_camp.glb' }
-            }
-        }
+        assets: null, // Model not yet implemented
     },
     MAGE_TOWER: {
         name: 'Mage Tower',
@@ -249,12 +229,7 @@ export const BUILDINGS = {
         position: { x: -35, y: 0, z: -85 },
         rotation: 0,
         tier: 2,
-        assets: {
-            baseUrl: 'assets/mage_tower',
-            levels: {
-                1: { url: 'assets/mage_tower.glb' }
-            }
-        }
+        assets: null,
     },
     TACTICS_CENTER: {
         name: 'Tactics Center',
@@ -263,12 +238,7 @@ export const BUILDINGS = {
         position: { x: 35, y: 0, z: -85 },
         rotation: 0,
         tier: 2,
-        assets: {
-            baseUrl: 'assets/tactics_center',
-            levels: {
-                1: { url: 'assets/tactics_center.glb' }
-            }
-        }
+        assets: null,
     },
     GEM_WORKSHOP: {
         name: 'Gem Workshop',
@@ -277,12 +247,7 @@ export const BUILDINGS = {
         position: { x: -45, y: 0, z: -95 },
         rotation: 0,
         tier: 3,
-        assets: {
-            baseUrl: 'assets/gem_workshop',
-            levels: {
-                1: { url: 'assets/gem_workshop.glb' }
-            }
-        }
+        assets: null, // Model not yet implemented
     },
     DIAMOND_VAULT: {
         name: 'Diamond Vault',
@@ -291,12 +256,7 @@ export const BUILDINGS = {
         position: { x: 45, y: 0, z: -95 },
         rotation: 0,
         tier: 3,
-        assets: {
-            baseUrl: 'assets/diamond_vault',
-            levels: {
-                1: { url: 'assets/diamond_vault.glb' }
-            }
-        }
+        assets: null, // Model not yet implemented
     },
     ARCANUM_OF_NAMES: {
         name: 'Arcanum of Names',
@@ -305,12 +265,7 @@ export const BUILDINGS = {
         position: { x: 0, y: 0, z: -105 },
         rotation: 0,
         tier: 3,
-        assets: {
-            baseUrl: 'assets/arcanum_of_names',
-            levels: {
-                1: { url: 'assets/arcanum_of_names.glb' }
-            }
-        }
+        assets: null // Model not yet implemented
     },
     REFINERY: {
         name: 'Refinery',
@@ -319,12 +274,7 @@ export const BUILDINGS = {
         position: { x: -55, y: 0, z: -105 },
         rotation: 0,
         tier: 3,
-        assets: {
-            baseUrl: 'assets/refinery',
-            levels: {
-                1: { url: 'assets/refinery.glb' }
-            }
-        }
+        assets: null // Model not yet implemented
     },
     COUNCIL_HALL: {
         name: 'Council Hall',
@@ -333,12 +283,7 @@ export const BUILDINGS = {
         position: { x: 55, y: 0, z: -105 },
         rotation: 0,
         tier: 4,
-        assets: {
-            baseUrl: 'assets/council_hall',
-            levels: {
-                1: { url: 'assets/council_hall.glb' }
-            }
-        }
+        assets: null // Model not yet implemented
     },
     FORTRESS_WALLS: {
         name: 'Fortress Walls',
@@ -347,12 +292,7 @@ export const BUILDINGS = {
         position: { x: -65, y: 0, z: -115 },
         rotation: 0,
         tier: 4,
-        assets: {
-            baseUrl: 'assets/fortress_walls',
-            levels: {
-                1: { url: 'assets/fortress_walls.glb' }
-            }
-        }
+        assets: null // Model not yet implemented
     },
     EMBASSY_HOME: {
         name: 'Embassy Home',
@@ -361,12 +301,7 @@ export const BUILDINGS = {
         position: { x: 65, y: 0, z: -115 },
         rotation: 0,
         tier: 4,
-        assets: {
-            baseUrl: 'assets/embassy_home',
-            levels: {
-                1: { url: 'assets/embassy_home.glb' }
-            }
-        }
+        assets: null // Model not yet implemented
     },
     TREASURY_VAULT: {
         name: 'Treasury Vault',
@@ -375,12 +310,7 @@ export const BUILDINGS = {
         position: { x: 0, y: 0, z: -125 },
         rotation: 0,
         tier: 4,
-        assets: {
-            baseUrl: 'assets/treasury_vault',
-            levels: {
-                1: { url: 'assets/treasury_vault.glb' }
-            }
-        }
+        assets: null // Model not yet implemented
     },
 };
 
