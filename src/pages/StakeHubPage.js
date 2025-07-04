@@ -626,8 +626,8 @@ export class StakePage extends BasePage {
     // --- Action handlers ---
     async stakeNFT(tokenId, collection) {
         try {
-            // Show loading modal
-            const loadingModal = this.modal.loading('Staking NFT...');
+            // Phase 1: Approve NFT transfer
+            const loadingModal = this.modal.loading('Approving NFT transfer...');
             
             // Determine tier from UI or NFT
             let tier = 0;
@@ -638,13 +638,20 @@ export class StakePage extends BasePage {
             const nftContract = collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()
                 ? this.contracts.farmNft
                 : this.contracts.nft;
+            
             await nftContract.approve(altarAddress, tokenId);
+            
+            // Close approval loading modal
+            loadingModal.close();
+            
+            // Phase 2: Stake NFT
+            const stakingModal = this.modal.loading('Staking NFT...');
             
             // Stake NFT
             await this.contracts.altar.stake(tokenId, tier, collection);
             
-            // Close loading modal
-            loadingModal.close();
+            // Close staking loading modal
+            stakingModal.close();
             
             // Reload data
             await this.loadUserData();
