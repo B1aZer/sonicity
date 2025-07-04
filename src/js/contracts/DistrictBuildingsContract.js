@@ -88,9 +88,11 @@ export class DistrictBuildingsContract extends BaseContract {
         for (let i = 0; i < buildingTypes.length; i++) {
             const isBuilt = await this.call('isDistrictBuildingBuilt', address, buildingTypes[i]);
             if (isBuilt) {
+                const level = await this.call('getBuildingLevel', address, buildingTypes[i]);
                 builtBuildings.push({
                     type: buildingTypes[i],
                     name: buildingNames[i],
+                    level: level,
                     config: configs[i]
                 });
             }

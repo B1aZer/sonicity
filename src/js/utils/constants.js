@@ -26,6 +26,11 @@ export const CONTRACT_CONFIG = {
 export const SHOW_PERFORMANCE_MONITOR = true;
 
 // Building definitions combining visual and game properties
+// NOTE: These building types must match the DistrictBuildingType enum in DistrictBuildings.sol
+// Contract enum order: CITY_HALL, ALTAR, MINE, SHOP, WORKSHOP, OUTPOST, DEFENSE_TOWER, BARRACKS, 
+// SCOUT_GUILD, COMMAND_CENTER, GARRISON, TAVERN, ADVENTURE_CAMP, MAGE_TOWER, TACTICS_CENTER, 
+// GEM_WORKSHOP, DIAMOND_VAULT, ARCANUM_OF_NAMES, REFINERY, COUNCIL_HALL, FORTRESS_WALLS, 
+// EMBASSY_HOME, TREASURY_VAULT
 export const BUILDINGS = {
     // Grid-based buildings (dynamic placement)
     HOUSE: {
@@ -377,3 +382,34 @@ export const SCOUT_GUILD_MESSAGES = [
     "Their torches flickered. Tracks led to nothing. The trail is cold.",
     "They wandered far, but no city dared reveal itself."
 ];
+
+// Validation function to ensure building constants are in sync with smart contract
+export function validateBuildingConstants() {
+    const expectedDistrictBuildings = [
+        'CITY_HALL', 'ALTAR', 'MINE', 'SHOP', 'WORKSHOP', 'OUTPOST', 'DEFENSE_TOWER', 
+        'BARRACKS', 'SCOUT_GUILD', 'COMMAND_CENTER', 'GARRISON', 'TAVERN', 'ADVENTURE_CAMP', 
+        'MAGE_TOWER', 'TACTICS_CENTER', 'GEM_WORKSHOP', 'DIAMOND_VAULT', 'ARCANUM_OF_NAMES', 
+        'REFINERY', 'COUNCIL_HALL', 'FORTRESS_WALLS', 'EMBASSY_HOME', 'TREASURY_VAULT'
+    ];
+    
+    const missingBuildings = expectedDistrictBuildings.filter(building => !BUILDINGS[building]);
+    const extraBuildings = Object.keys(BUILDINGS).filter(building => 
+        !BUILDINGS[building].isGridBuilding && !expectedDistrictBuildings.includes(building)
+    );
+    
+    if (missingBuildings.length > 0) {
+        console.error('Missing building constants:', missingBuildings);
+        return false;
+    }
+    
+    if (extraBuildings.length > 0) {
+        console.warn('Extra building constants (not in contract):', extraBuildings);
+    }
+    
+    return true;
+}
+
+// Run validation in development
+if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    validateBuildingConstants();
+}
