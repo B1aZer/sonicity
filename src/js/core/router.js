@@ -88,7 +88,8 @@ export class Router {
      * Get route from path
      */
     getRouteFromPath(path) {
-        return path.slice(1) || '';
+        // Remove leading slash if present
+        return path.startsWith('/') ? path.slice(1) : path;
     }
 
     /**
