@@ -3,10 +3,12 @@ import { SHOP_ITEMS } from '../js/utils/constants.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 
+import('../styles/shop-page.css');
+
 export class ShopPage extends BasePage {
     constructor() {
         super();
-        import('../styles/shop-page.css');
+        
         
         this.element.className = 'base-page';
         

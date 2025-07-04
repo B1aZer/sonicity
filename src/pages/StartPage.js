@@ -2,11 +2,13 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { BasePage } from './BasePage.js';
 
+import('../styles/start-page.css');
+
 export class StartPage extends BasePage {
     constructor() {
         super();
         Logger.info('StartPage constructor called');
-        import('../styles/start-page.css');
+        
         this.element.className = 'start-page';
         this.render();
     }

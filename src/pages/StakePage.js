@@ -5,10 +5,12 @@ import { BasePage } from './BasePage.js';
 import { StatusComponent } from '../components/StatusComponent.js';
 import { Modal } from '../js/utils/modal.js';
 
+import('../styles/nft-collection.css');
+
 export class StakePage extends BasePage {
     constructor() {
         super();
-        import('../styles/nft-collection.css');
+        
         Logger.info('StakePage constructor called');
         
         this.element.className = 'base-page';

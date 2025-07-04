@@ -7,11 +7,14 @@ import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
 import { StatusComponent } from '../components/StatusComponent.js';
 
+import('../styles/mint-page.css');
+import('../styles/nft-collection.css');
+
 export class MintPage extends BasePage {
     constructor() {
         super();
-        import('../styles/mint-page.css');
-        import('../styles/nft-collection.css');
+        
+        
         Logger.info('MintPage constructor called');
         this.element.className = 'base-page mint-page';
         this.tokensMinted = 0;

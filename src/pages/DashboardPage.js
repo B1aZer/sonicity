@@ -4,12 +4,14 @@ import { ethers } from 'ethers';
 import { Modal } from '../js/utils/modal.js';
 import { BasePage } from './BasePage.js';
 
+import('../styles/dashboard-page.css');
+
 export class DashboardPage extends BasePage {
     constructor() {
         super();
         Logger.info('DashboardPage constructor called');
         // Dynamically load styles
-        import('../styles/dashboard-page.css');
+        
         
         this.element.className = 'base-page';
         

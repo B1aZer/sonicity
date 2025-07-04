@@ -3,10 +3,12 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 
+import('../styles/shop-page.css');
+
 export class BarracksPage extends BasePage {
     constructor() {
         super();
-        import('../styles/shop-page.css');
+        
         Logger.info('BarracksPage constructor called');
         
         this.element.className = 'base-page';

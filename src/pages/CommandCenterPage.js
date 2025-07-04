@@ -2,11 +2,13 @@ import { BasePage } from './BasePage.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 
+import('../styles/command-center-page.css');
+
 
 export class CommandCenterPage extends BasePage {
     constructor() {
         super();
-        import('../styles/command-center-page.css');
+        
         Logger.info('CommandCenterPage constructor called');
         
         this.element.className = 'base-page command-center-page';

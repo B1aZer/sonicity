@@ -7,10 +7,12 @@ import { Modal } from '../js/utils/modal.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { ethers } from 'ethers';
 
+import('../styles/stake-hub-page.css');
+
 export class StakePage extends BasePage {
     constructor() {
         super();
-        import('../styles/stake-hub-page.css');
+        
         Logger.info('StakePage (GridHub style) constructor called');
         
         this.element.className = 'base-page stake-hub-page';
