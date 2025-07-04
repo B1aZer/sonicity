@@ -410,6 +410,9 @@ export class StakePage extends BasePage {
             const statusClass = 'unstaked';
             const statusText = 'Unstaked';
             const tokenId = item.tokenId ? item.tokenId : '-';
+            const contract = item.contractAddress ? item.contractAddress : '-';
+            const contractShort = contract !== '-' ? `...${contract.slice(-6)}` : '-';
+            const tierName = this.getTierName(item.tier);
             return `
                 <div class="building-card" data-nft-id="${item.tokenId}">
                     <div class="building-header">
@@ -430,6 +433,8 @@ export class StakePage extends BasePage {
                     </div>
                     <div class="building-details">
                         <div class="detail-item"><span class="detail-label">Token ID:</span><span class="detail-value">${tokenId}</span></div>
+                        <div class="detail-item"><span class="detail-label">Contract:</span><span class="detail-value">${contractShort}</span></div>
+                        <div class="detail-item"><span class="detail-label">Tier:</span><span class="detail-value">${tierName}</span></div>
                     </div>
                     <div class="building-actions">
                         <button class="btn btn-full btn-primary stake-btn">Stake</button>
@@ -463,6 +468,15 @@ export class StakePage extends BasePage {
             case 1: return '🌾';
             case 2: return '⭐';
             default: return '🏗️';
+        }
+    }
+
+    getTierName(tier) {
+        switch (Number(tier)) {
+            case 0: return 'House';
+            case 1: return 'Farm';
+            case 2: return 'Rep Station';
+            default: return 'Unknown';
         }
     }
 
@@ -748,4 +762,4 @@ export class StakePage extends BasePage {
             this.element.appendChild(statusElement);
         }
     }
-} 
+}
