@@ -124,7 +124,11 @@ export class BasePage {
     }
 
     async onWalletConnected(walletResult) {
-        // To be implemented by child classes
+        // WARNING: Do not override this method in child pages!
+        // The wallet connection is now handled by calling onInitialized when the wallet connects.
+        // Child pages should only implement onInitialized to handle both initial page load
+        // and wallet connection events.
+        Logger.warn('onWalletConnected called - this method should not be overridden. Use onInitialized instead.');
     }
 
     // Minimal render system

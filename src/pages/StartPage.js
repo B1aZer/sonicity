@@ -34,15 +34,6 @@ export class StartPage extends BasePage {
         }
     }
 
-    async onWalletConnected(walletResult) {
-        // Enable start button when wallet is connected
-        const startButton = this.element.querySelector('.start-button');
-        if (startButton) {
-            startButton.disabled = false;
-            startButton.textContent = 'Start Game';
-        }
-    }
-
     setupEventListeners() {
         const startButton = this.element.querySelector('.start-button');
         if (startButton) {
