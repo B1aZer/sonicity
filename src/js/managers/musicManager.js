@@ -43,7 +43,8 @@ export class MusicManager {
         // Page music mapping - only override for specific pages
         this.pageMusicMap = {
             '': 'title-theme',                    // Start page - Title Theme
-            'access': 'title-theme'               // Access page - Title Theme
+            'access': 'title-theme',               // Access page - Title Theme
+            'mint': 'title-theme' 
         };
 
         this.currentTrack = null;
