@@ -70,7 +70,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         
         gameState = GameState(_gameStateAddress);
         gridBuildings = GridBuildings(_gridBuildingsAddress);
-        minStakingDuration = 7 days;
+        minStakingDuration = 30 hours;
     }
 
     // Required by UUPS pattern
