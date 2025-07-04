@@ -231,12 +231,12 @@ export class StakePage extends BasePage {
                 <div class="donation-form" style="margin-top:16px; align-items: center;">
                     <input type="number" class="input input-lg donation-amount" min="1" max="${buildingCount}" value="${rechargeDefault}" />
                     <button class="btn btn-primary btn-md recharge-tier-btn">
-                        <i class="fas fa-bolt"></i> Recharge
+                        <i class="fas fa-bolt"></i> Charge
                         <!-- <span class="recharge-price">${rechargePrice}</span>
                         <span class="recharge-currency">Sonic</span> -->
                     </button>
                 </div>
-                <div class="progress-container" title="${progress.current} / ${progress.next} recharge">
+                <div class="progress-container" title="${progress.current} / ${progress.next} charge">
                     <div class="progress-bar" style="width:${progress.percent}%"></div>
                 </div>
             </div>
@@ -311,7 +311,7 @@ export class StakePage extends BasePage {
     async rechargeNInTier(tier, n) {
         try {
             // Show loading modal
-            const loadingModal = this.modal.loading(`Recharging ${n} building(s)...`);
+            const loadingModal = this.modal.loading(`Charging ${n} building(s)...`);
             
             // Find N staked buildings in this tier, prioritize at cap, then oldest
             const items = this.state.byTier[tier].filter(i => i.isStaked && !i.damaged);
@@ -319,7 +319,7 @@ export class StakePage extends BasePage {
             const notAtCap = items.filter(b => !b.isAtCap);
             notAtCap.sort((a, b) => (a.lastCollection || '').localeCompare(b.lastCollection || ''));
             const selected = [...atCap, ...notAtCap].slice(0, n);
-            if (selected.length === 0) throw new Error('No buildings to recharge');
+            if (selected.length === 0) throw new Error('No buildings to charge');
             
             await this.contracts.gridBuildings.rechargeBuildings(selected.map(b => b.id));
             
@@ -330,10 +330,10 @@ export class StakePage extends BasePage {
             await this.loadUserData();
             
             // Show success modal
-            this.modal.success('Buildings recharged successfully!', { title: 'Buildings Recharged!' });
+            this.modal.success('Buildings charged successfully!', { title: 'Buildings Charged!' });
         } catch (e) {
-            Logger.error('Error recharging buildings:', e);
-            this.modal.error(e.message || 'Failed to recharge buildings', { title: 'Recharge Failed' });
+            Logger.error('Error charging buildings:', e);
+            this.modal.error(e.message || 'Failed to charge buildings', { title: 'Charge Failed' });
         }
     }
 
@@ -398,7 +398,7 @@ export class StakePage extends BasePage {
                         </div>
                     </div>
                     <div class="building-actions">
-                        <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Recharge</button>
+                        <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Charge</button>
                         <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
                         <button class="btn btn-full btn-primary upgrade-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-arrow-up"></i> Upgrade</button>
                         <button class="btn btn-full btn-danger unstake-btn"><i class="fas fa-sign-out-alt"></i> Unstake</button>
@@ -695,7 +695,7 @@ export class StakePage extends BasePage {
     async rechargeBuilding(item) {
         try {
             // Show loading modal
-            const loadingModal = this.modal.loading('Recharging building...');
+            const loadingModal = this.modal.loading('Charging building...');
             
             await this.contracts.gridBuildings.rechargeBuilding(item.id);
             
@@ -706,10 +706,10 @@ export class StakePage extends BasePage {
             await this.loadUserData();
             
             // Show success modal
-            this.modal.success('Building recharged successfully!', { title: 'Building Recharged!' });
+            this.modal.success('Building charged successfully!', { title: 'Building Charged!' });
         } catch (e) {
-            Logger.error('Error recharging building:', e);
-            this.modal.error(e.message || 'Failed to recharge building', { title: 'Recharge Failed' });
+            Logger.error('Error charging building:', e);
+            this.modal.error(e.message || 'Failed to charge building', { title: 'Charge Failed' });
         }
     }
     
