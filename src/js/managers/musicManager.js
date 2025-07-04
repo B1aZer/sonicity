@@ -111,7 +111,36 @@ export class MusicManager {
             Logger.info('Music manager initialized with non-positional audio');
         }
 
+        // Set up user interaction handler to resume AudioContext
+        this.setupAudioContextResume();
+
         this.isInitialized = true;
+    }
+
+    /**
+     * Set up AudioContext resume on user interaction
+     */
+    setupAudioContextResume() {
+        const resumeAudioContext = () => {
+            if (this.listener && this.listener.context && this.listener.context.state === 'suspended') {
+                this.listener.context.resume().then(() => {
+                    Logger.info('AudioContext resumed successfully');
+                }).catch(error => {
+                    Logger.error('Failed to resume AudioContext:', error);
+                });
+            }
+        };
+
+        // Resume on any user interaction
+        const events = ['click', 'touchstart', 'keydown', 'mousedown'];
+        events.forEach(event => {
+            document.addEventListener(event, resumeAudioContext, { once: true });
+        });
+
+        // Also try to resume immediately if context is already available
+        if (this.listener && this.listener.context) {
+            resumeAudioContext();
+        }
     }
 
     /**
@@ -189,10 +218,20 @@ export class MusicManager {
                     this.nextMusic.setBuffer(buffer);
                     this.nextMusic.setLoop(true);
                     this.nextMusic.setVolume(0); // Start at 0 volume
-                    this.nextMusic.play();
                     
-                    // Start crossfade
-                    this.startCrossfade(trackKey);
+                    // Resume AudioContext if suspended before playing
+                    if (this.listener && this.listener.context && this.listener.context.state === 'suspended') {
+                        this.listener.context.resume().then(() => {
+                            this.nextMusic.play();
+                            this.startCrossfade(trackKey);
+                        }).catch(error => {
+                            Logger.error('Failed to resume AudioContext for music playback:', error);
+                            this.isPlaying = false;
+                        });
+                    } else {
+                        this.nextMusic.play();
+                        this.startCrossfade(trackKey);
+                    }
                     
                 } catch (error) {
                     console.log('MusicManager playTrack - error playing music:', error);
