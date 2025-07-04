@@ -11,10 +11,12 @@ export class MusicManager {
 
         this.listener = null;
         this.currentMusic = null;
-        this.isPlaying = false; // Start with music disabled
         this.musicVolume = 0.5;
         this.audioLoader = new THREE.AudioLoader();
         this.currentPage = null; // Track current page
+        
+        // Load settings from localStorage
+        this.loadSettings();
         
         // Music tracks
         this.tracks = {
@@ -40,6 +42,45 @@ export class MusicManager {
 
         this.currentTrack = null;
         this.isInitialized = false;
+    }
+
+    /**
+     * Load settings from localStorage
+     */
+    loadSettings() {
+        try {
+            const savedSettings = localStorage.getItem('musicSettings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                this.isPlaying = settings.isPlaying || false;
+                this.musicVolume = settings.musicVolume || 0.5;
+                console.log('MusicManager: Loaded settings from localStorage:', settings);
+            } else {
+                this.isPlaying = false; // Start with music disabled
+                this.musicVolume = 0.5;
+                console.log('MusicManager: No saved settings, using defaults');
+            }
+        } catch (error) {
+            console.warn('MusicManager: Failed to load settings from localStorage:', error);
+            this.isPlaying = false;
+            this.musicVolume = 0.5;
+        }
+    }
+
+    /**
+     * Save settings to localStorage
+     */
+    saveSettings() {
+        try {
+            const settings = {
+                isPlaying: this.isPlaying,
+                musicVolume: this.musicVolume
+            };
+            localStorage.setItem('musicSettings', JSON.stringify(settings));
+            console.log('MusicManager: Saved settings to localStorage:', settings);
+        } catch (error) {
+            console.warn('MusicManager: Failed to save settings to localStorage:', error);
+        }
     }
 
     /**
@@ -200,6 +241,9 @@ export class MusicManager {
             }
         }
         console.log('MusicManager toggleMusic - after toggle isPlaying:', this.isPlaying);
+        
+        // Save settings after toggle
+        this.saveSettings();
     }
 
     /**
@@ -212,6 +256,9 @@ export class MusicManager {
             this.currentMusic.setVolume(this.musicVolume);
         }
         Logger.info(`Music volume set to: ${this.musicVolume}`);
+        
+        // Save settings after volume change
+        this.saveSettings();
     }
 
     /**
