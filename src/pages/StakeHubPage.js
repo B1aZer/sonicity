@@ -142,7 +142,7 @@ export class StakePage extends BasePage {
         try {
             const stakedBuildings = await this.getStakedBuildings(userAddress);
             usedSlots = stakedBuildings.length;
-            totalSlots = usedSlots + 2;
+            totalSlots = Number(await this.contracts.gameState.getBuildingSlots());
         } catch (e) {
             usedSlots = 0;
             totalSlots = 0;
@@ -236,7 +236,7 @@ export class StakePage extends BasePage {
                 <div class="status-grid">
                     <div class="status-item"><span class="status-label">Buildings:</span><span class="status-value">${buildingCount}</span></div>
                     <div class="status-item"><span class="status-label">Claimable:</span><span class="status-value">${claimable}</span></div>
-                    <div class="status-item"><span class="status-label">Max Level:</span><span class="status-value">${formattedProgress.currentLevel}</span></div>
+                    <div class="status-item"><span class="status-label">Unlocked Level:</span><span class="status-value">${formattedProgress.currentLevel}</span></div>
                 </div>
             </div>
         `;
