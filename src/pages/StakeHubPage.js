@@ -202,7 +202,7 @@ export class StakePage extends BasePage {
     }
 
     async renderTierContent(tier) {
-        const grid = this.element.querySelector(`.tier-content[data-tier="${tier}"] .buildings-grid`);
+        const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
         const items = this.state.byTier[tier];
         const staked = items.filter(i => i.isStaked);
         
@@ -232,7 +232,8 @@ export class StakePage extends BasePage {
             upgradeStatusText = ''; // Remove redundant text, progress bar shows the info
         }
         
-        const statusSection = `
+        // Build the complete tier content HTML
+        const tierHTML = `
             <div class="page-section tier-status-section">
                 <h3>${tierNames[tier]} Status</h3>
                 <div class="status-grid">
@@ -241,10 +242,7 @@ export class StakePage extends BasePage {
                     <div class="status-item"><span class="status-label">Unlocked Level:</span><span class="status-value">${formattedProgress.currentLevel}</span></div>
                 </div>
             </div>
-        `;
-        
-        // Progress + recharge section (input, button, progress bar in a row)
-        const progressSection = `
+            
             <div class="page-section tier-progress-section">
                 <h3>${rechargeHeader}</h3>
                 <div class="donation-form" style="margin-top:16px; align-items: center;">
@@ -263,35 +261,32 @@ export class StakePage extends BasePage {
                     `}
                 </div>
             </div>
-        `;
-        
-        // Claim all section
-        const actionsSection = `
+            
             <div class="page-section tier-actions-section">
                 <h3>${tierNames[tier]} Actions</h3>
                 <button class="btn btn-md btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
             </div>
+            
+            <div class="buildings-grid">
+                ${!items || items.length === 0 ? 
+                    `<div class="empty-state"><div class="empty-icon">🏗️</div><h3>No Buildings or NFTs in this tier</h3></div>` :
+                    items.map(item => this.renderCard(item)).join('')
+                }
+            </div>
         `;
         
-        // --- Buildings grid ---
-        if (!items || items.length === 0) {
-            grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🏗️</div><h3>No Buildings or NFTs in this tier</h3></div>`;
-        } else {
-            grid.innerHTML = items.map(item => this.renderCard(item)).join('');
-        }
-        
-        // Render status, progress/recharge, and actions sections above grid
-        grid.insertAdjacentHTML('beforebegin', statusSection + progressSection + actionsSection);
+        // Replace the entire tier content
+        tierContent.innerHTML = tierHTML;
         
         // Attach event listeners for action buttons
         if (items && items.length > 0) {
+            const grid = tierContent.querySelector('.buildings-grid');
             Array.from(grid.children).forEach((card, i) => {
                 this.attachCardListeners(card, items[i]);
             });
         }
         
         // Attach per-tier action listeners
-        const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
         tierContent.querySelector('.claim-all-btn')?.addEventListener('click', () => this.claimAllInTier(tier));
         tierContent.querySelector('.recharge-tier-btn')?.addEventListener('click', () => {
             const input = tierContent.querySelector('.recharge-amount');
