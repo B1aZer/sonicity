@@ -47,13 +47,18 @@ export class StakePage extends BasePage {
             availableNFTs: [],
             stakedBuildings: [],
             byTier: { 0: [], 1: [], 2: [], 3: [] },
-            selectedTier: 0
+            selectedTier: 0,
+            // Resource values
+            gold: 0,
+            food: 0,
+            diamonds: 0,
+            repPoints: 0
         };
         this.render();
     }
 
     async onInitialized(walletResult) {
-        Logger.info('StakePage onInitialized called with wallet:', walletResult);
+        Logger.info('StakePage (GridHub style) onInitialized called with wallet:', walletResult);
         if (!walletResult || !walletResult.address) {
             Logger.error('No wallet address provided in onInitialized');
             this.modal.error('Please connect your wallet first.');
@@ -118,6 +123,28 @@ export class StakePage extends BasePage {
                         </div>
                     </div>
                 </div>
+                <!-- Resources Status Section -->
+                <div class="page-section resources-status-section">
+                    <h2>Resources</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Gold:</span>
+                            <span class="status-value gold-value" style="color: #FFD700; font-weight: bold;">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Food:</span>
+                            <span class="status-value food-value" style="color: #90EE90; font-weight: bold;">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Diamonds:</span>
+                            <span class="status-value diamonds-value" style="color: #00BCD4; font-weight: bold;">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Rep Points:</span>
+                            <span class="status-value rep-points-value" style="color: #4CAF50; font-weight: bold;">0</span>
+                        </div>
+                    </div>
+                </div>
                 <!-- Tier Tabs -->
                 <div class="page-section tier-tabs-section">
                     <div class="tabs">
@@ -174,6 +201,22 @@ export class StakePage extends BasePage {
             usedSlots = 0;
             totalSlots = 0;
         }
+        
+        // Load resource values
+        let gold = 0, food = 0, diamonds = 0, repPoints = 0;
+        try {
+            [gold, food, repPoints] = await Promise.all([
+                this.contracts.gameState.getPlayerGold(userAddress),
+                this.contracts.gameState.getPlayerFood(userAddress),
+                this.contracts.gameState.getPlayerRep(userAddress)
+            ]);
+            
+            // TODO: Implement diamonds when the contract function is available
+            // diamonds = await this.contracts.gameState.getPlayerDiamonds(userAddress);
+        } catch (e) {
+            Logger.warn('Failed to load resource values:', e);
+        }
+        
         const stakedBuildings = await this.getStakedBuildings(userAddress);
         const availableNFTs = await this.getAvailableNFTs(userAddress);
         // Group by buildingType (0: House, 1: Farm, 2: Diamond Station, 3: Rep Station)
@@ -196,7 +239,11 @@ export class StakePage extends BasePage {
             damaged,
             availableNFTs,
             stakedBuildings,
-            byTier
+            byTier,
+            gold: Number(gold),
+            food: Number(food),
+            diamonds: Number(diamonds),
+            repPoints: Number(repPoints)
         };
         this.updateStatusSection();
         this.updateTierTabs();
@@ -210,6 +257,12 @@ export class StakePage extends BasePage {
         this.element.querySelector('.total-staked-value').textContent = this.state.totalStaked;
         this.element.querySelector('.at-cap-value').textContent = this.state.atCap;
         this.element.querySelector('.damaged-value').textContent = this.state.damaged;
+        
+        // Update resource values
+        this.element.querySelector('.gold-value').textContent = this.state.gold.toLocaleString();
+        this.element.querySelector('.food-value').textContent = this.state.food.toLocaleString();
+        this.element.querySelector('.diamonds-value').textContent = this.state.diamonds.toLocaleString();
+        this.element.querySelector('.rep-points-value').textContent = this.state.repPoints.toLocaleString();
     }
 
     updateTierTabs() {

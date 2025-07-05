@@ -113,6 +113,18 @@
     font-weight: 600;
 }
 
+/* Stake Hub Page specific progress bar styling */
+.stake-hub-page .building-card .progress-container {
+    background: var(--color-primary);
+}
+
+.stake-hub-page .building-card .progress-bar {
+    background: var(--bg-light);
+}
+.stake-hub-page .building-card .progress-bar::after {
+    animation: none;
+}
+
 .progress-bar-normal {
     background: linear-gradient(90deg, var(--color-success), #4ade80);
 }
