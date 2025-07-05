@@ -75,7 +75,8 @@ export class StakePage extends BasePage {
                         <select class="building-type-select">
                             <option value="0">House (Tier 0)</option>
                             <option value="1">Farm (Tier 1)</option>
-                            <option value="2">Rep Station (Tier 2)</option>
+                            <option value="2">Diamond Station (Tier 2)</option>
+                            <option value="3">Rep Station (Tier 3)</option>
                         </select>
                     </div>
                 </div>
@@ -156,9 +157,9 @@ export class StakePage extends BasePage {
         // Filter NFTs based on selected type
         const filteredNFTs = this.availableNFTs.filter(nft => {
             const isCorrectContract = nft.contractAddress.toLowerCase() === (selectedType === '1' ? farmAddress : nftAddress).toLowerCase();
-            const isRep = selectedType === '2' && nft.metadata.name.toLowerCase().includes('rep');
+            const isRep = selectedType === '3' && nft.metadata.name.toLowerCase().includes('rep');
             
-            if (selectedType === '2') {
+            if (selectedType === '3') {
                 return isCorrectContract && isRep;
             }
             return isCorrectContract;
@@ -217,7 +218,8 @@ export class StakePage extends BasePage {
             buildingTypeSelect.innerHTML = `
                 <option value="0">House (Tier 0)</option>
                 <option value="1" ${playerTier < 1 ? 'disabled' : ''}>Farm (Tier 1)</option>
-                <option value="2" ${playerTier < 2 ? 'disabled' : ''}>Rep Station (Tier 2)</option>
+                <option value="2" ${playerTier < 2 ? 'disabled' : ''}>Diamond Station (Tier 2)</option>
+                <option value="3" ${playerTier < 3 ? 'disabled' : ''}>Rep Station (Tier 3)</option>
             `;
 
             // Restore selection if it's still valid

@@ -21,7 +21,8 @@ export class WorkshopPage extends BasePage {
             damagedByTier: {
                 0: 0, // Houses
                 1: 0, // Farms
-                2: 0  // Rep Stations
+                2: 0, // Diamond Stations
+                3: 0  // Rep Stations
             }
         });
         
@@ -60,7 +61,7 @@ export class WorkshopPage extends BasePage {
                     totalDamaged: 0,
                     canRepair: false,
                     repairCost: 0,
-                    damagedByTier: { 0: 0, 1: 0, 2: 0 }
+                    damagedByTier: { 0: 0, 1: 0, 2: 0, 3: 0 }
                 });
                 return;
             }
@@ -73,7 +74,7 @@ export class WorkshopPage extends BasePage {
             // Get building details for each ID and filter for damaged buildings
             const damagedBuildings = [];
             let totalRepairCost = 0;
-            const damagedByTier = { 0: 0, 1: 0, 2: 0 };
+            const damagedByTier = { 0: 0, 1: 0, 2: 0, 3: 0 };
 
             for (const buildingId of activeBuildingIds) {
                 const building = await this.contracts.gridBuildings.getBuilding(buildingId);
@@ -227,8 +228,12 @@ export class WorkshopPage extends BasePage {
                             <span class="status-value" data-state="damagedByTier.1">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Tier 2 (Rep Stations):</span>
+                            <span class="status-label">Tier 2 (Diamond Stations):</span>
                             <span class="status-value" data-state="damagedByTier.2">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Tier 3 (Rep Stations):</span>
+                            <span class="status-value" data-state="damagedByTier.3">0</span>
                         </div>
                     </div>
                 </div>

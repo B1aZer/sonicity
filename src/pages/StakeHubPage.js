@@ -10,26 +10,23 @@ import { ethers } from 'ethers';
 import('../styles/stake-hub-page.css');
 
 /**
- * @typedef {Object} BuildingWithUI
+ * @typedef {Object} StakedBuilding
  * @property {number} id - Building ID
- * @property {number} buildingType - Building type (0: House, 1: Farm, 2: Rep Station)
- * @property {number} level - Current building level
- * @property {number} lastUpgradeTime - Timestamp of last upgrade
- * @property {number} lastRechargeTime - Timestamp of last recharge
- * @property {number} lastCollectionTime - Timestamp of last collection
- * @property {boolean} damaged - Whether building is damaged
- * @property {boolean} isStaked - Whether building has an NFT staked to it
+ * @property {number} buildingType - Building type (0: House, 1: Farm, 2: Diamond Station, 3: Rep Station)
+ * @property {number} level - Building level
+ * @property {number} lastCollectionTime - Last collection timestamp
  * @property {boolean} isAtCap - Whether building is at production cap
- * @property {number} claimable - Amount of resources available to claim
- * @property {number} productionRate - Current production rate per hour
- * @property {number} progressCurrent - Current production progress in seconds
- * @property {number} progressMax - Maximum production time in seconds
+ * @property {number} claimable - Claimable resources
+ * @property {number} progressCurrent - Current production progress
+ * @property {number} progressMax - Maximum production progress
  * @property {number} progressPercent - Production progress percentage
  * @property {Object} config - Building configuration
+ * @property {number} productionRate - Current production rate
  * @property {Object} upgradeInfo - Upgrade information
- * @property {number|null} tokenId - Staked NFT token ID
- * @property {string|null} contractAddress - Staked NFT contract address
- * @property {Object|null} metadata - NFT metadata
+ * @property {number} tokenId - Staked NFT token ID
+ * @property {string} contractAddress - NFT contract address
+ * @property {Object} metadata - NFT metadata
+ * @property {boolean} isStaked - Whether building is staked
  */
 
 export class StakePage extends BasePage {
@@ -49,7 +46,7 @@ export class StakePage extends BasePage {
             damaged: 0,
             availableNFTs: [],
             stakedBuildings: [],
-            byTier: { 0: [], 1: [], 2: [] },
+            byTier: { 0: [], 1: [], 2: [], 3: [] },
             selectedTier: 0
         };
         this.render();
@@ -133,13 +130,18 @@ export class StakePage extends BasePage {
                             <span class="tab-count">0</span>
                         </button>
                         <button class="tab" data-tier="2">
-                            <span class="tab-label">Tier 2 (Rep Stations)</span>
+                            <span class="tab-label">Tier 2 (Diamond Stations)</span>
+                            <span class="tab-count">0</span>
+                        </button>
+                        <button class="tab" data-tier="3">
+                            <span class="tab-label">Tier 3 (Rep Stations)</span>
                             <span class="tab-count">0</span>
                         </button>
                     </div>
                     <div class="tier-content active" data-tier="0"><div class="buildings-grid"></div></div>
                     <div class="tier-content" data-tier="1"><div class="buildings-grid"></div></div>
                     <div class="tier-content" data-tier="2"><div class="buildings-grid"></div></div>
+                    <div class="tier-content" data-tier="3"><div class="buildings-grid"></div></div>
                 </div>
             </div>
         `;
@@ -174,8 +176,8 @@ export class StakePage extends BasePage {
         }
         const stakedBuildings = await this.getStakedBuildings(userAddress);
         const availableNFTs = await this.getAvailableNFTs(userAddress);
-        // Group by buildingType (0: House, 1: Farm, 2: Rep Station)
-        const byTier = { 0: [], 1: [], 2: [] };
+        // Group by buildingType (0: House, 1: Farm, 2: Diamond Station, 3: Rep Station)
+        const byTier = { 0: [], 1: [], 2: [], 3: [] };
         let atCap = 0, damaged = 0;
         stakedBuildings.forEach(b => {
             byTier[b.buildingType]?.push(b);
@@ -211,7 +213,7 @@ export class StakePage extends BasePage {
     }
 
     updateTierTabs() {
-        for (let tier = 0; tier <= 2; tier++) {
+        for (let tier = 0; tier <= 3; tier++) {
             const tab = this.element.querySelector(`.tab[data-tier="${tier}"]`);
             const count = this.state.byTier[tier].length;
             tab.querySelector('.tab-count').textContent = count;
@@ -243,8 +245,8 @@ export class StakePage extends BasePage {
         const rechargePrice = ethers.formatEther(GridBuildingsContract.RECHARGE_FEE);
         
         // Status section (like CityPage)
-        const tierNames = ['House', 'Farm', 'Rep Station'];
-        const tierNamesPlural = ['Houses', 'Farms', 'Rep Stations'];
+        const tierNames = ['House', 'Farm', 'Diamond Station', 'Rep Station'];
+        const tierNamesPlural = ['Houses', 'Farms', 'Diamond Stations', 'Rep Stations'];
         const rechargeHeader = buildingCount === 1 ? `Charge ${tierNames[tier]}` : `Charge ${tierNamesPlural[tier]}`;
         
         // Format upgrade progress for display
@@ -389,8 +391,8 @@ export class StakePage extends BasePage {
             }
             
             // Map buildingType to name/icon
-            const tierNames = ['House', 'Farm', 'Rep Station'];
-            const icons = ['🏠', '🌾', '⭐'];
+            const tierNames = ['House', 'Farm', 'Diamond Station', 'Rep Station'];
+            const icons = ['🏠', '🌾', '💎', '⭐'];
             const name = tierNames[item.buildingType] || 'Building';
             const icon = icons[item.buildingType] || '🏗️';
             
@@ -540,7 +542,8 @@ export class StakePage extends BasePage {
         switch (Number(tier)) {
             case 0: return '🏠';
             case 1: return '🌾';
-            case 2: return '⭐';
+            case 2: return '💎';
+            case 3: return '⭐';
             default: return '🏗️';
         }
     }
@@ -549,7 +552,8 @@ export class StakePage extends BasePage {
         switch (Number(tier)) {
             case 0: return 'House';
             case 1: return 'Farm';
-            case 2: return 'Rep Station';
+            case 2: return 'Diamond Station';
+            case 3: return 'Rep Station';
             default: return 'Unknown';
         }
     }

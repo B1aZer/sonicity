@@ -4,7 +4,8 @@ const { ethers } = require("hardhat");
 const GridBuildingType = {
     HOUSE: 0,
     FARM: 1,
-    REP_STATION: 2
+    DIAMOND_STATION: 2,
+    REP_STATION: 3
 };
 
 // Logging configuration
@@ -29,6 +30,8 @@ async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
         mintValue = ethers.parseEther("0.01"); // House NFT price
     } else if (buildingType === GridBuildingType.FARM) {
         mintValue = ethers.parseEther("0.015"); // Farm NFT price
+    } else if (buildingType === GridBuildingType.DIAMOND_STATION) {
+        mintValue = ethers.parseEther("0.02"); // Diamond Station NFT price
     } else {
         throw new Error("Unsupported building type");
     }

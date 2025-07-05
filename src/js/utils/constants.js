@@ -59,6 +59,19 @@ export const BUILDINGS = {
             }
         }
     },
+    DIAMOND_STATION: {
+        name: 'Diamond Station',
+        size: new THREE.Vector3(8, 8, 8),
+        color: 0xB9F2FF, // Diamond Blue
+        isGridBuilding: true,
+        tier: 2,
+        assets: {
+            baseUrl: 'assets/diamond_station',
+            levels: {
+                1: { url: 'assets/diamond_station.glb' }
+            }
+        }
+    },
 
     // Fixed district buildings
     CITY_HALL: {

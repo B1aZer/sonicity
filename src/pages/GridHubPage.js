@@ -32,14 +32,16 @@ export class GridHubPage extends BasePage {
             buildingsByTier: {
                 0: 0, // Houses
                 1: 0, // Farms
-                2: 0  // Rep Stations
+                2: 0, // Diamond Stations
+                3: 0  // Rep Stations
             },
             
             // Associated resources by tier
             resourcesByTier: {
                 0: 0, // Gold from houses
                 1: 0, // Food from farms
-                2: 0  // Rep from rep stations
+                2: 0, // Diamonds from diamond stations
+                3: 0  // Rep from rep stations
             },
             
             // Additional status
@@ -109,8 +111,8 @@ export class GridHubPage extends BasePage {
                 activeBuildingIds = [];
             }
             
-            const buildingsByTier = { 0: 0, 1: 0, 2: 0 };
-            const resourcesByTier = { 0: 0, 1: 0, 2: 0 };
+            const buildingsByTier = { 0: 0, 1: 0, 2: 0, 3: 0 };
+            const resourcesByTier = { 0: 0, 1: 0, 2: 0, 3: 0 };
             let damagedBuildings = 0;
             let buildingsAtCap = 0;
             const buildings = [];
@@ -278,7 +280,7 @@ export class GridHubPage extends BasePage {
         if (this.state.buildings.length === 0) {
             Logger.info('No buildings found, showing empty state');
             // Update all tier contents to show empty state
-            for (let tier = 0; tier <= 2; tier++) {
+            for (let tier = 0; tier <= 3; tier++) {
                 const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
                 if (tierContent) {
                     const buildingsGrid = tierContent.querySelector('.buildings-grid');
@@ -298,7 +300,7 @@ export class GridHubPage extends BasePage {
         }
         
         // Get buildings for each tier
-        for (let tier = 0; tier <= 2; tier++) {
+        for (let tier = 0; tier <= 3; tier++) {
             Logger.info(`Processing tier ${tier}`);
             const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
             if (!tierContent) {
@@ -442,7 +444,8 @@ export class GridHubPage extends BasePage {
         switch (Number(buildingType)) {
             case 0: return '🏠'; // House
             case 1: return '🌾'; // Farm
-            case 2: return '⭐'; // Rep Station
+            case 2: return '💎'; // Diamond Station
+            case 3: return '⭐'; // Rep Station
             default: return '🏗️';
         }
     }
@@ -674,6 +677,10 @@ export class GridHubPage extends BasePage {
                             <span>Tier 2</span>
                             <span class="tier-count">0</span>
                         </button>
+                        <button class="tier-tab" data-tier="3">
+                            <span>Tier 3</span>
+                            <span class="tier-count">0</span>
+                        </button>
                     </div>
                     
                     <!-- Tier Status -->
@@ -693,10 +700,17 @@ export class GridHubPage extends BasePage {
                             </span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Tier 2 (Rep Stations):</span>
+                            <span class="status-label">Tier 2 (Diamond Stations):</span>
                             <span class="status-value">
                                 <span data-state="buildingsByTier.2">0</span> buildings, 
-                                <span data-state="resourcesByTier.2">0</span> rep
+                                <span data-state="resourcesByTier.2">0</span> diamonds
+                            </span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Tier 3 (Rep Stations):</span>
+                            <span class="status-value">
+                                <span data-state="buildingsByTier.3">0</span> buildings, 
+                                <span data-state="resourcesByTier.3">0</span> rep
                             </span>
                         </div>
                     </div>
@@ -715,6 +729,12 @@ export class GridHubPage extends BasePage {
                     </div>
                     
                     <div class="tier-content" data-tier="2">
+                        <div class="buildings-grid">
+                            <!-- Buildings will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="tier-content" data-tier="3">
                         <div class="buildings-grid">
                             <!-- Buildings will be populated here -->
                         </div>
