@@ -9,6 +9,29 @@ import { ethers } from 'ethers';
 
 import('../styles/stake-hub-page.css');
 
+/**
+ * @typedef {Object} BuildingWithUI
+ * @property {number} id - Building ID
+ * @property {number} buildingType - Building type (0: House, 1: Farm, 2: Rep Station)
+ * @property {number} level - Current building level
+ * @property {number} lastUpgradeTime - Timestamp of last upgrade
+ * @property {number} lastRechargeTime - Timestamp of last recharge
+ * @property {number} lastCollectionTime - Timestamp of last collection
+ * @property {boolean} damaged - Whether building is damaged
+ * @property {boolean} isStaked - Whether building has an NFT staked to it
+ * @property {boolean} isAtCap - Whether building is at production cap
+ * @property {number} claimable - Amount of resources available to claim
+ * @property {number} productionRate - Current production rate per hour
+ * @property {number} progressCurrent - Current production progress in seconds
+ * @property {number} progressMax - Maximum production time in seconds
+ * @property {number} progressPercent - Production progress percentage
+ * @property {Object} config - Building configuration
+ * @property {Object} upgradeInfo - Upgrade information
+ * @property {number|null} tokenId - Staked NFT token ID
+ * @property {string|null} contractAddress - Staked NFT contract address
+ * @property {Object|null} metadata - NFT metadata
+ */
+
 export class StakePage extends BasePage {
     constructor() {
         super();
@@ -358,8 +381,8 @@ export class StakePage extends BasePage {
             let statusClass = item.damaged ? 'damaged' : item.isAtCap ? 'at-cap' : 'normal';
             let statusText = item.damaged ? 'Damaged' : item.isAtCap ? 'At Cap' : 'Operating';
             
-            // Check if building has been charged (lastCollectionTime > 0)
-            const hasBeenCharged = item.lastCollectionTime && item.lastCollectionTime > 0;
+            // Check if building has been charged (lastRechargeTime > 0)
+            const hasBeenCharged = item.lastRechargeTime && item.lastRechargeTime > 0;
             if (!item.damaged && !item.isAtCap && !hasBeenCharged) {
                 statusText = 'Idle';
                 statusClass = 'not-charged';
@@ -534,22 +557,14 @@ export class StakePage extends BasePage {
     // --- Replace dummy implementations below with real contract calls ---
     async getStakedBuildings(userAddress) {
         console.log('[DEBUG] getStakedBuildings for address:', userAddress);
-        const buildingIds = await this.contracts.gridBuildings.getActiveBuildings(userAddress);
-        console.log('[DEBUG] getActiveBuildings returned:', buildingIds);
-        const buildings = [];
-        for (const id of buildingIds) {
-            const b = await this.contracts.gridBuildings.getBuilding(userAddress, id);
-            console.log(`[DEBUG] Building for id ${id}:`, b);
-            // Map struct fields to named properties
-            const building = {
-                id,
-                buildingType: Number(b[0]),
-                level: Number(b[1]),
-                lastUpgradeTime: Number(b[2]),
-                lastCollectionTime: Number(b[3]),
-                damaged: b[4],
-                isStaked: true
-            };
+        const buildings = await this.contracts.gridBuildings.getActiveBuildingsWithData(userAddress);
+        console.log('[DEBUG] getActiveBuildingsWithData returned:', buildings);
+        
+        for (const building of buildings) {
+            console.log(`[DEBUG] Processing building ${building.id}:`, building);
+            
+            // Add staked flag
+            building.isStaked = true;
             
             // Get building configuration for production rate and other details
             const config = await this.contracts.gridBuildings.getBuildingConfig(building.buildingType);
@@ -566,20 +581,20 @@ export class StakePage extends BasePage {
             building.productionRate = building.config.baseProductionRate * building.level;
             
             // Add extra info for UI
-            building.isAtCap = await this.contracts.gridBuildings.isBuildingAtCap(id);
-            building.claimable = Number(await this.contracts.gridBuildings.calculateClaimableResources(id));
+            building.isAtCap = await this.contracts.gridBuildings.isBuildingAtCap(building.id);
+            building.claimable = Number(await this.contracts.gridBuildings.calculateClaimableResources(building.id));
 
             // Use contract method for production progress
-            const [progressCurrent, progressMax, progressPercent] = await this.contracts.gridBuildings.calculateProductionProgress(id);
+            const [progressCurrent, progressMax, progressPercent] = await this.contracts.gridBuildings.calculateProductionProgress(building.id);
             building.progressCurrent = Number(progressCurrent);
             building.progressMax = Number(progressMax);
             building.progressPercent = Number(progressPercent);
             
             // Get upgrade info for this building
             try {
-                building.upgradeInfo = await this.contracts.gridBuildings.getBuildingUpgradeInfo(id);
+                building.upgradeInfo = await this.contracts.gridBuildings.getBuildingUpgradeInfo(building.id);
             } catch (e) {
-                console.warn(`Could not get upgrade info for building ${id}:`, e);
+                console.warn(`Could not get upgrade info for building ${building.id}:`, e);
                 building.upgradeInfo = {
                     canUpgrade: false,
                     currentLevel: building.level,
@@ -595,7 +610,7 @@ export class StakePage extends BasePage {
             // We need to find which NFT is staked to this building
             // Check both NFT contracts
             const nftContracts = [this.contracts.nft, this.contracts.farmNft];
-            console.log(`[DEBUG] Looking for NFT info for building ${id}`);
+            console.log(`[DEBUG] Looking for NFT info for building ${building.id}`);
             
             for (const contract of nftContracts) {
                 try {
@@ -608,13 +623,13 @@ export class StakePage extends BasePage {
                     for (const tokenId of userStakes) {
                         const stakedBuildingId = await this.contracts.altar.getStakedBuilding(contractAddress, tokenId);
                         console.log(`[DEBUG] Token ${tokenId} is staked to building ${stakedBuildingId}`);
-                        console.log(`[DEBUG] Comparing: Number(${stakedBuildingId}) === Number(${id})`);
-                        console.log(`[DEBUG] Values: ${Number(stakedBuildingId)} === ${Number(id)}`);
+                        console.log(`[DEBUG] Comparing: Number(${stakedBuildingId}) === Number(${building.id})`);
+                        console.log(`[DEBUG] Values: ${Number(stakedBuildingId)} === ${Number(building.id)}`);
                         
-                        if (Number(stakedBuildingId) === Number(id)) {
+                        if (Number(stakedBuildingId) === Number(building.id)) {
                             building.tokenId = Number(tokenId);
                             building.contractAddress = contractAddress;
-                            console.log(`[DEBUG] Found NFT! Token ${tokenId} from ${contractAddress} is staked to building ${id}`);
+                            console.log(`[DEBUG] Found NFT! Token ${tokenId} from ${contractAddress} is staked to building ${building.id}`);
                             
                             // Fetch NFT metadata for the image
                             try {
@@ -637,8 +652,8 @@ export class StakePage extends BasePage {
             
             // If we couldn't find NFT info, log it for debugging
             if (!building.tokenId) {
-                console.warn(`Could not find NFT information for building ${id}`);
-                console.log(`[DEBUG] Building ${id} details:`, {
+                console.warn(`Could not find NFT information for building ${building.id}`);
+                console.log(`[DEBUG] Building ${building.id} details:`, {
                     buildingType: building.buildingType,
                     level: building.level,
                     lastCollectionTime: building.lastCollectionTime,
@@ -647,9 +662,8 @@ export class StakePage extends BasePage {
                 building.tokenId = null;
                 building.contractAddress = null;
             }
-            
-            buildings.push(building);
         }
+        
         console.log('[DEBUG] Final buildings array:', buildings);
         return buildings;
     }

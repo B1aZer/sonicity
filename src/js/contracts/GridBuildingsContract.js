@@ -3,6 +3,26 @@ import { BaseContract } from './BaseContract.js';
 import { CONTRACT_ADDRESSES } from '../utils/constants.js';
 import GridBuildingsABI from '../../../contracts/artifacts/contracts/GridBuildings.sol/GridBuildings.json';
 
+/**
+ * @typedef {Object} Building
+ * @property {number} buildingType - The type of building (0: House, 1: Farm, 2: Rep Station)
+ * @property {number} level - The current level of the building
+ * @property {number} lastUpgradeTime - Timestamp of last upgrade
+ * @property {number} lastRechargeTime - Timestamp of last recharge (when production started)
+ * @property {number} lastCollectionTime - Timestamp of last resource collection
+ * @property {boolean} damaged - Whether the building is damaged
+ */
+
+/**
+ * @typedef {Object} BuildingConfig
+ * @property {string} name - Building name
+ * @property {number} baseProductionRate - Base production rate per hour
+ * @property {number} upgradeCost - Cost to upgrade the building
+ * @property {number} maxLevel - Maximum level for this building type
+ * @property {string} description - Building description
+ * @property {number} tier - Building tier (0, 1, 2)
+ */
+
 export class GridBuildingsContract extends BaseContract {
     constructor() {
         super(CONTRACT_ADDRESSES.GRID_BUILDINGS, GridBuildingsABI.abi);
@@ -55,7 +75,22 @@ export class GridBuildingsContract extends BaseContract {
             address = await this.getAddress();
             buildingId = addressOrId;
         }
-        return await this.call('getBuilding', address, buildingId);
+        
+        // Get raw building data from contract
+        const rawBuilding = await this.call('getBuilding', address, buildingId);
+        
+        // Map to structured Building object
+        /** @type {Building} */
+        const building = {
+            buildingType: Number(rawBuilding[0]),
+            level: Number(rawBuilding[1]),
+            lastUpgradeTime: Number(rawBuilding[2]),
+            lastRechargeTime: Number(rawBuilding[3]),
+            lastCollectionTime: Number(rawBuilding[4]),
+            damaged: Boolean(rawBuilding[5])
+        };
+        
+        return building;
     }
 
     async getBuildingConfig(buildingType) {
@@ -65,6 +100,25 @@ export class GridBuildingsContract extends BaseContract {
     async getActiveBuildings(address) {
         if (!address) address = await this.getAddress();
         return await this.call('getActiveBuildings', address);
+    }
+
+    /**
+     * Get all active buildings for a player with full building data
+     * @param {string} address - Player address
+     * @returns {Promise<Building[]>} Array of Building objects
+     */
+    async getActiveBuildingsWithData(address) {
+        if (!address) address = await this.getAddress();
+        const buildingIds = await this.getActiveBuildings(address);
+        const buildings = [];
+        
+        for (const id of buildingIds) {
+            const building = await this.getBuilding(address, id);
+            building.id = id;
+            buildings.push(building);
+        }
+        
+        return buildings;
     }
 
     // Resource Calculation
@@ -87,7 +141,7 @@ export class GridBuildingsContract extends BaseContract {
     // Building Damage
     async isBuildingDamaged(buildingId) {
         const address = await this.getAddress();
-        const building = await this.call('getBuilding', address, buildingId);
+        const building = await this.getBuilding(address, buildingId);
         return building.damaged;
     }
 
