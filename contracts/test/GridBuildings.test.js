@@ -1292,38 +1292,38 @@ describe("GridBuildings", function () {
       const initialLastRechargeTime = buildingAfterRecharge.lastRechargeTime;
       const initialLastCollectionTime = buildingAfterRecharge.lastCollectionTime;
       
-      // Fast forward 12 hours (half of 24-hour production cycle)
+      // Fast forward 12 hours (half of production cap duration)
       await ethers.provider.send("evm_increaseTime", [12 * 3600]);
       await ethers.provider.send("evm_mine");
       
-      // Collect resources - this SHOULD reset the production timer to prevent infinite collection
+      // Collect resources - this should update lastCollectionTime but NOT reset lastRechargeTime
       await gridBuildings.connect(player1).collectResources(buildingId);
       
       // Check building state after collection
       const buildingAfterCollection = await gridBuildings.buildings(player1Address, buildingId);
       
-      // lastRechargeTime should be reset (production timer reset to prevent infinite collection)
-      expect(buildingAfterCollection.lastRechargeTime).to.be.gt(initialLastRechargeTime);
+      // lastRechargeTime should NOT be reset (only recharging resets the production timer)
+      expect(buildingAfterCollection.lastRechargeTime).to.equal(initialLastRechargeTime);
       
       // lastCollectionTime should be updated (when we collected)
       expect(buildingAfterCollection.lastCollectionTime).to.be.gt(initialLastCollectionTime);
       
-      // Fast forward another 12 hours (total 12 hours since last collection)
+      // Fast forward another 12 hours (total 24 hours since last recharge)
       await ethers.provider.send("evm_increaseTime", [12 * 3600]);
       await ethers.provider.send("evm_mine");
       
-      // Building should NOT be at cap (only 12 hours since last collection, not 24)
+      // Building should be at cap (24 hours since last recharge)
       const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
-      expect(isAtCap).to.be.false;
+      expect(isAtCap).to.be.true;
       
-      // Collect again - should get 12 hours worth, not 24 hours worth
+      // Collect again - should get 0 resources (building is at cap)
       await gridBuildings.connect(player1).collectResources(buildingId);
       
-      // Building should still not be at cap (just collected, so 0 hours since last collection)
+      // Building should still be at cap (24 hours since last recharge)
       const isStillAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
-      expect(isStillAtCap).to.be.false;
+      expect(isStillAtCap).to.be.true;
       
-      // Only recharging should reset the production timer for a new 24-hour cycle
+      // Only recharging should reset the production timer for a new production cycle
       await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
       
       const buildingAfterSecondRecharge = await gridBuildings.buildings(player1Address, buildingId);

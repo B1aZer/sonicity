@@ -24,6 +24,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Recharge fee in native tokens (0.01 SONIC)
     uint256 public constant RECHARGE_FEE = 0.01 ether;
 
+    // Production cap duration (default 24 hours)
+    uint256 public productionCapDuration;
+
     // Grid Building Types
     enum GridBuildingType {
         HOUSE,
@@ -71,6 +74,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event DistrictBuildingsAddressUpdated(address indexed newAddress);
     event BuildingRecharged(address indexed player, uint256 buildingId, uint256 fee);
     event BuildingsRecharged(address indexed player, uint256[] buildingIds, uint256 totalFee);
+    event ProductionCapDurationUpdated(uint256 newDuration);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -81,6 +85,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         __Ownable_init(msg.sender);
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
+        
+        // Initialize production cap duration to 24 hours
+        productionCapDuration = 24 hours;
         
         // Initialize building configurations
         buildingConfigs[GridBuildingType.HOUSE] = GridBuildingConfig({
@@ -157,6 +164,25 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function setDistrictBuildingsAddress(address _districtBuildingsAddress) external onlyOwner {
         districtBuildingsAddress = _districtBuildingsAddress;
         emit DistrictBuildingsAddressUpdated(_districtBuildingsAddress);
+    }
+
+    /**
+     * @dev Set the production cap duration
+     * @param _duration The new production cap duration in seconds
+     */
+    function setProductionCapDuration(uint256 _duration) external onlyOwner {
+        require(_duration > 0, "Duration must be greater than 0");
+        require(_duration <= 7 days, "Duration cannot exceed 7 days");
+        productionCapDuration = _duration;
+        emit ProductionCapDurationUpdated(_duration);
+    }
+
+    /**
+     * @dev Get the current production cap duration
+     * @return uint256 The current production cap duration in seconds
+     */
+    function getProductionCapDuration() external view returns (uint256) {
+        return productionCapDuration;
     }
 
     /**
@@ -303,10 +329,10 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 startTime = building.lastCollectionTime > 0 ? building.lastCollectionTime : building.lastRechargeTime;
         uint256 timePassed = block.timestamp - startTime;
         
-        // Cap at 24 hours from last recharge time
+        // Cap at production cap duration from last recharge time
         uint256 maxTimeFromRecharge = block.timestamp - building.lastRechargeTime;
-        if (maxTimeFromRecharge > 24 hours) {
-            maxTimeFromRecharge = 24 hours;
+        if (maxTimeFromRecharge > productionCapDuration) {
+            maxTimeFromRecharge = productionCapDuration;
         }
         
         // Use the smaller of the two: time since last collection or time since last recharge (capped)
@@ -406,10 +432,10 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 uint256 startTime = building.lastCollectionTime > 0 ? building.lastCollectionTime : building.lastRechargeTime;
                 uint256 timePassed = block.timestamp - startTime;
                 
-                // Cap at 24 hours from last recharge time
+                // Cap at production cap duration from last recharge time
                 uint256 maxTimeFromRecharge = block.timestamp - building.lastRechargeTime;
-                if (maxTimeFromRecharge > 24 hours) {
-                    maxTimeFromRecharge = 24 hours;
+                if (maxTimeFromRecharge > productionCapDuration) {
+                    maxTimeFromRecharge = productionCapDuration;
                 }
                 
                 // Use the smaller of the two: time since last collection or time since last recharge (capped)
@@ -508,10 +534,10 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 startTime = building.lastCollectionTime > 0 ? building.lastCollectionTime : building.lastRechargeTime;
         uint256 timePassed = block.timestamp - startTime;
         
-        // Cap at 24 hours from last recharge time
+        // Cap at production cap duration from last recharge time
         uint256 maxTimeFromRecharge = block.timestamp - building.lastRechargeTime;
-        if (maxTimeFromRecharge > 24 hours) {
-            maxTimeFromRecharge = 24 hours;
+        if (maxTimeFromRecharge > productionCapDuration) {
+            maxTimeFromRecharge = productionCapDuration;
         }
         
         // Use the smaller of the two: time since last collection or time since last recharge (capped)
@@ -694,7 +720,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Check if a building is at production cap (24 hours since last collection)
+     * @dev Check if a building is at production cap (production cap duration since last recharge)
      * @param player The address of the player
      * @param buildingId The ID of the building to check
      * @return bool Whether the building is at production cap
@@ -709,7 +735,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         }
         
         uint256 timeSinceRecharge = block.timestamp - building.lastRechargeTime;
-        return timeSinceRecharge >= 24 hours;
+        return timeSinceRecharge >= productionCapDuration;
     }
 
     /**
@@ -724,7 +750,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Count buildings at cap
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[player][activeBuildings[i]];
-            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= 24 hours) {
+            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= productionCapDuration) {
                 capCount++;
             }
         }
@@ -735,7 +761,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[player][activeBuildings[i]];
-            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= 24 hours) {
+            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= productionCapDuration) {
                 buildingsAtCap[index] = activeBuildings[i];
                 index++;
             }
@@ -871,14 +897,14 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param player The address of the player
      * @param buildingId The ID of the building to calculate for
      * @return currentTime The current production time in seconds
-     * @return maxTime The maximum production time (24 hours) in seconds
+     * @return maxTime The maximum production time (production cap duration) in seconds
      * @return progressPercent The progress percentage (0-100)
      */
     function calculateProductionProgress(address player, uint256 buildingId) external view returns (uint256 currentTime, uint256 maxTime, uint256 progressPercent) {
         Building storage building = buildings[player][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         
-        maxTime = 24 hours; // 24 hours in seconds
+        maxTime = productionCapDuration; // Production cap duration in seconds
         
         // If building has never been recharged, no production
         if (building.lastRechargeTime == 0) {
