@@ -74,6 +74,7 @@
     --border-primary: 2px solid var(--color-border);
     --border-secondary: 1px solid var(--color-border);
     --border-tertiary: 1px solid var(--color-secondary);
+    --border-header: 1px solid var(--color-border-dark);
     
     /* Shadows */
     --shadow-sm: 0 2px 4px var(--color-secondary-dark);
