@@ -795,6 +795,11 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             revert("Failed to track recharge amount");
         }
         
+        // Set lastCollectionTime during first recharge (when it's 0) to serve as base reference point
+        if (building.lastCollectionTime == 0) {
+            building.lastCollectionTime = block.timestamp;
+        }
+        
         // Reset last recharge time to restart production
         building.lastRechargeTime = block.timestamp;
         
@@ -814,6 +819,11 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             Building storage building = buildings[msg.sender][buildingIds[i]];
             require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
             require(!building.damaged, "Building is damaged");
+            
+            // Set lastCollectionTime during first recharge (when it's 0) to serve as base reference point
+            if (building.lastCollectionTime == 0) {
+                building.lastCollectionTime = block.timestamp;
+            }
             
             // Reset last recharge time to restart production
             building.lastRechargeTime = block.timestamp;
@@ -850,6 +860,11 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[msg.sender][activeBuildings[i]];
             require(!building.damaged, "Building is damaged");
+            
+            // Set lastCollectionTime during first recharge (when it's 0) to serve as base reference point
+            if (building.lastCollectionTime == 0) {
+                building.lastCollectionTime = block.timestamp;
+            }
             
             // Reset last recharge time to restart production
             building.lastRechargeTime = block.timestamp;
