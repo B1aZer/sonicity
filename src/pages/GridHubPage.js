@@ -128,7 +128,7 @@ export class GridHubPage extends BasePage {
                     Logger.info('Building damaged:', building.damaged);
                     
                     // Validate building data
-                    if (!building || (building.buildingType === 0n && building.level === 0n)) {
+                    if (!building || (building.buildingType === 0 && building.level === 0)) {
                         Logger.info(`Skipping building ${buildingId} - invalid or inactive building`);
                         continue;
                     }

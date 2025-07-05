@@ -30,10 +30,10 @@ export class GridBuildingsContract extends BaseContract {
 
     // Building Types
     static BuildingType = {
-        HOUSE: 0n,
-        FARM: 1n,
-        DIAMOND_STATION: 2n,
-        REP_STATION: 3n
+        HOUSE: 0,
+        FARM: 1,
+        DIAMOND_STATION: 2,
+        REP_STATION: 3
     };
 
     // Recharge fee constant

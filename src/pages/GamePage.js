@@ -162,7 +162,7 @@ export class GamePage extends BasePage {
                 const building = await this.contracts.gridBuildings.getBuilding(buildingId);
                 
                 // Skip if building type is 0 and level is 0 (inactive building)
-                if (building.buildingType === 0n && building.level === 0n) {
+                if (building.buildingType === 0 && building.level === 0) {
                     Logger.info('Skipping building - inactive:', {
                         buildingType: building.buildingType,
                         level: building.level
@@ -172,10 +172,15 @@ export class GamePage extends BasePage {
 
                 // Map building type to string
                 let buildingType;
+                
                 if (building.buildingType === GridBuildingsContract.BuildingType.HOUSE) {
                     buildingType = 'HOUSE';
                 } else if (building.buildingType === GridBuildingsContract.BuildingType.FARM) {
                     buildingType = 'FARM';
+                } else if (building.buildingType === GridBuildingsContract.BuildingType.DIAMOND_STATION) {
+                    buildingType = 'DIAMOND_STATION';
+                } else if (building.buildingType === GridBuildingsContract.BuildingType.REP_STATION) {
+                    buildingType = 'REP_STATION';
                 } else {
                     Logger.info('Skipping building - unknown type:', {
                         buildingType: building.buildingType
