@@ -299,10 +299,19 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         
-        // Calculate time passed since last recharge (production time)
-        uint256 timePassed = block.timestamp - building.lastRechargeTime;
-        if (timePassed > 24 hours) {
-            timePassed = 24 hours;
+        // Calculate time passed since last collection (or last recharge if never collected)
+        uint256 startTime = building.lastCollectionTime > 0 ? building.lastCollectionTime : building.lastRechargeTime;
+        uint256 timePassed = block.timestamp - startTime;
+        
+        // Cap at 24 hours from last recharge time
+        uint256 maxTimeFromRecharge = block.timestamp - building.lastRechargeTime;
+        if (maxTimeFromRecharge > 24 hours) {
+            maxTimeFromRecharge = 24 hours;
+        }
+        
+        // Use the smaller of the two: time since last collection or time since last recharge (capped)
+        if (timePassed > maxTimeFromRecharge) {
+            timePassed = maxTimeFromRecharge;
         }
         
         // Calculate resources to collect
@@ -310,6 +319,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         // Update last collection time (when we collected resources)
         building.lastCollectionTime = block.timestamp;
+        
+        // DO NOT reset lastRechargeTime - it should only be reset by recharge
         
         // Add resources to player based on building type
         if (building.buildingType == GridBuildingType.HOUSE) {
@@ -391,10 +402,19 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 
                 GridBuildingConfig memory config = buildingConfigs[building.buildingType];
                 
-                // Calculate time passed since last recharge (production time)
-                uint256 timePassed = block.timestamp - building.lastRechargeTime;
-                if (timePassed > 24 hours) {
-                    timePassed = 24 hours;
+                // Calculate time passed since last collection (or last recharge if never collected)
+                uint256 startTime = building.lastCollectionTime > 0 ? building.lastCollectionTime : building.lastRechargeTime;
+                uint256 timePassed = block.timestamp - startTime;
+                
+                // Cap at 24 hours from last recharge time
+                uint256 maxTimeFromRecharge = block.timestamp - building.lastRechargeTime;
+                if (maxTimeFromRecharge > 24 hours) {
+                    maxTimeFromRecharge = 24 hours;
+                }
+                
+                // Use the smaller of the two: time since last collection or time since last recharge (capped)
+                if (timePassed > maxTimeFromRecharge) {
+                    timePassed = maxTimeFromRecharge;
                 }
                 
                 // Calculate resources to collect
@@ -402,6 +422,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 
                 // Update last collection time (when we collected resources)
                 building.lastCollectionTime = block.timestamp;
+                
+                // DO NOT reset lastRechargeTime - it should only be reset by recharge
                 
                 // Add resources to player based on building type
                 if (building.buildingType == GridBuildingType.HOUSE) {
@@ -482,10 +504,19 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             return 0;
         }
         
-        // Calculate time passed since last recharge (production time)
-        uint256 timePassed = block.timestamp - building.lastRechargeTime;
-        if (timePassed > 24 hours) {
-            timePassed = 24 hours;
+        // Calculate time passed since last collection (or last recharge if never collected)
+        uint256 startTime = building.lastCollectionTime > 0 ? building.lastCollectionTime : building.lastRechargeTime;
+        uint256 timePassed = block.timestamp - startTime;
+        
+        // Cap at 24 hours from last recharge time
+        uint256 maxTimeFromRecharge = block.timestamp - building.lastRechargeTime;
+        if (maxTimeFromRecharge > 24 hours) {
+            maxTimeFromRecharge = 24 hours;
+        }
+        
+        // Use the smaller of the two: time since last collection or time since last recharge (capped)
+        if (timePassed > maxTimeFromRecharge) {
+            timePassed = maxTimeFromRecharge;
         }
         
         // Calculate resources to collect based on production rate and time passed

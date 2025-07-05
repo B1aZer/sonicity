@@ -1277,13 +1277,13 @@ describe("GridBuildings", function () {
       expect(updatedBuilding.lastRechargeTime).to.be.gt(initialLastRechargeTime);
     });
 
-    it("Should not reset production timer when collecting resources", async function () {
+    it("Should reset production timer when collecting resources to prevent infinite collection", async function () {
       const player1Address = await player1.getAddress();
       
       // Create a building
       const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       
-      // Recharge the building to start production
+      // Recharge building to start production
       const rechargeFee = ethers.parseEther("0.01");
       await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
       
@@ -1296,38 +1296,38 @@ describe("GridBuildings", function () {
       await ethers.provider.send("evm_increaseTime", [12 * 3600]);
       await ethers.provider.send("evm_mine");
       
-      // Collect resources - this should NOT reset the production timer
+      // Collect resources - this SHOULD reset the production timer to prevent infinite collection
       await gridBuildings.connect(player1).collectResources(buildingId);
       
       // Check building state after collection
       const buildingAfterCollection = await gridBuildings.buildings(player1Address, buildingId);
       
-      // lastRechargeTime should remain the same (production timer not reset)
-      expect(buildingAfterCollection.lastRechargeTime).to.equal(initialLastRechargeTime);
+      // lastRechargeTime should be reset (production timer reset to prevent infinite collection)
+      expect(buildingAfterCollection.lastRechargeTime).to.be.gt(initialLastRechargeTime);
       
       // lastCollectionTime should be updated (when we collected)
       expect(buildingAfterCollection.lastCollectionTime).to.be.gt(initialLastCollectionTime);
       
-      // Fast forward another 12 hours (total 24 hours since recharge)
+      // Fast forward another 12 hours (total 12 hours since last collection)
       await ethers.provider.send("evm_increaseTime", [12 * 3600]);
       await ethers.provider.send("evm_mine");
       
-      // Building should now be at cap (24 hours since last recharge)
+      // Building should NOT be at cap (only 12 hours since last collection, not 24)
       const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
-      expect(isAtCap).to.be.true;
+      expect(isAtCap).to.be.false;
       
-      // Collect again - should still be at cap because production timer wasn't reset
+      // Collect again - should get 12 hours worth, not 24 hours worth
       await gridBuildings.connect(player1).collectResources(buildingId);
       
-      // Building should still be at cap
+      // Building should still not be at cap (just collected, so 0 hours since last collection)
       const isStillAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
-      expect(isStillAtCap).to.be.true;
+      expect(isStillAtCap).to.be.false;
       
-      // Only recharging should reset the production timer
+      // Only recharging should reset the production timer for a new 24-hour cycle
       await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
       
       const buildingAfterSecondRecharge = await gridBuildings.buildings(player1Address, buildingId);
-      expect(buildingAfterSecondRecharge.lastRechargeTime).to.be.gt(initialLastRechargeTime);
+      expect(buildingAfterSecondRecharge.lastRechargeTime).to.be.gt(buildingAfterCollection.lastRechargeTime);
       
       // Building should no longer be at cap
       const isNoLongerAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
@@ -1582,6 +1582,343 @@ describe("GridBuildings", function () {
       expect(currentTime).to.equal(BigInt(0));
       expect(maxTime).to.equal(BigInt(24 * 3600)); // 24 hours in seconds
       expect(progressPercent).to.equal(BigInt(0)); // 0% (no production)
+    });
+  });
+
+  describe("Resource Collection Logic", function () {
+    it("Should prevent infinite production by capping at 24 hours from last recharge", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      
+      // Fast forward 48 hours (more than 24-hour cap)
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // First collection - should be capped at 24 hours worth
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      const goldAfterFirstCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterFirstCollection).to.equal(initialGold + BigInt(10 * 24)); // 10 gold per hour * 24 hours (capped)
+      
+      // Try to collect again immediately - should get 0 resources (no infinite production)
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      const goldAfterSecondCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterSecondCollection).to.equal(goldAfterFirstCollection); // No additional resources
+      
+      // Building should be at cap (24 hours since last recharge)
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCap).to.be.true;
+      
+      // Only recharge should allow new production
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      const isAtCapAfterRecharge = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCapAfterRecharge).to.be.false;
+    });
+
+    it("Should cap production at 24 hours maximum per collection", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      
+      // Fast forward 48 hours (more than 24-hour cap)
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect resources - should be capped at 24 hours worth
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      
+      // Check gold balance (should be capped at 24 hours)
+      const goldAfterCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterCollection).to.equal(initialGold + BigInt(10 * 24)); // 10 gold per hour * 24 hours (capped)
+      
+      // Building should be at cap after collection (24 hours since last recharge)
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCap).to.be.true;
+    });
+
+    it("Should allow continuous production with multiple collections", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      
+      // Collect every 6 hours for 24 hours total
+      for (let i = 0; i < 4; i++) {
+        // Fast forward 6 hours
+        await ethers.provider.send("evm_increaseTime", [6 * 3600]);
+        await ethers.provider.send("evm_mine");
+        
+        // Collect resources
+        await gridBuildings.connect(player1).collectResources(buildingId);
+      }
+      
+      // Check total gold collected (4 collections * 6 hours * 10 gold/hour = 240 gold)
+      const finalGold = await gameState.getPlayerGold(player1Address);
+      expect(finalGold).to.equal(initialGold + BigInt(240));
+      
+      // Building should be at cap (24 hours since last recharge)
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCap).to.be.true;
+    });
+
+    it("Should prevent claiming already claimed resources", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      
+      // Fast forward 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect resources first time
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      
+      // Check gold balance increased
+      const goldAfterFirstCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterFirstCollection).to.equal(initialGold + BigInt(10 * 12));
+      
+      // Try to collect immediately again - should get 0 resources
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      
+      // Check gold balance unchanged (no additional resources)
+      const goldAfterSecondCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterSecondCollection).to.equal(goldAfterFirstCollection);
+    });
+
+    it("Should correctly calculate claimable resources after collection", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Fast forward 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Check claimable resources before collection
+      const claimableBefore = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableBefore).to.equal(BigInt(10 * 12)); // 10 gold per hour * 12 hours
+      
+      // Collect resources
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      
+      // Check claimable resources after collection (should be 0)
+      const claimableAfter = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableAfter).to.equal(BigInt(0));
+      
+      // Fast forward 6 hours
+      await ethers.provider.send("evm_increaseTime", [6 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Check claimable resources after 6 more hours
+      const claimableLater = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableLater).to.equal(BigInt(10 * 6)); // 10 gold per hour * 6 hours
+    });
+
+    it("Should handle recharge after collection correctly", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Fast forward 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect resources
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      
+      // Get building state after collection
+      const buildingAfterCollection = await gridBuildings.buildings(player1Address, buildingId);
+      const lastRechargeAfterCollection = buildingAfterCollection.lastRechargeTime;
+      
+      // Recharge building again
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Get building state after recharge
+      const buildingAfterRecharge = await gridBuildings.buildings(player1Address, buildingId);
+      
+      // lastRechargeTime should be updated to new timestamp
+      expect(buildingAfterRecharge.lastRechargeTime).to.be.gt(lastRechargeAfterCollection);
+      
+      // Building should not be at cap
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCap).to.be.false;
+      
+      // Fast forward 24 hours
+      await ethers.provider.send("evm_increaseTime", [24 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Building should now be at cap
+      const isAtCapAfter24Hours = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCapAfter24Hours).to.be.true;
+    });
+
+    it("Should prevent infinite collection with collectResourcesByType", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a house building
+      const { buildingId: houseId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(houseId, { value: rechargeFee });
+      
+      // Get initial building state
+      const buildingAfterRecharge = await gridBuildings.buildings(player1Address, houseId);
+      const initialLastRechargeTime = buildingAfterRecharge.lastRechargeTime;
+      
+      // Fast forward 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      
+      // Collect resources by type - this SHOULD NOT reset the production timer
+      await gridBuildings.connect(player1).collectResourcesByType(GridBuildingType.HOUSE);
+      
+      // Check building state after collection
+      const buildingAfterCollection = await gridBuildings.buildings(player1Address, houseId);
+      
+      // lastRechargeTime should NOT be reset after collection (only lastCollectionTime should be updated)
+      expect(buildingAfterCollection.lastRechargeTime).to.equal(initialLastRechargeTime);
+      
+      // Check gold balance increased (should be 12 hours worth from 2 houses)
+      const goldAfterFirstCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterFirstCollection).to.equal(initialGold + BigInt(10 * 12 * 2)); // 10 gold per hour * 12 hours * 2 houses
+      
+      // Fast forward 6 hours
+      await ethers.provider.send("evm_increaseTime", [6 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Collect again by type - should only get 6 hours worth from 2 houses
+      await gridBuildings.connect(player1).collectResourcesByType(GridBuildingType.HOUSE);
+      
+      // Check gold balance (should be 18 hours total from 2 houses, not 24 hours)
+      const goldAfterSecondCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterSecondCollection).to.equal(goldAfterFirstCollection + BigInt(10 * 6 * 2)); // Only 6 hours worth per house added
+      
+      // Verify building is NOT at cap (only 18 hours since last collection)
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, houseId);
+      expect(isAtCap).to.be.false;
+    });
+
+    it("Should prevent double collection of the same time period", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      
+      // Fast forward 12 hours
+      await ethers.provider.send("evm_increaseTime", [12 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // First collection - should get 12 hours worth
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      const goldAfterFirstCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterFirstCollection).to.equal(initialGold + BigInt(10 * 12)); // 10 gold per hour * 12 hours
+      
+      // Try to collect again immediately - should get 0 resources (no double collection)
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      const goldAfterSecondCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterSecondCollection).to.equal(goldAfterFirstCollection); // No additional resources
+      
+      // Fast forward 6 more hours
+      await ethers.provider.send("evm_increaseTime", [6 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Third collection - should only get 6 hours worth (not 18 hours)
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      const goldAfterThirdCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterThirdCollection).to.equal(goldAfterSecondCollection + BigInt(10 * 6)); // Only 6 hours worth
+      
+      // Building should NOT be at cap (only 18 hours since last recharge)
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCap).to.be.false;
+    });
+
+    it("Should prevent infinite production by capping at 24 hours from last recharge", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      
+      // Fast forward 48 hours (more than 24-hour cap)
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // First collection - should be capped at 24 hours worth
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      const goldAfterFirstCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterFirstCollection).to.equal(initialGold + BigInt(10 * 24)); // 10 gold per hour * 24 hours (capped)
+      
+      // Try to collect again immediately - should get 0 resources (no infinite production)
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      const goldAfterSecondCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterSecondCollection).to.equal(goldAfterFirstCollection); // No additional resources
+      
+      // Building should be at cap (24 hours since last recharge)
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCap).to.be.true;
+      
+      // Only recharge should allow new production
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      const isAtCapAfterRecharge = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCapAfterRecharge).to.be.false;
     });
   });
 }); 
