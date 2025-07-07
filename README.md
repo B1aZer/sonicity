@@ -2,6 +2,10 @@
 
 npx hardhat run scripts/fast-forward.js --network localhost
 
+## gtp convo
+
+python split_conversation.py initial-conept-conversation.txt
+
 # Sonicity - 3D City Building Game
 
 A 3D city building game where players can construct and manage a city with various buildings and resources.
