@@ -1,5 +1,13 @@
 /* Font declarations */
 @font-face {
+    font-family: 'Roboto';
+    src: url('/webfonts/Roboto-VariableFont.ttf') format('truetype');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
     font-family: 'MedievalSharp';
     src: url('/webfonts/MedievalSharp-Regular.ttf') format('truetype');
     font-weight: normal;
