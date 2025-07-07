@@ -76,6 +76,7 @@ export class StakePage extends BasePage {
 
     render() {
         this.element.innerHTML = `
+        <div class="page-container-outer">
             <div class="page-container">
                 <h1>Grid Building Management</h1>
                 <p class="page-description">
@@ -171,6 +172,7 @@ export class StakePage extends BasePage {
                     <div class="tier-content" data-tier="3"><div class="buildings-grid"></div></div>
                 </div>
             </div>
+        </div>
         `;
     }
 
