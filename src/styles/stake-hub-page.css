@@ -183,12 +183,16 @@
     background: var(--bg-light);
 }
 
-.stake-hub-page .building-card .progress-bar {
+.stake-hub-page .building-card.normal .progress-container {
     background: var(--color-primary);
 }
 
 .stake-hub-page .building-card .progress-bar {
     background: var(--color-primary);
+}
+
+.stake-hub-page .building-card.normal .progress-bar {
+    background: var(--bg-light);
 }
 
 .stake-hub-page .building-card .progress-bar::after {
