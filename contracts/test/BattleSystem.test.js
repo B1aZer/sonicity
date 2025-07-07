@@ -296,8 +296,8 @@ describe("BattleSystem", function () {
         });
 
         it("should not find any opponent when all other players are in battle", async function () {
-            // Ensure players have enough gold
-            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            // Ensure players have enough gold (need more than 100 since startSearch costs 100)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 200);
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
 
 
