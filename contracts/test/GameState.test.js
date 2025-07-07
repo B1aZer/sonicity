@@ -112,20 +112,26 @@ describe("GameState", function () {
     it("Should apply tier multiplier to rep points", async function () {
       const player1Address = await player1.getAddress();
       
-      // First donation to reach tier 1
-      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
+      // Give player gold directly using testEarnGold instead of creating buildings
+      await gameState.connect(owner).testEarnGold(player1Address, 1000);
+      
+      // First donation to reach tier 1 (1000 gold)
       await gameState.connect(player1).donateGold(1000);
       const state = await gameState.playerState(player1Address);
       expect(state.tier).to.equal(1);
       
-      // Second donation to reach tier 2
-      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 2000);
-      await gameState.connect(player1).donateGold(1500); // Donate 1500 to reach 2500 total
+      // Give player more gold for second donation
+      await gameState.connect(owner).testEarnGold(player1Address, 1500);
+      
+      // Second donation to reach tier 2 (1500 more gold to reach 2500 total)
+      await gameState.connect(player1).donateGold(1500);
       const state2 = await gameState.playerState(player1Address);
       expect(state2.tier).to.equal(2);
       
-      // Third donation with tier 2 multiplier
-      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 3000);
+      // Give player more gold for third donation
+      await gameState.connect(owner).testEarnGold(player1Address, 1000);
+      
+      // Third donation with tier 2 multiplier (1000 more gold)
       await gameState.connect(player1).donateGold(1000);
       const finalRep = await gameState.getPlayerRep(player1Address);
       
@@ -178,8 +184,8 @@ describe("GameState", function () {
     it("Should upgrade multiple tiers when donating enough gold at once", async function () {
       const player1Address = await player1.getAddress();
       
-      // Ensure player has enough gold for the test
-      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 4000);
+      // Give player gold directly using testEarnGold instead of creating buildings
+      await gameState.connect(owner).testEarnGold(player1Address, 4000);
       
       // Get initial state
       const initialState = await gameState.playerState(player1Address);
