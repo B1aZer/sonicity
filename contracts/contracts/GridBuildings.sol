@@ -53,6 +53,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 lastRechargeTime;    // When building was last recharged (started production)
         uint256 lastCollectionTime;  // When resources were last collected
         bool damaged;  // Only keep damaged flag
+        uint256 startProductionTime;  // When production started (timestamp)
     }
 
     // Mappings
@@ -256,7 +257,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             lastUpgradeTime: lastUpgradeTime == 0 ? block.timestamp : lastUpgradeTime,  // Use current time for new, preserved time for restored
             lastRechargeTime: 0, // Buildings start with no production - must be recharged to start producing
             lastCollectionTime: 0, // Buildings start with no production - must be recharged to start producing
-            damaged: false
+            damaged: false,
+            startProductionTime: 0
         });
         
         // Update counts
@@ -314,10 +316,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     // Internal helper to calculate claimable resources for a building
     function _calculateClaimable(Building storage building, uint256 currentTime) internal view returns (uint256) {
-        if (building.lastRechargeTime == 0 || building.lastCollectionTime == 0) {
+        if (building.lastRechargeTime == 0 || building.startProductionTime == 0) {
             return 0;
         }
-        uint256 startTime = building.lastCollectionTime;
+        
+        // Calculate from lastCollectionTime (or startProductionTime if never collected)
+        // This prevents double-collecting the same resources
+        uint256 startTime = building.lastCollectionTime == 0 ? building.startProductionTime : building.lastCollectionTime;
         uint256 endTime = currentTime;
         uint256 maxEndTime = building.lastRechargeTime + productionCapDuration;
         if (endTime > maxEndTime) {
@@ -329,6 +334,16 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 timePassed = endTime - startTime;
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         return (config.baseProductionRate * timePassed * building.level) / 1 hours;
+    }
+
+    // Internal helper to recharge a building
+    function _rechargeBuilding(Building storage building) internal {
+        // If this is the first recharge, set startProductionTime
+        if (building.startProductionTime == 0) {
+            building.startProductionTime = block.timestamp;
+        }
+        // Always update lastRechargeTime to extend the production cap
+        building.lastRechargeTime = block.timestamp;
     }
 
     /**
@@ -355,54 +370,53 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         for (uint256 i = 0; i < buildingIds.length; i++) {
             Building storage building = buildings[msg.sender][buildingIds[i]];
             if (building.buildingType == buildingType) {
-                if (building.lastRechargeTime == 0 || building.lastCollectionTime == 0) {
-                    continue;
-                }
                 uint256 amount = _calculateClaimable(building, block.timestamp);
-                building.lastCollectionTime = block.timestamp;
-                if (building.buildingType == GridBuildingType.HOUSE) {
-                    (bool success, bytes memory returnData) = gameStateAddress.call(
-                        abi.encodeWithSignature("earnGold(address,uint256)", msg.sender, amount)
-                    );
-                    if (!success) {
-                        if (returnData.length > 0) {
-                            assembly { revert(add(returnData, 32), mload(returnData)) }
+                if (amount > 0) {
+                    building.lastCollectionTime = block.timestamp;
+                    if (building.buildingType == GridBuildingType.HOUSE) {
+                        (bool success, bytes memory returnData) = gameStateAddress.call(
+                            abi.encodeWithSignature("earnGold(address,uint256)", msg.sender, amount)
+                        );
+                        if (!success) {
+                            if (returnData.length > 0) {
+                                assembly { revert(add(returnData, 32), mload(returnData)) }
+                            }
+                            revert("Failed to add gold");
                         }
-                        revert("Failed to add gold");
-                    }
-                } else if (building.buildingType == GridBuildingType.FARM) {
-                    (bool success, bytes memory returnData) = gameStateAddress.call(
-                        abi.encodeWithSignature("earnFood(address,uint256)", msg.sender, amount)
-                    );
-                    if (!success) {
-                        if (returnData.length > 0) {
-                            assembly { revert(add(returnData, 32), mload(returnData)) }
+                    } else if (building.buildingType == GridBuildingType.FARM) {
+                        (bool success, bytes memory returnData) = gameStateAddress.call(
+                            abi.encodeWithSignature("earnFood(address,uint256)", msg.sender, amount)
+                        );
+                        if (!success) {
+                            if (returnData.length > 0) {
+                                assembly { revert(add(returnData, 32), mload(returnData)) }
+                            }
+                            revert("Failed to add food");
                         }
-                        revert("Failed to add food");
-                    }
-                } else if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
-                    (bool success, bytes memory returnData) = gameStateAddress.call(
-                        abi.encodeWithSignature("earnDiamonds(address,uint256)", msg.sender, amount)
-                    );
-                    if (!success) {
-                        if (returnData.length > 0) {
-                            assembly { revert(add(returnData, 32), mload(returnData)) }
+                    } else if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
+                        (bool success, bytes memory returnData) = gameStateAddress.call(
+                            abi.encodeWithSignature("earnDiamonds(address,uint256)", msg.sender, amount)
+                        );
+                        if (!success) {
+                            if (returnData.length > 0) {
+                                assembly { revert(add(returnData, 32), mload(returnData)) }
+                            }
+                            revert("Failed to add diamonds");
                         }
-                        revert("Failed to add diamonds");
-                    }
-                } else if (building.buildingType == GridBuildingType.REP_STATION) {
-                    (bool success, bytes memory returnData) = gameStateAddress.call(
-                        abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
-                    );
-                    if (!success) {
-                        if (returnData.length > 0) {
-                            assembly { revert(add(returnData, 32), mload(returnData)) }
+                    } else if (building.buildingType == GridBuildingType.REP_STATION) {
+                        (bool success, bytes memory returnData) = gameStateAddress.call(
+                            abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
+                        );
+                        if (!success) {
+                            if (returnData.length > 0) {
+                                assembly { revert(add(returnData, 32), mload(returnData)) }
+                            }
+                            revert("Failed to add rep");
                         }
-                        revert("Failed to add rep");
                     }
+                    emit ResourcesCollected(msg.sender, buildingIds[i], amount);
+                    totalAmount += amount;
                 }
-                emit ResourcesCollected(msg.sender, buildingIds[i], amount);
-                totalAmount += amount;
             }
         }
         
@@ -654,13 +668,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             revert("Failed to track recharge amount");
         }
         
-        // Set lastCollectionTime during first recharge (when it's 0) to serve as base reference point
-        if (building.lastCollectionTime == 0) {
-            building.lastCollectionTime = block.timestamp;
-        }
-        
-        // Reset last recharge time to restart production
-        building.lastRechargeTime = block.timestamp;
+        // Set startProduction flag to true and reset last recharge time
+        _rechargeBuilding(building);
         
         emit BuildingRecharged(msg.sender, buildingId, msg.value);
     }
@@ -679,13 +688,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
             require(!building.damaged, "Building is damaged");
             
-            // Set lastCollectionTime during first recharge (when it's 0) to serve as base reference point
-            if (building.lastCollectionTime == 0) {
-                building.lastCollectionTime = block.timestamp;
-            }
-            
-            // Reset last recharge time to restart production
-            building.lastRechargeTime = block.timestamp;
+            // Set startProduction flag to true and reset last recharge time
+            _rechargeBuilding(building);
             
             totalFee += RECHARGE_FEE;
         }
@@ -720,13 +724,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             Building storage building = buildings[msg.sender][activeBuildings[i]];
             require(!building.damaged, "Building is damaged");
             
-            // Set lastCollectionTime during first recharge (when it's 0) to serve as base reference point
-            if (building.lastCollectionTime == 0) {
-                building.lastCollectionTime = block.timestamp;
-            }
-            
-            // Reset last recharge time to restart production
-            building.lastRechargeTime = block.timestamp;
+            // Set startProduction flag to true and reset last recharge time
+            _rechargeBuilding(building);
             
             totalFee += RECHARGE_FEE;
         }
@@ -804,9 +803,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Building storage building = buildings[msg.sender][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         require(!building.damaged, "Building is damaged");
-        require(building.lastRechargeTime > 0, "Building has not been recharged yet");
 
         uint256 amount = _calculateClaimable(building, block.timestamp);
+
+        // If no resources to claim, just return 0 (no revert)
+        if (amount == 0) {
+            return 0;
+        }
 
         // Update last collection time (when we collected resources)
         building.lastCollectionTime = block.timestamp;

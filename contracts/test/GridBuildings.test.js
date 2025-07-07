@@ -2007,37 +2007,86 @@ describe("GridBuildings", function () {
       expect(claimableAfterCollectionAndTime).to.equal(BigInt(10 * 6)); // 10 gold per hour * 6 hours
     });
 
-    it("Should set lastCollectionTime during first recharge", async function () {
+    it("Should set lastCollectionTime during first collection", async function () {
       const player1Address = await player1.getAddress();
       
       // Create a building (this will do 1 initial recharge via mintAndStakeNFT)
       const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       
       // Check building state after mintAndStakeNFT (should already be recharged)
-      const buildingAfterMint = await gridBuildings.buildings(player1Address, buildingId);
-      expect(buildingAfterMint.lastCollectionTime).to.be.gt(BigInt(0)); // Should be set during first recharge
-      expect(buildingAfterMint.lastRechargeTime).to.be.gt(BigInt(0)); // Should be set to current time
-      
-      // Store the first recharge timestamp
-      const firstRechargeTime = buildingAfterMint.lastRechargeTime;
-      const firstCollectionTime = buildingAfterMint.lastCollectionTime;
+      let building = await gridBuildings.buildings(player1Address, buildingId);
+      expect(building.lastCollectionTime).to.equal(BigInt(0)); // Should NOT be set during recharge
+      expect(building.lastRechargeTime).to.be.gt(BigInt(0)); // Should be set to current time
       
       // Fast forward 6 hours
       await ethers.provider.send("evm_increaseTime", [6 * 3600]);
       await ethers.provider.send("evm_mine");
+      
+      // Collect resources
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      
+      // Check building state after collection
+      building = await gridBuildings.buildings(player1Address, buildingId);
+      expect(building.lastCollectionTime).to.be.gt(BigInt(0)); // Should be set now
+      
+      // Store the first collection time
+      const firstCollectionTime = building.lastCollectionTime;
       
       // Recharge building again
       const rechargeFee = ethers.parseEther("0.01");
       await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
       
       // Check building state after second recharge
-      const buildingAfterSecondRecharge = await gridBuildings.buildings(player1Address, buildingId);
+      building = await gridBuildings.buildings(player1Address, buildingId);
       
       // lastCollectionTime should remain the same (not reset on subsequent recharges)
-      expect(buildingAfterSecondRecharge.lastCollectionTime).to.equal(firstCollectionTime);
+      expect(building.lastCollectionTime).to.equal(firstCollectionTime);
       
       // lastRechargeTime should be updated to new timestamp
-      expect(buildingAfterSecondRecharge.lastRechargeTime).to.be.gt(firstRechargeTime);
+      expect(building.lastRechargeTime).to.be.gt(firstCollectionTime);
     });
+  });
+
+  it("should handle startProductionTime correctly", async function () {
+    // Use the already-initialized contracts and player1 from the test context
+    // Create a house
+    const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+    
+    // Before recharge, should return 0 resources
+    let claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
+    expect(claimable).to.equal(0);
+    
+    // Try to collect before recharge - should not revert, just return 0
+    await gridBuildings.connect(player1).collectResources(buildingId);
+    
+    // Recharge the building
+    await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+    
+    // After recharge, should still return 0 (no time has passed)
+    claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
+    expect(claimable).to.equal(0);
+    
+    // Advance time by 1 hour
+    await ethers.provider.send("evm_increaseTime", [3600]); // 1 hour
+    await ethers.provider.send("evm_mine");
+    
+    // Now should have some resources (10 gold per hour * 1 level * 1 hour = 10 gold)
+    claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
+    expect(claimable).to.equal(10);
+    
+    // Collect resources
+    await gridBuildings.connect(player1).collectResources(buildingId);
+    
+    // After collection, should return 0 (just collected)
+    claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
+    expect(claimable).to.equal(0);
+    
+    // Advance time by 30 minutes
+    await ethers.provider.send("evm_increaseTime", [1800]); // 30 minutes
+    await ethers.provider.send("evm_mine");
+    
+    // Should have 5 gold (10 gold per hour * 1 level * 0.5 hours = 5 gold)
+    claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
+    expect(claimable).to.equal(5);
   });
 }); 
