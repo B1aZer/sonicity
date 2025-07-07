@@ -140,8 +140,9 @@
     transition: all var(--transition-normal);
     color: var(--color-secondary);
     position: relative;
-    font-weight: 900;
+    font-weight: 600;
     font-family: var(--font-family);
+    font-size: var(--font-size-sm);
 }
 
 .tab:hover {
@@ -170,14 +171,9 @@
     opacity: 0.8;
 }
 
-.tab-label {
-    margin-right: var(--spacing-xs);
-    font-weight: 500;
-}
-
 .tab-count {
     display: inline-block;
-    min-width: 1.8em;
+    min-width: 1em;
     padding: 0 0.5em;
     margin-left: var(--spacing-xs);
     background: var(--color-secondary);
