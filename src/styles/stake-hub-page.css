@@ -24,6 +24,7 @@
     text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
     line-height: 1.6;
     color: var(--bg-light);
+    transform: rotate(-0.5deg);
 }
 
 
@@ -257,7 +258,7 @@
 }
 
 .page-container-outer {
-    padding: 10px; /* space between outer and inner border */
+    padding: 5px; /* space between outer and inner border */
     background: #2a1c0f; /* or a texture, or transparent */
     border: 2px solid #292111; /* outer border color */
     border-radius: 4px;

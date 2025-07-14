@@ -127,7 +127,7 @@
     display: flex;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
-    border-bottom: var(--border-primary);
+    border-bottom: var(--border-secondary);
     padding-bottom: var(--spacing-sm);
 }
 
