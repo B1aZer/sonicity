@@ -266,6 +266,51 @@
     box-shadow: inset 1px 1px 8px #000000;
     position: relative;
     /* animation: border-glow 2s infinite alternate; */
+         /* TODO: hack */
+    
+        margin-top: 100px;
+        padding-left:25px;
+        padding-right:25px;
+        margin-left:10px;
+}
+
+/* Scroll image on top of the container */
+.page-container-outer::before {
+    content: "";
+    position: absolute;
+    top: -140px; /* Position above the container */
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(980px, 90vw); /* Responsive width - max 930px or 90% of viewport */
+    height: auto; /* Let height adjust automatically */
+    aspect-ratio: 930/139; /* Maintain original aspect ratio */
+    background-image: url('/images/scroll.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 10;
+    pointer-events: none; /* So it doesn't interfere with interactions */
+}
+
+/* Responsive adjustments for different screen sizes */
+@media (max-width: 1000px) {
+    .page-container-outer::before {
+        width: min(1100px, 95vw);
+        top: -135px;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-container-outer::before {
+        top: -80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-container-outer::before {
+        width: min(300px, 75vw);
+        top: -100px;
+    }
 }
 
 /*
