@@ -22,7 +22,7 @@ export class BarracksPage extends BasePage {
         try {
             // Load troop configs from contract
             await this.loadTroopConfigs();
-            this.render(); // Re-render with troop configs
+            // Remove the render() call here - it causes re-render and animation restart
             await this.loadBarracksData();
             this.setupTrainHandlers();
             Logger.info('Barracks page initialized successfully');
@@ -135,11 +135,11 @@ export class BarracksPage extends BasePage {
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Gold:</span>
-                            <span id="gold-amount" class="status-value">0</span>
+                            <span id="gold-amount" class="status-value">Loading...</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Food:</span>
-                            <span id="food-amount" class="status-value">0</span>
+                            <span id="food-amount" class="status-value">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -170,7 +170,7 @@ export class BarracksPage extends BasePage {
                                             </div>
                                             <span class="shop-item-stock in-stock">
                                                 <i class="fas fa-check-circle"></i>
-                                                <span id="${type.toLowerCase()}-count">0</span> trained 
+                                                <span id="${type.toLowerCase()}-count">Loading...</span> trained 
                                             </span>
                                         </div>
                                     </div>

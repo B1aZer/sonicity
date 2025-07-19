@@ -144,6 +144,7 @@ export class Router {
         }
 
         Logger.info('Creating new page instance for:', route);
+        console.log('🆕 DEBUG: Creating new page instance for route:', route);
         const pageInstance = new PageClass();
         pageInstance.route = route; // Add route property for identification
         
@@ -156,6 +157,7 @@ export class Router {
     async cleanupCurrentPage() {
         if (this.currentPage) {
             Logger.info('Cleaning up current page:', this.currentPage.route);
+            console.log('🧹 DEBUG: Cleaning up page:', this.currentPage.route);
             
             // Clean up game if it exists and we're not going to the overview page
             const nextRoute = this.getRouteFromPath(window.location.pathname);
