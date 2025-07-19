@@ -192,7 +192,8 @@
     background: var(--color-primary);
 }
 
-.stake-hub-page .building-card.normal .progress-bar {
+.stake-hub-page .building-card.normal .progress-bar,
+.stake-hub-page .building-card.at-cap .progress-bar {
     background: var(--bg-light);
 }
 

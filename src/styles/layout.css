@@ -31,7 +31,7 @@
 }
 
 .layout-footer {
-    background-color: var(--bg-darker);
+    background-color: var(--bg-dark);
     color: var(--text-primary);
     padding: var(--spacing-lg);
     text-align: center;

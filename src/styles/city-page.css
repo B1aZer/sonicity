@@ -120,13 +120,13 @@
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     cursor: pointer;
     transition: all var(--transition-normal);
-    color: var(--text-muted);
+    color: var(--bg-dark);
     position: relative;
 }
 
 .tier-tab:hover {
     background: var(--bg-lighter);
-    color: var(--text-primary);
+    color: var(--color-primary);
 }
 
 .tier-tab.active {
