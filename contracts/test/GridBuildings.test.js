@@ -1980,6 +1980,50 @@ describe("GridBuildings", function () {
       const claimableAfterRecharge = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
       expect(claimableAfterRecharge).to.equal(BigInt(10 * 6)); // 6 hours worth of production
     });
+
+    it("Should preserve claimable resources when recharging building at cap", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Create a building
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge building to start production
+      const rechargeFee = ethers.parseEther("0.01");
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Fast forward 48 hours (more than 24-hour cap)
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Check claimable resources before collection (should be 240 gold - 24 hours worth)
+      const claimableBeforeCollection = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableBeforeCollection).to.equal(BigInt(10 * 24)); // 240 gold
+      
+      // Building should be at cap
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCap).to.be.true;
+      
+      // Recharge the building while it's at cap
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
+      
+      // Check claimable resources after recharge (should still be 240 gold)
+      const claimableAfterRecharge = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableAfterRecharge).to.equal(BigInt(10 * 24)); // Still 240 gold
+      
+      // Building should no longer be at cap
+      const isAtCapAfterRecharge = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
+      expect(isAtCapAfterRecharge).to.be.false;
+      
+      // Now collect the resources
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      await gridBuildings.connect(player1).collectResources(buildingId);
+      const goldAfterCollection = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterCollection).to.equal(initialGold + BigInt(10 * 24)); // 240 gold collected
+      
+      // After collection, claimable should be 0
+      const claimableAfterCollection = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableAfterCollection).to.equal(BigInt(0));
+    });
   });
 
   it("should handle startProductionTime correctly", async function () {
