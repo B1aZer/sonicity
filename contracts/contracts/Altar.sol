@@ -184,7 +184,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         uint256 buildingId = stakedBuilding[stakeData.collection][tokenId];
         
         // Get building data from GridBuildings
-        (GridBuildings.GridBuildingType buildingType, uint8 level, uint256 lastUpgradeTime, uint256 lastRechargeTime, uint256 lastCollectionTime, bool damaged, uint256 startProductionTime) = gridBuildings.buildings(msg.sender, buildingId);
+        (GridBuildings.GridBuildingType buildingType, uint8 level, uint256 lastUpgradeTime, uint256 lastRechargeTime, uint256 lastCollectionTime, bool damaged) = gridBuildings.buildings(msg.sender, buildingId);
         
         // Preserve building data (buildingLevel > 0 indicates preserved data)
         stakes[collection][tokenId] = Stake({

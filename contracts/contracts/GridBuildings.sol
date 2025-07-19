@@ -35,6 +35,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         REP_STATION
     }
 
+    // Production States
+    enum ProductionState {
+        INACTIVE,    // Building not recharged
+        ACTIVE,      // Building producing normally
+        AT_CAP       // Building at production cap
+    }
+
     // Grid Building configuration
     struct GridBuildingConfig {
         string name;
@@ -52,8 +59,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 lastUpgradeTime;
         uint256 lastRechargeTime;    // When building was last recharged (started production)
         uint256 lastCollectionTime;  // When resources were last collected
-        bool damaged;  // Only keep damaged flag
-        uint256 startProductionTime;  // When production started (timestamp)
+        bool damaged;
+        // Removed startProductionTime - redundant with lastRechargeTime
     }
 
     // Mappings
@@ -257,8 +264,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             lastUpgradeTime: lastUpgradeTime == 0 ? block.timestamp : lastUpgradeTime,  // Use current time for new, preserved time for restored
             lastRechargeTime: 0, // Buildings start with no production - must be recharged to start producing
             lastCollectionTime: 0, // Buildings start with no production - must be recharged to start producing
-            damaged: false,
-            startProductionTime: 0
+            damaged: false
         });
         
         // Update counts
@@ -314,46 +320,66 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit BuildingUpgraded(msg.sender, buildingId, building.level);
     }
 
-    // Internal helper to calculate claimable resources for a building
-    function _calculateClaimable(Building storage building, uint256 currentTime) internal view returns (uint256) {
-        if (building.lastRechargeTime == 0 || building.startProductionTime == 0) {
+    // Internal helper to calculate the effective production start time
+    function _getEffectiveProductionStart(Building storage building) internal view returns (uint256) {
+        // If building has never been recharged, no production
+        if (building.lastRechargeTime == 0) {
             return 0;
         }
         
-        // Calculate from lastCollectionTime (or startProductionTime if never collected)
-        // This prevents double-collecting the same resources
-        uint256 startTime = building.lastCollectionTime == 0 ? building.startProductionTime : building.lastCollectionTime;
-        uint256 endTime = currentTime;
-        uint256 maxEndTime = building.lastRechargeTime + productionCapDuration;
-        if (endTime > maxEndTime) {
-            endTime = maxEndTime;
+        // If building has never collected, start from last recharge
+        if (building.lastCollectionTime == 0) {
+            return building.lastRechargeTime;
         }
-        if (endTime <= startTime) {
+        
+        // If building has collected, start from last collection
+        return building.lastCollectionTime;
+    }
+
+    // Internal helper to calculate claimable resources for a building
+    function _calculateClaimable(Building storage building, uint256 currentTime) internal view returns (uint256) {
+        // Building must be recharged to produce
+        if (building.lastRechargeTime == 0) {
             return 0;
         }
-        uint256 timePassed = endTime - startTime;
+        
+        // Calculate production window
+        uint256 productionStart = _getEffectiveProductionStart(building);
+        uint256 productionEnd = currentTime;
+        
+        // Cap production at 24 hours from last recharge
+        uint256 maxProductionEnd = building.lastRechargeTime + productionCapDuration;
+        if (productionEnd > maxProductionEnd) {
+            productionEnd = maxProductionEnd;
+        }
+        
+        // No production if end time <= start time
+        if (productionEnd <= productionStart) {
+            return 0;
+        }
+        
+        // Calculate production time and resources
+        uint256 productionTime = productionEnd - productionStart;
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
-        return (config.baseProductionRate * timePassed * building.level) / 1 hours;
+        
+        return (config.baseProductionRate * productionTime * building.level) / 1 hours;
     }
 
     // Internal helper to recharge a building
     function _rechargeBuilding(Building storage building) internal {
-        // If this is the first recharge, set startProductionTime
-        if (building.startProductionTime == 0) {
-            building.startProductionTime = block.timestamp;
+        // First, collect any accumulated resources before starting fresh production
+        uint256 accumulatedResources = _calculateClaimable(building, block.timestamp);
+        if (accumulatedResources > 0) {
+            // Distribute accumulated resources to player
+            _distributeResources(msg.sender, building.buildingType, accumulatedResources);
+            emit ResourcesCollected(msg.sender, 0, accumulatedResources); // buildingId 0 for auto-collection
         }
         
-        // Check if building was at cap before recharge
-        bool wasAtCap = building.lastRechargeTime > 0 && 
-                       (block.timestamp - building.lastRechargeTime) >= productionCapDuration;
+        // Update collection time to current time (since we just collected)
+        building.lastCollectionTime = block.timestamp;
         
-        // Always update lastRechargeTime to extend the production cap
+        // Start fresh production cycle
         building.lastRechargeTime = block.timestamp;
-        
-        // If building was at cap, reset lastCollectionTime to start fresh production
-        if (wasAtCap) {
-            building.lastCollectionTime = block.timestamp;
-        }
     }
 
     /**
@@ -415,11 +441,14 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     // Internal helper to update collection time based on cap status
     function _updateCollectionTime(Building storage building) internal {
-        // If building is at cap, set lastCollectionTime to the cap time to prevent additional production
-        if (block.timestamp >= building.lastRechargeTime + productionCapDuration) {
-            building.lastCollectionTime = building.lastRechargeTime + productionCapDuration;
+        uint256 currentTime = block.timestamp;
+        uint256 maxProductionEnd = building.lastRechargeTime + productionCapDuration;
+        
+        // If building is at cap, set collection time to cap time
+        if (currentTime >= maxProductionEnd) {
+            building.lastCollectionTime = maxProductionEnd;
         } else {
-            building.lastCollectionTime = block.timestamp;
+            building.lastCollectionTime = currentTime;
         }
     }
 
@@ -666,6 +695,26 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         }
         
         return buildingsAtCap;
+    }
+
+    /**
+     * @dev Get production state for a building
+     * @param player The address of the player
+     * @param buildingId The ID of the building
+     * @return ProductionState The current production state
+     */
+    function getProductionState(address player, uint256 buildingId) public view returns (ProductionState) {
+        Building storage building = buildings[player][buildingId];
+        
+        if (building.lastRechargeTime == 0) {
+            return ProductionState.INACTIVE;
+        }
+        
+        if (block.timestamp >= building.lastRechargeTime + productionCapDuration) {
+            return ProductionState.AT_CAP;
+        }
+        
+        return ProductionState.ACTIVE;
     }
 
     /**

@@ -1995,34 +1995,39 @@ describe("GridBuildings", function () {
       await ethers.provider.send("evm_increaseTime", [48 * 3600]);
       await ethers.provider.send("evm_mine");
       
-      // Check claimable resources before collection (should be 240 gold - 24 hours worth)
-      const claimableBeforeCollection = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
-      expect(claimableBeforeCollection).to.equal(BigInt(10 * 24)); // 240 gold
+      // Check claimable resources before recharge (should be 240 gold - 24 hours worth)
+      const claimableBeforeRecharge = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableBeforeRecharge).to.equal(BigInt(10 * 24)); // 240 gold
       
       // Building should be at cap
       const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
       expect(isAtCap).to.be.true;
       
-      // Recharge the building while it's at cap
+      // Get initial gold balance
+      const initialGold = await gameState.getPlayerGold(player1Address);
+      
+      // Recharge the building while it's at cap - this should auto-collect the 240 gold
       await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeFee });
       
-      // Check claimable resources after recharge (should still be 240 gold)
+      // Check that gold was auto-collected during recharge
+      const goldAfterRecharge = await gameState.getPlayerGold(player1Address);
+      expect(goldAfterRecharge).to.equal(initialGold + BigInt(10 * 24)); // 240 gold auto-collected
+      
+      // Check claimable resources after recharge (should be 0 since auto-collected)
       const claimableAfterRecharge = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
-      expect(claimableAfterRecharge).to.equal(BigInt(10 * 24)); // Still 240 gold
+      expect(claimableAfterRecharge).to.equal(BigInt(0)); // Auto-collected during recharge
       
       // Building should no longer be at cap
       const isAtCapAfterRecharge = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
       expect(isAtCapAfterRecharge).to.be.false;
       
-      // Now collect the resources
-      const initialGold = await gameState.getPlayerGold(player1Address);
-      await gridBuildings.connect(player1).collectResources(buildingId);
-      const goldAfterCollection = await gameState.getPlayerGold(player1Address);
-      expect(goldAfterCollection).to.equal(initialGold + BigInt(10 * 24)); // 240 gold collected
+      // Fast forward 6 hours to test new production cycle
+      await ethers.provider.send("evm_increaseTime", [6 * 3600]);
+      await ethers.provider.send("evm_mine");
       
-      // After collection, claimable should be 0
-      const claimableAfterCollection = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
-      expect(claimableAfterCollection).to.equal(BigInt(0));
+      // Should have 6 hours worth of new production
+      const claimableAfterTime = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableAfterTime).to.equal(BigInt(10 * 6)); // 6 hours worth of new production
     });
   });
 
