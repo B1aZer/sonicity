@@ -342,8 +342,18 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (building.startProductionTime == 0) {
             building.startProductionTime = block.timestamp;
         }
+        
+        // Check if building was at cap before recharge
+        bool wasAtCap = building.lastRechargeTime > 0 && 
+                       (block.timestamp - building.lastRechargeTime) >= productionCapDuration;
+        
         // Always update lastRechargeTime to extend the production cap
         building.lastRechargeTime = block.timestamp;
+        
+        // If building was at cap, reset lastCollectionTime to start fresh production
+        if (wasAtCap) {
+            building.lastCollectionTime = block.timestamp;
+        }
     }
 
     /**
@@ -356,6 +366,61 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Building storage building = buildings[player][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         return _calculateClaimable(building, block.timestamp);
+    }
+
+    // Internal helper to distribute resources to player based on building type
+    function _distributeResources(address player, GridBuildingType buildingType, uint256 amount) internal {
+        if (buildingType == GridBuildingType.HOUSE) {
+            (bool success, bytes memory returnData) = gameStateAddress.call(
+                abi.encodeWithSignature("earnGold(address,uint256)", player, amount)
+            );
+            if (!success) {
+                if (returnData.length > 0) {
+                    assembly { revert(add(returnData, 32), mload(returnData)) }
+                }
+                revert("Failed to add gold");
+            }
+        } else if (buildingType == GridBuildingType.FARM) {
+            (bool success, bytes memory returnData) = gameStateAddress.call(
+                abi.encodeWithSignature("earnFood(address,uint256)", player, amount)
+            );
+            if (!success) {
+                if (returnData.length > 0) {
+                    assembly { revert(add(returnData, 32), mload(returnData)) }
+                }
+                revert("Failed to add food");
+            }
+        } else if (buildingType == GridBuildingType.DIAMOND_STATION) {
+            (bool success, bytes memory returnData) = gameStateAddress.call(
+                abi.encodeWithSignature("earnDiamonds(address,uint256)", player, amount)
+            );
+            if (!success) {
+                if (returnData.length > 0) {
+                    assembly { revert(add(returnData, 32), mload(returnData)) }
+                }
+                revert("Failed to add diamonds");
+            }
+        } else if (buildingType == GridBuildingType.REP_STATION) {
+            (bool success, bytes memory returnData) = gameStateAddress.call(
+                abi.encodeWithSignature("earnRep(address,uint256)", player, amount)
+            );
+            if (!success) {
+                if (returnData.length > 0) {
+                    assembly { revert(add(returnData, 32), mload(returnData)) }
+                }
+                revert("Failed to add rep");
+            }
+        }
+    }
+
+    // Internal helper to update collection time based on cap status
+    function _updateCollectionTime(Building storage building) internal {
+        // If building is at cap, set lastCollectionTime to the cap time to prevent additional production
+        if (block.timestamp >= building.lastRechargeTime + productionCapDuration) {
+            building.lastCollectionTime = building.lastRechargeTime + productionCapDuration;
+        } else {
+            building.lastCollectionTime = block.timestamp;
+        }
     }
 
     /**
@@ -372,48 +437,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             if (building.buildingType == buildingType) {
                 uint256 amount = _calculateClaimable(building, block.timestamp);
                 if (amount > 0) {
-                    building.lastCollectionTime = block.timestamp;
-                    if (building.buildingType == GridBuildingType.HOUSE) {
-                        (bool success, bytes memory returnData) = gameStateAddress.call(
-                            abi.encodeWithSignature("earnGold(address,uint256)", msg.sender, amount)
-                        );
-                        if (!success) {
-                            if (returnData.length > 0) {
-                                assembly { revert(add(returnData, 32), mload(returnData)) }
-                            }
-                            revert("Failed to add gold");
-                        }
-                    } else if (building.buildingType == GridBuildingType.FARM) {
-                        (bool success, bytes memory returnData) = gameStateAddress.call(
-                            abi.encodeWithSignature("earnFood(address,uint256)", msg.sender, amount)
-                        );
-                        if (!success) {
-                            if (returnData.length > 0) {
-                                assembly { revert(add(returnData, 32), mload(returnData)) }
-                            }
-                            revert("Failed to add food");
-                        }
-                    } else if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
-                        (bool success, bytes memory returnData) = gameStateAddress.call(
-                            abi.encodeWithSignature("earnDiamonds(address,uint256)", msg.sender, amount)
-                        );
-                        if (!success) {
-                            if (returnData.length > 0) {
-                                assembly { revert(add(returnData, 32), mload(returnData)) }
-                            }
-                            revert("Failed to add diamonds");
-                        }
-                    } else if (building.buildingType == GridBuildingType.REP_STATION) {
-                        (bool success, bytes memory returnData) = gameStateAddress.call(
-                            abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
-                        );
-                        if (!success) {
-                            if (returnData.length > 0) {
-                                assembly { revert(add(returnData, 32), mload(returnData)) }
-                            }
-                            revert("Failed to add rep");
-                        }
-                    }
+                    _updateCollectionTime(building);
+                    _distributeResources(msg.sender, building.buildingType, amount);
                     emit ResourcesCollected(msg.sender, buildingIds[i], amount);
                     totalAmount += amount;
                 }
@@ -811,53 +836,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             return 0;
         }
 
-        // Update last collection time (when we collected resources)
-        building.lastCollectionTime = block.timestamp;
+        // Update last collection time based on cap status
+        _updateCollectionTime(building);
 
         // DO NOT reset lastRechargeTime - it should only be reset by recharge
 
-        // Add resources to player based on building type
-        if (building.buildingType == GridBuildingType.HOUSE) {
-            (bool success, bytes memory returnData) = gameStateAddress.call(
-                abi.encodeWithSignature("earnGold(address,uint256)", msg.sender, amount)
-            );
-            if (!success) {
-                if (returnData.length > 0) {
-                    assembly { revert(add(returnData, 32), mload(returnData)) }
-                }
-                revert("Failed to add gold");
-            }
-        } else if (building.buildingType == GridBuildingType.FARM) {
-            (bool success, bytes memory returnData) = gameStateAddress.call(
-                abi.encodeWithSignature("earnFood(address,uint256)", msg.sender, amount)
-            );
-            if (!success) {
-                if (returnData.length > 0) {
-                    assembly { revert(add(returnData, 32), mload(returnData)) }
-                }
-                revert("Failed to add food");
-            }
-        } else if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
-            (bool success, bytes memory returnData) = gameStateAddress.call(
-                abi.encodeWithSignature("earnDiamonds(address,uint256)", msg.sender, amount)
-            );
-            if (!success) {
-                if (returnData.length > 0) {
-                    assembly { revert(add(returnData, 32), mload(returnData)) }
-                }
-                revert("Failed to add diamonds");
-            }
-        } else if (building.buildingType == GridBuildingType.REP_STATION) {
-            (bool success, bytes memory returnData) = gameStateAddress.call(
-                abi.encodeWithSignature("earnRep(address,uint256)", msg.sender, amount)
-            );
-            if (!success) {
-                if (returnData.length > 0) {
-                    assembly { revert(add(returnData, 32), mload(returnData)) }
-                }
-                revert("Failed to add rep");
-            }
-        }
+        // Distribute resources to player
+        _distributeResources(msg.sender, building.buildingType, amount);
 
         emit ResourcesCollected(msg.sender, buildingId, amount);
         return amount;
