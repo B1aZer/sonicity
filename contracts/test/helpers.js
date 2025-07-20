@@ -32,6 +32,8 @@ async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
         mintValue = ethers.parseEther("0.015"); // Farm NFT price
     } else if (buildingType === GridBuildingType.DIAMOND_STATION) {
         mintValue = ethers.parseEther("0.02"); // Diamond Station NFT price
+    } else if (buildingType === GridBuildingType.REP_STATION) {
+        mintValue = ethers.parseEther("0.025"); // Rep Station NFT price
     } else {
         throw new Error("Unsupported building type");
     }
