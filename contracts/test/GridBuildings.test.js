@@ -2073,4 +2073,49 @@ describe("GridBuildings", function () {
     claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
     expect(claimable).to.equal(5);
   });
+
+  describe("Custom Production Duration", () => {
+    it("Should set and get custom production durations for building types", async () => {
+      // Test setting custom production duration for HOUSE
+      await gridBuildings.setBuildingProductionDuration(0, 48 * 3600); // HOUSE = 0, 48 hours
+      let duration = await gridBuildings.getBuildingProductionDuration(0);
+      expect(duration).to.equal(48 * 3600); // 48 hours in seconds
+      
+      // Test setting custom production duration for DIAMOND_STATION
+      await gridBuildings.setBuildingProductionDuration(2, 96 * 3600); // DIAMOND_STATION = 2, 96 hours
+      duration = await gridBuildings.getBuildingProductionDuration(2);
+      expect(duration).to.equal(96 * 3600); // 96 hours in seconds
+      
+      // Test that FARM still uses global default (24 hours)
+      duration = await gridBuildings.getBuildingProductionDuration(1); // FARM = 1
+      expect(duration).to.equal(24 * 3600); // 24 hours in seconds
+    });
+
+    it("Should use custom production duration in resource calculations", async () => {
+      // Set custom production duration for HOUSE to 48 hours
+      await gridBuildings.setBuildingProductionDuration(0, 48 * 3600);
+      
+      // Create a house through staking using the helper function
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge the building
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+      
+      // Fast forward 36 hours (should still be producing)
+      await ethers.provider.send("evm_increaseTime", [36 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Calculate claimable resources
+      const claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
+      expect(claimable).to.be.gt(0); // Should still be producing after 36 hours
+      
+      // Fast forward another 24 hours (should be at cap)
+      await ethers.provider.send("evm_increaseTime", [24 * 3600]);
+      await ethers.provider.send("evm_mine");
+      
+      // Calculate claimable resources at cap
+      const claimableAtCap = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
+      expect(claimableAtCap).to.be.gt(0); // Should have resources at cap
+    });
+  });
 }); 

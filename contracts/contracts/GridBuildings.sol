@@ -50,6 +50,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 maxLevel;            // Maximum level
         string description;
         uint8 tier;                  // Required tier to build
+        uint256 productionDuration;  // Custom production duration in seconds (0 = use global default)
     }
 
     // Building state
@@ -83,6 +84,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event BuildingRecharged(address indexed player, uint256 buildingId, uint256 fee);
     event BuildingsRecharged(address indexed player, uint256[] buildingIds, uint256 totalFee);
     event ProductionCapDurationUpdated(uint256 newDuration);
+    event BuildingProductionDurationUpdated(GridBuildingType buildingType, uint256 newDuration);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -104,7 +106,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             upgradeCost: 100,        // 100 gold to upgrade
             maxLevel: 5,
             description: "Produces gold",
-            tier: 0
+            tier: 0,
+            productionDuration: 24 hours // 24 hours for houses
         });
 
         buildingConfigs[GridBuildingType.FARM] = GridBuildingConfig({
@@ -113,7 +116,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             upgradeCost: 150,        // 150 gold to upgrade
             maxLevel: 5,
             description: "Produces food",
-            tier: 1
+            tier: 1,
+            productionDuration: 24 hours // 24 hours for farms
         });
 
         buildingConfigs[GridBuildingType.DIAMOND_STATION] = GridBuildingConfig({
@@ -122,7 +126,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             upgradeCost: 500,        // 500 gold to upgrade (example)
             maxLevel: 5,
             description: "Produces diamonds",
-            tier: 2
+            tier: 2,
+            productionDuration: 72 hours // 72 hours for diamond stations
         });
 
         buildingConfigs[GridBuildingType.REP_STATION] = GridBuildingConfig({
@@ -131,7 +136,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             upgradeCost: 200,        // 200 gold to upgrade
             maxLevel: 5,
             description: "Produces reputation",
-            tier: 3
+            tier: 3,
+            productionDuration: 72 hours // 72 hours for rep stations
         });
     }
 
@@ -191,6 +197,26 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function getProductionCapDuration() external view returns (uint256) {
         return productionCapDuration;
+    }
+
+    /**
+     * @dev Set custom production duration for a specific building type
+     * @param buildingType The type of building
+     * @param duration The new production duration in seconds (0 = use global default)
+     */
+    function setBuildingProductionDuration(GridBuildingType buildingType, uint256 duration) external onlyOwner {
+        require(duration <= 7 days, "Duration cannot exceed 7 days");
+        buildingConfigs[buildingType].productionDuration = duration;
+        emit BuildingProductionDurationUpdated(buildingType, duration);
+    }
+
+    /**
+     * @dev Get production duration for a specific building type
+     * @param buildingType The type of building
+     * @return uint256 The production duration in seconds
+     */
+    function getBuildingProductionDuration(GridBuildingType buildingType) external view returns (uint256) {
+        return _getProductionDuration(buildingType);
     }
 
     /**
@@ -320,6 +346,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         emit BuildingUpgraded(msg.sender, buildingId, building.level);
     }
 
+    // Internal helper to get production duration for a building type
+    function _getProductionDuration(GridBuildingType buildingType) internal view returns (uint256) {
+        GridBuildingConfig memory config = buildingConfigs[buildingType];
+        // If custom duration is set (non-zero), use it; otherwise use global default
+        return config.productionDuration > 0 ? config.productionDuration : productionCapDuration;
+    }
+
     // Internal helper to calculate the effective production start time
     function _getEffectiveProductionStart(Building storage building) internal view returns (uint256) {
         // If building has never been recharged, no production
@@ -348,7 +381,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 productionEnd = currentTime;
         
         // Cap production at 24 hours from last recharge
-        uint256 maxProductionEnd = building.lastRechargeTime + productionCapDuration;
+        uint256 maxProductionEnd = building.lastRechargeTime + _getProductionDuration(building.buildingType);
         if (productionEnd > maxProductionEnd) {
             productionEnd = maxProductionEnd;
         }
@@ -442,7 +475,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Internal helper to update collection time based on cap status
     function _updateCollectionTime(Building storage building) internal {
         uint256 currentTime = block.timestamp;
-        uint256 maxProductionEnd = building.lastRechargeTime + productionCapDuration;
+        uint256 maxProductionEnd = building.lastRechargeTime + _getProductionDuration(building.buildingType);
         
         // If building is at cap, set collection time to cap time
         if (currentTime >= maxProductionEnd) {
@@ -662,7 +695,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         }
         
         uint256 timeSinceRecharge = block.timestamp - building.lastRechargeTime;
-        return timeSinceRecharge >= productionCapDuration;
+        return timeSinceRecharge >= _getProductionDuration(building.buildingType);
     }
 
     /**
@@ -677,7 +710,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Count buildings at cap
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[player][activeBuildings[i]];
-            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= productionCapDuration) {
+            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= _getProductionDuration(building.buildingType)) {
                 capCount++;
             }
         }
@@ -688,7 +721,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[player][activeBuildings[i]];
-            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= productionCapDuration) {
+            if (!building.damaged && building.lastRechargeTime > 0 && (block.timestamp - building.lastRechargeTime) >= _getProductionDuration(building.buildingType)) {
                 buildingsAtCap[index] = activeBuildings[i];
                 index++;
             }
@@ -710,7 +743,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             return ProductionState.INACTIVE;
         }
         
-        if (block.timestamp >= building.lastRechargeTime + productionCapDuration) {
+        if (block.timestamp >= building.lastRechargeTime + _getProductionDuration(building.buildingType)) {
             return ProductionState.AT_CAP;
         }
         
@@ -851,7 +884,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Building storage building = buildings[player][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         
-        maxTime = productionCapDuration; // Production cap duration in seconds
+        maxTime = _getProductionDuration(building.buildingType); // Production cap duration in seconds
         
         // If building has never been recharged, no production
         if (building.lastRechargeTime == 0) {
