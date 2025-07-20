@@ -142,8 +142,7 @@
 }
 
 .tier-tab.locked:hover {
-    background: var(--bg-lighter);
-    color: var(--text-muted);
+    color: var(--bg-dark);
 }
 
 .tier-tab.locked::after {
