@@ -51,6 +51,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         string description;
         uint8 tier;                  // Required tier to build
         uint256 productionDuration;  // Custom production duration in seconds (0 = use global default)
+        uint256 rechargeCost;        // Custom recharge cost in wei (0 = free recharge)
     }
 
     // Building state
@@ -85,6 +86,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event BuildingsRecharged(address indexed player, uint256[] buildingIds, uint256 totalFee);
     event ProductionCapDurationUpdated(uint256 newDuration);
     event BuildingProductionDurationUpdated(GridBuildingType buildingType, uint256 newDuration);
+    event BuildingRechargeCostUpdated(GridBuildingType buildingType, uint256 newCost);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -107,7 +109,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             maxLevel: 5,
             description: "Produces gold",
             tier: 0,
-            productionDuration: 24 hours // 24 hours for houses
+            productionDuration: 24 hours, // 24 hours for houses
+            rechargeCost: 0.01 ether // 0.01 SONIC for houses
         });
 
         buildingConfigs[GridBuildingType.FARM] = GridBuildingConfig({
@@ -117,7 +120,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             maxLevel: 5,
             description: "Produces food",
             tier: 1,
-            productionDuration: 24 hours // 24 hours for farms
+            productionDuration: 24 hours, // 24 hours for farms
+            rechargeCost: 0.01 ether // 0.01 SONIC for farms
         });
 
         buildingConfigs[GridBuildingType.DIAMOND_STATION] = GridBuildingConfig({
@@ -127,7 +131,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             maxLevel: 5,
             description: "Produces diamonds",
             tier: 2,
-            productionDuration: 72 hours // 72 hours for diamond stations
+            productionDuration: 72 hours, // 72 hours for diamond stations
+            rechargeCost: 0.03 ether // 0.03 SONIC for diamond stations
         });
 
         buildingConfigs[GridBuildingType.REP_STATION] = GridBuildingConfig({
@@ -137,7 +142,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             maxLevel: 5,
             description: "Produces reputation",
             tier: 3,
-            productionDuration: 72 hours // 72 hours for rep stations
+            productionDuration: 72 hours, // 72 hours for rep stations
+            rechargeCost: 0 // Free recharge for rep stations (default)
         });
     }
 
@@ -217,6 +223,25 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function getBuildingProductionDuration(GridBuildingType buildingType) external view returns (uint256) {
         return _getProductionDuration(buildingType);
+    }
+
+    /**
+     * @dev Set custom recharge cost for a specific building type
+     * @param buildingType The type of building
+     * @param cost The new recharge cost in wei (0 = free recharge)
+     */
+    function setBuildingRechargeCost(GridBuildingType buildingType, uint256 cost) external onlyOwner {
+        buildingConfigs[buildingType].rechargeCost = cost;
+        emit BuildingRechargeCostUpdated(buildingType, cost);
+    }
+
+    /**
+     * @dev Get recharge cost for a specific building type
+     * @param buildingType The type of building
+     * @return uint256 The recharge cost in wei
+     */
+    function getBuildingRechargeCost(GridBuildingType buildingType) external view returns (uint256) {
+        return _getRechargeCost(buildingType);
     }
 
     /**
@@ -351,6 +376,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         GridBuildingConfig memory config = buildingConfigs[buildingType];
         // If custom duration is set (non-zero), use it; otherwise use global default
         return config.productionDuration > 0 ? config.productionDuration : productionCapDuration;
+    }
+
+    // Internal helper to get recharge cost for a building type
+    function _getRechargeCost(GridBuildingType buildingType) internal view returns (uint256) {
+        GridBuildingConfig memory config = buildingConfigs[buildingType];
+        // Use the configured recharge cost (0 = free recharge)
+        return config.rechargeCost;
     }
 
     // Internal helper to calculate the effective production start time
@@ -755,11 +787,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param buildingId The ID of the building to recharge
      */
     function rechargeBuilding(uint256 buildingId) external payable nonReentrant {
-        require(msg.value == RECHARGE_FEE, "Incorrect fee amount");
-        
         Building storage building = buildings[msg.sender][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         require(!building.damaged, "Building is damaged");
+        
+        // Get the custom recharge cost for this building type
+        uint256 requiredFee = _getRechargeCost(building.buildingType);
+        require(msg.value == requiredFee, "Incorrect fee amount");
         
         // Track recharge amount in GameState with building type
         (bool success, bytes memory returnData) = gameStateAddress.call(
@@ -786,19 +820,28 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param buildingIds Array of building IDs to recharge
      */
     function rechargeBuildings(uint256[] calldata buildingIds) external payable nonReentrant {
-        require(msg.value == RECHARGE_FEE * buildingIds.length, "Incorrect fee amount");
         require(buildingIds.length > 0, "No buildings specified");
         
-        uint256 totalFee = 0;
+        // Calculate total required fee based on each building's custom cost
+        uint256 totalRequiredFee = 0;
         for (uint256 i = 0; i < buildingIds.length; i++) {
             Building storage building = buildings[msg.sender][buildingIds[i]];
             require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
             require(!building.damaged, "Building is damaged");
             
+            totalRequiredFee += _getRechargeCost(building.buildingType);
+        }
+        
+        require(msg.value == totalRequiredFee, "Incorrect fee amount");
+        
+        uint256 totalFee = 0;
+        for (uint256 i = 0; i < buildingIds.length; i++) {
+            Building storage building = buildings[msg.sender][buildingIds[i]];
+            
             // Set startProduction flag to true and reset last recharge time
             _rechargeBuilding(building);
             
-            totalFee += RECHARGE_FEE;
+            totalFee += _getRechargeCost(building.buildingType);
         }
         
         // Track recharge amount in GameState (for simplicity, track as HOUSE type for bulk operations)
@@ -824,17 +867,26 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function rechargeAllBuildings() external payable nonReentrant {
         uint256[] memory activeBuildings = getActiveBuildings(msg.sender);
         require(activeBuildings.length > 0, "No buildings to recharge");
-        require(msg.value == RECHARGE_FEE * activeBuildings.length, "Incorrect fee amount");
         
-        uint256 totalFee = 0;
+        // Calculate total required fee based on each building's custom cost
+        uint256 totalRequiredFee = 0;
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[msg.sender][activeBuildings[i]];
             require(!building.damaged, "Building is damaged");
             
+            totalRequiredFee += _getRechargeCost(building.buildingType);
+        }
+        
+        require(msg.value == totalRequiredFee, "Incorrect fee amount");
+        
+        uint256 totalFee = 0;
+        for (uint256 i = 0; i < activeBuildings.length; i++) {
+            Building storage building = buildings[msg.sender][activeBuildings[i]];
+            
             // Set startProduction flag to true and reset last recharge time
             _rechargeBuilding(building);
             
-            totalFee += RECHARGE_FEE;
+            totalFee += _getRechargeCost(building.buildingType);
         }
         
         // Track recharge amount in GameState (for simplicity, track as HOUSE type for bulk operations)

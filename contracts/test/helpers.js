@@ -70,8 +70,10 @@ async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
     const buildingId = Number(buildingCreatedEvent.args.buildingId);
 
     // Immediately recharge the building so production starts
-    // console.log('Calling rechargeBuilding with value:', ethers.formatEther(ethers.parseEther("0.01")), 'SONIC');
-    await gridBuildings.connect(player).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+    // Get the custom recharge cost for this building type
+    const rechargeCost = await gridBuildings.getBuildingRechargeCost(buildingType);
+    // console.log('Calling rechargeBuilding with value:', ethers.formatEther(rechargeCost), 'SONIC');
+    await gridBuildings.connect(player).rechargeBuilding(buildingId, { value: rechargeCost });
 
     return {
         buildingId: buildingId,

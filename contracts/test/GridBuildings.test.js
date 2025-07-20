@@ -2118,4 +2118,95 @@ describe("GridBuildings", function () {
       expect(claimableAtCap).to.be.gt(0); // Should have resources at cap
     });
   });
+
+  describe("Custom Recharge Cost", () => {
+    it("Should set and get custom recharge costs for building types", async () => {
+      // Test setting custom recharge cost for DIAMOND_STATION
+      await gridBuildings.setBuildingRechargeCost(2, ethers.parseEther("0.05")); // DIAMOND_STATION = 2
+      let cost = await gridBuildings.getBuildingRechargeCost(2);
+      expect(cost).to.equal(ethers.parseEther("0.05")); // 0.05 SONIC
+      
+      // Test setting custom recharge cost for HOUSE
+      await gridBuildings.setBuildingRechargeCost(0, ethers.parseEther("0.02")); // HOUSE = 0
+      cost = await gridBuildings.getBuildingRechargeCost(0);
+      expect(cost).to.equal(ethers.parseEther("0.02")); // 0.02 SONIC
+      
+      // Test that FARM uses configured 0.01 SONIC
+      cost = await gridBuildings.getBuildingRechargeCost(1); // FARM = 1
+      expect(cost).to.equal(ethers.parseEther("0.01")); // 0.01 SONIC
+    });
+
+    it("Should allow free recharge for buildings with zero cost", async () => {
+      // Set HOUSE to free recharge for testing
+      await gridBuildings.setBuildingRechargeCost(0, 0); // Set HOUSE to free for testing
+      
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Recharge the building for free (0 cost)
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: 0 });
+      
+      // Check that building was recharged
+      const building = await gridBuildings.buildings(player1.address, buildingId);
+      expect(building.lastRechargeTime).to.be.gt(0);
+    });
+
+    it("Should require correct fee for buildings with custom cost", async () => {
+      // Set custom recharge cost for HOUSE
+      await gridBuildings.setBuildingRechargeCost(0, ethers.parseEther("0.02"));
+      
+      // Create a house through staking
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      
+      // Try to recharge with wrong amount - should fail
+      await expect(
+        gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") })
+      ).to.be.revertedWith("Incorrect fee amount");
+      
+      // Recharge with correct amount - should succeed
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.02") });
+      
+      // Check that building was recharged
+      const building = await gridBuildings.buildings(player1.address, buildingId);
+      expect(building.lastRechargeTime).to.be.gt(0);
+    });
+
+    it("Should use correct default recharge costs", async () => {
+      // Test default costs
+      let houseCost = await gridBuildings.getBuildingRechargeCost(0); // HOUSE = 0
+      expect(houseCost).to.equal(ethers.parseEther("0.01")); // 0.01 SONIC
+      
+      let farmCost = await gridBuildings.getBuildingRechargeCost(1); // FARM = 1
+      expect(farmCost).to.equal(ethers.parseEther("0.01")); // 0.01 SONIC
+      
+      let diamondCost = await gridBuildings.getBuildingRechargeCost(2); // DIAMOND_STATION = 2
+      expect(diamondCost).to.equal(ethers.parseEther("0.03")); // 0.03 SONIC
+      
+      let repCost = await gridBuildings.getBuildingRechargeCost(3); // REP_STATION = 3
+      expect(repCost).to.equal(0); // Free recharge
+    });
+
+    it("Should calculate correct total fee for multiple buildings with different costs", async () => {
+      // Set different recharge costs
+      await gridBuildings.setBuildingRechargeCost(0, ethers.parseEther("0.02")); // HOUSE
+      await gridBuildings.setBuildingRechargeCost(1, ethers.parseEther("0.03")); // FARM
+      
+      // Create buildings
+      const { buildingId: houseId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      const { buildingId: farmId } = await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
+      
+      // Try to recharge both with wrong total amount - should fail
+      await expect(
+        gridBuildings.connect(player1).rechargeBuildings([houseId, farmId], { value: ethers.parseEther("0.04") })
+      ).to.be.revertedWith("Incorrect fee amount");
+      
+      // Recharge both with correct total amount - should succeed
+      await gridBuildings.connect(player1).rechargeBuildings([houseId, farmId], { value: ethers.parseEther("0.05") });
+      
+      // Check that both buildings were recharged
+      const house = await gridBuildings.buildings(player1.address, houseId);
+      const farm = await gridBuildings.buildings(player1.address, farmId);
+      expect(house.lastRechargeTime).to.be.gt(0);
+      expect(farm.lastRechargeTime).to.be.gt(0);
+    });
+  });
 }); 
