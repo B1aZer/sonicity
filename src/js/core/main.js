@@ -28,6 +28,12 @@ class App {
             this.handleRoute();
         });
 
+        // Add global debug function
+        window.setLogLevel = (level) => {
+            Logger.setLogLevel(level);
+            console.log(`Log level set to: ${level}`);
+        };
+
         // Initial route will be handled by popstate event
         window.dispatchEvent(new PopStateEvent('popstate'));
     }
@@ -59,5 +65,5 @@ class App {
     }
 }
 
-// Initialize app
+// Initialize the app
 new App();

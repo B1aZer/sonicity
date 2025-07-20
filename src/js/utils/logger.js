@@ -1,11 +1,15 @@
 // Logging utility with configurable levels
 class Logger {
-    static #logLevel = 'info'; // Default level: 'debug', 'info', 'warn', 'error', 'none'
+    static #logLevel = 'warn'; // Default level: 'debug', 'info', 'warn', 'error', 'none'
     static #isDebugEnabled = false;
 
     static setLogLevel(level) {
         this.#logLevel = level;
         this.#isDebugEnabled = level === 'debug';
+    }
+
+    static getLogLevel() {
+        return this.#logLevel;
     }
 
     static debug(message, ...args) {

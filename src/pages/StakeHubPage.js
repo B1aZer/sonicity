@@ -615,12 +615,12 @@ export class StakePage extends BasePage {
 
     // --- Replace dummy implementations below with real contract calls ---
     async getStakedBuildings(userAddress) {
-        console.log('[DEBUG] getStakedBuildings for address:', userAddress);
+        // console.log('[DEBUG] getStakedBuildings for address:', userAddress);
         const buildings = await this.contracts.gridBuildings.getActiveBuildingsWithData(userAddress);
-        console.log('[DEBUG] getActiveBuildingsWithData returned:', buildings);
+        // console.log('[DEBUG] getActiveBuildingsWithData returned:', buildings);
         
         for (const building of buildings) {
-            console.log(`[DEBUG] Processing building ${building.id}:`, building);
+            // console.log(`[DEBUG] Processing building ${building.id}:`, building);
             
             // Add staked flag
             building.isStaked = true;
@@ -665,66 +665,51 @@ export class StakePage extends BasePage {
                 };
             }
             
-            // Get NFT information from altar contract
-            // We need to find which NFT is staked to this building
-            // Check both NFT contracts
-            const nftContracts = [this.contracts.nft, this.contracts.farmNft];
-            console.log(`[DEBUG] Looking for NFT info for building ${building.id}`);
-            
-            for (const contract of nftContracts) {
-                try {
-                    const contractAddress = await contract.getContractAddress();
-                    console.log(`[DEBUG] Checking contract: ${contractAddress}`);
+            // Get NFT info for this building
+            building.nftInfo = await this.getNFTInfoForBuilding(building.id);
+        }
+        
+        return buildings;
+    }
+
+    async getNFTInfoForBuilding(buildingId) {
+        // console.log(`[DEBUG] Looking for NFT info for building ${buildingId}`);
+        
+        const nftContracts = [this.contracts.nft, this.contracts.farmNft];
+        
+        for (const contract of nftContracts) {
+            try {
+                const contractAddress = await contract.getContractAddress();
+                // console.log(`[DEBUG] Checking contract: ${contractAddress}`);
+                
+                const userStakes = await this.contracts.altar.getUserStakesByCollection(await this.contracts.gameState.getAddress(), contractAddress);
+                // console.log(`[DEBUG] User stakes for ${contractAddress}:`, userStakes);
+                
+                for (const tokenId of userStakes) {
+                    const stakedBuildingId = await this.contracts.altar.getStakedBuilding(contractAddress, tokenId);
+                    // console.log(`[DEBUG] Token ${tokenId} is staked to building ${stakedBuildingId}`);
+                    // console.log(`[DEBUG] Comparing: Number(${stakedBuildingId}) === Number(${buildingId})`);
+                    // console.log(`[DEBUG] Values: ${Number(stakedBuildingId)} === ${Number(buildingId)}`);
                     
-                    const userStakes = await this.contracts.altar.getUserStakesByCollection(userAddress, contractAddress);
-                    console.log(`[DEBUG] User stakes for ${contractAddress}:`, userStakes);
-                    
-                    for (const tokenId of userStakes) {
-                        const stakedBuildingId = await this.contracts.altar.getStakedBuilding(contractAddress, tokenId);
-                        console.log(`[DEBUG] Token ${tokenId} is staked to building ${stakedBuildingId}`);
-                        console.log(`[DEBUG] Comparing: Number(${stakedBuildingId}) === Number(${building.id})`);
-                        console.log(`[DEBUG] Values: ${Number(stakedBuildingId)} === ${Number(building.id)}`);
-                        
-                        if (Number(stakedBuildingId) === Number(building.id)) {
-                            building.tokenId = Number(tokenId);
-                            building.contractAddress = contractAddress;
-                            console.log(`[DEBUG] Found NFT! Token ${tokenId} from ${contractAddress} is staked to building ${building.id}`);
-                            
-                            // Fetch NFT metadata for the image
-                            try {
-                                const tokenURI = await contract.tokenURI(tokenId);
-                                const response = await fetch(tokenURI);
-                                building.metadata = await response.json();
-                            } catch (e) {
-                                console.warn(`Failed to fetch metadata for token ${tokenId}:`, e);
-                                building.metadata = {};
-                            }
-                            
-                            break;
-                        }
+                    if (Number(stakedBuildingId) === Number(buildingId)) {
+                        // console.log(`[DEBUG] Found NFT! Token ${tokenId} from ${contractAddress} is staked to building ${buildingId}`);
+                        return {
+                            contractAddress,
+                            tokenId: Number(tokenId),
+                            isStaked: true
+                        };
                     }
-                    if (building.tokenId) break; // Found the NFT
-                } catch (e) {
-                    console.warn(`Error checking contract ${contract}:`, e);
                 }
-            }
-            
-            // If we couldn't find NFT info, log it for debugging
-            if (!building.tokenId) {
-                console.warn(`Could not find NFT information for building ${building.id}`);
-                console.log(`[DEBUG] Building ${building.id} details:`, {
-                    buildingType: building.buildingType,
-                    level: building.level,
-                    lastCollectionTime: building.lastCollectionTime,
-                    isAtCap: building.isAtCap
-                });
-                building.tokenId = null;
-                building.contractAddress = null;
+            } catch (error) {
+                // console.log(`[DEBUG] Error checking contract ${contract.constructor.name}:`, error);
             }
         }
         
-        console.log('[DEBUG] Final buildings array:', buildings);
-        return buildings;
+        return {
+            contractAddress: null,
+            tokenId: null,
+            isStaked: false
+        };
     }
 
     async getAvailableNFTs(userAddress) {

@@ -135,7 +135,7 @@ export class BasePage {
     setState(newState) {
         const oldState = { ...this.state };
         this.state = { ...this.state, ...newState };
-        console.log('🔄 DEBUG: State changed in', this.constructor.name, newState);
+        // console.log('🔄 DEBUG: State changed in', this.constructor.name, newState);
         this.updateUI(oldState, this.state);
     }
 
