@@ -61,14 +61,14 @@ export class MusicManager {
                 const settings = JSON.parse(savedSettings);
                 this.isPlaying = settings.isPlaying || false;
                 this.musicVolume = settings.musicVolume || 0.5;
-                console.log('MusicManager: Loaded settings from localStorage:', settings);
+                Logger.debug('MusicManager: Loaded settings from localStorage:', settings);
             } else {
                 this.isPlaying = false; // Start with music disabled
                 this.musicVolume = 0.5;
-                console.log('MusicManager: No saved settings, using defaults');
+                Logger.debug('MusicManager: No saved settings, using defaults');
             }
         } catch (error) {
-            console.warn('MusicManager: Failed to load settings from localStorage:', error);
+            Logger.warn('MusicManager: Failed to load settings from localStorage:', error);
             this.isPlaying = false;
             this.musicVolume = 0.5;
         }
@@ -84,9 +84,9 @@ export class MusicManager {
                 musicVolume: this.musicVolume
             };
             localStorage.setItem('musicSettings', JSON.stringify(settings));
-            console.log('MusicManager: Saved settings to localStorage:', settings);
+            Logger.debug('MusicManager: Saved settings to localStorage:', settings);
         } catch (error) {
-            console.warn('MusicManager: Failed to save settings to localStorage:', error);
+            Logger.warn('MusicManager: Failed to save settings to localStorage:', error);
         }
     }
 
@@ -200,7 +200,7 @@ export class MusicManager {
             return;
         }
 
-        console.log('MusicManager playTrack - starting to load track:', trackKey);
+        Logger.debug(`MusicManager playTrack - starting to load track: ${trackKey}`);
 
         // If we're already crossfading, stop the current crossfade
         if (this.isCrossfading) {
@@ -214,7 +214,7 @@ export class MusicManager {
             track.path,
             (buffer) => {
                 try {
-                    console.log('MusicManager playTrack - audio loaded, starting crossfade');
+                    Logger.debug('MusicManager playTrack - audio loaded, starting crossfade');
                     this.nextMusic.setBuffer(buffer);
                     this.nextMusic.setLoop(true);
                     this.nextMusic.setVolume(0); // Start at 0 volume
@@ -234,18 +234,16 @@ export class MusicManager {
                     }
                     
                 } catch (error) {
-                    console.log('MusicManager playTrack - error playing music:', error);
+                    Logger.error('MusicManager playTrack - error playing music:', error);
                     this.isPlaying = false;
-                    Logger.error('Error playing music:', error);
                 }
             },
             (xhr) => {
-                Logger.info(`Loading music: ${(xhr.loaded / xhr.total * 100)}% loaded`);
+                Logger.debug(`Loading music: ${(xhr.loaded / xhr.total * 100)}% loaded`);
             },
             (error) => {
-                console.log('MusicManager playTrack - error loading music:', error);
+                Logger.error('MusicManager playTrack - error loading music:', error);
                 this.isPlaying = false;
-                Logger.error('Error loading music:', error);
             }
         );
     }
@@ -344,7 +342,7 @@ export class MusicManager {
      * Stop music
      */
     stopMusic() {
-        console.log('MusicManager stopMusic - before stop isPlaying:', this.isPlaying);
+        Logger.debug('MusicManager stopMusic - before stop isPlaying:', this.isPlaying);
         
         // Stop any ongoing crossfade
         this.stopCrossfade();
@@ -355,7 +353,7 @@ export class MusicManager {
         }
         this.currentTrack = null;
         this.isPlaying = false;
-        console.log('MusicManager stopMusic - after stop isPlaying:', this.isPlaying);
+        Logger.debug('MusicManager stopMusic - after stop isPlaying:', this.isPlaying);
         Logger.info('Music stopped');
     }
 
@@ -363,12 +361,12 @@ export class MusicManager {
      * Toggle music on/off
      */
     toggleMusic() {
-        console.log('MusicManager toggleMusic - current isPlaying:', this.isPlaying);
+        Logger.debug('MusicManager toggleMusic - current isPlaying:', this.isPlaying);
         if (this.isPlaying) {
-            console.log('MusicManager: Stopping music');
+            Logger.debug('MusicManager: Stopping music');
             this.stopMusic();
         } else {
-            console.log('MusicManager: Starting music');
+            Logger.debug('MusicManager: Starting music');
             // Set playing flag immediately for better UI responsiveness
             this.isPlaying = true;
             // Play music for current page
@@ -376,7 +374,7 @@ export class MusicManager {
                 this.playPageMusic(this.currentPage);
             }
         }
-        console.log('MusicManager toggleMusic - after toggle isPlaying:', this.isPlaying);
+        Logger.debug('MusicManager toggleMusic - after toggle isPlaying:', this.isPlaying);
         
         // Save settings after toggle
         this.saveSettings();
@@ -416,7 +414,7 @@ export class MusicManager {
      * @returns {boolean} True if music is playing
      */
     isMusicPlaying() {
-        console.log('MusicManager isMusicPlaying - returning:', this.isPlaying);
+        Logger.debug('MusicManager isMusicPlaying - returning:', this.isPlaying);
         return this.isPlaying;
     }
 

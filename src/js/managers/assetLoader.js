@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { TextureLoader } from 'three/src/loaders/TextureLoader.js';
 import { BUILDINGS } from '../utils/constants.js';
+import Logger from '../utils/logger.js';
 
 // Texture paths - using PNG format instead of TGA
 const textureMap = {
@@ -30,7 +31,7 @@ export class AssetLoader {
 
         // Create a new loading promise
         this.loadPromise = (async () => {
-            console.log("AssetLoader: Starting asset loading...");
+            Logger.info("AssetLoader: Starting asset loading...");
             this.isLoadingComplete = false;
             this.loadedModels = {};
             this.loadingPromises = {};
@@ -38,9 +39,9 @@ export class AssetLoader {
             // Load textures first
             try {
                 await this.loadTextures();
-                console.log("AssetLoader: Textures loaded successfully.");
+                Logger.debug("AssetLoader: Textures loaded successfully.");
             } catch (error) {
-                console.error("AssetLoader: Error loading textures:", error);
+                Logger.error("AssetLoader: Error loading textures:", error);
                 // Continue loading models even if textures fail
             }
 
@@ -53,7 +54,7 @@ export class AssetLoader {
                 
                 // Skip buildings that don't have assets defined (models not yet implemented)
                 if (!assetInfo) {
-                    console.log(`AssetLoader: Skipping ${type} - no assets defined (model not yet implemented)`);
+                    Logger.debug(`AssetLoader: Skipping ${type} - no assets defined (model not yet implemented)`);
                     continue;
                 }
                 
@@ -64,14 +65,14 @@ export class AssetLoader {
                         .then(model => {
                             if (model) {
                                 this.loadedModels[modelKey] = model;
-                                console.log(`AssetLoader: Successfully loaded and stored model for ${modelKey}`);
+                                Logger.debug(`AssetLoader: Successfully loaded and stored model for ${modelKey}`);
                             } else {
                                 this.loadedModels[modelKey] = null;
-                                console.warn(`AssetLoader: Failed to load model for ${modelKey}, storing null.`);
+                                Logger.warn(`AssetLoader: Failed to load model for ${modelKey}, storing null.`);
                             }
                         })
                         .catch(error => {
-                            console.error(`AssetLoader: Error in loadAssets for ${modelKey}:`, error);
+                            Logger.error(`AssetLoader: Error in loadAssets for ${modelKey}:`, error);
                             this.loadedModels[modelKey] = null;
                         });
 
@@ -82,11 +83,11 @@ export class AssetLoader {
 
             try {
                 await Promise.all(allLoadPromises);
-                console.log("AssetLoader: All asset loading processes finished.");
+                Logger.info("AssetLoader: All asset loading processes finished.");
                 this.isLoadingComplete = true;
-                console.log("AssetLoader: isLoadingComplete set to true.");
+                Logger.debug("AssetLoader: isLoadingComplete set to true.");
             } catch (error) {
-                console.error("AssetLoader: An unexpected error occurred during Promise.all:", error);
+                Logger.error("AssetLoader: An unexpected error occurred during Promise.all:", error);
                 throw error;
             }
         })();
@@ -106,12 +107,12 @@ export class AssetLoader {
                         texture.colorSpace = THREE.SRGBColorSpace;
                         texture.needsUpdate = true;
                         this.textures[key] = texture;
-                        console.log(`AssetLoader: Successfully loaded texture ${key}`);
+                        Logger.debug(`AssetLoader: Successfully loaded texture ${key}`);
                         resolve(texture);
                     },
                     undefined,
                     error => {
-                        console.warn(`AssetLoader: Could not load texture ${key} from ${path}. Using fallback material.`);
+                        Logger.warn(`AssetLoader: Could not load texture ${key} from ${path}. Using fallback material.`);
                         this.textures[key] = null;
                         resolve(null);
                     }
@@ -124,21 +125,21 @@ export class AssetLoader {
     }
 
     async loadGLTFModel(typeKey, modelUrl) {
-        console.log(`AssetLoader [${typeKey}]: Loading GLTF from ${modelUrl}...`);
+        Logger.debug(`AssetLoader [${typeKey}]: Loading GLTF from ${modelUrl}...`);
         try {
             const gltf = await this.gltfLoader.loadAsync(modelUrl, 
                 // Progress callback
                 (xhr) => {
-                    console.log(`AssetLoader [${typeKey}]: Loading progress: ${(xhr.loaded / xhr.total * 100)}%`);
+                    Logger.debug(`AssetLoader [${typeKey}]: Loading progress: ${(xhr.loaded / xhr.total * 100)}%`);
                 },
                 // Error callback
                 (error) => {
-                    console.error(`AssetLoader [${typeKey}]: GLTFLoader error:`, error);
+                    Logger.error(`AssetLoader [${typeKey}]: GLTFLoader error:`, error);
                 }
             );
 
             if (!gltf || !gltf.scene) {
-                console.error(`AssetLoader [${typeKey}]: Invalid GLTF data received`);
+                Logger.error(`AssetLoader [${typeKey}]: Invalid GLTF data received`);
                 return null;
             }
 
@@ -155,7 +156,7 @@ export class AssetLoader {
                     child.material = child.material.clone();
                     
                     // Log original material properties
-                    console.log(`AssetLoader [${typeKey}]: Original material properties:`, {
+                    Logger.debug(`AssetLoader [${typeKey}]: Original material properties:`, {
                         type: child.material.type,
                         color: child.material.color.getHexString(),
                         map: !!child.material.map,
@@ -186,7 +187,7 @@ export class AssetLoader {
                     child.material.needsUpdate = true;
 
                     // Log final material properties
-                    console.log(`AssetLoader [${typeKey}]: Final material properties:`, {
+                    Logger.debug(`AssetLoader [${typeKey}]: Final material properties:`, {
                         type: child.material.type,
                         color: child.material.color.getHexString(),
                         map: !!child.material.map,
@@ -199,18 +200,18 @@ export class AssetLoader {
                 }
             });
 
-            console.log(`AssetLoader [${typeKey}]: Model loading complete.`);
+            Logger.debug(`AssetLoader [${typeKey}]: Model loading complete.`);
             return model;
 
         } catch (error) {
-            console.error(`AssetLoader: Error loading ${typeKey} from ${modelUrl}:`, error);
+            Logger.error(`AssetLoader: Error loading ${typeKey} from ${modelUrl}:`, error);
             return null;
         }
     }
 
     getModel(typeKey) {
         if (!this.loadedModels[typeKey]) {
-            console.warn(`AssetLoader: Model for ${typeKey} not found or failed to load.`);
+            Logger.warn(`AssetLoader: Model for ${typeKey} not found or failed to load.`);
             return null;
         }
         // Clone the model to allow multiple instances
@@ -219,14 +220,14 @@ export class AssetLoader {
 
     async waitForLoad() {
         if (!this.loadPromise) {
-            console.warn("AssetLoader: waitForLoad called but no assets are loading.");
+            Logger.warn("AssetLoader: waitForLoad called but no assets are loading.");
             return;
         }
 
         try {
             await this.loadPromise;
         } catch (error) {
-            console.error("AssetLoader: Error waiting for assets to load:", error);
+            Logger.error("AssetLoader: Error waiting for assets to load:", error);
             throw error; // Re-throw to handle it in the calling code
         }
     }
