@@ -126,7 +126,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
         buildingConfigs[GridBuildingType.DIAMOND_STATION] = GridBuildingConfig({
             name: "Diamond Station",
-            baseProductionRate: 1,   // 1 diamond per hour (example)
+            baseProductionRate: 1,   // Not used - special calculation in _calculateClaimable
             upgradeCost: 500,        // 500 gold to upgrade (example)
             maxLevel: 5,
             description: "Produces diamonds",
@@ -137,12 +137,12 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
         buildingConfigs[GridBuildingType.REP_STATION] = GridBuildingConfig({
             name: "Rep Station",
-            baseProductionRate: 2,   // 2 rep per hour
+            baseProductionRate: 1,   // Not used - special calculation in _calculateClaimable
             upgradeCost: 200,        // 200 gold to upgrade
             maxLevel: 5,
             description: "Produces reputation",
             tier: 3,
-            productionDuration: 72 hours, // 72 hours for rep stations
+            productionDuration: 168 hours, // 168 hours (7 days) for rep stations
             rechargeCost: 0 // Free recharge for rep stations (default)
         });
     }
@@ -412,7 +412,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 productionStart = _getEffectiveProductionStart(building);
         uint256 productionEnd = currentTime;
         
-        // Cap production at 24 hours from last recharge
+        // Cap production at custom duration from last recharge
         uint256 maxProductionEnd = building.lastRechargeTime + _getProductionDuration(building.buildingType);
         if (productionEnd > maxProductionEnd) {
             productionEnd = maxProductionEnd;
@@ -427,7 +427,19 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 productionTime = productionEnd - productionStart;
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         
-        return (config.baseProductionRate * productionTime * building.level) / 1 hours;
+        // Special handling for DIAMOND_STATION and REP_STATION
+        if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
+            // 1 diamond per 72 hours at level 1
+            // Formula: (productionTime * level) / (72 hours)
+            return (productionTime * building.level) / (72 hours);
+        } else if (building.buildingType == GridBuildingType.REP_STATION) {
+            // 1 rep NFT per 168 hours at level 1
+            // Formula: (productionTime * level) / (168 hours)
+            return (productionTime * building.level) / (168 hours);
+        } else {
+            // Standard calculation for other buildings
+            return (config.baseProductionRate * productionTime * building.level) / 1 hours;
+        }
     }
 
     // Internal helper to recharge a building
