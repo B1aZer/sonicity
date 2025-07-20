@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import Logger from './logger.js';
 
 export class InputHandler {
     constructor(game) {
@@ -13,28 +14,28 @@ export class InputHandler {
         // Add click listener to the renderer's DOM element
         if (this.game.renderer && this.game.renderer.domElement) {
             this.game.renderer.domElement.addEventListener('click', this.boundOnClick);
-            console.log("InputHandler: Click listener added to renderer");
+            Logger.debug("InputHandler: Click listener added to renderer");
         } else {
-            console.error("InputHandler: Renderer or DOM element not available");
+            Logger.error("InputHandler: Renderer or DOM element not available");
         }
     }
 
     removeEventListeners() {
         if (this.game.renderer && this.game.renderer.domElement) {
             this.game.renderer.domElement.removeEventListener('click', this.boundOnClick);
-            console.log("InputHandler: Click listener removed");
+            Logger.debug("InputHandler: Click listener removed");
         }
     }
 
     onClick(event) {
-        console.log("InputHandler: Click detected");
+        Logger.debug("InputHandler: Click detected");
         
         // Prevent clicking on UI elements
         if (event.target !== this.game.renderer.domElement) {
             let targetElement = event.target;
             while (targetElement != null) {
                 if (targetElement.id === 'ui-container' || targetElement.id === 'building-selector-container') {
-                    console.log("InputHandler: Clicked on UI element, ignoring");
+                    Logger.debug("InputHandler: Clicked on UI element, ignoring");
                     return;
                 }
                 targetElement = targetElement.parentElement;
