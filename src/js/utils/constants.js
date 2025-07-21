@@ -4,6 +4,7 @@ import * as THREE from 'three';
 export const CONTRACT_ADDRESSES = {
     SONICITY_NFT: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Will be updated by update-addresses.sh
     SONICITY_FARM: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", // Will be updated by update-addresses.sh
+    SONICITY_DIAMOND: "0x5FbDB2315678afecb367f032d93F642f64180aa4", // Will be updated by update-addresses.sh
     ALTAR: "0x9A676e781A523b5d0C0e43731313A708CB607508", // Will be updated by update-addresses.sh
     GAME_STATE: "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6", // Will be updated by update-addresses.sh
     DISTRICT_BUILDINGS: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788", // Will be updated by update-addresses.sh

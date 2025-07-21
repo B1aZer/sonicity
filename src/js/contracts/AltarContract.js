@@ -94,4 +94,15 @@ export class AltarContract extends BaseContract {
     async getStakedBuilding(collection, tokenId) {
         return await this.call('stakedBuilding', collection, tokenId);
     }
+
+    /**
+     * Mint and stake an NFT in one atomic operation
+     * @param {string} collection - The NFT collection address
+     * @param {number|string} tokenId - The specific token ID to mint
+     * @param {number} buildingType - The type of building to create (0: HOUSE, 1: FARM, 2: DIAMOND_STATION, 3: REP_STATION)
+     * @returns {Promise<Object>} - Transaction result
+     */
+    async mintAndStake(collection, tokenId, buildingType) {
+        return await this.transact('mintAndStake', collection, tokenId, buildingType);
+    }
 } 
