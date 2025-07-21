@@ -11,6 +11,7 @@ async function main() {
   const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
   const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
   const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+  const SonicityRep = await ethers.getContractFactory("SonicityRep");
 
   // Set Altar contract address on SonicityNFT
   if (addresses.sonicityNFT) {
@@ -40,6 +41,16 @@ async function main() {
     console.log("Altar address set on SonicityDiamond");
   } else {
     console.log("SonicityDiamond address not found in deployed-addresses.json");
+  }
+
+  // Set Altar contract address on SonicityRep
+  if (addresses.sonicityRep) {
+    console.log("Setting Altar address on SonicityRep...");
+    const sonicityRep = SonicityRep.attach(addresses.sonicityRep);
+    await sonicityRep.setAltarContract(addresses.altarProxy);
+    console.log("Altar address set on SonicityRep");
+  } else {
+    console.log("SonicityRep address not found in deployed-addresses.json");
   }
 
   // Approve collections in Altar if not already approved
@@ -74,6 +85,16 @@ async function main() {
       console.log("SonicityDiamond approved in Altar");
     } else {
       console.log("SonicityDiamond already approved in Altar");
+    }
+  }
+
+  if (addresses.sonicityRep) {
+    const isApproved = await altar.approvedCollections(addresses.sonicityRep);
+    if (!isApproved) {
+      await altar.approveCollection(addresses.sonicityRep);
+      console.log("SonicityRep approved in Altar");
+    } else {
+      console.log("SonicityRep already approved in Altar");
     }
   }
 

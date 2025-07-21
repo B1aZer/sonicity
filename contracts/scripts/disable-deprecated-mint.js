@@ -11,6 +11,7 @@ async function main() {
   const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
   const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
   const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+  const SonicityRep = await ethers.getContractFactory("SonicityRep");
 
   // Disable minting on SonicityNFT
   if (addresses.sonicityNFT) {
@@ -37,9 +38,19 @@ async function main() {
     console.log("Disabling minting on SonicityDiamond...");
     const sonicityDiamond = SonicityDiamond.attach(addresses.sonicityDiamond);
     await sonicityDiamond.setMintActive(false);
-    console.log("✓ Minting disabled on SonicityDiamond");
+    console.log("Minting disabled on SonicityDiamond");
   } else {
     console.log("SonicityDiamond address not found in deployed-addresses.json");
+  }
+
+  // Disable minting on SonicityRep
+  if (addresses.sonicityRep) {
+    console.log("Disabling minting on SonicityRep...");
+    const sonicityRep = SonicityRep.attach(addresses.sonicityRep);
+    await sonicityRep.setMintActive(false);
+    console.log("Minting disabled on SonicityRep");
+  } else {
+    console.log("SonicityRep address not found in deployed-addresses.json");
   }
 
   console.log("\n✅ Deprecated mint functions disabled!");
