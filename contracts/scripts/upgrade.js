@@ -94,6 +94,7 @@ async function main() {
   const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
   const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
   const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+  const SonicityRep = await ethers.getContractFactory("SonicityRep");
   
   if (addresses.sonicityNFT) {
     const sonicityNFT = SonicityNFT.attach(addresses.sonicityNFT);
@@ -108,6 +109,11 @@ async function main() {
   if (addresses.sonicityDiamond) {
     const sonicityDiamond = SonicityDiamond.attach(addresses.sonicityDiamond);
     await sonicityDiamond.setAltarContract(await altarProxy.getAddress());
+  }
+
+  if (addresses.sonicityRep) {
+    const sonicityRep = SonicityRep.attach(addresses.sonicityRep);
+    await sonicityRep.setAltarContract(await altarProxy.getAddress());
   }
 
   // Update addresses file
