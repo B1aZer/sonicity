@@ -82,6 +82,7 @@ export class StakePage extends BasePage {
                 <p class="page-description">
                     Stake your NFTs to create grid buildings. Manage, upgrade, and recharge your buildings here.
                 </p>
+                
                 <!-- Status Grid -->
                 <div class="page-section status-section">
                     <h2>Grid Status</h2>
@@ -344,6 +345,7 @@ export class StakePage extends BasePage {
             
             <div class="page-section tier-actions-section">
                 <h3>${tierNames[tier]} Actions</h3>
+                <button class="btn btn-md btn-primary create-building-btn">Create ${tierNames[tier]}</button>
                 <button class="btn btn-md btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
             </div>
             
@@ -368,6 +370,7 @@ export class StakePage extends BasePage {
         
         // Attach per-tier action listeners
         tierContent.querySelector('.claim-all-btn')?.addEventListener('click', () => this.claimAllInTier(tier));
+        tierContent.querySelector('.create-building-btn')?.addEventListener('click', () => this.createBuilding(tier));
         tierContent.querySelector('.recharge-tier-btn')?.addEventListener('click', () => {
             const input = tierContent.querySelector('.recharge-amount');
             const n = Math.max(1, Math.min(Number(input.value), buildingCount));
@@ -532,7 +535,7 @@ export class StakePage extends BasePage {
                         <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Charge</button>
                         <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
                         <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''}><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
-                        <button class="btn btn-full btn-danger unstake-btn"><i class="fas fa-sign-out-alt"></i> Unstake</button>
+                        <button class="btn btn-full btn-danger destroy-btn"><i class="fas fa-trash"></i> Destroy</button>
                     </div>
                 </div>
             `;
@@ -580,12 +583,8 @@ export class StakePage extends BasePage {
             card.querySelector('.recharge-btn')?.addEventListener('click', () => this.rechargeBuilding(item));
             card.querySelector('.upgrade-btn')?.addEventListener('click', () => this.upgradeBuilding(item));
             card.querySelector('.claim-btn')?.addEventListener('click', () => this.claimBuilding(item));
-            card.querySelector('.unstake-btn')?.addEventListener('click', () => {
-                if (item.tokenId && item.contractAddress) {
-                    this.unstakeNFT(item.tokenId, item.contractAddress);
-                } else {
-                    this.modal.error('Cannot unstake: NFT information not found', { title: 'Missing NFT Data' });
-                }
+            card.querySelector('.destroy-btn')?.addEventListener('click', () => {
+                this.destroyBuilding(item);
             });
         } else {
             card.querySelector('.stake-btn')?.addEventListener('click', () => this.stakeNFT(item.tokenId, item.contractAddress));
@@ -675,7 +674,7 @@ export class StakePage extends BasePage {
     async getNFTInfoForBuilding(buildingId) {
         // console.log(`[DEBUG] Looking for NFT info for building ${buildingId}`);
         
-        const nftContracts = [this.contracts.nft, this.contracts.farmNft];
+        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.repNft];
         
         for (const contract of nftContracts) {
             try {
@@ -713,8 +712,8 @@ export class StakePage extends BasePage {
     }
 
     async getAvailableNFTs(userAddress) {
-        // Get unstaked NFTs from both contracts
-        const nftContracts = [this.contracts.nft, this.contracts.farmNft];
+        // Get unstaked NFTs from all contracts
+        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.repNft];
         const available = [];
         for (const contract of nftContracts) {
             const balance = await contract.balanceOf(userAddress);
@@ -732,10 +731,10 @@ export class StakePage extends BasePage {
                     const response = await fetch(tokenURI);
                     metadata = await response.json();
                 } catch (e) {}
-                // Determine tier from metadata or contract type
+                // Determine tier from contract type
                 let tier = 0;
                 if (contract === this.contracts.farmNft) tier = 1;
-                if (metadata.name && metadata.name.toLowerCase().includes('rep')) tier = 2;
+                else if (contract === this.contracts.repNft) tier = 3;
                 available.push({
                     tokenId,
                     tier,
@@ -910,6 +909,75 @@ export class StakePage extends BasePage {
         } catch (e) {
             Logger.error('Error claiming resources:', e);
             this.modal.error(e.message || 'Failed to claim resources', { title: 'Collection Failed' });
+        }
+    }
+
+    async createBuilding(tier) {
+        const tierNames = ['House', 'Farm', 'Diamond Station', 'Rep Station'];
+        
+        try {
+            const tierName = tierNames[tier];
+            
+            const loadingModal = this.modal.loading(`Creating ${tierName.toLowerCase()}...`);
+            
+            // Determine which NFT contract to use based on tier
+            let nftContract, contractAddress;
+            if (tier === 0) {
+                // House - use SonicityNFT
+                nftContract = this.contracts.nft;
+                contractAddress = await nftContract.getContractAddress();
+            } else if (tier === 1) {
+                // Farm - use SonicityFarm
+                nftContract = this.contracts.farmNft;
+                contractAddress = await nftContract.getContractAddress();
+            } else if (tier === 3) {
+                // Rep Station - use SonicityRep
+                nftContract = this.contracts.repNft;
+                contractAddress = await nftContract.getContractAddress();
+            } else {
+                throw new Error(`Unsupported tier: ${tier}`);
+            }
+            
+            // Get the next token ID to mint
+            const totalSupply = await nftContract.totalSupply();
+            const tokenId = totalSupply + 1n;
+            
+            // Use the new mintAndStake function for atomic mint + stake
+            await this.contracts.altar.mintAndStake(contractAddress, tokenId, tier);
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data
+            await this.loadUserData();
+            
+            // Show success modal
+            this.modal.success(`${tierName} created successfully!`, { title: 'Building Created!' });
+        } catch (error) {
+            this.modal.error(`Failed to create ${tierNames[tier].toLowerCase()}: ` + error.message, { title: 'Creation Failed' });
+        }
+    }
+
+    async destroyBuilding(item) {
+        try {
+            this.showLoading("Destroying building...");
+            
+            // Get NFT info for this building
+            const nftInfo = await this.getNFTInfoForBuilding(item.id);
+            
+            if (nftInfo.isStaked && nftInfo.contractAddress && nftInfo.tokenId) {
+                // Unstake the NFT (this will destroy the building and preserve data)
+                await this.contracts.altar.unstake(nftInfo.contractAddress, nftInfo.tokenId);
+                this.showSuccess("Building destroyed successfully!");
+            } else {
+                // Fallback to direct destruction if no NFT found
+                await this.contracts.altar.destroyBuilding(item.id);
+                this.showSuccess("Building destroyed successfully!");
+            }
+            
+            await this.loadUserData();
+        } catch (error) {
+            this.showError("Failed to destroy building: " + error.message);
         }
     }
 
