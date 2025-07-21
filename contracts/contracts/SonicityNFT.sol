@@ -21,13 +21,18 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     // Base URI
     string public baseURI;
 
+    // Altar contract address - only this contract can call mintForAltar
+    address public altarContract;
+
     // Constructor - initialize NFT contract
     constructor() ERC721("Sonicity Land NFT", "SONIC") Ownable(msg.sender) {
         baseURI = "http://localhost:3000/metadata/houses/";
         mintIsActive = true; // Enable minting by default
     }
 
-    // Mint function - allows users to mint NFTs
+    // DEPRECATED: Mint function - allows users to mint NFTs
+    // This method is deprecated and will be disabled on production
+    // Use mintForAltar method instead which can only be called by the Altar contract
     function mint(uint256 _numTokens) external payable {
         require(mintIsActive, "Minting is not active");
         require(_numTokens > 0 && _numTokens <= MAX_MINT_PER_TX, "Invalid token count");
@@ -38,6 +43,28 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
             uint256 tokenId = totalSupply() + 1;
             _safeMint(msg.sender, tokenId);
         }
+    }
+
+    /**
+     * @dev Mint NFT for Altar contract - only callable by Altar contract
+     * @param to The address to mint the NFT to
+     * @param tokenId The specific token ID to mint
+     */
+    function mintForAltar(address to, uint256 tokenId) external {
+        require(msg.sender == altarContract, "Only Altar contract can call this function");
+        require(tokenId > 0 && tokenId <= MAX_SUPPLY, "Invalid token ID");
+        require(!_exists(tokenId), "Token already exists");
+        
+        _safeMint(to, tokenId);
+    }
+
+    /**
+     * @dev Set the Altar contract address
+     * @param _altarContract The address of the Altar contract
+     */
+    function setAltarContract(address _altarContract) external onlyOwner {
+        require(_altarContract != address(0), "Invalid altar contract address");
+        altarContract = _altarContract;
     }
 
     // Set mint state (active/inactive)

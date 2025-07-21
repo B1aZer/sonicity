@@ -9,6 +9,11 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./GameState.sol";
 import "./GridBuildings.sol";
 
+// Interface for NFT contracts that support mintForAltar
+interface IMintableNFT {
+    function mintForAltar(address to, uint256 tokenId) external;
+}
+
 /**
  * @title Altar
  * @dev Contract for staking Sonicity NFTs with building upgrade preservation
@@ -94,6 +99,76 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         require(approvedCollections[collection], "Collection not approved");
         approvedCollections[collection] = false;
         emit CollectionRemoved(collection);
+    }
+
+    /**
+     * @dev Mint and stake an NFT in one operation
+     * @param collection The address of the NFT collection to mint from
+     * @param tokenId The specific token ID to mint
+     * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: REP_STATION)
+     */
+    function mintAndStake(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) external nonReentrant {
+        require(approvedCollections[collection], "Collection not approved");
+        
+        // Mint the NFT directly to this contract using the mintForAltar function
+        IMintableNFT(collection).mintForAltar(address(this), tokenId);
+        
+        // Now stake the newly minted NFT
+        // Check if this NFT was previously staked and has preserved building data
+        Stake memory existingStake = stakes[collection][tokenId];
+        
+        if (existingStake.buildingLevel > 0 && !existingStake.isActive) {
+            // Restore building with preserved data
+            uint256 restoredBuildingId = gridBuildings.createBuilding(
+                msg.sender, 
+                existingStake.buildingType, 
+                existingStake.buildingLevel, 
+                existingStake.lastUpgradeTime
+            );
+            
+            // Update stake record to active state, clear preserved data
+            stakes[collection][tokenId] = Stake({
+                tokenId: tokenId,
+                stakedAt: block.timestamp,
+                owner: msg.sender,
+                isActive: true,
+                collection: collection,
+                buildingType: buildingType,  // Use requested building type
+                buildingLevel: 0,            // Clear preserved data
+                lastUpgradeTime: 0           // Clear preserved data
+            });
+            
+            // Update staked building mapping
+            stakedBuilding[collection][tokenId] = restoredBuildingId;
+            
+            emit BuildingDataRestored(collection, tokenId, existingStake.buildingType, existingStake.buildingLevel);
+        } else {
+            // Create new building
+            require(!existingStake.isActive, "NFT already staked");
+            
+            uint256 newBuildingId = gridBuildings.createBuilding(msg.sender, buildingType, 0, 0);
+            
+            // Create new stake record
+            stakes[collection][tokenId] = Stake({
+                tokenId: tokenId,
+                stakedAt: block.timestamp,
+                owner: msg.sender,
+                isActive: true,
+                collection: collection,
+                buildingType: buildingType,
+                buildingLevel: 1,
+                lastUpgradeTime: block.timestamp
+            });
+            
+            // Update staked building mapping
+            stakedBuilding[collection][tokenId] = newBuildingId;
+        }
+        
+        // Add to user's collection-specific staked tokens
+        userStakesByCollection[msg.sender][collection].push(tokenId);
+        
+        uint256 buildingId = stakedBuilding[collection][tokenId];
+        emit NFTStaked(msg.sender, tokenId, buildingId, collection);
     }
 
     /**
