@@ -53,7 +53,7 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     function mintForAltar(address to, uint256 tokenId) external {
         require(msg.sender == altarContract, "Only Altar contract can call this function");
         require(tokenId > 0 && tokenId <= MAX_SUPPLY, "Invalid token ID");
-        require(!_exists(tokenId), "Token already exists");
+        require(_ownerOf(tokenId) == address(0), "Token already exists");
         
         _safeMint(to, tokenId);
     }
