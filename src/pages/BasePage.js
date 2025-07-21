@@ -4,6 +4,7 @@ import { AltarContract } from '../js/contracts/AltarContract.js';
 import { NFTContract } from '../js/contracts/NFTContract.js';
 import { FarmNFTContract } from '../js/contracts/FarmNFTContract.js';
 import { DiamondNFTContract } from '../js/contracts/DiamondNFTContract.js';
+import { RepNFTContract } from '../js/contracts/RepNFTContract.js';
 import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
@@ -21,6 +22,7 @@ export class BasePage {
             nft: new NFTContract(),
             farmNft: new FarmNFTContract(),
             diamondNft: new DiamondNFTContract(),
+            repNft: new RepNFTContract(),
             districtBuildings: new DistrictBuildingsContract(),
             gridBuildings: new GridBuildingsContract(),
             battleSystem: new BattleSystemContract()
@@ -84,6 +86,10 @@ export class BasePage {
                 }),
                 this.contracts.diamondNft.initialize().catch(e => {
                     Logger.warn('Diamond NFT contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.repNft.initialize().catch(e => {
+                    Logger.warn('Rep NFT contract initialization failed:', e);
                     return null;
                 }),
                 this.contracts.districtBuildings.initialize().catch(e => {
