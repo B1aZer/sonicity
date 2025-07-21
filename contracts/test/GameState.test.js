@@ -8,6 +8,8 @@ describe("GameState", function () {
   let player1;
   let player2;
   let sonicityNFT;
+  let sonicityFarm;
+  let sonicityDiamond;
   let altar;
   let gridBuildings;
 
@@ -19,6 +21,18 @@ describe("GameState", function () {
     sonicityNFT = await SonicityNFT.deploy();
     await sonicityNFT.waitForDeployment();
     const sonicityNFTAddress = await sonicityNFT.getAddress();
+
+    // Deploy SonicityFarm
+    const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
+    sonicityFarm = await SonicityFarm.deploy();
+    await sonicityFarm.waitForDeployment();
+    const sonicityFarmAddress = await sonicityFarm.getAddress();
+
+    // Deploy SonicityDiamond
+    const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+    sonicityDiamond = await SonicityDiamond.deploy();
+    await sonicityDiamond.waitForDeployment();
+    const sonicityDiamondAddress = await sonicityDiamond.getAddress();
 
     // Deploy GameState
     const GameState = await ethers.getContractFactory("GameState");
@@ -55,6 +69,13 @@ describe("GameState", function () {
 
     // Approve NFT collection in Altar
     await altar.approveCollection(sonicityNFTAddress);
+    await altar.approveCollection(sonicityFarmAddress);
+    await altar.approveCollection(sonicityDiamondAddress);
+
+    // Set Altar contract address on all NFT contracts
+    await sonicityNFT.connect(owner).setAltarContract(altarAddress);
+    await sonicityFarm.connect(owner).setAltarContract(altarAddress);
+    await sonicityDiamond.connect(owner).setAltarContract(altarAddress);
 
     // Initialize players
     await gameState.connect(player1).initializePlayer();

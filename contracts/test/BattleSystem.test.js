@@ -9,7 +9,8 @@ describe("BattleSystem", function () {
     let gridBuildings;
     let altar;
     let sonicityNFT;
-    let farmNFT;
+    let sonicityFarm;
+    let sonicityDiamond;
     let owner;
     let player1;
     let player2;
@@ -27,11 +28,17 @@ describe("BattleSystem", function () {
         await sonicityNFT.waitForDeployment();
         const sonicityNFTAddress = await sonicityNFT.getAddress();
 
-        // Deploy FarmNFT (for farms)
-        const FarmNFT = await ethers.getContractFactory("SonicityNFT");
-        farmNFT = await FarmNFT.deploy();
-        await farmNFT.waitForDeployment();
-        const farmNFTAddress = await farmNFT.getAddress();
+        // Deploy SonicityFarm (for farms)
+        const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
+        sonicityFarm = await SonicityFarm.deploy();
+        await sonicityFarm.waitForDeployment();
+        const sonicityFarmAddress = await sonicityFarm.getAddress();
+
+        // Deploy SonicityDiamond (for diamonds)
+        const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+        sonicityDiamond = await SonicityDiamond.deploy();
+        await sonicityDiamond.waitForDeployment();
+        const sonicityDiamondAddress = await sonicityDiamond.getAddress();
 
         // Deploy GameState
         const GameState = await ethers.getContractFactory("GameState");
@@ -88,7 +95,13 @@ describe("BattleSystem", function () {
 
         // Approve NFT collections in Altar
         await altar.approveCollection(sonicityNFTAddress);
-        await altar.approveCollection(farmNFTAddress);
+        await altar.approveCollection(sonicityFarmAddress);
+        await altar.approveCollection(sonicityDiamondAddress);
+
+        // Set Altar contract address on all NFT contracts
+        await sonicityNFT.connect(owner).setAltarContract(altarAddress);
+        await sonicityFarm.connect(owner).setAltarContract(altarAddress);
+        await sonicityDiamond.connect(owner).setAltarContract(altarAddress);
 
         // Initialize players
         await gameState.connect(player1).initializePlayer();
@@ -121,7 +134,7 @@ describe("BattleSystem", function () {
 
             // Ensure each player has enough resources for training troops
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100 * amount); // 100 gold per infantry
-            await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, 50 * amount);  // 50 food per infantry
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 50 * amount);  // 50 food per infantry
 
             await battleSystem.connect(player1).trainTroops(0, amount); // 0 = INFANTRY
             
@@ -137,7 +150,7 @@ describe("BattleSystem", function () {
             const amount = 3;
             // Ensure resources for cavalry (200 gold, 100 food each)
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 200 * amount);
-            await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, 100 * amount);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 100 * amount);
                      
             await battleSystem.connect(player1).trainTroops(1, amount); // 1 = CAVALRY
             
@@ -154,7 +167,7 @@ describe("BattleSystem", function () {
             const amount = 2;
             // Ensure resources for siege units (300 gold, 150 food each)
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 300 * amount);
-            await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, 150 * amount);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 150 * amount);
                      
             await battleSystem.connect(player1).trainTroops(2, amount); // 2 = SIEGE
             
@@ -189,7 +202,7 @@ describe("BattleSystem", function () {
 
             // Ensure player has enough resources
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, totalGoldNeeded);
-            await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, totalFoodNeeded);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, totalFoodNeeded);
 
             // Log player's current resources
             const gold = await gameState.getPlayerGold(player1.address);
@@ -492,7 +505,7 @@ describe("BattleSystem", function () {
 
             // Ensure player has enough resources
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, totalGoldNeeded);
-            await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, totalFoodNeeded);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, totalFoodNeeded);
 
             // Configure troop damage chances
             await battleSystem.connect(owner).setTroopConfig(
@@ -1304,7 +1317,7 @@ describe("BattleSystem", function () {
             const opponent = searchStatus.foundOpponent;
             
             // Train some troops
-            await ensurePlayerFood(player1, gameState, gridBuildings, altar, farmNFT, 100);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 100);
             await battleSystem.connect(player1).trainTroops(0, 1); // Infantry
             
             await battleSystem.connect(player1).startBattle(1, 0, 0);

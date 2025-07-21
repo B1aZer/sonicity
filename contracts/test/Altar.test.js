@@ -5,6 +5,7 @@ const { GridBuildingType, mintAndStakeNFT, donateGoldForTier } = require("./help
 describe("Altar", function () {
   let sonicityNFT;
   let sonicityFarm;
+  let sonicityDiamond;
   let gameState;
   let gridBuildings;
   let altar;
@@ -27,6 +28,12 @@ describe("Altar", function () {
     sonicityFarm = await SonicityFarm.deploy();
     await sonicityFarm.waitForDeployment();
     const sonicityFarmAddress = await sonicityFarm.getAddress();
+
+    // Deploy SonicityDiamond
+    const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+    sonicityDiamond = await SonicityDiamond.deploy();
+    await sonicityDiamond.waitForDeployment();
+    const sonicityDiamondAddress = await sonicityDiamond.getAddress();
 
     // Deploy GameState
     const GameState = await ethers.getContractFactory("GameState");
@@ -70,6 +77,12 @@ describe("Altar", function () {
     // Approve NFT collections in Altar
     await altar.connect(owner).approveCollection(sonicityNFTAddress);
     await altar.connect(owner).approveCollection(sonicityFarmAddress);
+    await altar.connect(owner).approveCollection(sonicityDiamondAddress);
+
+    // Set Altar contract address on all NFT contracts
+    await sonicityNFT.connect(owner).setAltarContract(altarAddress);
+    await sonicityFarm.connect(owner).setAltarContract(altarAddress);
+    await sonicityDiamond.connect(owner).setAltarContract(altarAddress);
 
     // Initialize players (they start at tier 0 by default)
     await gameState.connect(player1).initializePlayer();

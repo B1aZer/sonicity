@@ -11,6 +11,8 @@ describe("DistrictBuildings", function () {
   let player1;
   let altar;
   let sonicityNFT;
+  let sonicityFarm;
+  let sonicityDiamond;
   let buildingNames;
   let getBuildingTypeIndex;
 
@@ -51,6 +53,18 @@ describe("DistrictBuildings", function () {
     await sonicityNFT.waitForDeployment();
     const sonicityNFTAddress = await sonicityNFT.getAddress();
 
+    // Deploy SonicityFarm
+    const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
+    sonicityFarm = await SonicityFarm.deploy();
+    await sonicityFarm.waitForDeployment();
+    const sonicityFarmAddress = await sonicityFarm.getAddress();
+
+    // Deploy SonicityDiamond
+    const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+    sonicityDiamond = await SonicityDiamond.deploy();
+    await sonicityDiamond.waitForDeployment();
+    const sonicityDiamondAddress = await sonicityDiamond.getAddress();
+
     // Deploy Altar
     const Altar = await ethers.getContractFactory("Altar");
     altar = await upgrades.deployProxy(Altar, [await gameState.getAddress(), await gridBuildings.getAddress()], {
@@ -71,6 +85,13 @@ describe("DistrictBuildings", function () {
     await gameState.connect(owner).setGridBuildingsAddress(await gridBuildings.getAddress());
     // Approve NFT collection in Altar
     await altar.connect(owner).approveCollection(sonicityNFTAddress);
+    await altar.connect(owner).approveCollection(sonicityFarmAddress);
+    await altar.connect(owner).approveCollection(sonicityDiamondAddress);
+
+    // Set Altar contract address on all NFT contracts
+    await sonicityNFT.connect(owner).setAltarContract(altarAddress);
+    await sonicityFarm.connect(owner).setAltarContract(altarAddress);
+    await sonicityDiamond.connect(owner).setAltarContract(altarAddress);
 
     // Set up contract interactions
     await districtBuildings.setGameStateAddress(await gameState.getAddress());
