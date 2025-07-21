@@ -6,25 +6,25 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
- * @title SonicityNFT
- * @dev Basic NFT contract for the Sonicity game
+ * @title SonicityDiamond
+ * @dev NFT contract for diamond station buildings in the Sonicity game
  */
-contract SonicityNFT is ERC721Enumerable, Ownable {
+contract SonicityDiamond is ERC721Enumerable, Ownable {
     using Strings for uint256;
 
     // Token config
-    uint256 public constant MAX_SUPPLY = 10000;
-    uint256 public constant MAX_MINT_PER_TX = 10;
-    uint256 public mintPrice = 0; // Free minting
+    uint256 public constant MAX_SUPPLY = 2000;  // Lower supply than houses and farms (premium)
+    uint256 public constant MAX_MINT_PER_TX = 3;  // Lower mint limit (premium)
+    uint256 public mintPrice = 0;  // Free minting
     bool public mintIsActive = false;
 
     // Base URI
     string public baseURI;
 
     // Constructor - initialize NFT contract
-    constructor() ERC721("Sonicity Land NFT", "SONIC") Ownable(msg.sender) {
-        baseURI = "http://localhost:3000/metadata/houses/";
-        mintIsActive = true; // Enable minting by default
+    constructor() ERC721("Sonicity Diamond NFT", "SDIAMOND") Ownable(msg.sender) {
+        baseURI = "http://localhost:3000/metadata/diamonds/";
+        mintIsActive = true;  // Enable minting by default
     }
 
     // Mint function - allows users to mint NFTs
