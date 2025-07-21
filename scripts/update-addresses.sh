@@ -13,6 +13,8 @@ fi
 # Read addresses from deployed-addresses.json
 SONICITY_NFT=$(jq -r '.sonicityNFT' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 SONICITY_FARM=$(jq -r '.sonicityFarm' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+SONICITY_DIAMOND=$(jq -r '.sonicityDiamond' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+SONICITY_REP=$(jq -r '.sonicityRep' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 ALTAR=$(jq -r '.altarProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 GAME_STATE=$(jq -r '.gameStateProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 DISTRICT_BUILDINGS=$(jq -r '.districtBuildingsProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
@@ -20,7 +22,7 @@ GRID_BUILDINGS=$(jq -r '.gridBuildingsProxy' "$PROJECT_ROOT/contracts/deployed-a
 BATTLE_SYSTEM=$(jq -r '.battleSystemProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 
 # Check if jq was successful
-if [ -z "$SONICITY_NFT" ] || [ -z "$SONICITY_FARM" ] || [ -z "$ALTAR" ] || [ -z "$GAME_STATE" ] || [ -z "$DISTRICT_BUILDINGS" ] || [ -z "$GRID_BUILDINGS" ] || [ -z "$BATTLE_SYSTEM" ]; then
+if [ -z "$SONICITY_NFT" ] || [ -z "$SONICITY_FARM" ] || [ -z "$SONICITY_DIAMOND" ] || [ -z "$SONICITY_REP" ] || [ -z "$ALTAR" ] || [ -z "$GAME_STATE" ] || [ -z "$DISTRICT_BUILDINGS" ] || [ -z "$GRID_BUILDINGS" ] || [ -z "$BATTLE_SYSTEM" ]; then
     echo "Error: Failed to read addresses from deployed-addresses.json"
     exit 1
 fi
@@ -28,6 +30,8 @@ fi
 # Update constants.js
 sed -i '' "s/SONICITY_NFT: \".*\"/SONICITY_NFT: \"$SONICITY_NFT\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/SONICITY_FARM: \".*\"/SONICITY_FARM: \"$SONICITY_FARM\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+sed -i '' "s/SONICITY_DIAMOND: \".*\"/SONICITY_DIAMOND: \"$SONICITY_DIAMOND\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+sed -i '' "s/SONICITY_REP: \".*\"/SONICITY_REP: \"$SONICITY_REP\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/ALTAR: \".*\"/ALTAR: \"$ALTAR\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/GAME_STATE: \".*\"/GAME_STATE: \"$GAME_STATE\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/DISTRICT_BUILDINGS: \".*\"/DISTRICT_BUILDINGS: \"$DISTRICT_BUILDINGS\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
@@ -37,6 +41,8 @@ sed -i '' "s/BATTLE_SYSTEM: \".*\"/BATTLE_SYSTEM: \"$BATTLE_SYSTEM\"/" "$PROJECT
 echo "Contract addresses updated successfully!"
 echo "SonicityNFT: $SONICITY_NFT"
 echo "SonicityFarm: $SONICITY_FARM"
+echo "SonicityDiamond: $SONICITY_DIAMOND"
+echo "SonicityRep: $SONICITY_REP"
 echo "Altar: $ALTAR"
 echo "GameState: $GAME_STATE"
 echo "DistrictBuildings: $DISTRICT_BUILDINGS"
