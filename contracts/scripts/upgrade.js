@@ -89,6 +89,27 @@ async function main() {
   console.log("Setting GridBuildings address in BattleSystem...");
   await battleSystemProxy.setGridBuildingsAddress(await gridBuildingsProxy.getAddress());
 
+  // Set Altar contract address on all NFT contracts (in case they were redeployed)
+  console.log("Setting Altar contract address on NFT contracts...");
+  const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
+  const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
+  const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+  
+  if (addresses.sonicityNFT) {
+    const sonicityNFT = SonicityNFT.attach(addresses.sonicityNFT);
+    await sonicityNFT.setAltarContract(await altarProxy.getAddress());
+  }
+  
+  if (addresses.sonicityFarm) {
+    const sonicityFarm = SonicityFarm.attach(addresses.sonicityFarm);
+    await sonicityFarm.setAltarContract(await altarProxy.getAddress());
+  }
+  
+  if (addresses.sonicityDiamond) {
+    const sonicityDiamond = SonicityDiamond.attach(addresses.sonicityDiamond);
+    await sonicityDiamond.setAltarContract(await altarProxy.getAddress());
+  }
+
   // Update addresses file
   const newAddresses = {
     ...addresses,

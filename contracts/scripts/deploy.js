@@ -21,6 +21,15 @@ async function main() {
   const sonicityFarmAddress = await sonicityFarm.getAddress();
   console.log("SonicityFarm deployed to:", sonicityFarmAddress);
 
+  // Deploy SonicityDiamond
+  console.log("Deploying SonicityDiamond...");
+  const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+  const sonicityDiamond = await SonicityDiamond.deploy();
+  console.log("Waiting for SonicityDiamond deployment...");
+  await sonicityDiamond.waitForDeployment();
+  const sonicityDiamondAddress = await sonicityDiamond.getAddress();
+  console.log("SonicityDiamond deployed to:", sonicityDiamondAddress);
+
   // Deploy GameState implementation
   console.log("Deploying GameState implementation...");
   const GameState = await ethers.getContractFactory("GameState");
@@ -136,6 +145,13 @@ async function main() {
   console.log("Approving NFT collections in Altar...");
   await altarProxy.approveCollection(sonicityNFTAddress);
   await altarProxy.approveCollection(sonicityFarmAddress);
+  await altarProxy.approveCollection(sonicityDiamondAddress);
+  
+  // Set Altar contract address on all NFT contracts
+  console.log("Setting Altar contract address on NFT contracts...");
+  await sonicityNFT.setAltarContract(altarProxyAddress);
+  await sonicityFarm.setAltarContract(altarProxyAddress);
+  await sonicityDiamond.setAltarContract(altarProxyAddress);
   
   // Set GameState address in DistrictBuildings
   console.log("Setting GameState address in DistrictBuildings...");
@@ -182,6 +198,7 @@ async function main() {
   console.log("Contract addresses:");
   console.log("SonicityNFT:", sonicityNFTAddress);
   console.log("SonicityFarm:", sonicityFarmAddress);
+  console.log("SonicityDiamond:", sonicityDiamondAddress);
   console.log("GameState implementation:", gameStateImplAddress);
   console.log("GameState proxy:", gameStateProxyAddress);
   console.log("DistrictBuildings implementation:", districtBuildingsImplAddress);
@@ -197,6 +214,7 @@ async function main() {
   const addresses = {
     sonicityNFT: sonicityNFTAddress,
     sonicityFarm: sonicityFarmAddress,
+    sonicityDiamond: sonicityDiamondAddress,
     gameStateImpl: gameStateImplAddress,
     gameStateProxy: gameStateProxyAddress,
     districtBuildingsImpl: districtBuildingsImplAddress,
