@@ -6,6 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "./GameState.sol";
 import "./GridBuildings.sol";
 
@@ -19,7 +20,7 @@ interface IMintableNFT {
  * @dev Contract for staking Sonicity NFTs with building upgrade preservation
  * Uses UUPS upgradeable pattern for future upgrades
  */
-contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable, IERC721Receiver {
     // Reference to the GameState contract
     GameState public gameState;
 
@@ -345,5 +346,22 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
      */
     function setMinStakingDuration(uint256 _duration) external onlyOwner {
         minStakingDuration = _duration;
+    }
+
+    /**
+     * @dev Implementation of IERC721Receiver.onERC721Received
+     * @param operator The address which called `safeTransferFrom` function
+     * @param from The address which previously owned the token
+     * @param tokenId The NFT identifier which is being transferred
+     * @param data Additional data with no specified format
+     * @return bytes4 `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
+     */
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 } 

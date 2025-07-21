@@ -24,43 +24,19 @@ async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
     const altarAddress = await altar.getAddress();
     const nftAddress = await nftContract.getAddress();
     
-    // Select mint value based on building type
-    let mintValue;
-    if (buildingType === GridBuildingType.HOUSE) {
-        mintValue = ethers.parseEther("0.01"); // House NFT price
-    } else if (buildingType === GridBuildingType.FARM) {
-        mintValue = ethers.parseEther("0.015"); // Farm NFT price
-    } else if (buildingType === GridBuildingType.DIAMOND_STATION) {
-        mintValue = ethers.parseEther("0.02"); // Diamond Station NFT price
-    } else if (buildingType === GridBuildingType.REP_STATION) {
-        mintValue = ethers.parseEther("0.025"); // Rep Station NFT price
-    } else {
-        throw new Error("Unsupported building type");
-    }
-
-    // Mint NFT
-    const mintTx = await nftContract.connect(player).mint(1, { value: mintValue });
-    const mintReceipt = await mintTx.wait();
+    // Get the next token ID to mint
+    const totalSupply = await nftContract.totalSupply();
+    const tokenId = totalSupply + 1n; // Use BigInt literal
     
-    // Get tokenId from Transfer event
-    const transferEvent = mintReceipt.logs
-        .map(log => {
-            try { return nftContract.interface.parseLog(log); } catch { return null; }
-        })
-        .find(e => e && e.name === "Transfer");
-    if (!transferEvent) throw new Error("Transfer event not found");
-    const tokenId = transferEvent.args.tokenId;
-
-    // Approve and stake
-    await nftContract.connect(player).approve(altarAddress, tokenId);
-    const stakeTx = await altar.connect(player).stake(tokenId, buildingType, nftAddress);
-    const stakeReceipt = await stakeTx.wait();
+    // Use the new mintAndStake function
+    const mintAndStakeTx = await altar.connect(player).mintAndStake(nftAddress, tokenId, buildingType);
+    const mintAndStakeReceipt = await mintAndStakeTx.wait();
     
     // Get the BuildingCreated event from the GridBuildings contract
     const gridBuildings = await ethers.getContractAt("GridBuildings", await altar.gridBuildings());
     const buildingCreatedTopic = gridBuildings.interface.getEvent("BuildingCreated").topicHash;
     const gridBuildingsAddress = await gridBuildings.getAddress();
-    const buildingCreatedLog = stakeReceipt.logs.find(
+    const buildingCreatedLog = mintAndStakeReceipt.logs.find(
         log => log.address === gridBuildingsAddress && log.topics[0] === buildingCreatedTopic
     );
     
