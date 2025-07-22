@@ -11,6 +11,7 @@ describe("BattleSystem", function () {
     let sonicityNFT;
     let sonicityFarm;
     let sonicityDiamond;
+    let sonicityRep;
     let owner;
     let player1;
     let player2;
@@ -40,6 +41,12 @@ describe("BattleSystem", function () {
         await sonicityDiamond.waitForDeployment();
         const sonicityDiamondAddress = await sonicityDiamond.getAddress();
 
+        // Deploy SonicityRep (for rep stations)
+        const SonicityRep = await ethers.getContractFactory("SonicityRep");
+        const sonicityRep = await SonicityRep.deploy();
+        await sonicityRep.waitForDeployment();
+        const sonicityRepAddress = await sonicityRep.getAddress();
+
         // Deploy GameState
         const GameState = await ethers.getContractFactory("GameState");
         gameState = await upgrades.deployProxy(GameState, [], { initializer: 'initialize' });
@@ -58,50 +65,52 @@ describe("BattleSystem", function () {
         await districtBuildings.waitForDeployment();
         const districtBuildingsAddress = await districtBuildings.getAddress();
 
-        // Deploy Altar
-        const Altar = await ethers.getContractFactory("Altar");
-        altar = await upgrades.deployProxy(Altar, [
-            gameStateAddress,
-            gridBuildingsAddress
-        ], { initializer: 'initialize' });
-        await altar.waitForDeployment();
-        const altarAddress = await altar.getAddress();
-
-        // Set minimum staking duration to 0 for testing
-        await altar.connect(owner).setMinStakingDuration(0);
-
         // Deploy BattleSystem
         const BattleSystem = await ethers.getContractFactory("BattleSystem");
         battleSystem = await upgrades.deployProxy(BattleSystem, [], { initializer: 'initialize' });
         await battleSystem.waitForDeployment();
         const battleSystemAddress = await battleSystem.getAddress();
 
-        // Set up contract references
+        // Deploy Altar
+        const Altar = await ethers.getContractFactory("Altar");
+        altar = await upgrades.deployProxy(Altar, [gameStateAddress, gridBuildingsAddress], { initializer: 'initialize' });
+        await altar.waitForDeployment();
+        const altarAddress = await altar.getAddress();
+
+        // Set up contract interactions
         await gameState.setAltarAddress(altarAddress);
         await gameState.setGridBuildingsAddress(gridBuildingsAddress);
-        await gameState.setBattleSystemAddress(battleSystemAddress);
         await gameState.setDistrictBuildingsAddress(districtBuildingsAddress);
+        await gameState.setBattleSystemAddress(battleSystemAddress);
 
-        await gridBuildings.setGameStateAddress(gameStateAddress);
         await gridBuildings.setAltarAddress(altarAddress);
+        await gridBuildings.setGameStateAddress(gameStateAddress);
+        await gridBuildings.setDistrictBuildingsAddress(districtBuildingsAddress);
         await gridBuildings.setBattleSystemAddress(battleSystemAddress);
 
         await districtBuildings.setGameStateAddress(gameStateAddress);
-        await districtBuildings.setBattleSystemAddress(battleSystemAddress);
 
         await battleSystem.setGameStateAddress(gameStateAddress);
         await battleSystem.setDistrictBuildingsAddress(districtBuildingsAddress);
         await battleSystem.setGridBuildingsAddress(gridBuildingsAddress);
 
+        // Set BattleSystem address in DistrictBuildings
+        await districtBuildings.setBattleSystemAddress(battleSystemAddress);
+
         // Approve NFT collections in Altar
         await altar.approveCollection(sonicityNFTAddress);
         await altar.approveCollection(sonicityFarmAddress);
         await altar.approveCollection(sonicityDiamondAddress);
+        await altar.approveCollection(sonicityRepAddress);
 
         // Set Altar contract address on all NFT contracts
-        await sonicityNFT.connect(owner).setAltarContract(altarAddress);
-        await sonicityFarm.connect(owner).setAltarContract(altarAddress);
-        await sonicityDiamond.connect(owner).setAltarContract(altarAddress);
+        await sonicityNFT.setAltarContract(altarAddress);
+        await sonicityFarm.setAltarContract(altarAddress);
+        await sonicityDiamond.setAltarContract(altarAddress);
+        await sonicityRep.setAltarContract(altarAddress);
+
+        // Set minimum staking duration to 0 for testing
+        await altar.setMinStakingDuration(0);
 
         // Initialize players
         await gameState.connect(player1).initializePlayer();

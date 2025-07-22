@@ -34,6 +34,12 @@ describe("GameState", function () {
     await sonicityDiamond.waitForDeployment();
     const sonicityDiamondAddress = await sonicityDiamond.getAddress();
 
+    // Deploy SonicityRep
+    const SonicityRep = await ethers.getContractFactory("SonicityRep");
+    const sonicityRep = await SonicityRep.deploy();
+    await sonicityRep.waitForDeployment();
+    const sonicityRepAddress = await sonicityRep.getAddress();
+
     // Deploy GameState
     const GameState = await ethers.getContractFactory("GameState");
     gameState = await upgrades.deployProxy(GameState, [], { initializer: 'initialize' });
@@ -48,38 +54,30 @@ describe("GameState", function () {
 
     // Deploy Altar
     const Altar = await ethers.getContractFactory("Altar");
-    altar = await upgrades.deployProxy(Altar, [
-      gameStateAddress,
-      gridBuildingsAddress
-    ], { initializer: 'initialize' });
+    altar = await upgrades.deployProxy(Altar, [gameStateAddress, gridBuildingsAddress], { initializer: 'initialize' });
     await altar.waitForDeployment();
     const altarAddress = await altar.getAddress();
 
-    // Set altar address in GameState
+    // Set up contract interactions
     await gameState.setAltarAddress(altarAddress);
-
-    // Set GridBuildings address in GameState
     await gameState.setGridBuildingsAddress(gridBuildingsAddress);
-
-    // Set GameState address in GridBuildings
+    await gridBuildings.setAltarAddress(altarAddress);
     await gridBuildings.setGameStateAddress(gameStateAddress);
 
-    // Set Altar address in GridBuildings
-    await gridBuildings.setAltarAddress(altarAddress);
-
-    // Approve NFT collection in Altar
+    // Approve NFT collections in Altar
     await altar.approveCollection(sonicityNFTAddress);
     await altar.approveCollection(sonicityFarmAddress);
     await altar.approveCollection(sonicityDiamondAddress);
+    await altar.approveCollection(sonicityRepAddress);
 
     // Set Altar contract address on all NFT contracts
-    await sonicityNFT.connect(owner).setAltarContract(altarAddress);
-    await sonicityFarm.connect(owner).setAltarContract(altarAddress);
-    await sonicityDiamond.connect(owner).setAltarContract(altarAddress);
+    await sonicityNFT.setAltarContract(altarAddress);
+    await sonicityFarm.setAltarContract(altarAddress);
+    await sonicityDiamond.setAltarContract(altarAddress);
+    await sonicityRep.setAltarContract(altarAddress);
 
-    // Initialize players
-    await gameState.connect(player1).initializePlayer();
-    await gameState.connect(player2).initializePlayer();
+    // Set minimum staking duration to 0 for testing
+    await altar.setMinStakingDuration(0);
   });
 
   describe("Player State", function () {
@@ -94,6 +92,10 @@ describe("GameState", function () {
     });
 
     it("Should not allow re-initialization of players", async function () {
+      // First call should succeed
+      await gameState.connect(player1).initializePlayer();
+      
+      // Second call should fail
       await expect(gameState.connect(player1).initializePlayer())
         .to.be.revertedWith("Player already initialized");
     });
@@ -204,6 +206,9 @@ describe("GameState", function () {
 
     it("Should upgrade multiple tiers when donating enough gold at once", async function () {
       const player1Address = await player1.getAddress();
+      
+      // Initialize the player first
+      await gameState.connect(player1).initializePlayer();
       
       // Give player gold directly using testEarnGold instead of creating buildings
       await gameState.connect(owner).testEarnGold(player1Address, 4000);
