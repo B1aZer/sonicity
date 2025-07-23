@@ -513,11 +513,6 @@ export class StakePage extends BasePage {
             let upgradeButtonText = 'Upgrade';
             let upgradeDisabled = item.damaged || !canUpgrade;
             
-            if (upgradeCost > 0n) {
-                const costInSonic = this.contracts.gridBuildings.formatUpgradeCost(upgradeCost);
-                upgradeButtonText = `Upgrade (${costInSonic} SONIC)`;
-            }
-            
             if (currentLevel >= maxLevel) {
                 upgradeButtonText = 'Max Level';
                 upgradeDisabled = true;
