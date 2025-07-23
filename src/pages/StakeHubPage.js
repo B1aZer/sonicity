@@ -249,7 +249,7 @@ export class StakePage extends BasePage {
             repPoints: Number(repPoints)
         };
         this.updateStatusSection();
-        this.updateTierTabs();
+        await this.updateTierTabs();
         this.renderTierContent(this.state.selectedTier);
     }
 
@@ -268,18 +268,42 @@ export class StakePage extends BasePage {
         this.element.querySelector('.rep-points-value').textContent = this.state.repPoints.toLocaleString();
     }
 
-    updateTierTabs() {
+    async updateTierTabs() {
+        // Get the player's tier (not city tier)
+        let playerTier = 0;
+        try {
+            const userAddress = await this.contracts.nft.getAddress();
+            playerTier = Number(await this.contracts.gameState.getPlayerTier(userAddress));
+            Logger.info('Player tier:', playerTier);
+        } catch (error) {
+            Logger.warn('Error getting player tier:', error);
+            // Default to tier 0 if error
+            playerTier = 0;
+        }
+        
         for (let tier = 0; tier <= 3; tier++) {
             const tab = this.element.querySelector(`.tab[data-tier="${tier}"]`);
             const count = this.state.byTier[tier].length;
             tab.querySelector('.tab-count').textContent = count;
-            tab.disabled = count === 0;
-            if (count === 0) {
+            
+            // Tier unlocking logic based on player tier:
+            // - Tier 0 (Houses): Always unlocked
+            // - Tier 1 (Farms): Requires player tier 1+
+            // - Tier 2 (Diamond Stations): Requires player tier 2+
+            // - Tier 3 (Rep Stations): Requires player tier 3+
+            const isUnlocked = tier === 0 || tier <= playerTier;
+            
+            Logger.info(`Tier ${tier}: playerTier=${playerTier}, isUnlocked=${isUnlocked}`);
+            
+            // Enable tab if tier is unlocked, regardless of building count
+            tab.disabled = !isUnlocked;
+            if (!isUnlocked) {
                 tab.classList.add('locked');
             } else {
                 tab.classList.remove('locked');
             }
         }
+        
     }
 
     async renderTierContent(tier) {
