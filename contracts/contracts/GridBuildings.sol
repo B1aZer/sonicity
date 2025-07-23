@@ -47,7 +47,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         string name;
         uint256 baseProductionRate;  // Base production rate (gold/food/rep per hour)
         uint256 upgradeCost;         // Cost to upgrade
-        uint256 maxLevel;            // Maximum level
         string description;
         uint8 tier;                  // Required tier to build
         uint256 productionDuration;  // Custom production duration in seconds (0 = use global default)
@@ -106,7 +105,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             name: "House",
             baseProductionRate: 10,  // 10 gold per hour
             upgradeCost: 100,        // 100 gold to upgrade
-            maxLevel: 5,
             description: "Produces gold",
             tier: 0,
             productionDuration: 24 hours, // 24 hours for houses
@@ -117,7 +115,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             name: "Farm",
             baseProductionRate: 5,   // 5 food per hour
             upgradeCost: 150,        // 150 gold to upgrade
-            maxLevel: 5,
             description: "Produces food",
             tier: 1,
             productionDuration: 24 hours, // 24 hours for farms
@@ -128,7 +125,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             name: "Diamond Station",
             baseProductionRate: 1,   // Not used - special calculation in _calculateClaimable
             upgradeCost: 500,        // 500 gold to upgrade (example)
-            maxLevel: 5,
             description: "Produces diamonds",
             tier: 2,
             productionDuration: 72 hours, // 72 hours for diamond stations
@@ -139,7 +135,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             name: "Rep Station",
             baseProductionRate: 1,   // Not used - special calculation in _calculateClaimable
             upgradeCost: 200,        // 200 gold to upgrade
-            maxLevel: 5,
             description: "Produces reputation",
             tier: 3,
             productionDuration: 168 hours, // 168 hours (7 days) for rep stations
@@ -336,7 +331,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         require(!building.damaged, "Building is damaged");
         
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
-        require(building.level < config.maxLevel, "Building at max level");
         
         // Check if player has unlocked the required upgrade level for this building type
         (bool success, bytes memory returnData) = gameStateAddress.call(
