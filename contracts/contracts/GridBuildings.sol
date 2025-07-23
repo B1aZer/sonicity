@@ -853,21 +853,22 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             // Set startProduction flag to true and reset last recharge time
             _rechargeBuilding(building);
             
-            totalFee += _getRechargeCost(building.buildingType);
-        }
-        
-        // Track recharge amount in GameState (for simplicity, track as HOUSE type for bulk operations)
-        (bool success, bytes memory returnData) = gameStateAddress.call(
-            abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, msg.value, 0)
-        );
-        if (!success) {
-            // If the call failed, decode and propagate the error message
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
+            // Track recharge amount in GameState with correct building type
+            uint256 rechargeCost = _getRechargeCost(building.buildingType);
+            (bool success, bytes memory returnData) = gameStateAddress.call(
+                abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, rechargeCost, uint8(building.buildingType))
+            );
+            if (!success) {
+                // If the call failed, decode and propagate the error message
+                if (returnData.length > 0) {
+                    assembly {
+                        revert(add(returnData, 32), mload(returnData))
+                    }
                 }
+                revert("Failed to track recharge amount");
             }
-            revert("Failed to track recharge amount");
+            
+            totalFee += rechargeCost;
         }
         
         emit BuildingsRecharged(msg.sender, buildingIds, totalFee);
@@ -898,21 +899,22 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             // Set startProduction flag to true and reset last recharge time
             _rechargeBuilding(building);
             
-            totalFee += _getRechargeCost(building.buildingType);
-        }
-        
-        // Track recharge amount in GameState (for simplicity, track as HOUSE type for bulk operations)
-        (bool success, bytes memory returnData) = gameStateAddress.call(
-            abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, msg.value, 0)
-        );
-        if (!success) {
-            // If the call failed, decode and propagate the error message
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
+            // Track recharge amount in GameState with correct building type
+            uint256 rechargeCost = _getRechargeCost(building.buildingType);
+            (bool success, bytes memory returnData) = gameStateAddress.call(
+                abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, rechargeCost, uint8(building.buildingType))
+            );
+            if (!success) {
+                // If the call failed, decode and propagate the error message
+                if (returnData.length > 0) {
+                    assembly {
+                        revert(add(returnData, 32), mload(returnData))
+                    }
                 }
+                revert("Failed to track recharge amount");
             }
-            revert("Failed to track recharge amount");
+            
+            totalFee += rechargeCost;
         }
         
         emit BuildingsRecharged(msg.sender, activeBuildings, totalFee);
