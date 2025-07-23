@@ -2,15 +2,15 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0x5067457698Fd6Fa1C6964e416b3f42713513B3dD", // Will be updated by update-addresses.sh
-    SONICITY_FARM: "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629", // Will be updated by update-addresses.sh
-    SONICITY_DIAMOND: "0x4b6aB5F819A515382B0dEB6935D793817bB4af28", // Will be updated by update-addresses.sh
-    SONICITY_REP: "0xCace1b78160AE76398F486c8a18044da0d66d86D", // Will be updated by update-addresses.sh
-    ALTAR: "0xA7c59f010700930003b33aB25a7a0679C860f29c", // Will be updated by update-addresses.sh
-    GAME_STATE: "0xD0141E899a65C95a556fE2B27e5982A6DE7fDD7A", // Will be updated by update-addresses.sh
-    DISTRICT_BUILDINGS: "0x07882Ae1ecB7429a84f1D53048d35c4bB2056877", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0x22753E4264FDDc6181dc7cce468904A80a363E44", // Will be updated by update-addresses.sh
-    BATTLE_SYSTEM: "0xfaAddC93baf78e89DCf37bA67943E1bE8F37Bb8c" // Will be updated by update-addresses.sh
+    SONICITY_NFT: "0xefc1aB2475ACb7E60499Efb171D173be19928a05", // Will be updated by update-addresses.sh
+    SONICITY_FARM: "0x870526b7973b56163a6997bB7C886F5E4EA53638", // Will be updated by update-addresses.sh
+    SONICITY_DIAMOND: "0xD49a0e9A4CD5979aE36840f542D2d7f02C4817Be", // Will be updated by update-addresses.sh
+    SONICITY_REP: "0xe1Fd27F4390DcBE165f4D60DBF821e4B9Bb02dEd", // Will be updated by update-addresses.sh
+    ALTAR: "0x26B862f640357268Bd2d9E95bc81553a2Aa81D7E", // Will be updated by update-addresses.sh
+    GAME_STATE: "0x74Cf9087AD26D541930BaC724B7ab21bA8F00a27", // Will be updated by update-addresses.sh
+    DISTRICT_BUILDINGS: "0xefAB0Beb0A557E452b398035eA964948c750b2Fd", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0x70bDA08DBe07363968e9EE53d899dFE48560605B", // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0xA56F946D6398Dd7d9D4D9B337Cf9E0F68982ca5B" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
