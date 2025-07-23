@@ -341,6 +341,17 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         require(building.level + 1 <= maxUpgradeLevel, "Upgrade level not unlocked. Recharge more buildings to unlock higher levels.");
         
+        // Auto-claim any accumulated resources before upgrade to prevent exploit
+        uint256 accumulatedResources = _calculateClaimable(building, block.timestamp);
+        if (accumulatedResources > 0) {
+            // Distribute accumulated resources to player
+            _distributeResources(msg.sender, building.buildingType, accumulatedResources);
+            emit ResourcesCollected(msg.sender, buildingId, accumulatedResources);
+            
+            // Update collection time to current time (since we just collected)
+            building.lastCollectionTime = block.timestamp;
+        }
+        
         // Calculate upgrade cost
         uint256 upgradeCost = config.upgradeCost * building.level;
         
