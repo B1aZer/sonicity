@@ -1,6 +1,6 @@
 // Logging utility with configurable levels
 class Logger {
-    static #logLevel = 'warn'; // Default level: 'debug', 'info', 'warn', 'error', 'none'
+    static #logLevel = 'debug'; // Default level: 'debug', 'info', 'warn', 'error', 'none'
     static #isDebugEnabled = false;
 
     static setLogLevel(level) {
