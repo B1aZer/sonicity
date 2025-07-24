@@ -33,7 +33,7 @@ export class GridHubPage extends BasePage {
                 0: 0, // Houses
                 1: 0, // Farms
                 2: 0, // Diamond Stations
-                3: 0  // Rep Stations
+                3: 0  // REP Forges
             },
             
             // Associated resources by tier
@@ -41,7 +41,7 @@ export class GridHubPage extends BasePage {
                 0: 0, // Gold from houses
                 1: 0, // Food from farms
                 2: 0, // Diamonds from diamond stations
-                3: 0  // Rep from rep stations
+                3: 0  // NFTs from REP forges
             },
             
             // Additional status
@@ -445,7 +445,7 @@ export class GridHubPage extends BasePage {
             case 0: return '🏠'; // House
             case 1: return '🌾'; // Farm
             case 2: return '💎'; // Diamond Station
-            case 3: return '⭐'; // Rep Station
+            case 3: return '🔨'; // REP Forge
             default: return '🏗️';
         }
     }
@@ -707,10 +707,10 @@ export class GridHubPage extends BasePage {
                             </span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Tier 3 (Rep Stations):</span>
+                            <span class="status-label">Tier 3 (REP Forges):</span>
                             <span class="status-value">
                                 <span data-state="buildingsByTier.3">0</span> buildings, 
-                                <span data-state="resourcesByTier.3">0</span> rep
+                                <span data-state="resourcesByTier.3">0</span> NFTs
                             </span>
                         </div>
                     </div>

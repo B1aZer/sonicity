@@ -106,7 +106,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
      * @dev Mint and stake an NFT in one operation
      * @param collection The address of the NFT collection to mint from
      * @param tokenId The specific token ID to mint
-     * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: REP_STATION)
+     * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: DIAMOND_STATION, 3: REP_FORGE)
      */
     function mintAndStake(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) external nonReentrant {
         require(approvedCollections[collection], "Collection not approved");
@@ -175,7 +175,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     /**
      * @dev Stake an NFT
      * @param tokenId The ID of the NFT to stake
-     * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: REP_STATION)
+     * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: DIAMOND_STATION, 3: REP_FORGE)
      * @param collection The address of the NFT collection
      */
     function stake(uint256 tokenId, GridBuildings.GridBuildingType buildingType, address collection) external nonReentrant {

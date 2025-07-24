@@ -200,7 +200,7 @@ export class MintPage extends BasePage {
                         <select id="nft-type-selector" class="building-type-select">
                             <option value="house">House (Tier 0)</option>
                             <option value="farm">Farm (Tier 1)</option>
-                            <option value="rep">Rep Station (Tier 2)</option>
+                            <option value="rep">REP Forge (Tier 2)</option>
                         </select>
                     </div>
                 </div>

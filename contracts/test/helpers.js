@@ -5,7 +5,7 @@ const GridBuildingType = {
     HOUSE: 0,
     FARM: 1,
     DIAMOND_STATION: 2,
-    REP_STATION: 3
+    REP_FORGE: 3
 };
 
 // Logging configuration
@@ -81,7 +81,7 @@ async function donateGoldForTier(player, gameState, gridBuildings, altar, sonici
     // Calculate total buildings and slot limit
     let totalHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
     let totalFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
-    let totalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_STATION);
+    let totalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_FORGE);
     let totalBuildings = totalHouses + totalFarms + totalRepStations;
     let playerTier = await gameState.getPlayerTier(playerAddress);
     let buildingSlotLimit = await gameState.buildingSlotsPerTier(playerTier);
@@ -138,7 +138,7 @@ async function donateGoldForTier(player, gameState, gridBuildings, altar, sonici
     // Recalculate total buildings after donation
     totalHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
     totalFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
-    totalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_STATION);
+    totalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_FORGE);
     totalBuildings = totalHouses + totalFarms + totalRepStations;
     
     // Get updated player's tier and building slot limit

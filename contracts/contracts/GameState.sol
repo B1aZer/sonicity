@@ -126,7 +126,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         state.maxUpgradeLevelByType[0] = 1; // HOUSE starts at level 1
         state.maxUpgradeLevelByType[1] = 1; // FARM starts at level 1
         state.maxUpgradeLevelByType[2] = 1; // DIAMOND_STATION starts at level 1
-        state.maxUpgradeLevelByType[3] = 1; // REP_STATION starts at level 1
+        state.maxUpgradeLevelByType[3] = 1; // REP_FORGE starts at level 1
 
         // Initialize core buildings for the new player
         (bool success, bytes memory returnData) = districtBuildingsAddress.call(
@@ -513,11 +513,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @dev Track recharge amount and update upgrade level if threshold is met
      * @param player The address of the player
      * @param amount The amount of SONIC recharged
-     * @param buildingType The type of building being recharged (0=HOUSE, 1=FARM, 2=REP_STATION)
+     * @param buildingType The type of building being recharged (0=HOUSE, 1=FARM, 2=REP_FORGE)
      */
     function trackRechargeAmount(address player, uint256 amount, uint8 buildingType) external {
         require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
-        require(buildingType <= 2, "Invalid building type"); // 0=HOUSE, 1=FARM, 2=REP_STATION
+        require(buildingType <= 3, "Invalid building type"); // 0=HOUSE, 1=FARM, 2=DIAMOND_STATION, 3=REP_FORGE
         
         PlayerState storage state = playerState[player];
         state.totalRechargeAmountByType[buildingType] += amount;
@@ -555,11 +555,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     /**
      * @dev Get the maximum upgrade level a player can reach for a specific building type
      * @param player The address of the player
-     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=REP_STATION)
-     * @return uint8 The maximum upgrade level (1-3)
+     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=DIAMOND_STATION, 3=REP_FORGE)
+     * @return uint8 The maximum upgrade level unlocked for this building type
      */
     function getMaxUpgradeLevel(address player, uint8 buildingType) external view returns (uint8) {
-        require(buildingType <= 2, "Invalid building type");
+        require(buildingType <= 3, "Invalid building type"); // 0=HOUSE, 1=FARM, 2=DIAMOND_STATION, 3=REP_FORGE
         return playerState[player].maxUpgradeLevelByType[buildingType];
     }
 

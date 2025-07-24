@@ -179,8 +179,8 @@ export class GamePage extends BasePage {
                     buildingType = 'FARM';
                 } else if (building.buildingType === GridBuildingsContract.BuildingType.DIAMOND_STATION) {
                     buildingType = 'DIAMOND_STATION';
-                } else if (building.buildingType === GridBuildingsContract.BuildingType.REP_STATION) {
-                    buildingType = 'REP_STATION';
+                } else if (building.buildingType === GridBuildingsContract.BuildingType.REP_FORGE) {
+                    buildingType = 'REP_FORGE';
                 } else {
                     Logger.info('Skipping building - unknown type:', {
                         buildingType: building.buildingType

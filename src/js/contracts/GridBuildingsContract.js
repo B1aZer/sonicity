@@ -5,7 +5,7 @@ import GridBuildingsABI from '../../../contracts/artifacts/contracts/GridBuildin
 
 /**
  * @typedef {Object} Building
- * @property {number} buildingType - The type of building (0: House, 1: Farm, 2: Diamond Station, 3: Rep Station)
+ * @property {number} buildingType - The type of building (0: House, 1: Farm, 2: Diamond Station, 3: REP Forge)
  * @property {number} level - The current level of the building
  * @property {number} lastUpgradeTime - Timestamp of last upgrade
  * @property {number} lastRechargeTime - Timestamp of last recharge (when production started)
@@ -33,7 +33,7 @@ export class GridBuildingsContract extends BaseContract {
         HOUSE: 0,
         FARM: 1,
         DIAMOND_STATION: 2,
-        REP_STATION: 3
+        REP_FORGE: 3
     };
 
     // Recharge fee constant

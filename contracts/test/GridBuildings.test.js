@@ -2206,7 +2206,7 @@ describe("GridBuildings", function () {
       let diamondCost = await gridBuildings.getBuildingRechargeCost(2); // DIAMOND_STATION = 2
       expect(diamondCost).to.equal(ethers.parseEther("0.03")); // 0.03 SONIC
       
-      let repCost = await gridBuildings.getBuildingRechargeCost(3); // REP_STATION = 3
+      let repCost = await gridBuildings.getBuildingRechargeCost(3); // REP_FORGE = 3
       expect(repCost).to.equal(0); // Free recharge
     });
 

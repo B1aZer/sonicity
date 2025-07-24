@@ -12,7 +12,7 @@ import('../styles/stake-hub-page.css');
 /**
  * @typedef {Object} StakedBuilding
  * @property {number} id - Building ID
- * @property {number} buildingType - Building type (0: House, 1: Farm, 2: Diamond Station, 3: Rep Station)
+ * @property {number} buildingType - Building type (0: House, 1: Farm, 2: Diamond Station, 3: REP Forge)
  * @property {number} level - Building level
  * @property {number} lastCollectionTime - Last collection timestamp
  * @property {boolean} isAtCap - Whether building is at production cap
@@ -163,7 +163,7 @@ export class StakePage extends BasePage {
                             <span class="tab-count">0</span>
                         </button>
                         <button class="tab" data-tier="3">
-                            <span class="tab-label">Tier 3 (Rep Stations)</span>
+                            <span class="tab-label">Tier 3 (REP Forges)</span>
                             <span class="tab-count">0</span>
                         </button>
                     </div>
@@ -222,7 +222,7 @@ export class StakePage extends BasePage {
         
         const stakedBuildings = await this.getStakedBuildings(userAddress);
         const availableNFTs = await this.getAvailableNFTs(userAddress);
-        // Group by buildingType (0: House, 1: Farm, 2: Diamond Station, 3: Rep Station)
+        // Group by buildingType (0: House, 1: Farm, 2: Diamond Station, 3: REP Forge)
         const byTier = { 0: [], 1: [], 2: [], 3: [] };
         let atCap = 0, damaged = 0;
         stakedBuildings.forEach(b => {
@@ -325,8 +325,8 @@ export class StakePage extends BasePage {
         const rechargePrice = ethers.formatEther(GridBuildingsContract.RECHARGE_FEE);
         
         // Status section (like CityPage)
-        const tierNames = ['House', 'Farm', 'Diamond Station', 'Rep Station'];
-        const tierNamesPlural = ['Houses', 'Farms', 'Diamond Stations', 'Rep Stations'];
+        const tierNames = ['House', 'Farm', 'Diamond Station', 'REP Forge'];
+        const tierNamesPlural = ['Houses', 'Farms', 'Diamond Stations', 'REP Forges'];
         const rechargeHeader = buildingCount === 1 ? `Charge ${tierNames[tier]}` : `Charge ${tierNamesPlural[tier]}`;
         
         // Format upgrade progress for display
@@ -473,8 +473,8 @@ export class StakePage extends BasePage {
             }
             
             // Map buildingType to name/icon
-            const tierNames = ['House', 'Farm', 'Diamond Station', 'Rep Station'];
-            const icons = ['🏠', '🌾', '💎', '⭐'];
+            const tierNames = ['House', 'Farm', 'Diamond Station', 'REP Forge'];
+            const icons = ['🏠', '🌾', '💎', '🔨'];
             const name = tierNames[item.buildingType] || 'Building';
             const icon = icons[item.buildingType] || '🏗️';
             
@@ -616,7 +616,7 @@ export class StakePage extends BasePage {
             case 0: return '🏠';
             case 1: return '🌾';
             case 2: return '💎';
-            case 3: return '⭐';
+            case 3: return '🔨';
             default: return '🏗️';
         }
     }
@@ -626,7 +626,7 @@ export class StakePage extends BasePage {
             case 0: return 'House';
             case 1: return 'Farm';
             case 2: return 'Diamond Station';
-            case 3: return 'Rep Station';
+            case 3: return 'REP Forge';
             default: return 'Unknown';
         }
     }

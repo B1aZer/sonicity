@@ -76,7 +76,7 @@ export class StakePage extends BasePage {
                             <option value="0">House (Tier 0)</option>
                             <option value="1">Farm (Tier 1)</option>
                             <option value="2">Diamond Station (Tier 2)</option>
-                            <option value="3">Rep Station (Tier 3)</option>
+                            <option value="3">REP Forge (Tier 3)</option>
                         </select>
                     </div>
                 </div>
@@ -219,7 +219,7 @@ export class StakePage extends BasePage {
                 <option value="0">House (Tier 0)</option>
                 <option value="1" ${playerTier < 1 ? 'disabled' : ''}>Farm (Tier 1)</option>
                 <option value="2" ${playerTier < 2 ? 'disabled' : ''}>Diamond Station (Tier 2)</option>
-                <option value="3" ${playerTier < 3 ? 'disabled' : ''}>Rep Station (Tier 3)</option>
+                <option value="3" ${playerTier < 3 ? 'disabled' : ''}>REP Forge (Tier 3)</option>
             `;
 
             // Restore selection if it's still valid

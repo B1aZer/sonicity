@@ -41,7 +41,7 @@ describe("BattleSystem", function () {
         await sonicityDiamond.waitForDeployment();
         const sonicityDiamondAddress = await sonicityDiamond.getAddress();
 
-        // Deploy SonicityRep (for rep stations)
+        // Deploy SonicityRep (for REP Forge)
         const SonicityRep = await ethers.getContractFactory("SonicityRep");
         const sonicityRep = await SonicityRep.deploy();
         await sonicityRep.waitForDeployment();

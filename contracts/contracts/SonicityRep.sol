@@ -8,16 +8,16 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title SonicityRep
- * @dev ERC721 NFT contract for Rep Station NFTs
- * This contract allows minting of Rep Station NFTs for staking in the Altar contract
+ * @dev ERC721 NFT contract for REP Forge NFTs
+ * This contract allows minting of REP Forge NFTs for staking in the Altar contract
  */
 contract SonicityRep is ERC721Enumerable, Ownable {
     using Strings for uint256;
 
-    // Maximum supply of Rep Station NFTs
+    // Maximum supply of REP Forge NFTs
     uint256 public constant MAX_SUPPLY = 1000;
     
-    // Mint price for Rep Station NFTs
+    // Mint price for REP Forge NFTs
     uint256 public constant MINT_PRICE = 0.025 ether;
     
     // Base URI for token metadata
@@ -33,7 +33,7 @@ contract SonicityRep is ERC721Enumerable, Ownable {
     event AltarContractSet(address indexed altarContract);
     event MintActiveSet(bool indexed mintActive);
 
-    constructor() ERC721("Sonicity Rep Station", "SONICITY_REP") Ownable(msg.sender) {
+    constructor() ERC721("Sonicity REP Forge", "SONICITY_REP") Ownable(msg.sender) {
         _baseTokenURI = "https://api.sonicity.com/metadata/rep/";
     }
 

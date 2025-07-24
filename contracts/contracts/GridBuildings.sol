@@ -32,7 +32,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         HOUSE,
         FARM,
         DIAMOND_STATION,
-        REP_STATION
+        REP_FORGE
     }
 
     // Production States
@@ -131,14 +131,14 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             rechargeCost: 0.03 ether // 0.03 SONIC for diamond stations
         });
 
-        buildingConfigs[GridBuildingType.REP_STATION] = GridBuildingConfig({
-            name: "Rep Station",
+        buildingConfigs[GridBuildingType.REP_FORGE] = GridBuildingConfig({
+            name: "REP Forge",
             baseProductionRate: 1,   // Not used - special calculation in _calculateClaimable
             upgradeCost: 200,        // 200 gold to upgrade
-            description: "Produces reputation",
+            description: "Forge dynamic NFTs from REP",
             tier: 3,
-            productionDuration: 168 hours, // 168 hours (7 days) for rep stations
-            rechargeCost: 0 // Free recharge for rep stations (default)
+            productionDuration: 168 hours, // 168 hours (7 days) for rep forge
+            rechargeCost: 0 // Free recharge for rep forge (default)
         });
     }
 
@@ -269,7 +269,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function createBuilding(address player, GridBuildingType buildingType, uint8 level, uint256 lastUpgradeTime) external returns (uint256) {
         require(msg.sender == altarAddress, "Only Altar can create buildings");
-        require(buildingType <= GridBuildingType.REP_STATION, "Invalid building type");
+        require(buildingType <= GridBuildingType.REP_FORGE, "Invalid building type");
         
         // Validate level for restored buildings
         if (level > 0) {
@@ -295,7 +295,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         // Get current total buildings count
         uint256 totalBuildings = 0;
-        for (uint8 i = 0; i <= uint8(GridBuildingType.REP_STATION); i++) {
+        for (uint8 i = 0; i <= uint8(GridBuildingType.REP_FORGE); i++) {
             totalBuildings += buildingCounts[player][GridBuildingType(i)];
         }
         
@@ -432,12 +432,12 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 productionTime = productionEnd - productionStart;
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         
-        // Special handling for DIAMOND_STATION and REP_STATION
+        // Special handling for DIAMOND_STATION and REP_FORGE
         if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
             // 1 diamond per 72 hours at level 1
             // Formula: (productionTime * level) / (72 hours)
             return (productionTime * building.level) / (72 hours);
-        } else if (building.buildingType == GridBuildingType.REP_STATION) {
+        } else if (building.buildingType == GridBuildingType.REP_FORGE) {
             // 1 rep NFT per 168 hours at level 1
             // Formula: (productionTime * level) / (168 hours)
             return (productionTime * building.level) / (168 hours);
@@ -508,7 +508,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                 }
                 revert("Failed to add diamonds");
             }
-        } else if (buildingType == GridBuildingType.REP_STATION) {
+        } else if (buildingType == GridBuildingType.REP_FORGE) {
             (bool success, bytes memory returnData) = gameStateAddress.call(
                 abi.encodeWithSignature("earnRep(address,uint256)", player, amount)
             );

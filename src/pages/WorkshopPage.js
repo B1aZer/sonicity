@@ -22,7 +22,7 @@ export class WorkshopPage extends BasePage {
                 0: 0, // Houses
                 1: 0, // Farms
                 2: 0, // Diamond Stations
-                3: 0  // Rep Stations
+                3: 0  // REP Forges
             }
         });
         
@@ -232,7 +232,7 @@ export class WorkshopPage extends BasePage {
                             <span class="status-value" data-state="damagedByTier.2">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Tier 3 (Rep Stations):</span>
+                            <span class="status-label">Tier 3 (REP Forges):</span>
                             <span class="status-value" data-state="damagedByTier.3">0</span>
                         </div>
                     </div>
