@@ -15,6 +15,8 @@ SONICITY_NFT=$(jq -r '.sonicityNFT' "$PROJECT_ROOT/contracts/deployed-addresses.
 SONICITY_FARM=$(jq -r '.sonicityFarm' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 SONICITY_DIAMOND=$(jq -r '.sonicityDiamond' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 SONICITY_REP=$(jq -r '.sonicityRep' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+SONICITY_YIELD_NFT=$(jq -r '.sonicityYieldNFT // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+SONICITY_ART_PROXY=$(jq -r '.sonicityArtProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 ALTAR=$(jq -r '.altarProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 GAME_STATE=$(jq -r '.gameStateProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 DISTRICT_BUILDINGS=$(jq -r '.districtBuildingsProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
@@ -32,6 +34,16 @@ sed -i '' "s/SONICITY_NFT: \".*\"/SONICITY_NFT: \"$SONICITY_NFT\"/" "$PROJECT_RO
 sed -i '' "s/SONICITY_FARM: \".*\"/SONICITY_FARM: \"$SONICITY_FARM\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/SONICITY_DIAMOND: \".*\"/SONICITY_DIAMOND: \"$SONICITY_DIAMOND\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/SONICITY_REP: \".*\"/SONICITY_REP: \"$SONICITY_REP\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+
+# Update REP Forge contracts if they exist
+if [ ! -z "$SONICITY_YIELD_NFT" ]; then
+    sed -i '' "s/SONICITY_YIELD_NFT: \".*\"/SONICITY_YIELD_NFT: \"$SONICITY_YIELD_NFT\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+fi
+
+if [ ! -z "$SONICITY_ART_PROXY" ]; then
+    sed -i '' "s/SONICITY_ART_PROXY: \".*\"/SONICITY_ART_PROXY: \"$SONICITY_ART_PROXY\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+fi
+
 sed -i '' "s/ALTAR: \".*\"/ALTAR: \"$ALTAR\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/GAME_STATE: \".*\"/GAME_STATE: \"$GAME_STATE\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/DISTRICT_BUILDINGS: \".*\"/DISTRICT_BUILDINGS: \"$DISTRICT_BUILDINGS\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
@@ -43,6 +55,12 @@ echo "SonicityNFT: $SONICITY_NFT"
 echo "SonicityFarm: $SONICITY_FARM"
 echo "SonicityDiamond: $SONICITY_DIAMOND"
 echo "SonicityRep: $SONICITY_REP"
+if [ ! -z "$SONICITY_YIELD_NFT" ]; then
+    echo "SonicityYieldNFT: $SONICITY_YIELD_NFT"
+fi
+if [ ! -z "$SONICITY_ART_PROXY" ]; then
+    echo "SonicityArtProxy: $SONICITY_ART_PROXY"
+fi
 echo "Altar: $ALTAR"
 echo "GameState: $GAME_STATE"
 echo "DistrictBuildings: $DISTRICT_BUILDINGS"

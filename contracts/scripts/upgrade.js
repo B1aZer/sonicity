@@ -42,6 +42,24 @@ async function main() {
   await battleSystemProxy.waitForDeployment();
   console.log("BattleSystem upgraded to:", await battleSystemProxy.getAddress());
 
+  // Upgrade SonicityYieldNFT (if it exists)
+  if (addresses.sonicityYieldNFT) {
+    console.log("Upgrading SonicityYieldNFT...");
+    const SonicityYieldNFT = await ethers.getContractFactory("SonicityYieldNFT");
+    const sonicityYieldNFT = await upgrades.upgradeProxy(addresses.sonicityYieldNFT, SonicityYieldNFT);
+    await sonicityYieldNFT.waitForDeployment();
+    console.log("SonicityYieldNFT upgraded to:", await sonicityYieldNFT.getAddress());
+  }
+
+  // Upgrade SonicityArtProxy (if it exists)
+  if (addresses.sonicityArtProxy) {
+    console.log("Upgrading SonicityArtProxy...");
+    const SonicityArtProxy = await ethers.getContractFactory("SonicityArtProxy");
+    const sonicityArtProxy = await upgrades.upgradeProxy(addresses.sonicityArtProxy, SonicityArtProxy);
+    await sonicityArtProxy.waitForDeployment();
+    console.log("SonicityArtProxy upgraded to:", await sonicityArtProxy.getAddress());
+  }
+
   // Set up contract interactions
   console.log("Setting up contract interactions...");
   
@@ -95,6 +113,7 @@ async function main() {
   const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
   const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
   const SonicityRep = await ethers.getContractFactory("SonicityRep");
+  const SonicityYieldNFT = await ethers.getContractFactory("SonicityYieldNFT");
   
   if (addresses.sonicityNFT) {
     const sonicityNFT = SonicityNFT.attach(addresses.sonicityNFT);
@@ -116,6 +135,16 @@ async function main() {
     await sonicityRep.setAltarContract(await altarProxy.getAddress());
   }
 
+  if (addresses.sonicityYieldNFT) {
+    const sonicityYieldNFT = SonicityYieldNFT.attach(addresses.sonicityYieldNFT);
+    await sonicityYieldNFT.setAltarContract(await altarProxy.getAddress());
+    
+    // Set Art Proxy address if it exists
+    if (addresses.sonicityArtProxy) {
+      await sonicityYieldNFT.setArtProxy(addresses.sonicityArtProxy);
+    }
+  }
+
   // Update addresses file
   const newAddresses = {
     ...addresses,
@@ -124,6 +153,8 @@ async function main() {
     gridBuildingsProxy: await gridBuildingsProxy.getAddress(),
     altarProxy: await altarProxy.getAddress(),
     battleSystemProxy: await battleSystemProxy.getAddress(),
+    ...(addresses.sonicityYieldNFT && { sonicityYieldNFT: await sonicityYieldNFT.getAddress() }),
+    ...(addresses.sonicityArtProxy && { sonicityArtProxy: await sonicityArtProxy.getAddress() }),
   };
 
   fs.writeFileSync(

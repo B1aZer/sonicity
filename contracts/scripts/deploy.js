@@ -37,6 +37,22 @@ async function main() {
   const sonicityRepAddress = await sonicityRep.getAddress();
   console.log("SonicityRep deployed to:", sonicityRepAddress);
 
+  // Deploy SonicityYieldNFT contract
+  console.log("Deploying SonicityYieldNFT contract...");
+  const SonicityYieldNFT = await ethers.getContractFactory("SonicityYieldNFT");
+  const sonicityYieldNFT = await SonicityYieldNFT.deploy();
+  await sonicityYieldNFT.waitForDeployment();
+  const sonicityYieldNFTAddress = await sonicityYieldNFT.getAddress();
+  console.log("SonicityYieldNFT deployed to:", sonicityYieldNFTAddress);
+
+  // Deploy SonicityArtProxy contract
+  console.log("Deploying SonicityArtProxy contract...");
+  const SonicityArtProxy = await ethers.getContractFactory("SonicityArtProxy");
+  const sonicityArtProxy = await SonicityArtProxy.deploy();
+  await sonicityArtProxy.waitForDeployment();
+  const sonicityArtProxyAddress = await sonicityArtProxy.getAddress();
+  console.log("SonicityArtProxy deployed to:", sonicityArtProxyAddress);
+
   // Deploy GameState implementation
   console.log("Deploying GameState implementation...");
   const GameState = await ethers.getContractFactory("GameState");
@@ -154,6 +170,7 @@ async function main() {
   await altarProxy.approveCollection(sonicityFarmAddress);
   await altarProxy.approveCollection(sonicityDiamondAddress);
   await altarProxy.approveCollection(sonicityRepAddress);
+  await altarProxy.approveCollection(sonicityYieldNFTAddress);
   
   // Set Altar contract address on all NFT contracts
   console.log("Setting Altar contract address on NFT contracts...");
@@ -161,6 +178,11 @@ async function main() {
   await sonicityFarm.setAltarContract(altarProxyAddress);
   await sonicityDiamond.setAltarContract(altarProxyAddress);
   await sonicityRep.setAltarContract(altarProxyAddress);
+  await sonicityYieldNFT.setAltarContract(altarProxyAddress);
+  
+  // Set Art Proxy address in SonicityYieldNFT
+  console.log("Setting Art Proxy address in SonicityYieldNFT...");
+  await sonicityYieldNFT.setArtProxy(sonicityArtProxyAddress);
   
   // Set GameState address in DistrictBuildings
   console.log("Setting GameState address in DistrictBuildings...");
@@ -209,6 +231,8 @@ async function main() {
   console.log("SonicityFarm:", sonicityFarmAddress);
   console.log("SonicityDiamond:", sonicityDiamondAddress);
   console.log("SonicityRep:", sonicityRepAddress);
+  console.log("SonicityYieldNFT:", sonicityYieldNFTAddress);
+  console.log("SonicityArtProxy:", sonicityArtProxyAddress);
   console.log("GameState implementation:", gameStateImplAddress);
   console.log("GameState proxy:", gameStateProxyAddress);
   console.log("DistrictBuildings implementation:", districtBuildingsImplAddress);
@@ -226,6 +250,8 @@ async function main() {
     sonicityFarm: sonicityFarmAddress,
     sonicityDiamond: sonicityDiamondAddress,
     sonicityRep: sonicityRepAddress,
+    sonicityYieldNFT: sonicityYieldNFTAddress,
+    sonicityArtProxy: sonicityArtProxyAddress,
     gameStateImpl: gameStateImplAddress,
     gameStateProxy: gameStateProxyAddress,
     districtBuildingsImpl: districtBuildingsImplAddress,
