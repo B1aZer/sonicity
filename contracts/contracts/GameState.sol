@@ -496,6 +496,21 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Test function to earn rep (only for testing)
+     * @param player The address of the player
+     * @param amount The amount of rep to earn
+     */
+    function testEarnRep(address player, uint256 amount) external {
+        // Only allow owner to call this function
+        require(msg.sender == owner(), "Only owner can call this function");
+        // Only allow in test environment
+        require(block.chainid == 31337 || block.chainid == 1337, "Only available in test environment");
+        
+        playerState[player].rep += amount;
+        emit RepEarned(player, amount);
+    }
+
+    /**
      * @dev Burn treasury during battles
      * @param player The address of the player whose treasury is being burned
      * @param amount The amount of treasury to burn
