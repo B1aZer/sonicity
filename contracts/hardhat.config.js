@@ -6,6 +6,7 @@ module.exports = {
   solidity: {
     version: "0.8.22",
     settings: {
+      //viaIR: true, // Re-enabled to avoid stack too deep error
       optimizer: {
         enabled: true,
         runs: 200
