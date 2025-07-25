@@ -289,7 +289,7 @@ describe("DistrictBuildings", function () {
       const player1Address = await player1.getAddress();
       
       // Ensure player has enough gold for both buildings and repair
-      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 500);
+      await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 525);
       
       // Get initial gold balance
       const initialGold = await gameState.getPlayerGold(player1Address);
