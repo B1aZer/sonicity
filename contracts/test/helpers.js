@@ -76,75 +76,57 @@ async function getDamagedBuildingId(tx, gridBuildings) {
 // Helper to ensure player has enough gold and donate for tier upgrade
 async function donateGoldForTier(player, gameState, gridBuildings, altar, sonicityNFT, amount) {
     const playerAddress = await player.getAddress();
-    let gold = await gameState.getPlayerGold(playerAddress);
+    const initialGold = await gameState.getPlayerGold(playerAddress);
     
-    // Calculate total buildings and slot limit
-    let totalHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
-    let totalFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
-    let totalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_FORGE);
-    let totalBuildings = totalHouses + totalFarms + totalRepStations;
-    let playerTier = await gameState.getPlayerTier(playerAddress);
-    let buildingSlotLimit = await gameState.buildingSlotsPerTier(playerTier);
+    log(`Player (${playerAddress.slice(-6)}): initial gold: ${initialGold}, donating: ${amount}`);
     
-    log(`Player (${playerAddress.slice(-6)}): gold: ${gold}, need: ${amount}. Total buildings: ${totalBuildings} / ${buildingSlotLimit} (${totalHouses}/${totalFarms}/${totalRepStations})`);
-    
-    // Track tokenIds for houses we create
-    const houseTokenIds = [];
-    
-    // If we already have enough gold, skip to donation
-    if (gold < BigInt(amount)) {
-        // Get current houses
-        const currentHouses = await gridBuildings.buildingCounts(playerAddress, 0); // 0 is HOUSE type
-
-        // Create houses up to the limit of 9 if needed
-        if (currentHouses < BigInt(9)) {
-            log(`Player (${playerAddress.slice(-6)}) creating ${9 - Number(currentHouses)} houses`);
-            for (let i = Number(currentHouses); i < 9; i++) {
-                const { tokenId } = await mintAndStakeNFT(player, altar, sonicityNFT, GridBuildingType.HOUSE);
-                houseTokenIds.push(tokenId);
-            }
-        }
-        
-        // Fast forward time and collect until we have enough gold
-        while (gold < BigInt(amount)) {
-            await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
-            await ethers.provider.send("evm_mine");
-            
-            // Get all active buildings
-            const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
-            // Collect from all houses
-            for (const buildingId of activeBuildings) {
-                await gridBuildings.connect(player).collectResources(buildingId);
-            }       
-            gold = await gameState.getPlayerGold(playerAddress);
-        }
-    }
-    
-    // After collecting enough gold, remove all houses we created except one
-    let housesRemoved = 0;
-    for (const tokenId of houseTokenIds) {
-        if (housesRemoved >= 8) break; // Keep one house
-        try {
-            await altar.connect(player).unstake(await sonicityNFT.getAddress(), tokenId);
-            housesRemoved++;
-        } catch (error) {
-            log(`Failed to unstake token ${tokenId}: ${error.message}`);
-        }
-    }
+    // Use ensurePlayerResource to get the required gold
+    await ensurePlayerResource({
+        player,
+        gameState,
+        gridBuildings,
+        altar,
+        nftContract: sonicityNFT,
+        buildingType: GridBuildingType.HOUSE,
+        getResource: async (gameState, playerAddress) => await gameState.getPlayerGold(playerAddress),
+        resourceName: 'gold',
+        amount: BigInt(amount)
+    });
     
     // Donate gold
     await gameState.connect(player).donateGold(amount);
 
+    // Restore the player's gold to the initial amount using testDeductResources
+    const currentGold = await gameState.getPlayerGold(playerAddress);
+    if (currentGold !== initialGold) {
+        if (currentGold > initialGold) {
+            // Player has more gold than initial - deduct the excess
+            const excessGold = currentGold - initialGold;
+            await gameState.testDeductResources(playerAddress, excessGold, 0, 0);
+            log(`Player (${playerAddress.slice(-6)}) deducted ${excessGold} gold to restore to initial amount: ${initialGold}`);
+        } else {
+            // Player has less gold than initial - add more
+            const neededGold = initialGold - currentGold;
+            await gameState.testEarnGold(playerAddress, neededGold);
+            log(`Player (${playerAddress.slice(-6)}) added ${neededGold} gold to restore to initial amount: ${initialGold}`);
+        }
+    }
+
     // Recalculate total buildings after donation
-    totalHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
-    totalFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
-    totalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_FORGE);
-    totalBuildings = totalHouses + totalFarms + totalRepStations;
+    let totalHouses = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.HOUSE);
+    let totalFarms = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.FARM);
+    let totalRepStations = await gridBuildings.buildingCounts(playerAddress, GridBuildingType.REP_FORGE);
+    let totalBuildings = totalHouses + totalFarms + totalRepStations;
     
     // Get updated player's tier and building slot limit
-    playerTier = await gameState.getPlayerTier(playerAddress);
-    buildingSlotLimit = await gameState.buildingSlotsPerTier(playerTier);
-    log(`Player (${playerAddress.slice(-6)}) donated ${amount}: Total buildings: ${totalBuildings} / ${buildingSlotLimit} (${totalHouses}/${totalFarms}/${totalRepStations}). Removed ${housesRemoved} houses`);
+    let playerTier = await gameState.getPlayerTier(playerAddress);
+    let buildingSlotLimit = await gameState.buildingSlotsPerTier(playerTier);
+    
+    const finalGold = await gameState.getPlayerGold(playerAddress);
+    const treasury = await gameState.getPlayerTreasury(playerAddress);
+    const tier = await gameState.getPlayerTier(playerAddress);
+    log(`Player (${playerAddress.slice(-6)}) donated ${amount}: Total buildings: ${totalBuildings} / ${buildingSlotLimit} (${totalHouses}/${totalFarms}/${totalRepStations})`);
+    log(`Player (${playerAddress.slice(-6)}) final state: gold: ${finalGold}, treasury: ${treasury}, tier: ${tier}`);
 }
 
 // Generic helper to ensure player has at least the specified amount of a resource
@@ -161,87 +143,106 @@ async function ensurePlayerResource({
 }) {
     const playerAddress = await player.getAddress();
     let resource = await getResource(gameState, playerAddress);
+    // Ensure amount is BigInt
+    const amountBigInt = BigInt(amount);
     log(`--- ensurePlayerResource START [${resourceName}] ---`);
-    log(`Player (${playerAddress.slice(-6)}): initial ${resourceName}: ${resource}, need: ${amount}`);
+    log(`Player (${playerAddress.slice(-6)}): initial ${resourceName}: ${resource}, need: ${amountBigInt}`);
     let resourceBefore = resource;
-    // Log current buildings
-    let buildingsCount = await gridBuildings.buildingCounts(playerAddress, buildingType);
-    log(`Player (${playerAddress.slice(-6)}): ${resourceName} buildings before: ${buildingsCount}`);
+    
     // If we already have enough, return early
-    if (resource >= amount) {
-        log(`Player (${playerAddress.slice(-6)}) already has enough ${resourceName}: ${resource} >= ${amount}`);
+    if (resource >= amountBigInt) {
+        log(`Player (${playerAddress.slice(-6)}) already has enough ${resourceName}: ${resource} >= ${amountBigInt}`);
         log(`--- ensurePlayerResource END (early) ---`);
         return;
     }
-    // Remove all buildings of this type before starting (to ensure a clean state)
+    
+    // Get all active buildings of this type
     const activeBuildings = await gridBuildings.getActiveBuildings(playerAddress);
-    let unstakedBefore = 0;
+    const buildingsOfType = [];
+    
     for (const buildingId of activeBuildings) {
         const building = await gridBuildings.buildings(playerAddress, buildingId);
         if (BigInt(building.buildingType) === BigInt(buildingType)) {
-            try {
-                await altar.connect(player).unstake(await nftContract.getAddress(), building.tokenId);
-                unstakedBefore++;
-                log(`Unstaked ${resourceName} building (cleanup) with buildingId ${buildingId}, tokenId ${building.tokenId}`);
-            } catch (e) {
-                log(`Failed to unstake ${resourceName} building (cleanup) with buildingId ${buildingId}: ${e.message}`);
-            }
+            buildingsOfType.push(buildingId);
         }
     }
-    if (unstakedBefore > 0) log(`Unstaked ${unstakedBefore} ${resourceName} buildings for clean state`);
-    // Now, loop until we have enough resource
-    let totalMinted = 0;
-    let totalCollected = 0n;
+    
+    log(`Player (${playerAddress.slice(-6)}): found ${buildingsOfType.length} existing ${resourceName} buildings`);
+    
+    // Track buildings we create
+    const createdBuildings = [];
+    
+    // If we don't have any buildings of this type, create one
+    if (buildingsOfType.length === 0) {
+        log(`Player (${playerAddress.slice(-6)}): no ${resourceName} buildings found, creating one`);
+        const { buildingId, tokenId } = await mintAndStakeNFT(player, altar, nftContract, buildingType);
+        buildingsOfType.push(buildingId);
+        createdBuildings.push({ buildingId, tokenId });
+    }
+    
+    // Now loop until we have enough resource by recharging and fast-forwarding
     let cycle = 0;
-    while (resource < amount) {
+    while (resource < amountBigInt) {
         cycle++;
-        // Mint and stake up to 9 buildings
-        let buildingsToCreate = 9;
-        let mintedTokenIds = [];
-        for (let i = 0; i < buildingsToCreate; i++) {
-            const { tokenId, buildingId } = await mintAndStakeNFT(player, altar, nftContract, buildingType);
-            mintedTokenIds.push({ tokenId, buildingId });
-            totalMinted++;
-            log(`Cycle ${cycle}: Minted and staked ${resourceName} building #${i + 1} (tokenId: ${tokenId}, buildingId: ${buildingId})`);
+        log(`Cycle ${cycle}: Player ${resourceName}: ${resource}, need: ${amountBigInt}`);
+        
+        // Recharge all buildings of this type
+        for (const buildingId of buildingsOfType) {
+            const rechargeCost = await gridBuildings.getBuildingRechargeCost(buildingType);
+            await gridBuildings.connect(player).rechargeBuilding(buildingId, { value: rechargeCost });
+            log(`Cycle ${cycle}: Recharged ${resourceName} building ${buildingId} with ${ethers.formatEther(rechargeCost)} SONIC`);
         }
+        
         // Fast forward 24 hours
         await ethers.provider.send("evm_increaseTime", [24 * 3600]);
         await ethers.provider.send("evm_mine");
-        // Collect from all buildings
+        
+        // Collect from all buildings of this type
         let resourceBeforeCollect = await getResource(gameState, playerAddress);
-        let resourceGainedThisCycle = 0n;
-        for (const { buildingId } of mintedTokenIds) {
+        for (const buildingId of buildingsOfType) {
             await gridBuildings.connect(player).collectResources(buildingId);
         }
         let resourceAfterCollect = await getResource(gameState, playerAddress);
-        resourceGainedThisCycle = resourceAfterCollect - resourceBeforeCollect;
-        totalCollected += resourceGainedThisCycle;
-        log(`Cycle ${cycle}: Collected from ${mintedTokenIds.length} ${resourceName} buildings, gained this cycle: ${resourceGainedThisCycle}, total now: ${resourceAfterCollect}`);
-        // Unstake all buildings created in this cycle
-        let unstaked = 0;
-        for (const { tokenId, buildingId } of mintedTokenIds) {
-            try {
-                await altar.connect(player).unstake(await nftContract.getAddress(), tokenId);
-                unstaked++;
-                log(`Cycle ${cycle}: Unstaked ${resourceName} building (tokenId: ${tokenId}, buildingId: ${buildingId})`);
-            } catch (e) {
-                log(`Cycle ${cycle}: Failed to unstake ${resourceName} building (tokenId: ${tokenId}): ${e.message}`);
-            }
-        }
-        log(`Cycle ${cycle}: Unstaked ${unstaked} ${resourceName} buildings`);
+        let resourceGainedThisCycle = resourceAfterCollect - resourceBeforeCollect;
+        
+        log(`Cycle ${cycle}: Collected from ${buildingsOfType.length} ${resourceName} buildings, gained: ${resourceGainedThisCycle}, total now: ${resourceAfterCollect}`);
+        
         // Update resource
         resource = await getResource(gameState, playerAddress);
-        log(`Cycle ${cycle}: Player ${resourceName} after unstake: ${resource}`);
-        if (resource >= amount) {
-            log(`Cycle ${cycle}: Target reached! Player ${resourceName}: ${resource}, needed: ${amount}`);
+        
+        if (resource >= amountBigInt) {
+            log(`Cycle ${cycle}: Target reached! Player ${resourceName}: ${resource}, needed: ${amountBigInt}`);
             break;
         }
     }
+    
+    // If we have more than needed, use testDeductResources to reduce to exact amount
+    if (resource > amountBigInt) {
+        const excess = resource - amountBigInt;
+        if (resourceName === 'gold') {
+            await gameState.testDeductResources(playerAddress, excess, 0, 0);
+            log(`Player (${playerAddress.slice(-6)}): deducted ${excess} excess ${resourceName} to reach exact amount: ${amountBigInt}`);
+        } else if (resourceName === 'food') {
+            await gameState.testDeductResources(playerAddress, 0, excess, 0);
+            log(`Player (${playerAddress.slice(-6)}): deducted ${excess} excess ${resourceName} to reach exact amount: ${amountBigInt}`);
+        }
+        resource = amountBigInt;
+    }
+    
+    // Clean up all buildings we created
+    for (const { buildingId, tokenId } of createdBuildings) {
+        try {
+            await altar.connect(player).unstake(await nftContract.getAddress(), tokenId);
+            log(`Player (${playerAddress.slice(-6)}): cleaned up ${resourceName} building ${buildingId} (token ${tokenId})`);
+        } catch (error) {
+            log(`Failed to unstake token ${tokenId}: ${error.message}`);
+        }
+    }
+    
     // Log final state
-    buildingsCount = await gridBuildings.buildingCounts(playerAddress, buildingType);
-    log(`Player (${playerAddress.slice(-6)}): ${resourceName} buildings after: ${buildingsCount}`);
+    const finalBuildingsCount = await gridBuildings.buildingCounts(playerAddress, buildingType);
+    log(`Player (${playerAddress.slice(-6)}): ${resourceName} buildings after: ${finalBuildingsCount}`);
     log(`Player (${playerAddress.slice(-6)}): ${resourceName} before: ${resourceBefore}, after: ${resource}`);
-    log(`Player (${playerAddress.slice(-6)}): total minted: ${totalMinted}, total collected: ${totalCollected}`);
     log(`--- ensurePlayerResource END [${resourceName}] ---`);
 }
 

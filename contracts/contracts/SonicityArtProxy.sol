@@ -22,27 +22,42 @@ contract SonicityArtProxy {
         uint256 mintedAt,
         bool isListable
     ) external pure returns (string memory) {
-        string memory name = string(abi.encodePacked("Sonicity Yield NFT #", _toString(tokenId)));
+        string memory name = _generateName(tokenId);
         string memory description = "This NFT represents staked REP and yield rights in the Sonicity economy.";
-
         string memory image = _generateSVG(repStaked, mintedAt, isListable);
-
+        string memory attributes = _generateAttributes(repStaked, mintedAt, isListable);
+        
         string memory metadata = string(abi.encodePacked(
-            '{',
-                '"name":"', name, '",',
-                '"description":"', description, '",',
-                '"attributes":[',
-                    '{"trait_type":"REP Committed","value":', _toString(repStaked), '},',
-                    '{"trait_type":"Minted","display_type":"date","value":', _toString(mintedAt), '},',
-                    '{"trait_type":"Listable","value":"', isListable ? "Yes" : "No", '"}',
-                '],',
-                '"image":"data:image/svg+xml;base64,', image, '"',
-            '}'
+            '{"name":"', name, '","description":"', description, '","attributes":', attributes, ',"image":"data:image/svg+xml;base64,', image, '"}'
         ));
 
         return string(abi.encodePacked(
             "data:application/json;base64,", _base64(bytes(metadata))
         ));
+    }
+
+    /**
+     * @dev Generate the NFT name
+     * @param tokenId The token ID
+     * @return The name string
+     */
+    function _generateName(uint256 tokenId) internal pure returns (string memory) {
+        return string(abi.encodePacked("Sonicity Yield NFT #", _toString(tokenId)));
+    }
+
+    /**
+     * @dev Generate the attributes array
+     * @param repStaked The amount of REP staked
+     * @param mintedAt The mint timestamp
+     * @param isListable Whether the NFT is listable
+     * @return The attributes JSON string
+     */
+    function _generateAttributes(uint256 repStaked, uint256 mintedAt, bool isListable) internal pure returns (string memory) {
+        string memory repAttr = string(abi.encodePacked('{"trait_type":"REP Committed","value":', _toString(repStaked), '}'));
+        string memory mintAttr = string(abi.encodePacked('{"trait_type":"Minted","display_type":"date","value":', _toString(mintedAt), '}'));
+        string memory listableAttr = string(abi.encodePacked('{"trait_type":"Listable","value":"', isListable ? "Yes" : "No", '"}'));
+        
+        return string(abi.encodePacked('[', repAttr, ',', mintAttr, ',', listableAttr, ']'));
     }
 
     /**
@@ -53,17 +68,15 @@ contract SonicityArtProxy {
      * @return The base64-encoded SVG
      */
     function _generateSVG(uint256 repStaked, uint256 mintedAt, bool isListable) internal pure returns (string memory) {
-        string memory text = string(abi.encodePacked(
-            '<svg xmlns="http://www.w3.org/2000/svg" width="350" height="350">',
-                '<rect width="100%" height="100%" fill="#f2f0e8"/>',
-                '<text x="20" y="40" font-size="20" fill="#333">Sonicity Yield NFT</text>',
-                '<text x="20" y="80" font-size="14" fill="#666">REP: ', _toString(repStaked), '</text>',
-                '<text x="20" y="110" font-size="14" fill="#666">Minted: ', _toString(mintedAt), '</text>',
-                '<text x="20" y="140" font-size="14" fill="#666">Listable: ', isListable ? "Yes" : "No", '</text>',
-            '</svg>'
-        ));
-
-        return _base64(bytes(text));
+        string memory svgStart = '<svg xmlns="http://www.w3.org/2000/svg" width="350" height="350"><rect width="100%" height="100%" fill="#f2f0e8"/>';
+        string memory title = '<text x="20" y="40" font-size="20" fill="#333">Sonicity Yield NFT</text>';
+        string memory repText = string(abi.encodePacked('<text x="20" y="80" font-size="14" fill="#666">REP: ', _toString(repStaked), '</text>'));
+        string memory mintText = string(abi.encodePacked('<text x="20" y="110" font-size="14" fill="#666">Minted: ', _toString(mintedAt), '</text>'));
+        string memory listableText = string(abi.encodePacked('<text x="20" y="140" font-size="14" fill="#666">Listable: ', isListable ? "Yes" : "No", '</text>'));
+        string memory svgEnd = '</svg>';
+        
+        string memory svg = string(abi.encodePacked(svgStart, title, repText, mintText, listableText, svgEnd));
+        return _base64(bytes(svg));
     }
 
     // ========== Utils ==========

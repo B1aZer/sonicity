@@ -81,6 +81,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event TreasuryBurned(address indexed player, uint256 amount);
     event UpgradeLevelUnlocked(address indexed player, uint8 newLevel, uint256 totalRechargeAmount);
     event DiamondsEarned(address indexed player, uint256 amount);
+    event GoldDeducted(address indexed player, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -478,6 +479,61 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         
         playerState[player].gold += amount;
         emit GoldEarned(player, amount);
+    }
+
+    /**
+     * @dev Test function to deduct gold (only for testing)
+     * @param player The address of the player
+     * @param amount The amount of gold to deduct
+     */
+    function testDeductGold(address player, uint256 amount) external {
+        // Only allow owner to call this function
+        require(msg.sender == owner(), "Only owner can call this function");
+        // Only allow in test environment
+        require(block.chainid == 31337 || block.chainid == 1337, "Only available in test environment");
+        require(playerState[player].gold >= amount, "Insufficient gold");
+        
+        playerState[player].gold -= amount;
+        emit GoldDeducted(player, amount);
+    }
+
+    /**
+     * @dev Test function to deduct resources (only for testing)
+     * @param player The address of the player
+     * @param goldAmount The amount of gold to deduct (0 if not needed)
+     * @param foodAmount The amount of food to deduct (0 if not needed)
+     * @param repAmount The amount of rep to deduct (0 if not needed)
+     */
+    function testDeductResources(
+        address player,
+        uint256 goldAmount,
+        uint256 foodAmount,
+        uint256 repAmount
+    ) external {
+        // Only allow owner to call this function
+        require(msg.sender == owner(), "Only owner can call this function");
+        // Only allow in test environment
+        require(block.chainid == 31337 || block.chainid == 1337, "Only available in test environment");
+        
+        PlayerState storage state = playerState[player];
+        
+        // Check if player has enough resources
+        if (goldAmount > 0) {
+            require(state.gold >= goldAmount, "Insufficient gold");
+            state.gold -= goldAmount;
+        }
+        
+        if (foodAmount > 0) {
+            require(state.food >= foodAmount, "Insufficient food");
+            state.food -= foodAmount;
+        }
+        
+        if (repAmount > 0) {
+            require(state.rep >= repAmount, "Insufficient rep");
+            state.rep -= repAmount;
+        }
+        
+        emit ResourcesDeducted(player, goldAmount, foodAmount, repAmount);
     }
 
     /**

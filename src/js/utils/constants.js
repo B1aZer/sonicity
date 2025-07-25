@@ -2,15 +2,17 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0xefc1aB2475ACb7E60499Efb171D173be19928a05", // Will be updated by update-addresses.sh
-    SONICITY_FARM: "0x870526b7973b56163a6997bB7C886F5E4EA53638", // Will be updated by update-addresses.sh
-    SONICITY_DIAMOND: "0xD49a0e9A4CD5979aE36840f542D2d7f02C4817Be", // Will be updated by update-addresses.sh
-    SONICITY_REP: "0xe1Fd27F4390DcBE165f4D60DBF821e4B9Bb02dEd", // Will be updated by update-addresses.sh
-    ALTAR: "0x26B862f640357268Bd2d9E95bc81553a2Aa81D7E", // Will be updated by update-addresses.sh
-    GAME_STATE: "0x74Cf9087AD26D541930BaC724B7ab21bA8F00a27", // Will be updated by update-addresses.sh
-    DISTRICT_BUILDINGS: "0xefAB0Beb0A557E452b398035eA964948c750b2Fd", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0x70bDA08DBe07363968e9EE53d899dFE48560605B", // Will be updated by update-addresses.sh
-    BATTLE_SYSTEM: "0xA56F946D6398Dd7d9D4D9B337Cf9E0F68982ca5B" // Will be updated by update-addresses.sh
+    SONICITY_NFT: "0xdF46e54aAadC1d55198A4a8b4674D7a4c927097A", // Will be updated by update-addresses.sh
+    SONICITY_FARM: "0xf5c4a909455C00B99A90d93b48736F3196DB5621", // Will be updated by update-addresses.sh
+    SONICITY_DIAMOND: "0xFD2Cf3b56a73c75A7535fFe44EBABe7723c64719", // Will be updated by update-addresses.sh
+    SONICITY_REP: "0xB22C255250d74B0ADD1bfB936676D2a299BF48Bd", // Will be updated by update-addresses.sh
+    SONICITY_YIELD_NFT: "0x666D0c3da3dBc946D5128D06115bb4eed4595580", // Will be updated by update-addresses.sh
+    SONICITY_ART_PROXY: "0x742489F22807ebB4C36ca6cD95c3e1C044B7B6c8", // Will be updated by update-addresses.sh
+    ALTAR: "0x9338CA7d556248055f5751d85cDA7aD6eF254433", // Will be updated by update-addresses.sh
+    GAME_STATE: "0xb868Cc77A95a65F42611724AF05Aa2d3B6Ec05F2", // Will be updated by update-addresses.sh
+    DISTRICT_BUILDINGS: "0x70E5370b8981Abc6e14C91F4AcE823954EFC8eA3", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0x4000F8820522AC96C4221b299876e3e53bCc8525", // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0x9c65f85425c619A6cB6D29fF8d57ef696323d188" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
@@ -71,6 +73,19 @@ export const BUILDINGS = {
             baseUrl: 'assets/diamond_station',
             levels: {
                 1: { url: 'assets/diamond_station.glb' }
+            }
+        }
+    },
+    REP_FORGE: {
+        name: 'REP Forge',
+        size: new THREE.Vector3(8, 8, 8),
+        color: 0xFF6B35, // Orange-Red
+        isGridBuilding: true,
+        tier: 3,
+        assets: {
+            baseUrl: 'assets/rep_forge',
+            levels: {
+                1: { url: 'assets/rep_forge.glb' }
             }
         }
     },

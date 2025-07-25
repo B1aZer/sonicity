@@ -124,17 +124,26 @@ describe("BattleSystem", function () {
         barracksIndex = getBuildingTypeIndex("BARRACKS");
 
         // Setup initial resources for players and unlock tier 1
-        await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1500); // 1000 for tier 1 + 500 for building
-
+        await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1500); // 1000 for tier 1 + 500 for building  
         // Now build the defense tower for each player
         const defenseTowerIndex = getBuildingTypeIndex("DEFENSE_TOWER");
+        const defenseTowerConfig = await districtBuildings.districtBuildingConfigs(defenseTowerIndex);
+        const defenseTowerCost = defenseTowerConfig.buildCost;
+        await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, defenseTowerCost, battleSystem); 
         await districtBuildings.connect(player1).buildDistrictBuilding(defenseTowerIndex);
         // await districtBuildings.connect(player2).buildDistrictBuilding(defenseTowerIndex); // Do not create defense tower for player2
         // await districtBuildings.connect(player3).buildDistrictBuilding(defenseTowerIndex); // DEFENSE_TOWER
     });
 
     describe("Troop Training", function () {
-        beforeEach(async function () {    
+        beforeEach(async function () {   
+
+            const barracksIndex = getBuildingTypeIndex("BARRACKS");
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, BigInt(barracksCost), battleSystem); 
+    
             await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
         });
 
@@ -185,6 +194,13 @@ describe("BattleSystem", function () {
         });
 
         it("should fail if player doesn't have enough resources", async function () {
+            // Ensure player has enough gold and food for training 1 infantry (100 gold, 50 food)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 50);
+            
+            // Now deduct the food so the player doesn't have enough
+            await gameState.testDeductResources(player1.address, 0, 50, 0);
+            
             await expect(
                 battleSystem.connect(player1).trainTroops(0, 1)
             ).to.be.revertedWith("Insufficient food");
@@ -324,6 +340,8 @@ describe("BattleSystem", function () {
 
 
             // Register players for matchmaking
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
             await gameState.connect(player1).donateGold(100);
             await gameState.connect(player2).donateGold(100);
   
@@ -346,7 +364,11 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).startBattle(5, 2, 1);
 
             await donateGoldForTier(player3, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
             await gameState.connect(player3).donateGold(100);
+
+            // Ensure player3 has enough gold for search
+            await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
 
             // Now player3 tries to find an opponent
             await battleSystem.connect(player3).startSearch();
@@ -403,6 +425,8 @@ describe("BattleSystem", function () {
         });
 
         it("should allow players to register for matchmaking", async function () {
+            // Ensure player has enough gold before donating
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000, battleSystem);
             // Register for matchmaking by donating gold to reach tier 1
             await gameState.connect(player1).donateGold(1000);
             
@@ -421,6 +445,8 @@ describe("BattleSystem", function () {
         });
 
         it("should allow players to unregister from matchmaking", async function () {
+            // Ensure player has enough gold before donating
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000, battleSystem);
             // Register for matchmaking by donating gold to reach tier 1
             await gameState.connect(player1).donateGold(1000);
             await battleSystem.connect(player1).unregisterFromMatchmaking();
@@ -432,6 +458,9 @@ describe("BattleSystem", function () {
         it("should return zero address based on noOpponentFoundChance", async function () {
             // Set noOpponentFoundChance to 100 to always return zero address
             await battleSystem.connect(owner).setNoOpponentFoundChance(100);
+
+            // Ensure player has enough gold for search
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
 
             // Start search first
             await battleSystem.connect(player1).startSearch();
@@ -597,6 +626,11 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
+            
+            // Ensure player2 has enough gold to build barracks
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
             await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
 
             // Register players for matchmaking
@@ -660,6 +694,10 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
+            // Ensure player2 has enough gold for barracks
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
             await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
 
             // Register players for matchmaking
@@ -735,6 +773,9 @@ describe("BattleSystem", function () {
             
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
             await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
 
             // Register players for matchmaking
@@ -1229,6 +1270,9 @@ describe("BattleSystem", function () {
         });
 
         it("Should allow starting new search and reset found opponent", async function () {
+            // Ensure player has enough gold for search
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 200, battleSystem);
+            
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
@@ -1270,6 +1314,9 @@ describe("BattleSystem", function () {
         });
 
         it("Should check search status correctly", async function () {
+            // Ensure player has enough gold for search
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
+            
             await battleSystem.connect(player1).startSearch();
             
             let status = await battleSystem.connect(player1).checkSearchStatus();
@@ -1295,6 +1342,9 @@ describe("BattleSystem", function () {
         });
 
         it("Should not allow starting battle without found opponent", async function () {
+            // Ensure player has enough gold for search
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
+            
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
@@ -1308,9 +1358,15 @@ describe("BattleSystem", function () {
 
         it("Should not allow starting search while in battle", async function () {
 
-            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 250);
+            const barracksIndex = getBuildingTypeIndex("BARRACKS");
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
+
             await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
 
+            // Ensure player has enough gold for search
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
             await battleSystem.connect(player1).startSearch();
             
             // Fast forward time
@@ -1327,10 +1383,12 @@ describe("BattleSystem", function () {
             
             // Train some troops
             await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 100);
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
             await battleSystem.connect(player1).trainTroops(0, 1); // Infantry
             
             await battleSystem.connect(player1).startBattle(1, 0, 0);
             
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100, battleSystem);
             await expect(
                 battleSystem.connect(player1).startSearch()
             ).to.be.revertedWith("Already in a battle");
