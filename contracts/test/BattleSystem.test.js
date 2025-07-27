@@ -633,6 +633,18 @@ describe("BattleSystem", function () {
             await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
             await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
 
+            // Ensure player2 has some grid buildings and treasury for damage
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000, battleSystem);
+            await ensurePlayerFood(player2, gameState, gridBuildings, altar, sonicityFarm, 500);
+            
+            // Build some grid buildings for player2
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // House
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // Another house
+            await mintAndStakeNFT(player2, altar, sonicityFarm, GridBuildingType.FARM); // Farm
+
+            // Add some treasury for player2
+            await gameState.testEarnGold(player2.address, 500);
+
             // Register players for matchmaking
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
 
@@ -679,6 +691,11 @@ describe("BattleSystem", function () {
             console.log("\nPower Levels:");
             console.log("  Attacker Power:", battleRecord.attackerPower.toString());
             console.log("  Defender Power:", battleRecord.defenderPower.toString());
+            console.log("\nBattle Effects:");
+            console.log("  Treasury Burned:", battleRecord.treasuryBurned.toString());
+            console.log("  Grid Buildings Damaged:", battleRecord.gridBuildingsDamaged.toString());
+            console.log("  District Buildings Damaged:", battleRecord.districtBuildingsDamaged.toString());
+            console.log("  REP Points Awarded:", battleRecord.repPoints.toString());
             console.log("----------------------------------------\n");
 
             expect(battleRecord.repPoints).to.be.gt(0);
@@ -699,6 +716,15 @@ describe("BattleSystem", function () {
             const barracksCost = barracksConfig.buildCost;
             await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
             await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
+
+            // Ensure player2 has some grid buildings for damage
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000, battleSystem);
+            await ensurePlayerFood(player2, gameState, gridBuildings, altar, sonicityFarm, 500);
+            
+            // Build some grid buildings for player2
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // House
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // Another house
+            await mintAndStakeNFT(player2, altar, sonicityFarm, GridBuildingType.FARM); // Farm
 
             // Register players for matchmaking
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
@@ -748,7 +774,7 @@ describe("BattleSystem", function () {
             console.log("  Defender Power:", battleRecord.defenderPower.toString());
             console.log("----------------------------------------\n");
 
-            expect(battleRecord.repPoints).to.be.gt(0);
+            expect(battleRecord.repPoints, "Rep points should be greater than 0").to.be.gt(0);
             expect(battleRecord.treasuryBurned, "Treasury burn should be 0").to.be.eq(0);
             expect(battleRecord.gridBuildingsDamaged, "Grid buildings damage should be greater than 0").to.be.gt(0);
             expect(battleRecord.districtBuildingsDamaged, "District buildings damage should be equal to 0").to.be.eq(0);
@@ -826,7 +852,7 @@ describe("BattleSystem", function () {
             console.log("  Defender Power:", battleRecord.defenderPower.toString());
             console.log("----------------------------------------\n");
 
-            expect(battleRecord.repPoints).to.be.gt(0);
+            expect(battleRecord.repPoints, "Rep points should be greater than 0").to.be.gt(0);
             expect(battleRecord.treasuryBurned, "Treasury burn should be equal to 0").to.be.eq(0);
             expect(battleRecord.gridBuildingsDamaged, "Grid buildings damage should be equal to 0").to.be.eq(0);
             expect(battleRecord.districtBuildingsDamaged, "District buildings damage should be greater than 0").to.be.gt(0);
@@ -919,7 +945,7 @@ describe("BattleSystem", function () {
             const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
 
             console.log("\nBattle Record:");
-            console.log("should apply battle effects (treasury burn, building damage)");
+            console.log("should apply battle effects (only rep points)");
             console.log("----------------------------------------");
             console.log("Attacker:", battleRecord.attacker);
             console.log("Defender:", battleRecord.defender);
@@ -1006,6 +1032,15 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
+
+            // Ensure player2 has some grid buildings for damage
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000, battleSystem);
+            await ensurePlayerFood(player2, gameState, gridBuildings, altar, sonicityFarm, 500);
+            
+            // Build some grid buildings for player2
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // House
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // Another house
+            await mintAndStakeNFT(player2, altar, sonicityFarm, GridBuildingType.FARM); // Farm
 
             // Register players for matchmaking
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
