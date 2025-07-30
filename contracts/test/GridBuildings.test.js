@@ -1512,24 +1512,26 @@ describe("GridBuildings", function () {
     });
 
     it("Should track recharge amounts correctly for multiple recharges", async function () {
-      const player1Address = await player1.getAddress();
+      // Use a fresh player (player2) for this test to avoid interference from previous tests
+      const player2Address = await player2.getAddress();
+      await gameState.connect(player2).initializePlayer();
+      
       // Mint and stake an NFT for a house (1 initial recharge)
-      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE);
       // Fast forward time to make building reach cap
       await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
       await ethers.provider.send("evm_mine");
       // Multiple small recharges (9 recharges of 0.01 each = 0.09 total + 0.01 from helper = 0.1)
       for (let i = 0; i < 9; i++) {
-        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+        await gridBuildings.connect(player2).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
       }
-      // The total recharge tracked includes all previous recharges from the test setup
-      // Based on debug output, the actual total is 0.19 SONIC
-      const totalRecharge = await gameState.getTotalRechargeAmount(player1Address, GridBuildingType.HOUSE);
-      expect(totalRecharge).to.equal(ethers.parseEther("0.19"));
+      // Total should be: 0.01 (initial) + 9 * 0.01 = 0.10 SONIC
+      const totalRecharge = await gameState.getTotalRechargeAmount(player2Address, GridBuildingType.HOUSE);
+      expect(totalRecharge).to.equal(ethers.parseEther("0.10"));
       // Check max upgrade level (should be 2)
-      const maxLevel = await gameState.getMaxUpgradeLevel(player1Address, GridBuildingType.HOUSE);
+      const maxLevel = await gameState.getMaxUpgradeLevel(player2Address, GridBuildingType.HOUSE);
       expect(maxLevel).to.equal(2);
     });
 
