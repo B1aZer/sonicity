@@ -152,15 +152,13 @@ describe("GridBuildings", function () {
     buildingNames = await districtBuildings.getBuildingNames();
     getBuildingTypeIndex = (name) => buildingNames.findIndex(n => n === name);
 
-    // Ensure player has enough gold for workshop (400 to unlock + 150 to build)
+    // Ensure player has enough gold for various operations
     await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 550);
     
     // Provide additional gold for building costs
     await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 300);
 
-    // Build workshop
-    const workshopIndex = getBuildingTypeIndex("WORKSHOP");
-    await districtBuildings.connect(player1).buildDistrictBuilding(workshopIndex);
+    // Note: Workshop is not built here to allow tests to control workshop availability
   });
 
   describe("Building Management", function () {
@@ -795,9 +793,12 @@ describe("GridBuildings", function () {
       // Ensure player has enough gold for workshop (400 to unlock + 150 to build)
       await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 550);
 
-      // Build workshop
+      // Build workshop only if not already built
       const workshopIndex = getBuildingTypeIndex("WORKSHOP");
-      await districtBuildings.connect(player1).buildDistrictBuilding(workshopIndex);
+      const isWorkshopBuilt = await districtBuildings.isDistrictBuildingBuilt(await player1.getAddress(), workshopIndex);
+      if (!isWorkshopBuilt) {
+        await districtBuildings.connect(player1).buildDistrictBuilding(workshopIndex);
+      }
     });
 
     it("Should damage buildings starting from highest tier", async function () {
@@ -1145,6 +1146,8 @@ describe("GridBuildings", function () {
       expect(farm.buildingType).to.equal(GridBuildingType.FARM);
       expect(farm.level).to.equal(1);
       expect(await gridBuildings.buildingCounts(await player1.getAddress(), GridBuildingType.FARM)).to.equal(BigInt(2));
+
+      // Note: We intentionally do NOT build a workshop here to test workshop requirements
     });
 
     it("Should not allow repairing without a workshop", async function () {
