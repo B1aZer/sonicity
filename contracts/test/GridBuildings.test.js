@@ -677,7 +677,7 @@ describe("GridBuildings", function () {
         
         // Verify player2 is now tier 1
         const playerState = await gameState.playerState(player2Address);
-        expect(playerState.tier).to.equal(1);
+        expect(playerState.tier, "Player should be tier 1").to.equal(1);
         
         const { buildingId: farmId } = await mintAndStakeNFT(player2, altar, sonicityFarm, GridBuildingType.FARM);
         
@@ -706,7 +706,7 @@ describe("GridBuildings", function () {
 
         // Verify player has enough gold
         const playerGold = await gameState.getPlayerGold(player2Address);
-        expect(playerGold).to.be.gte(upgradeCost);
+        expect(playerGold, "Player should have enough gold to upgrade farm").to.be.gte(upgradeCost);
 
         // Upgrade the farm
         await gridBuildings.connect(player2).upgradeBuilding(farmId);
@@ -741,7 +741,7 @@ describe("GridBuildings", function () {
         const foodGained = finalFood - initialFood;
         console.log("Food gained:", foodGained.toString());
         console.log("Expected food:", "10");
-        expect(finalFood).to.equal(initialFood + BigInt(10));
+        expect(finalFood, "Food should be 10").to.equal(initialFood + BigInt(10));
       });
 
       it("Should allow creating and managing farms", async function () {

@@ -28,6 +28,8 @@ async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
     const totalSupply = await nftContract.totalSupply();
     const tokenId = totalSupply + 1n; // Use BigInt literal
     
+    log(`mintAndStakeNFT: Creating building type ${buildingType} for player ${playerAddress.slice(-6)}, tokenId: ${tokenId}`);
+    
     // Use the new mintAndStake function
     const mintAndStakeTx = await altar.connect(player).mintAndStake(nftAddress, tokenId, buildingType);
     const mintAndStakeReceipt = await mintAndStakeTx.wait();
@@ -46,6 +48,8 @@ async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
     
     const buildingCreatedEvent = gridBuildings.interface.parseLog(buildingCreatedLog);
     const buildingId = Number(buildingCreatedEvent.args.buildingId);
+
+    log(`mintAndStakeNFT: Created building ${buildingId} of type ${buildingType} for player ${playerAddress.slice(-6)}`);
 
     // Immediately recharge the building so production starts
     // Get the custom recharge cost for this building type
@@ -178,6 +182,7 @@ async function ensurePlayerResource({
         const { buildingId, tokenId } = await mintAndStakeNFT(player, altar, nftContract, buildingType);
         buildingsOfType.push(buildingId);
         createdBuildings.push({ buildingId, tokenId });
+        log(`Player (${playerAddress.slice(-6)}): created ${resourceName} building ${buildingId} (token ${tokenId})`);
     }
     
     // Now loop until we have enough resource by recharging and fast-forwarding
@@ -232,6 +237,7 @@ async function ensurePlayerResource({
     // Clean up all buildings we created
     for (const { buildingId, tokenId } of createdBuildings) {
         try {
+            log(`Player (${playerAddress.slice(-6)}): attempting to clean up ${resourceName} building ${buildingId} (token ${tokenId})`);
             await altar.connect(player).unstake(await nftContract.getAddress(), tokenId);
             log(`Player (${playerAddress.slice(-6)}): cleaned up ${resourceName} building ${buildingId} (token ${tokenId})`);
         } catch (error) {
