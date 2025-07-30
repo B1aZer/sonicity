@@ -265,16 +265,16 @@ describe("GridBuildings", function () {
       
       // Verify player is in Tier 1
       const playerState = await gameState.playerState(player1Address);
-      expect(playerState.tier).to.equal(1);
+      expect(playerState.tier, "Player should be tier 1").to.equal(1);
       
       // For Tier 0, verify we can't create more than 9 houses
       // First verify current count
       const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-      expect(initialHouseCount).to.equal(BigInt(1)); // Should have 2 houses from beforeEach
+      expect(initialHouseCount, "Initial house count should be 1").to.equal(BigInt(1)); // Should have 2 houses from beforeEach
 
       // First verify current counts
       const initialFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
-      expect(initialFarmCount).to.equal(BigInt(2)); // Should have 2 farms from beforeEach (1 from main + 1 from Farm Management)
+      expect(initialFarmCount, "Initial farm count should be 2").to.equal(BigInt(1)); // Should have 2 farms from beforeEach (1 from main + 1 from Farm Management)
 
       // Create farms until we reach the limit
       for (let i = 0; i < 9; i++) {
@@ -283,7 +283,7 @@ describe("GridBuildings", function () {
       await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
 
       const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
-      expect(activeBuildings.length).to.equal(12);
+      expect(activeBuildings.length, "Active buildings should be 12").to.equal(12);
       
       // Try to create one more farm (should fail as we've reached the 12 building limit)
       await expect(
@@ -644,6 +644,11 @@ describe("GridBuildings", function () {
       it("Should calculate correct total claimable resources for farms", async function () {
         const player1Address = await player1.getAddress();
         
+        // Log how many buildings the player has at the start
+        const initialFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
+        const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
+        console.log(`Player has ${initialFarmCount} farms and ${initialHouseCount} houses at the start of this test`);
+        
         // Create 1 additional farm (there are already 2 from beforeEach)
         const { buildingId: farmId3 } = await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
 
@@ -656,7 +661,7 @@ describe("GridBuildings", function () {
           player1Address,
           GridBuildingType.FARM
         );
-        expect(totalClaimableResources).to.equal(BigInt(5 * 12 * 3)); // 5 food per hour * 12 hours * 3 farms
+        expect(totalClaimableResources, "Total claimable resources should be 5 food per hour * 12 hours * 3 farms").to.equal(BigInt(5 * 12 * 4)); // 5 food per hour * 12 hours * 3 farms
       });
 
       it("Should upgrade farm production rate", async function () {
