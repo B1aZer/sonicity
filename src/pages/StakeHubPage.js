@@ -949,6 +949,10 @@ export class StakePage extends BasePage {
                 // Farm - use SonicityFarm
                 nftContract = this.contracts.farmNft;
                 contractAddress = await nftContract.getContractAddress();
+            } else if (tier === 2) {
+                // Diamond Station - use SonicityDiamond
+                nftContract = this.contracts.diamondNft;
+                contractAddress = await nftContract.getContractAddress();
             } else if (tier === 3) {
                 // Rep Station - use SonicityRep
                 nftContract = this.contracts.repNft;
