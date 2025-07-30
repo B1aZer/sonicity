@@ -13,8 +13,24 @@ export class BarracksPage extends BasePage {
         
         this.element.className = 'base-page';
         
-        this.troopConfigs = {};
-        this.render(); // Render the initial UI
+        // Initialize state
+        this.setState({
+            gold: 0,
+            food: 0,
+            barracksLevel: 0,
+            isBarracksBuilt: false,
+            infantryCount: 0,
+            cavalryCount: 0,
+            siegeCount: 0,
+            infantryGoldCost: 0,
+            infantryFoodCost: 0,
+            cavalryGoldCost: 0,
+            cavalryFoodCost: 0,
+            siegeGoldCost: 0,
+            siegeFoodCost: 0
+        });
+        
+        this.render();
     }
 
     async onInitialized(walletResult) {
@@ -22,7 +38,7 @@ export class BarracksPage extends BasePage {
         try {
             // Load troop configs from contract
             await this.loadTroopConfigs();
-            // Remove the render() call here - it causes re-render and animation restart
+            // Load barracks data
             await this.loadBarracksData();
             this.setupTrainHandlers();
             Logger.info('Barracks page initialized successfully');
@@ -36,10 +52,21 @@ export class BarracksPage extends BasePage {
         try {
             // Load configs for each troop type
             const troopTypes = Object.keys(BattleSystemContract.TROOP_TYPES);
+            const troopConfigs = {};
             for (const type of troopTypes) {
                 const troopTypeValue = BattleSystemContract.TROOP_TYPES[type];
-                this.troopConfigs[type] = await this.contracts.battleSystem.getTroopConfig(troopTypeValue);
+                troopConfigs[type] = await this.contracts.battleSystem.getTroopConfig(troopTypeValue);
             }
+            
+            // Update state with flattened troop configs
+            this.setState({
+                infantryGoldCost: troopConfigs.INFANTRY.goldCost,
+                infantryFoodCost: troopConfigs.INFANTRY.foodCost,
+                cavalryGoldCost: troopConfigs.CAVALRY.goldCost,
+                cavalryFoodCost: troopConfigs.CAVALRY.foodCost,
+                siegeGoldCost: troopConfigs.SIEGE.goldCost,
+                siegeFoodCost: troopConfigs.SIEGE.foodCost
+            });
         } catch (error) {
             Logger.error('Error loading troop configs:', error);
             throw error;
@@ -86,43 +113,49 @@ export class BarracksPage extends BasePage {
                 siege: troopCounts[2].toString()
             });
 
-            // Update UI with troop counts
-            this.element.querySelector('#infantry-count').textContent = troopCounts[0].toString();
-            this.element.querySelector('#cavalry-count').textContent = troopCounts[1].toString();
-            this.element.querySelector('#siege-count').textContent = troopCounts[2].toString();
-
-            // Update resource displays
-            this.element.querySelector('#gold-amount').textContent = gold.toString();
-            this.element.querySelector('#food-amount').textContent = food.toString();
+            // Update state (this will automatically update UI)
+            this.setState({
+                gold: gold.toString(),
+                food: food.toString(),
+                barracksLevel: Number(barracksLevel),
+                isBarracksBuilt,
+                infantryCount: troopCounts[0].toString(),
+                cavalryCount: troopCounts[1].toString(),
+                siegeCount: troopCounts[2].toString()
+            });
 
             // Update troop card states based on barracks level
-            const troopCards = this.element.querySelectorAll('.shop-item-card');
-            troopCards.forEach((card, index) => {
-                const isLocked = Number(barracksLevel) <= index;
-                Logger.info(`Troop card ${index} locked status:`, { isLocked, barracksLevel });
-                if (isLocked) {
-                    card.classList.add('locked');
-                    const lockOverlay = document.createElement('div');
-                    lockOverlay.className = 'lock-overlay';
-                    lockOverlay.innerHTML = `
-                        <i class="fas fa-lock lock-icon"></i>
-                        <div class="unlock-info">
-                            <p class="unlock-requirement">Requires Barracks Level ${index + 1}</p>
-                        </div>
-                    `;
-                    card.appendChild(lockOverlay);
-                } else {
-                    card.classList.remove('locked');
-                    const existingOverlay = card.querySelector('.lock-overlay');
-                    if (existingOverlay) {
-                        existingOverlay.remove();
-                    }
-                }
-            });
+            this.updateTroopCardStates(Number(barracksLevel));
         } catch (error) {
             console.error('Error loading barracks data:', error);
             this.modal.error('Failed to load barracks data: ' + error.message);
         }
+    }
+
+    updateTroopCardStates(barracksLevel) {
+        const troopCards = this.element.querySelectorAll('.shop-item-card');
+        troopCards.forEach((card, index) => {
+            const isLocked = barracksLevel <= index;
+            Logger.info(`Troop card ${index} locked status:`, { isLocked, barracksLevel });
+            if (isLocked) {
+                card.classList.add('locked');
+                const lockOverlay = document.createElement('div');
+                lockOverlay.className = 'lock-overlay';
+                lockOverlay.innerHTML = `
+                    <i class="fas fa-lock lock-icon"></i>
+                    <div class="unlock-info">
+                        <p class="unlock-requirement">Requires Barracks Level ${index + 1}</p>
+                    </div>
+                `;
+                card.appendChild(lockOverlay);
+            } else {
+                card.classList.remove('locked');
+                const existingOverlay = card.querySelector('.lock-overlay');
+                if (existingOverlay) {
+                    existingOverlay.remove();
+                }
+            }
+        });
     }
 
     render() {
@@ -135,11 +168,11 @@ export class BarracksPage extends BasePage {
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Gold:</span>
-                            <span id="gold-amount" class="status-value">Loading...</span>
+                            <span id="gold-amount" class="status-value" data-state="gold">Loading...</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Food:</span>
-                            <span id="food-amount" class="status-value">Loading...</span>
+                            <span id="food-amount" class="status-value" data-state="food">Loading...</span>
                         </div>
                     </div>
                 </div>
@@ -148,7 +181,9 @@ export class BarracksPage extends BasePage {
                     <h2>Available Troops</h2>
                     <div class="buildings-grid-rows">
                         ${Object.entries(BattleSystemContract.TROOP_DEFINITIONS).map(([type, troop]) => {
-                            const config = this.troopConfigs[type] || { goldCost: 0, foodCost: 0 };
+                            const goldCostKey = `${type.toLowerCase()}GoldCost`;
+                            const foodCostKey = `${type.toLowerCase()}FoodCost`;
+                            const countKey = `${type.toLowerCase()}Count`;
                             return `
                                 <div class="shop-item-card">
                                     <div class="shop-item-image">
@@ -162,15 +197,15 @@ export class BarracksPage extends BasePage {
                                         <div class="shop-item-cost">
                                             <div class="cost-item">
                                                 <i class="fas fa-coins cost-icon"></i>
-                                                <span class="cost-value">${config.goldCost}</span>
+                                                <span class="cost-value" data-state="${goldCostKey}">0</span>
                                             </div>
                                             <div class="cost-item">
                                                 <i class="fas fa-wheat-awn cost-icon"></i>
-                                                <span class="cost-value">${config.foodCost}</span>
+                                                <span class="cost-value" data-state="${foodCostKey}">0</span>
                                             </div>
                                             <span class="shop-item-stock in-stock">
                                                 <i class="fas fa-check-circle"></i>
-                                                <span id="${type.toLowerCase()}-count">Loading...</span> trained 
+                                                <span id="${type.toLowerCase()}-count" data-state="${countKey}">Loading...</span> trained 
                                             </span>
                                         </div>
                                     </div>
@@ -226,8 +261,11 @@ export class BarracksPage extends BasePage {
                     }
 
                     // Get troop config to check costs
-                    const config = this.troopConfigs[troopType];
-                    Logger.info('Troop config:', config);
+                    const goldCostKey = `${troopType.toLowerCase()}GoldCost`;
+                    const foodCostKey = `${troopType.toLowerCase()}FoodCost`;
+                    const goldCost = this.state[goldCostKey];
+                    const foodCost = this.state[foodCostKey];
+                    Logger.info('Troop costs:', { goldCost, foodCost });
 
                     // Get current resources
                     const [gold, food] = await Promise.all([
@@ -237,8 +275,8 @@ export class BarracksPage extends BasePage {
                     Logger.info('Current resources:', { gold, food });
 
                     // Check if player has enough resources
-                    const totalGoldCost = BigInt(config.goldCost) * BigInt(amount);
-                    const totalFoodCost = BigInt(config.foodCost) * BigInt(amount);
+                    const totalGoldCost = BigInt(goldCost) * BigInt(amount);
+                    const totalFoodCost = BigInt(foodCost) * BigInt(amount);
                     Logger.info('Required resources:', { totalGoldCost, totalFoodCost });
 
                     if (BigInt(gold) < totalGoldCost) {
