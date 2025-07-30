@@ -178,6 +178,24 @@ export class BarracksPage extends BasePage {
                 </div>
 
                 <div class="page-section">
+                    <h2>Troop Counts</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Infantry:</span>
+                            <span class="status-value" data-state="infantryCount">Loading...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Cavalry:</span>
+                            <span class="status-value" data-state="cavalryCount">Loading...</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Siege:</span>
+                            <span class="status-value" data-state="siegeCount">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page-section">
                     <h2>Available Troops</h2>
                     <div class="buildings-grid-rows">
                         ${Object.entries(BattleSystemContract.TROOP_DEFINITIONS).map(([type, troop]) => {
