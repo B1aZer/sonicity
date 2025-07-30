@@ -675,6 +675,9 @@ describe("GridBuildings", function () {
         // Upgrade player2 to tier 1 before creating farm
         await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
         
+        // Recharge the house after donateGoldForTier to reset the production timer
+        await gridBuildings.connect(player2).rechargeBuilding(houseId, { value: ethers.parseEther("0.01") });
+        
         // Verify player2 is now tier 1
         const playerState = await gameState.playerState(player2Address);
         expect(playerState.tier, "Player should be tier 1").to.equal(1);
