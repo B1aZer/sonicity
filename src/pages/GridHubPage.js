@@ -198,7 +198,17 @@ export class GridHubPage extends BasePage {
             Logger.info('Total buildings processed:', buildings.length);
             Logger.info('Buildings array:', buildings);
             
-            // Update state
+            // Calculate total recharge cost for buildings at cap
+            let totalRechargeCost = 0n;
+            if (buildingsAtCap > 0) {
+                const buildingsAtCapList = await this.contracts.gridBuildings.getBuildingsAtCap();
+                for (const buildingId of buildingsAtCapList) {
+                    const building = await this.contracts.gridBuildings.getBuilding(playerAddress, buildingId);
+                    const config = await this.contracts.gridBuildings.getBuildingConfig(building.buildingType);
+                    totalRechargeCost += config.rechargeCost;
+                }
+            }
+
             this.setState({
                 totalBuildings: activeBuildingIds.length,
                 totalBuildingSlots,
@@ -213,7 +223,7 @@ export class GridHubPage extends BasePage {
                 resourcesByTier,
                 buildings,
                 canRecharge: buildingsAtCap > 0,
-                rechargeCost: ethers.formatEther(GridBuildingsContract.RECHARGE_FEE)
+                rechargeCost: this.contracts.gridBuildings.formatRechargeFee(totalRechargeCost)
             });
             
         } catch (error) {
@@ -345,8 +355,23 @@ export class GridHubPage extends BasePage {
                 const hoursSinceCollection = Math.floor(timeSinceCollection / 3600);
                 const minutesSinceCollection = Math.floor((timeSinceCollection % 3600) / 60);
                 
-                // Calculate production rate
-                const productionRate = config.baseProductionRate * level;
+                // Calculate production rate correctly for each building type
+                let productionRate = 0;
+                let productionRateDisplay = '';
+                
+                if (type === 0) { // House
+                    productionRate = config.baseProductionRate * level;
+                    productionRateDisplay = `${productionRate} Gold/hour`;
+                } else if (type === 1) { // Farm
+                    productionRate = config.baseProductionRate * level;
+                    productionRateDisplay = `${productionRate} Food/hour`;
+                } else if (type === 2) { // Diamond Station
+                    // Diamond Stations: 1 diamond per 72 hours at level 1
+                    productionRateDisplay = `${level} Diamonds per 72h`;
+                } else if (type === 3) { // REP Forge
+                    // REP Forges: 1 rep NFT per 168 hours at level 1
+                    productionRateDisplay = `${level} Rep per 168h`;
+                }
                 
                 // Determine building status
                 let statusClass = 'normal';
@@ -395,7 +420,7 @@ export class GridHubPage extends BasePage {
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Production Rate:</span>
-                                <span class="detail-value">${productionRate}/hour</span>
+                                <span class="detail-value">${productionRateDisplay}</span>
                             </div>
                             <div class="detail-item">
                                 <span class="detail-label">Last Collection:</span>

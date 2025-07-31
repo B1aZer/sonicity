@@ -1,5 +1,23 @@
 ## todo
 
+- merge main
+- esc exit building
+
+## todo
+
+- MINIMAL PRROF OF CYCLE
+1. houses
+2. farms + farms buildings
+3. get rep
+4. check other player UI
+5. recieve diamonds
+6. build rep -> stake rep -> get nft
+7. PROFIT  (FOR LATER) (nft is probably some kind of a house ?? -> so by staking it at altar we can potentionally receive profits??)
+
+where profit comes from ? GOLOSSARY PAGE ? We have n in treasury lets vote. Either make buildings damaging with a change to get s, or stake reps to get revue (simple contract - upload n funds - distribute to stakers)
+
+## todo
+
 later maybe it makes sense to remove altar and build dirreclty in hub. build instead of stake
 
 ## grid hub

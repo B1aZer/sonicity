@@ -36,9 +36,6 @@ export class GridBuildingsContract extends BaseContract {
         REP_FORGE: 3
     };
 
-    // Recharge fee constant
-    static RECHARGE_FEE = ethers.parseEther('0.01');
-
     // Building Management
     async createBuilding(buildingType) {
         return await this.transact('createBuilding', buildingType);
@@ -176,11 +173,27 @@ export class GridBuildingsContract extends BaseContract {
     }
 
     async rechargeBuilding(buildingId) {
-        return await this.transactWithValue('rechargeBuilding', [buildingId], GridBuildingsContract.RECHARGE_FEE);
+        // Get the building to determine its type
+        const address = await this.getAddress();
+        const building = await this.getBuilding(address, buildingId);
+        const config = await this.getBuildingConfig(building.buildingType);
+        
+        // Use the building's configured recharge cost
+        const rechargeCost = config.rechargeCost;
+        return await this.transactWithValue('rechargeBuilding', [buildingId], rechargeCost);
     }
 
     async rechargeBuildings(buildingIds) {
-        const totalFee = GridBuildingsContract.RECHARGE_FEE * BigInt(buildingIds.length);
+        // Calculate total fee based on each building's type
+        const address = await this.getAddress();
+        let totalFee = 0n;
+        
+        for (const buildingId of buildingIds) {
+            const building = await this.getBuilding(address, buildingId);
+            const config = await this.getBuildingConfig(building.buildingType);
+            totalFee += config.rechargeCost;
+        }
+        
         return await this.transactWithValue('rechargeBuildings', [buildingIds], totalFee);
     }
 
@@ -189,7 +202,17 @@ export class GridBuildingsContract extends BaseContract {
         if (buildingsAtCap.length === 0) {
             throw new Error('No buildings at cap to recharge');
         }
-        const totalFee = GridBuildingsContract.RECHARGE_FEE * BigInt(buildingsAtCap.length);
+        
+        // Calculate total fee based on each building's type
+        const address = await this.getAddress();
+        let totalFee = 0n;
+        
+        for (const buildingId of buildingsAtCap) {
+            const building = await this.getBuilding(address, buildingId);
+            const config = await this.getBuildingConfig(building.buildingType);
+            totalFee += config.rechargeCost;
+        }
+        
         return await this.transactWithValue('rechargeAllBuildingsAtCap', [], totalFee);
     }
 
@@ -197,14 +220,15 @@ export class GridBuildingsContract extends BaseContract {
         return await this.call('getContractBalance');
     }
 
-    // Helper method to get recharge fee for UI display
-    getRechargeFee() {
-        return GridBuildingsContract.RECHARGE_FEE;
+    // Helper method to get recharge fee for a specific building type
+    async getRechargeFeeForBuildingType(buildingType) {
+        const config = await this.getBuildingConfig(buildingType);
+        return config.rechargeCost;
     }
 
     // Helper method to format recharge fee for display
-    formatRechargeFee() {
-        return ethers.formatEther(GridBuildingsContract.RECHARGE_FEE);
+    formatRechargeFee(fee) {
+        return ethers.formatEther(fee);
     }
 
     // Production Progress

@@ -322,7 +322,16 @@ export class StakePage extends BasePage {
         
         // Recharge input default
         const rechargeDefault = buildingCount;
-        const rechargePrice = ethers.formatEther(GridBuildingsContract.RECHARGE_FEE);
+        
+        // Get the correct recharge cost for this tier
+        let rechargePrice = '0';
+        try {
+            const rechargeCost = await this.contracts.gridBuildings.getRechargeFeeForBuildingType(tier);
+            rechargePrice = this.contracts.gridBuildings.formatRechargeFee(rechargeCost);
+        } catch (error) {
+            Logger.warn(`Failed to get recharge cost for tier ${tier}:`, error);
+            rechargePrice = '0.01'; // fallback
+        }
         
         // Status section (like CityPage)
         const tierNames = ['House', 'Farm', 'Diamond Station', 'REP Forge'];
@@ -478,9 +487,42 @@ export class StakePage extends BasePage {
             const name = tierNames[item.buildingType] || 'Building';
             const icon = icons[item.buildingType] || '🏗️';
             
-            // Format production rate
-            const productionRate = item.productionRate || 0;
-            const resourceType = item.buildingType === 0 ? 'Gold' : item.buildingType === 1 ? 'Food' : 'Rep';
+            // Calculate production rate correctly for each building type
+            let productionRate = 0;
+            let resourceType = '';
+            let productionDurationHours = 24;
+            
+            if (item.buildingType === 0) { // House
+                productionRate = item.config.baseProductionRate * item.level;
+                resourceType = 'Gold';
+                productionDurationHours = 24;
+            } else if (item.buildingType === 1) { // Farm
+                productionRate = item.config.baseProductionRate * item.level;
+                resourceType = 'Food';
+                productionDurationHours = 24;
+            } else if (item.buildingType === 2) { // Diamond Station
+                // Diamond Stations: 1 diamond per 72 hours at level 1
+                productionRate = item.level / 72; // diamonds per hour
+                resourceType = 'Diamonds';
+                productionDurationHours = 72;
+            } else if (item.buildingType === 3) { // REP Forge
+                // REP Forges: 1 rep NFT per 168 hours at level 1
+                productionRate = item.level / 168; // rep per hour
+                resourceType = 'Rep';
+                productionDurationHours = 168;
+            }
+            
+            // Format production rate for display
+            let productionRateDisplay = '';
+            if (item.buildingType === 2 || item.buildingType === 3) {
+                // For Diamond Stations and REP Forges, show as "X per Y hours"
+                const hoursPerUnit = item.buildingType === 2 ? 72 : 168;
+                const unitsPerCycle = item.level;
+                productionRateDisplay = `${unitsPerCycle} per ${hoursPerUnit}h`;
+            } else {
+                // For Houses and Farms, show as "X per hour"
+                productionRateDisplay = `${productionRate}/hr`;
+            }
             
             // Format progress information
             const progressPercent = item.progressPercent || 0;
@@ -538,14 +580,14 @@ export class StakePage extends BasePage {
                     </div>
                     <div class="building-details">
                         <div class="detail-item"><span class="detail-label">Level:</span><span class="detail-value">${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}</span></div>
-                        <div class="detail-item"><span class="detail-label">Production Rate:</span><span class="detail-value">${productionRate} ${resourceType}/hr</span></div>
+                        <div class="detail-item"><span class="detail-label">Production Rate:</span><span class="detail-value">${productionRateDisplay}</span></div>
                         <div class="detail-item"><span class="detail-label">Claimable:</span><span class="detail-value">${item.claimable || 0}</span></div>
                         <div class="building-progress">
                             <div class="progress-info">
                                 <span class="progress-label">Production Progress</span>
                                 <span class="progress-time">${progressText}</span>
                             </div>
-                            <div class="progress-container" title="${Math.floor(item.progressCurrent / 3600)}h / 24h production">
+                            <div class="progress-container" title="${Math.floor(item.progressCurrent / 3600)}h / ${productionDurationHours}h production">
                                 <div class="progress-bar" style="width:${progressPercent}%"></div>
                             </div>
                         </div>
@@ -653,9 +695,6 @@ export class StakePage extends BasePage {
                 description: config.description,
                 tier: Number(config.tier)
             };
-            
-            // Calculate production rate (base rate * level)
-            building.productionRate = building.config.baseProductionRate * building.level;
             
             // Add extra info for UI
             building.isAtCap = await this.contracts.gridBuildings.isBuildingAtCap(building.id);
