@@ -7,13 +7,11 @@ import { StakePage } from '../../pages/StakeHubPage.js';
 import { HousePage } from '../../pages/HousePage.js';
 import { FarmPage } from '../../pages/FarmPage.js';
 import { CityPage } from '../../pages/CityPage.js';
-import { DistrictPage } from '../../pages/DistrictPage.js';
 import { ShopPage } from '../../pages/ShopPage.js';
 import { WorkshopPage } from '../../pages/WorkshopPage.js';
 import { BarracksPage } from '../../pages/BarracksPage.js';
 import { ScoutGuildPage } from '../../pages/ScoutGuildPage.js';
 import { CommandCenterPage } from '../../pages/CommandCenterPage.js';
-import { GridHubPage } from '../../pages/GridHubPage.js';
 import Logger from '../utils/logger.js';
 
 export class Router {
@@ -44,13 +42,11 @@ export class Router {
             'house': HousePage,
             'farm': FarmPage,
             'city': CityPage,
-            'district': DistrictPage,
             'shop': ShopPage,
             'workshop': WorkshopPage,
             'barracks': BarracksPage,
             'scout-guild': ScoutGuildPage,
-            'command-center': CommandCenterPage,
-            'grid-hub': GridHubPage
+            'command-center': CommandCenterPage
         };
     }
 
