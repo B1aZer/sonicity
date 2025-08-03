@@ -86,6 +86,11 @@ export class GameStateContract extends BaseContract {
         return await this.call('getPlayerFood', address);
     }
 
+    async getPlayerDiamonds() {
+        const address = await this.getAddress();
+        return await this.call('getPlayerDiamonds', address);
+    }
+
     async getPlayerTreasury() {
         const address = await this.getAddress();
         return await this.call('getPlayerTreasury', address);

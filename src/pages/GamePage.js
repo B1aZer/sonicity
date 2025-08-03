@@ -44,9 +44,11 @@ export class GamePage extends BasePage {
                 this.contracts.gameState.getPlayerRep(playerAddress)
             ]);
             
-            // TODO: Implement gems and diamonds contract calls
+            // Get diamonds balance
+            const diamonds = await this.contracts.gameState.getPlayerDiamonds(playerAddress);
+            
+            // TODO: Implement gems contract calls
             const gems = 0; // await this.contracts.gameState.getPlayerGems(playerAddress);
-            const diamonds = 0; // await this.contracts.gameState.getPlayerDiamonds(playerAddress);
             
             Logger.info('Resource values:', {
                 gold: gold.toString(),

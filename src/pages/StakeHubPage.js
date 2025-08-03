@@ -205,8 +205,9 @@ export class StakePage extends BasePage {
             totalSlots = 0;
         }
         
-        // Load resource values
+        // Get player resources
         let gold = 0, food = 0, diamonds = 0, repPoints = 0;
+        
         try {
             [gold, food, repPoints] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(userAddress),
@@ -214,10 +215,10 @@ export class StakePage extends BasePage {
                 this.contracts.gameState.getPlayerRep(userAddress)
             ]);
             
-            // TODO: Implement diamonds when the contract function is available
-            // diamonds = await this.contracts.gameState.getPlayerDiamonds(userAddress);
-        } catch (e) {
-            Logger.warn('Failed to load resource values:', e);
+            // Get diamonds balance
+            diamonds = await this.contracts.gameState.getPlayerDiamonds(userAddress);
+        } catch (error) {
+            Logger.error('Error fetching player resources:', error);
         }
         
         const stakedBuildings = await this.getStakedBuildings(userAddress);
