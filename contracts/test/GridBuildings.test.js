@@ -2227,7 +2227,7 @@ describe("GridBuildings", function () {
       expect(diamondCost).to.equal(ethers.parseEther("0.03")); // 0.03 SONIC
       
       let repCost = await gridBuildings.getBuildingRechargeCost(3); // REP_FORGE = 3
-      expect(repCost).to.equal(0); // Free recharge
+      expect(repCost).to.equal(ethers.parseEther("0.05")); // 0.05 SONIC recharge
     });
 
     it("Should calculate correct total fee for multiple buildings with different costs", async () => {
@@ -2508,7 +2508,7 @@ describe("GridBuildings", function () {
       const { buildingId: repForgeId } = await mintAndStakeNFT(player1, altar, sonicityRep, GridBuildingType.REP_FORGE);
       
       // Recharge REP forge and collect REP
-      await gridBuildings.connect(player1).rechargeBuilding(repForgeId, { value: 0 });
+      await gridBuildings.connect(player1).rechargeBuilding(repForgeId, { value: ethers.parseEther("0.05") });
       await ethers.provider.send("evm_increaseTime", [168 * 3600]);
       await ethers.provider.send("evm_mine");
       await gridBuildings.connect(player1).collectResources(repForgeId);
@@ -2599,6 +2599,26 @@ describe("GridBuildings", function () {
       // Verify player tier was upgraded to tier 4
       const playerTier = await gameState.getPlayerTier(player1.address);
       expect(playerTier).to.be.gte(4);
+    });
+  });
+
+  describe("REP Forge NFT Production System", () => {
+    it("Should recharge REP forges with correct cost", async () => {
+      // Ensure player has enough gold for tier 3
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 5000);
+      
+      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityRep, GridBuildingType.REP_FORGE);
+      
+      // Get recharge cost - should be 0.05 SONIC
+      const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.REP_FORGE);
+      expect(rechargeCost).to.equal(ethers.parseEther("0.05")); // 0.05 SONIC
+      
+      // Recharge the building with correct cost
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.05") });
+      
+      // Verify recharge
+      const building = await gridBuildings.buildings(player1.address, buildingId);
+      expect(building.lastRechargeTime).to.be.gt(0);
     });
   });
 }); 
