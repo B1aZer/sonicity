@@ -170,6 +170,7 @@ export class CityPage extends BasePage {
                     
                     const isLocked = treasuryBigInt < unlockCostBigInt;
                     const isTierLocked = tier > currentTier;
+                    const isDisabled = config.disabled;
                     const currentLevel = Number(level);
                     const canUpgrade = isBuilt && currentLevel < Number(config.maxLevel);
                     
@@ -187,22 +188,24 @@ export class CityPage extends BasePage {
                     Logger.info(`Building ${config.name} - Progress: ${progressPercentage}%`);
                     
                     // Determine if button should be disabled
-                    const isButtonDisabled = isLocked || isTierLocked || (isBuilt && !canUpgrade);
+                    const isButtonDisabled = isLocked || isTierLocked || (isBuilt && !canUpgrade) || isDisabled;
                     
                     return `
-                        <div class="building-card ${isLocked || isTierLocked ? 'locked' : ''} ${isBuilt ? 'built' : ''}" 
+                        <div class="building-card ${isLocked || isTierLocked || isDisabled ? 'locked' : ''} ${isBuilt ? 'built' : ''} ${isDisabled ? 'disabled' : ''}" 
                              data-required-donation="${config.unlockCost}"
                              data-building-type="${config.name}">
-                            ${(isLocked || isTierLocked) ? `
+                            ${(isLocked || isTierLocked || isDisabled) ? `
                                 <div class="lock-overlay">
                                     <i class="fas fa-lock lock-icon"></i>
                                     <div class="unlock-info">
-                                        ${isTierLocked ? 
-                                            `<p class="unlock-requirement">Requires Tier ${tier}</p>` :
-                                            `<p class="unlock-requirement">Requires ${remainingGold.toString()} more Gold to unlock</p>
-                                             <div class="progress-container">
-                                                <div class="progress-bar" style="width: ${Math.min(progressPercentage, 100)}%"></div>
-                                             </div>`
+                                        ${isDisabled ? 
+                                            `<p class="unlock-requirement">This building is currently disabled</p>` :
+                                            isTierLocked ? 
+                                                `<p class="unlock-requirement">Requires Tier ${tier}</p>` :
+                                                `<p class="unlock-requirement">Requires ${remainingGold.toString()} more Gold to unlock</p>
+                                                 <div class="progress-container">
+                                                    <div class="progress-bar" style="width: ${Math.min(progressPercentage, 100)}%"></div>
+                                                 </div>`
                                         }
                                     </div>
                                 </div>
@@ -219,9 +222,10 @@ export class CityPage extends BasePage {
                                 `}
                             </div>
                             <button class="building-button btn btn-primary" data-building="${config.name}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
-                                ${isBuilt ? 
-                                    (canUpgrade ? `Upgrade to Level ${currentLevel + 1}` : 'Constructed') : 
-                                    `Build ${config.name}`}
+                                ${isDisabled ? 'Building Disabled' :
+                                    isBuilt ? 
+                                        (canUpgrade ? `Upgrade to Level ${currentLevel + 1}` : 'Constructed') : 
+                                        `Build ${config.name}`}
                             </button>
                         </div>
                     `;
@@ -305,6 +309,13 @@ export class CityPage extends BasePage {
             }
             const config = configs[buildingIndex];
             Logger.info(`Building config found: ${config.name} (Type: ${buildingTypes[buildingIndex]})`);
+
+            // Check if building is disabled
+            if (config.disabled) {
+                Logger.info('Building is disabled, showing modal');
+                this.modal.error('This building is currently disabled and cannot be built.');
+                return;
+            }
 
             // Check if building is unlocked
             Logger.info('Checking if building is unlocked...');
@@ -455,6 +466,12 @@ export class CityPage extends BasePage {
                 const requiredDonation = buildingCard.dataset.requiredDonation;
                 
                 try {
+                    // Check if building is disabled
+                    if (buildingCard.classList.contains('disabled')) {
+                        this.modal.error('This building is currently disabled and cannot be built.');
+                        return;
+                    }
+                    
                     // Check if building is locked
                     if (buildingCard.classList.contains('locked')) {
                         this.modal.error(`This building requires ${requiredDonation} gold in donations to unlock`);
