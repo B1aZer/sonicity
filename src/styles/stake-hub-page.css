@@ -1,3 +1,35 @@
+/* Navbar - stake hub page specific */
+
+.stake-hub-page .navbar {
+    opacity: 0.78;
+}
+
+
+/* Base Page - stake hub page specific */
+
+.stake-hub-page.base-page {
+    margin-top: -30px;
+}
+
+/* Stake Hub Page Animation */
+.stake-hub-page .page-container {
+    animation: slideUpFromTop 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+    transform: translateY(-50px);
+}
+
+@keyframes slideUpFromTop {
+    0% {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* Donation Section */
 
 .donation-form {
