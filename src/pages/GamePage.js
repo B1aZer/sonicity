@@ -319,6 +319,10 @@ export class GamePage extends BasePage {
                     Logger.info('REP Forge clicked');
                     window.history.pushState({}, '', '/rep-forge');
                     window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isArcanumofnames) {
+                    Logger.info('Arcanum of Names clicked');
+                    window.history.pushState({}, '', '/arcanum');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                 } else if (clickedObject.userData.isShop) {
                     Logger.info('Shop clicked');
                     window.history.pushState({}, '', '/shop');
