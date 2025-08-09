@@ -138,7 +138,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             description: "Forge dynamic NFTs from REP",
             tier: 3,
             productionDuration: 168 hours, // 168 hours (7 days) for rep forge
-            rechargeCost: 0 // Free recharge for rep forge (default)
+            rechargeCost: 0.05 ether // 0.05 SONIC for rep forge (highest tier)
         });
     }
 
