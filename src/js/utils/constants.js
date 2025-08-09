@@ -72,7 +72,7 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/diamond_station',
             levels: {
-                1: { url: 'assets/diamond_station.glb' }
+                1: { url: 'assets/rep_forge.glb' }
             }
         }
     },
@@ -85,7 +85,7 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/rep_forge',
             levels: {
-                1: { url: 'assets/rep_forge.glb' }
+                1: { url: 'assets/mine.glb' }
             }
         }
     },
@@ -129,7 +129,7 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/mine',
             levels: {
-                1: { url: 'assets/mine.glb' }
+                1: { url: 'assets/diamond_station.glb' }
             }
         }
     },
