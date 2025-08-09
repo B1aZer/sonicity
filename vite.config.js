@@ -7,7 +7,8 @@ export default defineConfig({
     fs: {
       // Allow serving files from the public directory
       allow: ['..']
-    }
+    },
+    hmr: false // Completely disable hot module replacement
   },
   build: {
     outDir: 'dist',
