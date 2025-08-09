@@ -311,6 +311,10 @@ export class GamePage extends BasePage {
                     Logger.info('Farm clicked');
                     window.history.pushState({}, '', '/farm');
                     window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isDiamondstation) {
+                    Logger.info('Diamond Station clicked');
+                    window.history.pushState({}, '', '/diamond-station');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                 } else if (clickedObject.userData.isRepforge) {
                     Logger.info('REP Forge clicked');
                     window.history.pushState({}, '', '/rep-forge');

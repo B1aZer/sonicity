@@ -6,6 +6,7 @@ import { AccessPage } from '../../pages/AccessPage.js';
 import { StakePage } from '../../pages/StakeHubPage.js';
 import { HousePage } from '../../pages/HousePage.js';
 import { FarmPage } from '../../pages/FarmPage.js';
+import { DiamondStationPage } from '../../pages/DiamondStationPage.js';
 import { RepForgePage } from '../../pages/RepForgePage.js';
 import { CityPage } from '../../pages/CityPage.js';
 import { ShopPage } from '../../pages/ShopPage.js';
@@ -42,6 +43,7 @@ export class Router {
             'stake': StakePage,
             'house': HousePage,
             'farm': FarmPage,
+            'diamond-station': DiamondStationPage,
             'rep-forge': RepForgePage,
             'city': CityPage,
             'shop': ShopPage,
