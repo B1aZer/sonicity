@@ -134,7 +134,7 @@ export class BuildingManager {
                 building.receiveShadow = true;
                 
                 // Set userData on the building and all its children
-                const propertyName = `is${type.charAt(0) + type.slice(1).toLowerCase().replace('_', '')}`;
+                const propertyName = `is${type.charAt(0) + type.slice(1).toLowerCase().replaceAll('_', '')}`;
                 building.userData[propertyName] = true;
                 building.userData.level = level;
                 building.traverse((child) => {
@@ -185,7 +185,7 @@ export class BuildingManager {
                 building.receiveShadow = true;
                 
                 // Set userData on the fallback mesh
-                const propertyName = `is${type.charAt(0) + type.slice(1).toLowerCase().replace('_', '')}`;
+                const propertyName = `is${type.charAt(0) + type.slice(1).toLowerCase().replaceAll('_', '')}`;
                 building.userData[propertyName] = true;
                 building.userData.level = level;
                 
