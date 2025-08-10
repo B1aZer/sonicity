@@ -297,7 +297,7 @@ export const BUILDINGS = {
         name: 'Arcanum of Names',
         size: new THREE.Vector3(15, 15, 15),
         color: 0xFFD700, // Gold
-        position: { x: 0, y: 0, z: -105 },
+        position: { x: 55, y: 0, z: -75 },
         rotation: 0,
         tier: 3,
         assets: {
