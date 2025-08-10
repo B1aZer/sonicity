@@ -72,7 +72,7 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/diamond_station',
             levels: {
-                1: { url: 'assets/rep_forge.glb' }
+                1: { url: 'assets/diamond_station.glb' }
             }
         }
     },
@@ -129,7 +129,7 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/mine',
             levels: {
-                1: { url: 'assets/diamond_station.glb' }
+                1: { url: 'assets/rep_forge.glb' }
             }
         }
     },
@@ -300,7 +300,12 @@ export const BUILDINGS = {
         position: { x: 0, y: 0, z: -105 },
         rotation: 0,
         tier: 3,
-        assets: null // Model not yet implemented
+        assets: {
+            baseUrl: 'assets/arcanum',
+            levels: {
+                1: { url: 'assets/arcanum.glb' }
+            }
+        }
     },
     REFINERY: {
         name: 'Refinery',
