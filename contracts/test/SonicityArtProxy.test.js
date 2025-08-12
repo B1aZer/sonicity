@@ -38,10 +38,11 @@ describe("SonicityArtProxy", function () {
             
             // Verify SVG contains expected content
             expect(svgContent).to.include("<svg");
-            expect(svgContent).to.include("Sonicity Yield NFT");
-            expect(svgContent).to.include(`REP: ${repStaked}`);
-            expect(svgContent).to.include(`Minted: ${mintedAt}`);
-            expect(svgContent).to.include("Listable: Yes");
+            expect(svgContent).to.include("SONICITY YIELD NFT");
+            expect(svgContent).to.include("REP STAKED");
+            expect(svgContent).to.include(`${repStaked}`);
+            expect(svgContent).to.include(`Block ${mintedAt}`);
+            expect(svgContent).to.include("Status: Tradeable");
         });
 
         it("Should handle different REP amounts correctly", async function () {
@@ -62,8 +63,8 @@ describe("SonicityArtProxy", function () {
                 Buffer.from(tokenURI2.replace("data:application/json;base64,", ""), 'base64').toString()
             );
 
-            const repAttr1 = metadata1.attributes.find(attr => attr.trait_type === "REP Committed");
-            const repAttr2 = metadata2.attributes.find(attr => attr.trait_type === "REP Committed");
+            const repAttr1 = metadata1.attributes.find(attr => attr.trait_type === "REP Staked");
+            const repAttr2 = metadata2.attributes.find(attr => attr.trait_type === "REP Staked");
 
             expect(repAttr1.value).to.equal(100);
             expect(repAttr2.value).to.equal(1000);
@@ -87,8 +88,8 @@ describe("SonicityArtProxy", function () {
                 Buffer.from(tokenURI2.replace("data:application/json;base64,", ""), 'base64').toString()
             );
 
-            const listableAttr1 = metadata1.attributes.find(attr => attr.trait_type === "Listable");
-            const listableAttr2 = metadata2.attributes.find(attr => attr.trait_type === "Listable");
+            const listableAttr1 = metadata1.attributes.find(attr => attr.trait_type === "Tradeable");
+            const listableAttr2 = metadata2.attributes.find(attr => attr.trait_type === "Tradeable");
 
             expect(listableAttr1.value).to.equal("Yes");
             expect(listableAttr2.value).to.equal("No");
@@ -115,16 +116,20 @@ describe("SonicityArtProxy", function () {
 
             // Check attributes structure
             expect(metadata.attributes).to.be.an('array');
-            expect(metadata.attributes).to.have.length(3);
+            expect(metadata.attributes).to.have.length(5); // Updated to 5 attributes
 
             // Check specific attributes
-            const repAttr = metadata.attributes.find(attr => attr.trait_type === "REP Committed");
+            const repAttr = metadata.attributes.find(attr => attr.trait_type === "REP Staked");
             const mintAttr = metadata.attributes.find(attr => attr.trait_type === "Minted");
-            const listableAttr = metadata.attributes.find(attr => attr.trait_type === "Listable");
+            const listableAttr = metadata.attributes.find(attr => attr.trait_type === "Tradeable");
+            const tierAttr = metadata.attributes.find(attr => attr.trait_type === "Prestige Tier");
+            const rarityAttr = metadata.attributes.find(attr => attr.trait_type === "Rarity");
 
             expect(repAttr).to.exist;
             expect(mintAttr).to.exist;
             expect(listableAttr).to.exist;
+            expect(tierAttr).to.exist;
+            expect(rarityAttr).to.exist;
             expect(repAttr.value).to.equal(repStaked);
             expect(mintAttr.value).to.equal(mintedAt);
             expect(listableAttr.value).to.equal("Yes");
@@ -150,6 +155,52 @@ describe("SonicityArtProxy", function () {
 
             expect(metadata1.name).to.equal("Sonicity Yield NFT #1");
             expect(metadata2.name).to.equal("Sonicity Yield NFT #2");
+        });
+
+        it("Should generate different tiers based on REP amount", async function () {
+            const tokenId = 1;
+            const mintedAt = Math.floor(Date.now() / 1000);
+            const isListable = true;
+
+            // Test Bronze tier (< 11 REP)
+            const bronzeURI = await artProxy.tokenURI(tokenId, 5, mintedAt, isListable);
+            const bronzeMetadata = JSON.parse(
+                Buffer.from(bronzeURI.replace("data:application/json;base64,", ""), 'base64').toString()
+            );
+            const bronzeTierAttr = bronzeMetadata.attributes.find(attr => attr.trait_type === "Prestige Tier");
+            const bronzeRarityAttr = bronzeMetadata.attributes.find(attr => attr.trait_type === "Rarity");
+            expect(bronzeTierAttr.value).to.equal("Bronze");
+            expect(bronzeRarityAttr.value).to.equal("Common");
+
+            // Test Silver tier (11-50 REP)
+            const silverURI = await artProxy.tokenURI(tokenId, 25, mintedAt, isListable);
+            const silverMetadata = JSON.parse(
+                Buffer.from(silverURI.replace("data:application/json;base64,", ""), 'base64').toString()
+            );
+            const silverTierAttr = silverMetadata.attributes.find(attr => attr.trait_type === "Prestige Tier");
+            const silverRarityAttr = silverMetadata.attributes.find(attr => attr.trait_type === "Rarity");
+            expect(silverTierAttr.value).to.equal("Silver");
+            expect(silverRarityAttr.value).to.equal("Uncommon");
+
+            // Test Gold tier (51-100 REP)
+            const goldURI = await artProxy.tokenURI(tokenId, 75, mintedAt, isListable);
+            const goldMetadata = JSON.parse(
+                Buffer.from(goldURI.replace("data:application/json;base64,", ""), 'base64').toString()
+            );
+            const goldTierAttr = goldMetadata.attributes.find(attr => attr.trait_type === "Prestige Tier");
+            const goldRarityAttr = goldMetadata.attributes.find(attr => attr.trait_type === "Rarity");
+            expect(goldTierAttr.value).to.equal("Gold");
+            expect(goldRarityAttr.value).to.equal("Rare");
+
+            // Test Legendary tier (101+ REP)
+            const legendaryURI = await artProxy.tokenURI(tokenId, 150, mintedAt, isListable);
+            const legendaryMetadata = JSON.parse(
+                Buffer.from(legendaryURI.replace("data:application/json;base64,", ""), 'base64').toString()
+            );
+            const legendaryTierAttr = legendaryMetadata.attributes.find(attr => attr.trait_type === "Prestige Tier");
+            const legendaryRarityAttr = legendaryMetadata.attributes.find(attr => attr.trait_type === "Rarity");
+            expect(legendaryTierAttr.value).to.equal("Legendary");
+            expect(legendaryRarityAttr.value).to.equal("Ultra Rare");
         });
     });
 }); 
