@@ -27,6 +27,7 @@ import('../styles/stake-hub-page.css');
  * @property {string} contractAddress - NFT contract address
  * @property {Object} metadata - NFT metadata
  * @property {boolean} isStaked - Whether building is staked
+ * @property {string} formattedRechargeCost - Formatted recharge cost for display
  */
 
 export class StakePage extends BasePage {
@@ -582,6 +583,7 @@ export class StakePage extends BasePage {
                     <div class="building-details">
                         <div class="detail-item"><span class="detail-label">Level:</span><span class="detail-value">${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}</span></div>
                         <div class="detail-item"><span class="detail-label">Production Rate:</span><span class="detail-value">${productionRateDisplay}</span></div>
+                        <div class="detail-item"><span class="detail-label">Charge Price:</span><span class="detail-value">${item.formattedRechargeCost || '0'} SONIC</span></div>
                         <div class="detail-item"><span class="detail-label">Claimable:</span><span class="detail-value">${item.claimable || 0}</span></div>
                         <div class="building-progress">
                             <div class="progress-info">
@@ -694,8 +696,12 @@ export class StakePage extends BasePage {
                 upgradeCost: Number(config.upgradeCost),
                 maxLevel: Number(config.maxLevel),
                 description: config.description,
-                tier: Number(config.tier)
+                tier: Number(config.tier),
+                rechargeCost: config.rechargeCost // Add recharge cost to config
             };
+            
+            // Get formatted recharge cost for display
+            building.formattedRechargeCost = this.contracts.gridBuildings.formatRechargeFee(config.rechargeCost);
             
             // Add extra info for UI
             building.isAtCap = await this.contracts.gridBuildings.isBuildingAtCap(building.id);
@@ -710,21 +716,19 @@ export class StakePage extends BasePage {
             // Get upgrade info for this building
             try {
                 building.upgradeInfo = await this.contracts.gridBuildings.getBuildingUpgradeInfo(building.id);
-            } catch (e) {
-                console.warn(`Could not get upgrade info for building ${building.id}:`, e);
+            } catch (error) {
+                console.warn(`Failed to get upgrade info for building ${building.id}:`, error);
+                // Provide fallback upgrade info
                 building.upgradeInfo = {
                     canUpgrade: false,
-                    currentLevel: building.level,
+                    currentLevel: building.level || 0,
                     maxLevel: 1,
                     upgradeCost: 0n,
-                    errorMessage: 'Failed to get upgrade information',
-                    buildingType: building.buildingType,
-                    damaged: building.damaged
+                    errorMessage: 'Failed to load upgrade info',
+                    buildingType: building.buildingType || 0,
+                    damaged: building.damaged || false
                 };
             }
-            
-            // Get NFT info for this building
-            building.nftInfo = await this.getNFTInfoForBuilding(building.id);
         }
         
         return buildings;
