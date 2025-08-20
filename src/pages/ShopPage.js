@@ -30,7 +30,7 @@ export class ShopPage extends BasePage {
         Logger.info('Updating wallet status with address:', address);
         if (address) {
             // Refresh shop data when wallet changes
-            this.render();
+            // this.render();
         }
     }
 
