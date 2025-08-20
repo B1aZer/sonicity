@@ -1,30 +1,11 @@
 import { BaseContract } from './BaseContract.js';
+import { CONTRACT_ADDRESSES } from '../utils/constants.js';
+import SonicityYieldNFTABI from '../../../contracts/artifacts/contracts/SonicityYieldNFT.sol/SonicityYieldNFT.json';
 import Logger from '../utils/logger.js';
 
 export class SonicityYieldNFTContract extends BaseContract {
-    constructor(provider, signer) {
-        // ABI for SonicityYieldNFT contract
-        const abi = [
-            // ERC721 standard functions
-            "function balanceOf(address owner) view returns (uint256)",
-            "function ownerOf(uint256 tokenId) view returns (address)",
-            "function tokenURI(uint256 tokenId) view returns (string)",
-            "function totalSupply() view returns (uint256)",
-            "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
-            
-            // SonicityYieldNFT specific functions
-            "function stakeInfo(uint256 tokenId) view returns (uint256 repStaked, uint256 mintedAt)",
-            "function lockedForYield(uint256 tokenId) view returns (bool)",
-            "function mintForAltar(address to, uint256 tokenId, uint256 repAmount)",
-            "function setArtProxy(address _artProxy)",
-            
-            // Events
-            "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)",
-            "event ArtProxySet(address indexed artProxy)"
-        ];
-
-        super(provider, signer, abi);
-        this.contractName = 'SonicityYieldNFT';
+    constructor() {
+        super(CONTRACT_ADDRESSES.SONICITY_YIELD_NFT, SonicityYieldNFTABI.abi);
     }
 
     /**
