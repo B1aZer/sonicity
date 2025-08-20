@@ -91,19 +91,19 @@ export class RevenueHubPage extends BasePage {
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Total Treasury:</span>
-                            <span class="status-value" data-state="totalTreasury" style="color: #FFD700; font-weight: bold;">0 Sonic</span>
+                            <span class="status-value" data-state="totalTreasury">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Your Rep Points:</span>
-                            <span class="status-value" data-state="yourRepPoints" style="color: #4CAF50; font-weight: bold;">0</span>
+                            <span class="status-value" data-state="yourRepPoints">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Current Tier:</span>
-                            <span class="status-value" data-state="currentTier" style="color: #00BCD4; font-weight: bold;">0</span>
+                            <span class="status-value" data-state="currentTier">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Total Yield NFTs:</span>
-                            <span class="status-value" data-state="totalYieldNFTs" style="color: #9C27B0; font-weight: bold;">0</span>
+                            <span class="status-value" data-state="totalYieldNFTs">0</span>
                         </div>
                     </div>
                 </div>
@@ -135,7 +135,7 @@ export class RevenueHubPage extends BasePage {
                             <div class="building-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Claimable Revenue:</span>
-                                    <span class="detail-value" data-state="claimableRevenue">0 Sonic</span>
+                                    <span class="detail-value" data-state="claimableRevenue">0</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Distribution:</span>
