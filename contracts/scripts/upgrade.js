@@ -143,6 +143,10 @@ async function main() {
     if (addresses.sonicityArtProxy) {
       await sonicityYieldNFT.setArtProxy(addresses.sonicityArtProxy);
     }
+    
+    // Set Yield NFT address in Altar
+    console.log("Setting Yield NFT address in Altar...");
+    await altarProxy.setYieldNFT(addresses.sonicityYieldNFT);
   }
 
   // Update addresses file

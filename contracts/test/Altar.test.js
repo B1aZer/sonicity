@@ -13,6 +13,8 @@ describe("Altar", function () {
   let player1;
   let player2;
   let unapprovedCollection;
+  let sonicityYieldNFT;
+  let sonicityArtProxy;
 
   beforeEach(async function () {
     [owner, player1, player2, unapprovedCollection] = await ethers.getSigners();
@@ -40,6 +42,18 @@ describe("Altar", function () {
     const sonicityRep = await SonicityRep.deploy();
     await sonicityRep.waitForDeployment();
     const sonicityRepAddress = await sonicityRep.getAddress();
+
+    // Deploy SonicityYieldNFT
+    const SonicityYieldNFT = await ethers.getContractFactory("SonicityYieldNFT");
+    sonicityYieldNFT = await SonicityYieldNFT.deploy();
+    await sonicityYieldNFT.waitForDeployment();
+    const sonicityYieldNFTAddress = await sonicityYieldNFT.getAddress();
+
+    // Deploy SonicityArtProxy
+    const SonicityArtProxy = await ethers.getContractFactory("SonicityArtProxy");
+    sonicityArtProxy = await SonicityArtProxy.deploy();
+    await sonicityArtProxy.waitForDeployment();
+    const sonicityArtProxyAddress = await sonicityArtProxy.getAddress();
 
     // Deploy GameState
     const GameState = await ethers.getContractFactory("GameState");
@@ -79,12 +93,18 @@ describe("Altar", function () {
     await altar.approveCollection(sonicityFarmAddress);
     await altar.approveCollection(sonicityDiamondAddress);
     await altar.approveCollection(sonicityRepAddress);
+    await altar.approveCollection(sonicityYieldNFTAddress);
 
     // Set Altar contract address on all NFT contracts
     await sonicityNFT.setAltarContract(altarAddress);
     await sonicityFarm.setAltarContract(altarAddress);
     await sonicityDiamond.setAltarContract(altarAddress);
     await sonicityRep.setAltarContract(altarAddress);
+    await sonicityYieldNFT.setAltarContract(altarAddress);
+
+    // Set up yield NFT connections
+    await sonicityYieldNFT.setArtProxy(sonicityArtProxyAddress);
+    await altar.setYieldNFT(sonicityYieldNFTAddress);
 
     // Set minimum staking duration to 0 for testing
     await altar.setMinStakingDuration(0);

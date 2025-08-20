@@ -184,6 +184,10 @@ async function main() {
   console.log("Setting Art Proxy address in SonicityYieldNFT...");
   await sonicityYieldNFT.setArtProxy(sonicityArtProxyAddress);
   
+  // Set Yield NFT address in Altar
+  console.log("Setting Yield NFT address in Altar...");
+  await altarProxy.setYieldNFT(sonicityYieldNFTAddress);
+  
   // Set GameState address in DistrictBuildings
   console.log("Setting GameState address in DistrictBuildings...");
   await districtBuildingsProxy.setGameStateAddress(gameStateProxyAddress);
