@@ -2,17 +2,17 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0xeAd789bd8Ce8b9E94F5D0FCa99F8787c7e758817", // Will be updated by update-addresses.sh
-    SONICITY_FARM: "0x95775fD3Afb1F4072794CA4ddA27F2444BCf8Ac3", // Will be updated by update-addresses.sh
-    SONICITY_DIAMOND: "0xd9fEc8238711935D6c8d79Bef2B9546ef23FC046", // Will be updated by update-addresses.sh
-    SONICITY_REP: "0xd3FFD73C53F139cEBB80b6A524bE280955b3f4db", // Will be updated by update-addresses.sh
-    SONICITY_YIELD_NFT: "0x512F7469BcC83089497506b5df64c6E246B39925", // Will be updated by update-addresses.sh
-    SONICITY_ART_PROXY: "0x9fD16eA9E31233279975D99D5e8Fc91dd214c7Da", // Will be updated by update-addresses.sh
-    ALTAR: "0x4593ed9CbE6003e687e5e77368534bb04b162503", // Will be updated by update-addresses.sh
-    GAME_STATE: "0x7580708993de7CA120E957A62f26A5dDD4b3D8aC", // Will be updated by update-addresses.sh
-    DISTRICT_BUILDINGS: "0x75c68e69775fA3E9DD38eA32E554f6BF259C1135", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0x572316aC11CB4bc5daf6BDae68f43EA3CCE3aE0e", // Will be updated by update-addresses.sh
-    BATTLE_SYSTEM: "0xCd7c00Ac6dc51e8dCc773971Ac9221cC582F3b1b" // Will be updated by update-addresses.sh
+    SONICITY_NFT: "0x2538a10b7fFb1B78c890c870FC152b10be121f04", // Will be updated by update-addresses.sh
+    SONICITY_FARM: "0x24432a08869578aAf4d1eadA12e1e78f171b1a2b", // Will be updated by update-addresses.sh
+    SONICITY_DIAMOND: "0xdB05A386810c809aD5a77422eb189D36c7f24402", // Will be updated by update-addresses.sh
+    SONICITY_REP: "0xbf2ad38fd09F37f50f723E35dd84EEa1C282c5C9", // Will be updated by update-addresses.sh
+    SONICITY_YIELD_NFT: "0xF66CfDf074D2FFD6A4037be3A669Ed04380Aef2B", // Will be updated by update-addresses.sh
+    SONICITY_ART_PROXY: "0xFC4EE541377F3b6641c23CBE82F6f04388290421", // Will be updated by update-addresses.sh
+    ALTAR: "0x6A47346e722937B60Df7a1149168c0E76DD6520f", // Will be updated by update-addresses.sh
+    GAME_STATE: "0xccA9728291bC98ff4F97EF57Be3466227b0eb06C", // Will be updated by update-addresses.sh
+    DISTRICT_BUILDINGS: "0xc6B407503dE64956Ad3cF5Ab112cA4f56AA13517", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0x3a622DB2db50f463dF562Dc5F341545A64C580fc", // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0x7A28cf37763279F774916b85b5ef8b64AB421f79" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
