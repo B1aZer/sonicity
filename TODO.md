@@ -1,18 +1,36 @@
 ## todo
 
+1 do we need arcanum ? We mostly dont need ANY of tier 3 buidlings, exxcept maybe decrease time but no
+- do we need teir 4 buildings ?
+2. How revenue hub will look like. It should be similar to other 2
+3. Main goad - SHOW POSSIBLE REV
+- teir 1. stake - receive anyhting ? no, but we have calculator 
+- teir 2. stake more - receive anything ?
+- max number of buildings per player that can  be minterd
+- impllment charge per SONIC(amount ot donat), plus allow sime time boost based on amount of sonic charged
+- new revenue building altar on the right, you can also stake there
+- replace now not needed district buildings like converters, with leaderboards and so on , check history
+- how upgrades to grid works?
+- Cycle is complete when I claim SONIC
+
+## todo
+
 - merge main
 - esc exit building
+- protect disctrict buidling url if no building
+- leaderboard   
 
 ## todo
 
 - MINIMAL PRROF OF CYCLE
-1. houses
-2. farms + farms buildings
-3. get rep
+1. [x] houses 
+2. [x] farms + farms buildings
+3. [x] get rep
 4. check other player UI
-5. recieve diamonds
-6. build rep -> stake rep -> get nft
+5. [x] recieve diamonds
+6. [ ] build rep -> stake rep -> get nft
 7. PROFIT  (FOR LATER) (nft is probably some kind of a house ?? -> so by staking it at altar we can potentionally receive profits??)
+9. ALTAR is where you stake NFT, not MINT
 
 where profit comes from ? GOLOSSARY PAGE ? We have n in treasury lets vote. Either make buildings damaging with a change to get s, or stake reps to get revue (simple contract - upload n funds - distribute to stakers)
 
