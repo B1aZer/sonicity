@@ -5,6 +5,7 @@ import { NFTContract } from '../js/contracts/NFTContract.js';
 import { FarmNFTContract } from '../js/contracts/FarmNFTContract.js';
 import { DiamondNFTContract } from '../js/contracts/DiamondNFTContract.js';
 import { RepNFTContract } from '../js/contracts/RepNFTContract.js';
+import { SonicityYieldNFTContract } from '../js/contracts/SonicityYieldNFTContract.js';
 import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
@@ -23,6 +24,7 @@ export class BasePage {
             farmNft: new FarmNFTContract(),
             diamondNft: new DiamondNFTContract(),
             repNft: new RepNFTContract(),
+            yieldNft: new SonicityYieldNFTContract(),
             districtBuildings: new DistrictBuildingsContract(),
             gridBuildings: new GridBuildingsContract(),
             battleSystem: new BattleSystemContract()
@@ -90,6 +92,10 @@ export class BasePage {
                 }),
                 this.contracts.repNft.initialize().catch(e => {
                     Logger.warn('Rep NFT contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.yieldNft.initialize().catch(e => {
+                    Logger.warn('Sonicity Yield NFT contract initialization failed:', e);
                     return null;
                 }),
                 this.contracts.districtBuildings.initialize().catch(e => {
