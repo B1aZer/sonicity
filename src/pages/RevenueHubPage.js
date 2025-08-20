@@ -128,7 +128,7 @@ export class RevenueHubPage extends BasePage {
             
             // Check if tier is unlocked
             if (tier > 0 && tier > this.state.currentTier) {
-                this.modal.warning(`You need to reach Gold Tier ${tier} to access this tab.`);
+                this.modal.error(`You need to reach Gold Tier ${tier} to access this tab.`);
                 return;
             }
             
@@ -166,13 +166,13 @@ export class RevenueHubPage extends BasePage {
             const repAmount = parseInt(repInput.value);
             
             if (!repAmount || repAmount <= 0) {
-                this.modal.warning('Please enter a valid REP amount.');
+                this.modal.error('Please enter a valid REP amount.');
                 return;
             }
             
             // Validate player has enough REP
             if (repAmount > this.state.yourRepPoints) {
-                this.modal.warning(`You don't have enough REP. You have ${this.state.yourRepPoints} REP.`);
+                this.modal.error(`You don't have enough REP. You have ${this.state.yourRepPoints} REP.`);
                 return;
             }
             
@@ -180,7 +180,7 @@ export class RevenueHubPage extends BasePage {
             const nftTier = this.calculateNFTTier(repAmount);
             if (this.state.currentTier < nftTier) {
                 const tierNames = ['', 'Bronze', 'Silver', 'Gold', 'Legendary'];
-                this.modal.warning(`You need Gold Tier ${nftTier} to mint ${tierNames[nftTier]} yield NFTs. You are currently Gold Tier ${this.state.currentTier}.`);
+                this.modal.error(`You need Gold Tier ${nftTier} to mint ${tierNames[nftTier]} yield NFTs. You are currently Gold Tier ${this.state.currentTier}.`);
                 return;
             }
             
