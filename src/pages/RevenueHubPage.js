@@ -276,8 +276,20 @@ export class RevenueHubPage extends BasePage {
                             <span class="detail-value">Bronze, Silver, Gold, Legendary</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">REP Requirements:</span>
-                            <span class="detail-value">Bronze - 1-10 REP<br>Silver - 11-50 REP<br>Gold - 51-100 REP<br>Legendary - 101+ REP</span>
+                            <span class="detail-label">Bronze Tier</span>
+                            <span class="detail-value">1-10 REP</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Silver Tier</span>
+                            <span class="detail-value">11-50 REP</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Gold Tier</span>
+                            <span class="detail-value">51-100 REP</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Legendary Tier</span>
+                            <span class="detail-value">101+ REP</span>
                         </div>
                     </div>
                 </div>
