@@ -32,7 +32,8 @@ export class RevenueHubPage extends BasePage {
             
             // UI state
             selectedTier: 1,
-            isLoading: false
+            isLoading: false,
+            canMint: true
         });
         
         this.render();
@@ -206,19 +207,35 @@ export class RevenueHubPage extends BasePage {
                 return;
             }
             
-            this.setState({ isLoading: true });
+            this.setState({ isLoading: true, canMint: false });
             
-            // TODO: Implement actual minting through Altar contract
-            // For now, show success message
-            this.modal.success(`Minting ${this.getNFTTierName(nftTier)} yield NFT with ${repAmount} REP...`);
+            // Call the Altar contract to mint the yield NFT
+            Logger.info('Minting yield NFT with REP amount:', repAmount);
+            const result = await this.contracts.altar.mintYieldNFT(repAmount);
             
-            Logger.info('Minting NFT:', { repAmount, nftTier });
+            // Wait for transaction confirmation
+            const receipt = await result.wait();
+            Logger.info('Yield NFT minted successfully:', receipt);
+            
+            // Extract token ID from transaction logs if available
+            const tokenId = receipt.logs && receipt.logs.length > 0 ? 'New NFT' : 'Unknown';
+            
+            // Show success message
+            this.modal.success(`Successfully minted ${this.getNFTTierName(nftTier)} yield NFT! Token ID: ${tokenId}`);
+            
+            // Clear the input
+            repInput.value = '';
+            
+            // Reload the page data to show the new NFT
+            await this.loadRevenueData();
+            this.updateTierTabs();
+            this.renderTierContent(this.state.selectedTier);
             
         } catch (error) {
             Logger.error('Error minting NFT:', error);
             this.modal.error('Failed to mint yield NFT. Please try again.');
         } finally {
-            this.setState({ isLoading: false });
+            this.setState({ isLoading: false, canMint: true });
         }
     }
 
@@ -453,7 +470,7 @@ export class RevenueHubPage extends BasePage {
                             min="1"
                             max="999999"
                         />
-                        <button class="btn btn-primary btn-md mint-nft-btn" data-state="isLoading">
+                        <button class="btn btn-primary btn-md mint-nft-btn" data-state="canMint">
                             <span class="button-text">Mint Yield NFT</span>
                         </button>
                     </div>
