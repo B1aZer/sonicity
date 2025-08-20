@@ -211,17 +211,11 @@ export class RevenueHubPage extends BasePage {
             
             // Call the Altar contract to mint the yield NFT
             Logger.info('Minting yield NFT with REP amount:', repAmount);
-            const result = await this.contracts.altar.mintYieldNFT(repAmount);
-            
-            // Wait for transaction confirmation
-            const receipt = await result.wait();
-            Logger.info('Yield NFT minted successfully:', receipt);
-            
-            // Extract token ID from transaction logs if available
-            const tokenId = receipt.logs && receipt.logs.length > 0 ? 'New NFT' : 'Unknown';
+            await this.contracts.altar.mintYieldNFT(repAmount);
+            Logger.info('Yield NFT minted successfully');
             
             // Show success message
-            this.modal.success(`Successfully minted ${this.getNFTTierName(nftTier)} yield NFT! Token ID: ${tokenId}`);
+            this.modal.success(`Successfully minted ${this.getNFTTierName(nftTier)} yield NFT!`);
             
             // Clear the input
             repInput.value = '';
