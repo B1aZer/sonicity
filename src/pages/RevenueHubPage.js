@@ -86,40 +86,17 @@ export class RevenueHubPage extends BasePage {
 
     async loadYieldNFTs(userAddress) {
         try {
-            const balance = await this.contracts.yieldNft.balanceOf(userAddress);
-            const nfts = [];
+            const nfts = await this.contracts.yieldNft.getAllNFTsWithDetails(userAddress);
             
-            for (let i = 0; i < balance; i++) {
-                const tokenId = await this.contracts.yieldNft.tokenOfOwnerByIndex(userAddress, i);
-                const stakeInfo = await this.contracts.yieldNft.getStakeInfo(tokenId);
-                const tokenURI = await this.contracts.yieldNft.tokenURI(tokenId);
-                
-                let metadata = {};
-                try {
-                    // Try to fetch metadata if it's a URL
-                    if (tokenURI.startsWith('http')) {
-                        const response = await fetch(tokenURI);
-                        metadata = await response.json();
-                    } else if (tokenURI.startsWith('data:')) {
-                        // Handle base64 encoded metadata
-                        const base64Data = tokenURI.split(',')[1];
-                        const jsonString = atob(base64Data);
-                        metadata = JSON.parse(jsonString);
-                    }
-                } catch (e) {
-                    Logger.warn('Could not load metadata for token', tokenId);
-                }
-                
-                nfts.push({
-                    tokenId: Number(tokenId),
-                    repStaked: Number(stakeInfo.repStaked),
-                    mintedAt: Number(stakeInfo.mintedAt),
-                    metadata,
-                    tier: this.calculateNFTTier(Number(stakeInfo.repStaked))
-                });
-            }
+            // Convert to the format expected by the UI
+            return nfts.map(nft => ({
+                tokenId: nft.tokenId,
+                repStaked: Number(nft.repStaked),
+                mintedAt: nft.mintedAt,
+                metadata: nft.metadata,
+                tier: this.calculateNFTTier(Number(nft.repStaked))
+            }));
             
-            return nfts;
         } catch (error) {
             Logger.error('Error loading yield NFTs:', error);
             return [];
