@@ -252,6 +252,7 @@ export class RevenueHubPage extends BasePage {
 
     renderYieldNFTCard(nft) {
         const mintDate = new Date(nft.mintedAt * 1000).toLocaleDateString();
+        const icon = this.getYieldNFTIcon(nft.tier);
         return `
             <div class="building-card yield-nft-card" data-token-id="${nft.tokenId}" style="
                 background-image: url('${nft.image}'); 
@@ -277,8 +278,8 @@ export class RevenueHubPage extends BasePage {
                     z-index: 1;
                 "></div>
                 <div class="building-header" style="position: relative; z-index: 2;">
-                    <div class="building-icon nft-image">
-                        <img src="${nft.image}" onerror="this.src='/images/placeholder.jpg'" alt="${nft.name}" />
+                    <div class="building-icon">
+                        ${icon}
                     </div>
                     <div class="building-info">
                         <h3>${nft.name}</h3>
@@ -309,6 +310,17 @@ export class RevenueHubPage extends BasePage {
                 </div>
             </div>
         `;
+    }
+
+    getYieldNFTIcon(tier) {
+        switch (tier.toUpperCase()) {
+            case 'BRONZE': return '🥉';
+            case 'SILVER': return '🥈';
+            case 'GOLD': return '🥇';
+            case 'PLATINUM': return '💎';
+            case 'DIAMOND': return '💍';
+            default: return '��';
+        }
     }
 
     render() {
