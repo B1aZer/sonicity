@@ -105,4 +105,13 @@ export class AltarContract extends BaseContract {
     async mintAndStake(collection, tokenId, buildingType) {
         return await this.transact('mintAndStake', collection, tokenId, buildingType);
     }
+
+    /**
+     * Mint a yield NFT by staking REP points
+     * @param {number|string} repAmount - The amount of REP to stake for the NFT
+     * @returns {Promise<Object>} - Transaction result containing the new token ID
+     */
+    async mintYieldNFT(repAmount) {
+        return await this.transact('mintYieldNFT', repAmount);
+    }
 } 

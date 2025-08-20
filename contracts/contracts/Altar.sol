@@ -15,6 +15,12 @@ interface IMintableNFT {
     function mintForAltar(address to, uint256 tokenId) external;
 }
 
+// Interface for Yield NFT contracts that support mintForAltar with REP amount
+interface IYieldNFT {
+    function mintForAltar(address to, uint256 tokenId, uint256 repAmount) external;
+    function totalSupply() external view returns (uint256);
+}
+
 /**
  * @title Altar
  * @dev Contract for staking Sonicity NFTs with building upgrade preservation
@@ -26,6 +32,9 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
 
     // Reference to the GridBuildings contract
     GridBuildings public gridBuildings;
+
+    // Reference to the SonicityYieldNFT contract
+    IYieldNFT public yieldNFT;
 
     // Mapping of approved NFT collections
     mapping(address => bool) public approvedCollections;
@@ -346,6 +355,40 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
      */
     function setMinStakingDuration(uint256 _duration) external onlyOwner {
         minStakingDuration = _duration;
+    }
+
+    /**
+     * @dev Set the SonicityYieldNFT contract address (only owner)
+     * @param _yieldNFT The address of the SonicityYieldNFT contract
+     */
+    function setYieldNFT(address _yieldNFT) external onlyOwner {
+        require(_yieldNFT != address(0), "Invalid yield NFT contract address");
+        yieldNFT = IYieldNFT(_yieldNFT);
+    }
+
+    /**
+     * @dev Mint a yield NFT by staking REP points
+     * @param repAmount The amount of REP to stake for the NFT
+     * @return tokenId The ID of the newly minted yield NFT
+     */
+    function mintYieldNFT(uint256 repAmount) external nonReentrant returns (uint256) {
+        require(address(yieldNFT) != address(0), "Yield NFT contract not set");
+        require(repAmount > 0, "REP amount must be positive");
+        
+        // Check if user has enough REP
+        uint256 userRep = gameState.getPlayerRep(msg.sender);
+        require(userRep >= repAmount, "Insufficient REP balance");
+        
+        // Deduct REP from user
+        gameState.deductResources(msg.sender, 0, 0, repAmount);
+        
+        // Get next token ID for yield NFT
+        uint256 tokenId = yieldNFT.totalSupply() + 1;
+        
+        // Mint the yield NFT with the REP amount
+        yieldNFT.mintForAltar(msg.sender, tokenId, repAmount);
+        
+        return tokenId;
     }
 
     /**

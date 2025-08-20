@@ -431,7 +431,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         require(
             msg.sender == districtBuildingsAddress || 
             msg.sender == gridBuildingsAddress || 
-            msg.sender == battleSystemAddress, 
+            msg.sender == battleSystemAddress ||
+            msg.sender == altarAddress, 
             "Unauthorized caller"
         );
         PlayerState storage state = playerState[player];
