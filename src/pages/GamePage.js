@@ -293,7 +293,7 @@ export class GamePage extends BasePage {
                 // Check for building types using userData flags
                 if (clickedObject.userData.isMine) {
                     Logger.info('Mine clicked');
-                    window.history.pushState({}, '', '/mint');
+                    window.history.pushState({}, '', '/revenue-hub');
                     window.dispatchEvent(new PopStateEvent('popstate'));
                 } else if (clickedObject.userData.isCityhall) {
                     Logger.info('City Hall clicked');
