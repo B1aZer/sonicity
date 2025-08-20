@@ -194,11 +194,12 @@ export class BasePage {
 
     // Event listener management
     addEventListener(selector, event, handler) {
-        const element = this.element.querySelector(selector);
-        if (element) {
+        const elements = this.element.querySelectorAll(selector);
+        elements.forEach((element, index) => {
             element.addEventListener(event, handler);
-            this.eventListeners.set(`${selector}-${event}`, { element, event, handler });
-        }
+            // Use unique keys for each element to properly track them
+            this.eventListeners.set(`${selector}-${event}-${index}`, { element, event, handler });
+        });
     }
 
     removeEventListeners() {
