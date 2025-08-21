@@ -282,11 +282,32 @@ async function ensurePlayerFood(player, gameState, gridBuildings, altar, sonicit
     });
 }
 
+/**
+ * Find the first building of a specific type for a player
+ * @param {Contract} gridBuildings - GridBuildings contract instance
+ * @param {Signer} player - Player signer
+ * @param {number} buildingType - GridBuildingType enum value
+ * @returns {Promise<BigNumber>} Building ID
+ */
+async function findBuildingOfType(gridBuildings, player, buildingType) {
+    const activeBuildings = await gridBuildings.getActiveBuildings(player.address);
+    
+    for (const buildingId of activeBuildings) {
+        const building = await gridBuildings.buildings(player.address, buildingId);
+        if (Number(building.buildingType) === buildingType) {
+            return buildingId;
+        }
+    }
+    
+    throw new Error(`No building of type ${buildingType} found for player ${player.address}`);
+}
+
 module.exports = {
     GridBuildingType,
     mintAndStakeNFT,
     getDamagedBuildingId,
     donateGoldForTier,
     ensurePlayerGold,
-    ensurePlayerFood
+    ensurePlayerFood,
+    findBuildingOfType
 }; 
