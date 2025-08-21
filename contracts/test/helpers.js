@@ -5,7 +5,8 @@ const GridBuildingType = {
     HOUSE: 0,
     FARM: 1,
     DIAMOND_STATION: 2,
-    REP_FORGE: 3
+    REP_FORGE: 3,
+    YIELD_STATION: 4
 };
 
 // Logging configuration
