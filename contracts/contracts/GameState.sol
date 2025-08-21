@@ -589,7 +589,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function trackRechargeAmount(address player, uint256 amount, uint8 buildingType) external {
         require(msg.sender == gridBuildingsAddress, "Only GridBuildings can call this function");
-        require(buildingType <= 3, "Invalid building type"); // 0=HOUSE, 1=FARM, 2=DIAMOND_STATION, 3=REP_FORGE
+        require(buildingType <= 4, "Invalid building type"); // 0=HOUSE, 1=FARM, 2=DIAMOND_STATION, 3=REP_FORGE, 4=YIELD_STATION
         
         PlayerState storage state = playerState[player];
         state.totalRechargeAmountByType[buildingType] += amount;
@@ -604,6 +604,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @param buildingType The type of building
      */
     function checkAndUpdateUpgradeLevel(address player, uint8 buildingType) internal {
+        // Only process upgradeable building types (YIELD_STATION doesn't have upgrades)
+        if (buildingType > 3) {
+            return;
+        }
+        
         PlayerState storage state = playerState[player];
         uint8 currentMaxLevel = state.maxUpgradeLevelByType[buildingType];
         uint8 newMaxLevel = currentMaxLevel;
@@ -636,13 +641,13 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
-     * @dev Get the total recharge amount for a player for a specific building type
+     * @dev Get total recharge amount for a specific building type
      * @param player The address of the player
-     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=REP_STATION)
-     * @return uint256 The total SONIC recharged for this building type
+     * @param buildingType The building type to get recharge amount for
+     * @return uint256 Total recharge amount for the building type
      */
     function getTotalRechargeAmount(address player, uint8 buildingType) external view returns (uint256) {
-        require(buildingType <= 2, "Invalid building type");
+        require(buildingType <= 4, "Invalid building type");
         return playerState[player].totalRechargeAmountByType[buildingType];
     }
 
@@ -661,7 +666,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint8 progressPercent,
         uint8 currentLevel
     ) {
-        require(buildingType <= 2, "Invalid building type");
+        require(buildingType <= 3, "Invalid building type");
         
         PlayerState storage state = playerState[player];
         currentAmount = state.totalRechargeAmountByType[buildingType];

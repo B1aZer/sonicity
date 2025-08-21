@@ -19,6 +19,7 @@ interface IMintableNFT {
 interface IYieldNFT {
     function mintForAltar(address to, uint256 tokenId, uint256 repAmount) external;
     function totalSupply() external view returns (uint256);
+    function ownerOf(uint256 tokenId) external view returns (address);
 }
 
 /**
@@ -64,6 +65,18 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     // Add mapping to track staked NFT to buildingId
     mapping(address => mapping(uint256 => uint256)) public stakedBuilding;
 
+    // Yield Station specific data (stored in Altar, not GridBuildings)
+    struct YieldStationData {
+        uint256 nftTokenId;      // Staked NFT token ID
+        uint256 repAmount;       // REP amount staked in NFT
+        uint256 nftTier;         // NFT tier (1=Bronze, 2=Silver, 3=Gold, 4=Legendary)
+        uint256 stakeTime;       // When NFT was staked
+        uint256 lastClaimTime;   // Last time revenue was calculated
+    }
+    
+    // Mapping from player to buildingId to yield station data
+    mapping(address => mapping(uint256 => YieldStationData)) public yieldStationData;
+
     // Events
     event NFTStaked(address indexed user, uint256 indexed tokenId, uint256 buildingId, address indexed collection);
     event NFTUnstaked(address indexed user, uint256 indexed tokenId, uint256 timestamp, address indexed collection);
@@ -72,6 +85,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     // New events for building data preservation
     event BuildingDataPreserved(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint8 level);
     event BuildingDataRestored(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint8 level);
+    event YieldNFTStaked(address indexed user, uint256 indexed tokenId, uint256 buildingId, uint256 repAmount, uint256 nftTier);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -269,7 +283,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         uint256 buildingId = stakedBuilding[stakeData.collection][tokenId];
         
         // Get building data from GridBuildings
-        (GridBuildings.GridBuildingType buildingType, uint8 level, uint256 lastUpgradeTime, uint256 lastRechargeTime, uint256 lastCollectionTime, bool damaged) = gridBuildings.buildings(msg.sender, buildingId);
+        GridBuildings.Building memory buildingData = gridBuildings.getBuilding(msg.sender, buildingId);
         
         // Preserve building data (buildingLevel > 0 indicates preserved data)
         stakes[collection][tokenId] = Stake({
@@ -278,9 +292,9 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
             owner: msg.sender,
             isActive: false,
             collection: collection,
-            buildingType: buildingType,
-            buildingLevel: level,        // This indicates preserved data exists
-            lastUpgradeTime: lastUpgradeTime
+            buildingType: buildingData.buildingType,
+            buildingLevel: buildingData.level,        // This indicates preserved data exists
+            lastUpgradeTime: buildingData.lastUpgradeTime
         });
         
         // Remove from user's collection-specific staked tokens
@@ -301,7 +315,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         IERC721(stakeData.collection).transferFrom(address(this), msg.sender, tokenId);
         
         emit NFTUnstaked(msg.sender, tokenId, block.timestamp, stakeData.collection);
-        emit BuildingDataPreserved(collection, tokenId, buildingType, level);
+        emit BuildingDataPreserved(collection, tokenId, buildingData.buildingType, buildingData.level);
     }
 
     /**
@@ -406,5 +420,93 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         bytes calldata data
     ) external override returns (bytes4) {
         return this.onERC721Received.selector;
+    }
+
+    // ============ YIELD NFT STAKING FUNCTIONS ============
+
+    /**
+     * @dev Stake a yield NFT to create a yield station
+     * @param tokenId The token ID of the yield NFT to stake
+     */
+    function stakeYieldNFT(uint256 tokenId) external nonReentrant {
+        require(address(yieldNFT) != address(0), "Yield NFT contract not set");
+        
+        // Verify ownership
+        require(yieldNFT.ownerOf(tokenId) == msg.sender, "Not the owner of this NFT");
+        
+        // Get NFT details
+        uint256 repAmount = getYieldNFTRepAmount(tokenId);
+        uint256 nftTier = gridBuildings.calculateNFTTier(repAmount);
+        
+        // Use existing createBuilding function (gets all validation)
+        uint256 buildingId = gridBuildings.createBuilding(
+            msg.sender, 
+            GridBuildings.GridBuildingType.YIELD_STATION, 
+            0, 0
+        );
+        
+        // Store yield-specific data in Altar
+        yieldStationData[msg.sender][buildingId] = YieldStationData({
+            nftTokenId: tokenId,
+            repAmount: repAmount,
+            nftTier: nftTier,
+            stakeTime: block.timestamp,
+            lastClaimTime: block.timestamp
+        });
+        
+        // Transfer NFT to Altar
+        IERC721(address(yieldNFT)).transferFrom(msg.sender, address(this), tokenId);
+        
+        // Store standard staking data
+        stakes[address(yieldNFT)][tokenId] = Stake({
+            tokenId: tokenId,
+            stakedAt: block.timestamp,
+            owner: msg.sender,
+            isActive: true,
+            collection: address(yieldNFT),
+            buildingType: GridBuildings.GridBuildingType.YIELD_STATION,
+            buildingLevel: 1,
+            lastUpgradeTime: block.timestamp
+        });
+        
+        // Add to user's collection-specific staked tokens
+        userStakesByCollection[msg.sender][address(yieldNFT)].push(tokenId);
+        
+        // Update staked building mapping
+        stakedBuilding[address(yieldNFT)][tokenId] = buildingId;
+        
+        emit YieldNFTStaked(msg.sender, tokenId, buildingId, repAmount, nftTier);
+    }
+
+    /**
+     * @dev Get REP amount from a yield NFT token
+     * @param tokenId The token ID to get REP amount for
+     * @return uint256 The REP amount staked in this NFT
+     */
+    function getYieldNFTRepAmount(uint256 tokenId) public view returns (uint256) {
+        // Call the yield NFT contract to get stake info
+        (bool success, bytes memory data) = address(yieldNFT).staticcall(
+            abi.encodeWithSignature("stakeInfo(uint256)", tokenId)
+        );
+        
+        if (success && data.length >= 64) {
+            (uint256 repAmount, uint256 mintedAt) = abi.decode(data, (uint256, uint256));
+            return repAmount;
+        }
+        
+        // Fallback: return 0 if call fails
+        return 0;
+    }
+
+    /**
+     * @dev Get yield station data for a specific building (called by GridBuildings for revenue distribution)
+     * @param player The address of the player
+     * @param buildingId The building ID
+     * @return repAmount The REP amount staked in the NFT
+     * @return nftTier The NFT tier
+     */
+    function getYieldStationData(address player, uint256 buildingId) external view returns (uint256 repAmount, uint256 nftTier) {
+        YieldStationData storage data = yieldStationData[player][buildingId];
+        return (data.repAmount, data.nftTier);
     }
 } 

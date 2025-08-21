@@ -32,7 +32,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         HOUSE,
         FARM,
         DIAMOND_STATION,
-        REP_FORGE
+        REP_FORGE,
+        YIELD_STATION
     }
 
     // Production States
@@ -61,7 +62,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 lastRechargeTime;    // When building was last recharged (started production)
         uint256 lastCollectionTime;  // When resources were last collected
         bool damaged;
-        // Removed startProductionTime - redundant with lastRechargeTime
     }
 
     // Mappings
@@ -69,6 +69,11 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     mapping(address => uint256) public nextBuildingId;
     mapping(GridBuildingType => GridBuildingConfig) public buildingConfigs;
     mapping(address => mapping(GridBuildingType => uint256)) public buildingCounts;
+    
+    // Revenue distribution mappings
+    mapping(address => uint256) public playerSonicBalance;  // Claimable SONIC per player
+    uint256 public totalRevenuePool;                       // Total SONIC distributed
+    uint256 public lastDistributionTime;                   // Track distribution timing
 
     // Events
     event BuildingCreated(address indexed player, GridBuildingType buildingType, uint256 buildingId);
@@ -86,6 +91,10 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event ProductionCapDurationUpdated(uint256 newDuration);
     event BuildingProductionDurationUpdated(GridBuildingType buildingType, uint256 newDuration);
     event BuildingRechargeCostUpdated(GridBuildingType buildingType, uint256 newCost);
+    
+    // Revenue Distribution Events
+    event RevenueDistributed(uint256 totalAmount, uint256 timestamp);
+    event SonicClaimed(address indexed player, uint256 amount);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -139,6 +148,16 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             tier: 3,
             productionDuration: 168 hours, // 168 hours (7 days) for rep forge
             rechargeCost: 0.05 ether // 0.05 SONIC for rep forge (highest tier)
+        });
+
+        buildingConfigs[GridBuildingType.YIELD_STATION] = GridBuildingConfig({
+            name: "Yield Station",
+            baseProductionRate: 0,   // Not used - special calculation for revenue
+            upgradeCost: 0,          // No upgrades for yield stations
+            description: "Generates SONIC revenue from staked yield NFTs",
+            tier: 1,                 // Require tier 1+
+            productionDuration: 24 hours, // 24 hours for yield stations
+            rechargeCost: 0          // Free recharge!
         });
     }
 
@@ -269,7 +288,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function createBuilding(address player, GridBuildingType buildingType, uint8 level, uint256 lastUpgradeTime) external returns (uint256) {
         require(msg.sender == altarAddress, "Only Altar can create buildings");
-        require(buildingType <= GridBuildingType.REP_FORGE, "Invalid building type");
+        require(buildingType <= GridBuildingType.YIELD_STATION, "Invalid building type");
         
         // Validate level for restored buildings
         if (level > 0) {
@@ -295,7 +314,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         // Get current total buildings count
         uint256 totalBuildings = 0;
-        for (uint8 i = 0; i <= uint8(GridBuildingType.REP_FORGE); i++) {
+        for (uint8 i = 0; i <= uint8(GridBuildingType.YIELD_STATION); i++) {
             totalBuildings += buildingCounts[player][GridBuildingType(i)];
         }
         
@@ -999,5 +1018,57 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
         emit ResourcesCollected(msg.sender, buildingId, amount);
         return amount;
+    }
+
+    // ============ REVENUE DISTRIBUTION FUNCTIONS ============
+
+    /**
+     * @dev Distribute 50% of contract balance to yield station owners
+     */
+    function distributeRevenue() external onlyOwner {
+        uint256 contractBalance = address(this).balance;
+        require(contractBalance > 0, "No balance to distribute");
+        
+        uint256 distributionAmount = contractBalance / 2; // 50% distribution
+        totalRevenuePool += distributionAmount;
+        
+        // For now, revenue distribution is simplified
+        // In the future, this will call Altar to get yield station data
+        // and distribute proportionally based on staked NFT tiers and REP amounts
+        
+        lastDistributionTime = block.timestamp;
+        emit RevenueDistributed(distributionAmount, block.timestamp);
+    }
+
+    /**
+     * @dev Players claim their SONIC revenue
+     */
+    function claimSonicRevenue() external nonReentrant {
+        uint256 amount = playerSonicBalance[msg.sender];
+        require(amount > 0, "No SONIC to claim");
+        
+        playerSonicBalance[msg.sender] = 0;
+        
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "Failed to send SONIC");
+        
+        emit SonicClaimed(msg.sender, amount);
+    }
+
+    /**
+     * @dev Get player's claimable SONIC balance
+     */
+    function getClaimableSonic(address player) external view returns (uint256) {
+        return playerSonicBalance[player];
+    }
+
+    /**
+     * @dev Calculate NFT tier from REP amount (utility function)
+     */
+    function calculateNFTTier(uint256 repAmount) public pure returns (uint256) {
+        if (repAmount >= 101) return 4; // Legendary (101+)
+        if (repAmount >= 51) return 3;  // Gold (51-100)
+        if (repAmount >= 11) return 2;  // Silver (11-50)
+        return 1; // Bronze (1-10)
     }
 }
