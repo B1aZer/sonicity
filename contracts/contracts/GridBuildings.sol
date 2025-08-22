@@ -70,10 +70,27 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     mapping(GridBuildingType => GridBuildingConfig) public buildingConfigs;
     mapping(address => mapping(GridBuildingType => uint256)) public buildingCounts;
     
-    // Revenue distribution mappings
-    mapping(address => uint256) public playerSonicBalance;  // Claimable SONIC per player
-    uint256 public totalRevenuePool;                       // Total SONIC distributed
-    uint256 public lastDistributionTime;                   // Track distribution timing
+    // Revenue pool management (time-based system)
+    uint256 public revenuePool;                                 // Total accumulated SONIC for distribution
+    uint256 public poolLastUpdateTime;                          // Track when pool was last updated
+    
+    // Dynamic rate yield station system
+    mapping(address => mapping(uint256 => uint256)) public stationActivationTime;
+    mapping(address => mapping(uint256 => uint256)) public accumulatedRevenue;
+    mapping(address => mapping(uint256 => uint256)) public lastRateUpdateTime;
+    mapping(address => mapping(uint256 => uint256)) public currentRate;
+    mapping(address => mapping(uint256 => uint256)) public stationLastClaimTime;
+    
+    // Global registry for efficient yield station iteration
+    struct YieldStationInfo {
+        address player;
+        uint256 buildingId;
+    }
+    YieldStationInfo[] public allYieldStations;
+    mapping(address => mapping(uint256 => uint256)) public yieldStationIndex; // player -> buildingId -> array index
+    
+    // Configuration
+    uint256 public yieldStationDuration; // Configurable recharge duration
 
     // Events
     event BuildingCreated(address indexed player, GridBuildingType buildingType, uint256 buildingId);
@@ -108,6 +125,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         // Initialize production cap duration to 24 hours
         productionCapDuration = 24 hours;
+        
+        // Initialize yield station duration
+        yieldStationDuration = 24 hours;
         
         // Initialize building configurations
         buildingConfigs[GridBuildingType.HOUSE] = GridBuildingConfig({
@@ -155,7 +175,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             baseProductionRate: 0,   // Not used - special calculation for revenue
             upgradeCost: 0,          // No upgrades for yield stations
             description: "Generates SONIC revenue from staked yield NFTs",
-            tier: 1,                 // Require tier 1+
+            tier: 4,                 // Require tier 4+
             productionDuration: 24 hours, // 24 hours for yield stations
             rechargeCost: 0          // Free recharge!
         });
@@ -198,6 +218,16 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function setDistrictBuildingsAddress(address _districtBuildingsAddress) external onlyOwner {
         districtBuildingsAddress = _districtBuildingsAddress;
         emit DistrictBuildingsAddressUpdated(_districtBuildingsAddress);
+    }
+
+    /**
+     * @dev Set yield station duration
+     * @param _duration The new yield station duration in seconds
+     */
+    function setYieldStationDuration(uint256 _duration) external onlyOwner {
+        require(_duration > 0, "Duration must be greater than 0");
+        require(_duration <= 7 days, "Duration cannot exceed 7 days");
+        yieldStationDuration = _duration;
     }
 
     /**
@@ -335,6 +365,12 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Update counts
         buildingCounts[player][buildingType]++;
         
+        // Register yield stations in global registry for efficient iteration
+        if (buildingType == GridBuildingType.YIELD_STATION) {
+            allYieldStations.push(YieldStationInfo(player, buildingId));
+            yieldStationIndex[player][buildingId] = allYieldStations.length - 1;
+        }
+        
         emit BuildingCreated(player, buildingType, buildingId);
         
         return buildingId;
@@ -407,6 +443,189 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         GridBuildingConfig memory config = buildingConfigs[buildingType];
         // Use the configured recharge cost (0 = free recharge)
         return config.rechargeCost;
+    }
+
+    // ============ YIELD STATION DYNAMIC RATE SYSTEM ============
+
+    /**
+     * @dev Get station weight based on REP amount, tier, and historical bonuses
+     */
+    function _getStationWeight(address player, uint256 buildingId) internal view returns (uint256) {
+        // Get yield station data from Altar
+        (bool success, bytes memory data) = altarAddress.staticcall(
+            abi.encodeWithSignature("getYieldStationData(address,uint256)", player, buildingId)
+        );
+        
+        if (!success || data.length < 64) return 0;
+        
+        (uint256 repAmount, uint256 nftTier) = abi.decode(data, (uint256, uint256));
+        if (repAmount == 0) return 0;
+        
+        // Base weight: REP amount
+        uint256 baseWeight = repAmount;
+        
+        // Tier modifier: small bonus
+        uint256 tierModifier = (nftTier - 1) * 5; // Bronze=0, Silver=5, Gold=10, Legendary=15
+        
+        // Historical modifier: small bonus based on total SONIC spent
+        uint256 historicalModifier = _getHistoricalModifier(player);
+        
+        return baseWeight + tierModifier + historicalModifier;
+    }
+
+    /**
+     * @dev Get historical recharge bonus for a player
+     */
+    function _getHistoricalModifier(address player) internal view returns (uint256) {
+        // Get total historical SONIC spent on recharges for all building types
+        uint256 totalSpent = 0;
+        
+        for (uint8 i = 0; i <= 4; i++) {
+            (bool success, bytes memory data) = gameStateAddress.staticcall(
+                abi.encodeWithSignature("getTotalRechargeAmount(address,uint8)", player, i)
+            );
+            
+            if (success && data.length >= 32) {
+                uint256 totalRechargeAmount = abi.decode(data, (uint256));
+                totalSpent += totalRechargeAmount;
+            }
+        }
+        
+        // Convert to reasonable bonus: 1 bonus point per 0.1 SONIC spent
+        uint256 historicalBonus = totalSpent / (0.1 ether);
+        
+        return historicalBonus;
+    }
+
+    /**
+     * @dev Calculate dynamic rate for a yield station
+     */
+    function _calculateStationRate(address player, uint256 buildingId) internal view returns (uint256) {
+        uint256 stationWeight = _getStationWeight(player, buildingId);
+        if (stationWeight == 0) return 0;
+        
+        // Calculate total weight including this station if it's active
+        uint256 totalWeight = _calculateTotalActiveYieldWeight();
+        
+        // If this station is not yet in the active list, add its weight
+        Building storage building = buildings[player][buildingId];
+        if (building.lastRechargeTime > 0 && 
+            block.timestamp < building.lastRechargeTime + yieldStationDuration &&
+            !building.damaged) {
+            // Station is active, weight is already included in totalWeight
+        } else {
+            // Station is not active yet, add its weight for rate calculation
+            totalWeight += stationWeight;
+        }
+        
+        if (totalWeight == 0) return 0;
+        
+        // Calculate rate based on pool and station weight
+        uint256 poolPerSecond = revenuePool / yieldStationDuration;
+        uint256 finalRate = (poolPerSecond * stationWeight) / totalWeight;
+        
+        return finalRate;
+    }
+
+    /**
+     * @dev Calculate total weight of all currently active yield stations
+     */
+    function _calculateTotalActiveYieldWeight() internal view returns (uint256) {
+        uint256 totalWeight = 0;
+        
+        for (uint256 i = 0; i < allYieldStations.length; i++) {
+            YieldStationInfo memory station = allYieldStations[i];
+            Building storage building = buildings[station.player][station.buildingId];
+            
+            // Only count active (recharged and not damaged) stations
+            if (!building.damaged && 
+                building.lastRechargeTime > 0 && 
+                block.timestamp < building.lastRechargeTime + yieldStationDuration) {
+                
+                totalWeight += _getStationWeight(station.player, station.buildingId);
+            }
+        }
+        
+        return totalWeight;
+    }
+
+    /**
+     * @dev Calculate yield revenue for a station
+     */
+    function _calculateYieldRevenue(address player, uint256 buildingId, Building storage building, uint256 currentTime) internal view returns (uint256) {
+        if (building.lastRechargeTime == 0 || building.damaged) {
+            return 0;
+        }
+        
+        // Check if station is still active
+        if (currentTime > building.lastRechargeTime + yieldStationDuration) {
+            // Station has expired, calculate final earnings up to expiration
+            uint256 lastUpdate = lastRateUpdateTime[player][buildingId];
+            uint256 timeElapsed = 0;
+            
+            if (lastUpdate > 0) {
+                uint256 expirationTime = building.lastRechargeTime + yieldStationDuration;
+                timeElapsed = expirationTime - lastUpdate;
+            } else {
+                // If lastUpdate is 0, use time since recharge up to expiration
+                timeElapsed = yieldStationDuration;
+            }
+            
+            uint256 finalEarnings = currentRate[player][buildingId] * timeElapsed;
+            return accumulatedRevenue[player][buildingId] + finalEarnings;
+        }
+        
+        // Calculate current earnings
+        uint256 lastUpdate = lastRateUpdateTime[player][buildingId];
+        uint256 timeElapsed = 0;
+        
+        if (lastUpdate > 0) {
+            timeElapsed = currentTime - lastUpdate;
+        } else {
+            // If lastUpdate is 0, use time since recharge
+            timeElapsed = currentTime - building.lastRechargeTime;
+        }
+        
+        uint256 currentEarnings = currentRate[player][buildingId] * timeElapsed;
+        
+        return accumulatedRevenue[player][buildingId] + currentEarnings;
+    }
+
+    /**
+     * @dev Update accumulated revenue for a station
+     */
+    function _updateAccumulatedRevenue(address player, uint256 buildingId) internal {
+        uint256 lastUpdate = lastRateUpdateTime[player][buildingId];
+        if (lastUpdate == 0) return; // First time
+        
+        uint256 timeElapsed = block.timestamp - lastUpdate;
+        uint256 stationRate = currentRate[player][buildingId];
+        
+        accumulatedRevenue[player][buildingId] += stationRate * timeElapsed;
+    }
+
+    /**
+     * @dev Update rates for all active stations
+     */
+    function _updateAllStationRates() internal {
+        for (uint256 i = 0; i < allYieldStations.length; i++) {
+            YieldStationInfo memory station = allYieldStations[i];
+            Building storage building = buildings[station.player][station.buildingId];
+            
+            // Only update active stations
+            if (!building.damaged && 
+                building.lastRechargeTime > 0 && 
+                block.timestamp < building.lastRechargeTime + yieldStationDuration) {
+                
+                // Update accumulated revenue before rate change
+                _updateAccumulatedRevenue(station.player, station.buildingId);
+                
+                // Calculate new rate
+                uint256 newRate = _calculateStationRate(station.player, station.buildingId);
+                currentRate[station.player][station.buildingId] = newRate;
+                lastRateUpdateTime[station.player][station.buildingId] = block.timestamp;
+            }
+        }
     }
 
     // Internal helper to calculate the effective production start time
@@ -831,6 +1050,17 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 requiredFee = _getRechargeCost(building.buildingType);
         require(msg.value == requiredFee, "Incorrect fee amount");
         
+        // Special handling for yield stations
+        if (building.buildingType == GridBuildingType.YIELD_STATION) {
+            _rechargeYieldStation(msg.sender, buildingId);
+        } else {
+            // Regular building logic (add to revenue pool)
+            if (requiredFee > 0) {
+                revenuePool += requiredFee / 2;
+                poolLastUpdateTime = block.timestamp;
+            }
+        }
+        
         // Track recharge amount in GameState with building type
         (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, msg.value, uint8(building.buildingType))
@@ -849,6 +1079,25 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         _rechargeBuilding(building);
         
         emit BuildingRecharged(msg.sender, buildingId, msg.value);
+    }
+
+    /**
+     * @dev Recharge a yield station with dynamic rate system
+     */
+    function _rechargeYieldStation(address player, uint256 buildingId) internal {
+        // Update accumulated revenue before rate change
+        _updateAccumulatedRevenue(player, buildingId);
+        
+        // Set activation time
+        stationActivationTime[player][buildingId] = block.timestamp;
+        lastRateUpdateTime[player][buildingId] = block.timestamp;
+        
+        // Calculate initial rate for this station
+        uint256 initialRate = _calculateStationRate(player, buildingId);
+        currentRate[player][buildingId] = initialRate;
+        
+        // Update rates for all active stations (including this new one)
+        _updateAllStationRates();
     }
 
     /**
@@ -1020,47 +1269,147 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         return amount;
     }
 
+    // ============ YIELD STATION REVENUE FUNCTIONS ============
+
+    /**
+     * @dev Calculate claimable revenue for a specific yield station
+     */
+    function calculateYieldStationRevenue(address player, uint256 buildingId) external view returns (uint256) {
+        Building storage building = buildings[player][buildingId];
+        require(building.buildingType == GridBuildingType.YIELD_STATION, "Not a yield station");
+        return _calculateYieldRevenue(player, buildingId, building, block.timestamp);
+    }
+
+    /**
+     * @dev Collect revenue from a specific yield station
+     */
+    function collectYieldStationRevenue(uint256 buildingId) external nonReentrant {
+        Building storage building = buildings[msg.sender][buildingId];
+        require(building.buildingType == GridBuildingType.YIELD_STATION, "Not a yield station");
+        require(!building.damaged, "Building is damaged");
+        
+        // Update accumulated revenue
+        _updateAccumulatedRevenue(msg.sender, buildingId);
+        
+        uint256 claimableAmount = accumulatedRevenue[msg.sender][buildingId];
+        require(claimableAmount > 0, "No revenue to claim");
+        require(claimableAmount <= revenuePool, "Insufficient pool balance");
+        
+        // Reset accumulated revenue
+        accumulatedRevenue[msg.sender][buildingId] = 0;
+        
+        // Reduce revenue pool
+        revenuePool -= claimableAmount;
+        
+        // Transfer SONIC to player
+        (bool success, ) = payable(msg.sender).call{value: claimableAmount}("");
+        require(success, "Failed to transfer revenue");
+        
+        emit SonicClaimed(msg.sender, claimableAmount);
+    }
+
+    /**
+     * @dev Get total claimable revenue across all player's yield stations
+     */
+    function getTotalClaimableYieldRevenue(address player) external view returns (uint256) {
+        uint256 totalClaimable = 0;
+        
+        // Iterate through all yield stations for this player
+        for (uint256 i = 0; i < allYieldStations.length; i++) {
+            YieldStationInfo memory station = allYieldStations[i];
+            if (station.player == player) {
+                Building storage building = buildings[player][station.buildingId];
+                if (building.buildingType == GridBuildingType.YIELD_STATION && !building.damaged) {
+                    totalClaimable += _calculateYieldRevenue(player, station.buildingId, building, block.timestamp);
+                }
+            }
+        }
+        
+        return totalClaimable;
+    }
+
+    /**
+     * @dev Collect revenue from all player's yield stations
+     */
+    function collectAllYieldStationRevenue() external nonReentrant {
+        uint256 totalClaimable = 0;
+        uint256[] memory buildingIds = new uint256[](allYieldStations.length);
+        uint256 buildingCount = 0;
+        
+        // Calculate total claimable and collect building IDs
+        for (uint256 i = 0; i < allYieldStations.length; i++) {
+            YieldStationInfo memory station = allYieldStations[i];
+            if (station.player == msg.sender) {
+                Building storage building = buildings[msg.sender][station.buildingId];
+                if (building.buildingType == GridBuildingType.YIELD_STATION && !building.damaged) {
+                    uint256 claimable = _calculateYieldRevenue(msg.sender, station.buildingId, building, block.timestamp);
+                    if (claimable > 0) {
+                        totalClaimable += claimable;
+                        buildingIds[buildingCount] = station.buildingId;
+                        buildingCount++;
+                    }
+                }
+            }
+        }
+        
+        require(totalClaimable > 0, "No revenue to claim");
+        require(totalClaimable <= revenuePool, "Insufficient pool balance");
+        
+        // Reset accumulated revenue for all stations
+        for (uint256 i = 0; i < buildingCount; i++) {
+            accumulatedRevenue[msg.sender][buildingIds[i]] = 0;
+        }
+        
+        // Reduce revenue pool
+        revenuePool -= totalClaimable;
+        
+        // Transfer SONIC to player
+        (bool success, ) = payable(msg.sender).call{value: totalClaimable}("");
+        require(success, "Failed to transfer revenue");
+        
+        emit SonicClaimed(msg.sender, totalClaimable);
+    }
+
+    /**
+     * @dev Get yield station info
+     */
+    function getYieldStationInfo(address player, uint256 buildingId) external view returns (
+        uint256 claimableRevenue,
+        uint256 revenueRate,
+        uint256 timeRemaining,
+        bool isActive
+    ) {
+        Building storage building = buildings[player][buildingId];
+        require(building.buildingType == GridBuildingType.YIELD_STATION, "Not a yield station");
+        
+        claimableRevenue = _calculateYieldRevenue(player, buildingId, building, block.timestamp);
+        
+        if (building.lastRechargeTime > 0 && !building.damaged) {
+            uint256 endTime = building.lastRechargeTime + yieldStationDuration;
+            timeRemaining = block.timestamp < endTime ? endTime - block.timestamp : 0;
+            isActive = timeRemaining > 0;
+            
+            // Only calculate rate if station is active
+            if (isActive) {
+                revenueRate = _calculateStationRate(player, buildingId);
+            } else {
+                revenueRate = 0; // No longer earning
+            }
+        } else {
+            timeRemaining = 0;
+            isActive = false;
+            revenueRate = 0; // Not active
+        }
+    }
+
+    /**
+     * @dev Get current revenue pool size
+     */
+    function getRevenuePool() external view returns (uint256) {
+        return revenuePool;
+    }
+
     // ============ REVENUE DISTRIBUTION FUNCTIONS ============
-
-    /**
-     * @dev Distribute 50% of contract balance to yield station owners
-     */
-    function distributeRevenue() external onlyOwner {
-        uint256 contractBalance = address(this).balance;
-        require(contractBalance > 0, "No balance to distribute");
-        
-        uint256 distributionAmount = contractBalance / 2; // 50% distribution
-        totalRevenuePool += distributionAmount;
-        
-        // For now, revenue distribution is simplified
-        // In the future, this will call Altar to get yield station data
-        // and distribute proportionally based on staked NFT tiers and REP amounts
-        
-        lastDistributionTime = block.timestamp;
-        emit RevenueDistributed(distributionAmount, block.timestamp);
-    }
-
-    /**
-     * @dev Players claim their SONIC revenue
-     */
-    function claimSonicRevenue() external nonReentrant {
-        uint256 amount = playerSonicBalance[msg.sender];
-        require(amount > 0, "No SONIC to claim");
-        
-        playerSonicBalance[msg.sender] = 0;
-        
-        (bool success, ) = payable(msg.sender).call{value: amount}("");
-        require(success, "Failed to send SONIC");
-        
-        emit SonicClaimed(msg.sender, amount);
-    }
-
-    /**
-     * @dev Get player's claimable SONIC balance
-     */
-    function getClaimableSonic(address player) external view returns (uint256) {
-        return playerSonicBalance[player];
-    }
 
     /**
      * @dev Calculate NFT tier from REP amount (utility function)
