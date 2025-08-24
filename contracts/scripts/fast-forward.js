@@ -6,7 +6,8 @@ async function main() {
     console.log("Current timestamp:", new Date(currentBlock.timestamp * 1000).toLocaleString());
 
     // Get the time to fast forward (in seconds)
-    const hours = 6; // Change this to the number of hours you want to fast forward
+    // Check if hours is provided as command line argument, otherwise use 24 hours
+    const hours = process.argv[2] ? parseFloat(process.argv[2]) : 24;
     const secondsToAdd = hours * 60 * 60;
 
     console.log(`Fast forwarding ${hours} hours (${secondsToAdd} seconds)...`);
