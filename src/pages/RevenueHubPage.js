@@ -3,6 +3,7 @@ import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { AltarContract } from '../js/contracts/AltarContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
+import { ethers } from 'ethers';
 
 import('../styles/city-page.css');
 import('../styles/stake-hub-page.css');
@@ -20,7 +21,6 @@ export class RevenueHubPage extends BasePage {
             totalTreasury: 0,
             yourRepPoints: 0,
             currentTier: 0,
-            totalYieldNFTs: 0,
             
             // Yield NFT data organized by rarity tier
             yieldNFTsByRarity: {
@@ -31,7 +31,7 @@ export class RevenueHubPage extends BasePage {
             },
             
             // UI state
-            selectedTier: 1,
+            selectedTier: 0,
             isLoading: false,
             canMint: true
         });
@@ -59,9 +59,9 @@ export class RevenueHubPage extends BasePage {
         try {
             const userAddress = await this.contracts.gameState.getAddress();
             
-            // Load player data from GameState
-            const [treasury, repPoints, playerTier] = await Promise.all([
-                this.contracts.gameState.getPlayerTreasury(userAddress),
+            // Load player data from GameState and revenue pool from GridBuildings
+            const [revenuePool, repPoints, playerTier] = await Promise.all([
+                this.contracts.gridBuildings.getRevenuePool(),
                 this.contracts.gameState.getPlayerRep(userAddress),
                 this.contracts.gameState.getPlayerTier(userAddress)
             ]);
@@ -70,11 +70,13 @@ export class RevenueHubPage extends BasePage {
             const yieldNFTs = await this.loadYieldNFTs(userAddress);
             const yieldNFTsByRarity = this.organizeNFTsByRarity(yieldNFTs);
             
+            // Format revenue pool from wei to SONIC
+            const formattedRevenuePool = ethers.formatEther(revenuePool);
+            
             this.setState({
-                totalTreasury: Number(treasury),
+                totalTreasury: formattedRevenuePool,
                 yourRepPoints: Number(repPoints),
                 currentTier: Number(playerTier),
-                totalYieldNFTs: yieldNFTs.length,
                 yieldNFTsByRarity
             });
             
@@ -291,7 +293,7 @@ export class RevenueHubPage extends BasePage {
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">REP Source:</span>
-                            <span class="detail-value">Earned by donating gold to treasury</span>
+                            <span class="detail-value">Earned by progressing and in battles</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Yield:</span>
@@ -411,7 +413,7 @@ export class RevenueHubPage extends BasePage {
                     <h2>Revenue Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
-                            <span class="status-label">Total Treasury:</span>
+                            <span class="status-label">Revenue Pool:</span>
                             <span class="status-value" data-state="totalTreasury">0</span>
                         </div>
                         <div class="status-item">
@@ -421,10 +423,6 @@ export class RevenueHubPage extends BasePage {
                         <div class="status-item">
                             <span class="status-label">Current Tier:</span>
                             <span class="status-value" data-state="currentTier">0</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Total Yield NFTs:</span>
-                            <span class="status-value" data-state="totalYieldNFTs">0</span>
                         </div>
                     </div>
                 </div>
@@ -450,10 +448,10 @@ export class RevenueHubPage extends BasePage {
                 <!-- Tier Tabs -->
                 <div class="page-section tier-tabs-section">
                     <div class="tier-tabs">
-                        <button class="tier-tab" data-tier="0">
+                        <button class="tier-tab active" data-tier="0">
                             Tier 0
                         </button>
-                        <button class="tier-tab active" data-tier="1">
+                        <button class="tier-tab" data-tier="1">
                             Tier 1
                         </button>
                         <button class="tier-tab" data-tier="2">
@@ -468,12 +466,12 @@ export class RevenueHubPage extends BasePage {
                     </div>
 
                     <!-- Tier 0 Content - Introduction -->
-                    <div class="tier-content" data-tier="0">
+                    <div class="tier-content active" data-tier="0">
                         <!-- Content will be rendered dynamically -->
                     </div>
 
                     <!-- Tier 1 Content - Bronze NFTs -->
-                    <div class="tier-content active" data-tier="1">
+                    <div class="tier-content" data-tier="1">
                         <!-- Content will be rendered dynamically -->
                     </div>
 

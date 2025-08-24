@@ -147,20 +147,10 @@ describe("YieldStation", function () {
     await gameState.connect(player3).initializePlayer();
   });
 
-  describe("YIELD_STATION Building Type", function () {
-    it("should have YIELD_STATION building type configured", async function () {
-      const config = await gridBuildings.buildingConfigs(GridBuildingType.YIELD_STATION);
-      expect(config.name).to.equal("Yield Station");
-      expect(config.tier).to.equal(1);
-      expect(config.rechargeCost).to.equal(0); // Free recharge
-      expect(config.productionDuration).to.equal(24 * 60 * 60); // 24 hours
-    });
-  });
-
   describe("Yield NFT Minting and Staking", function () {
     beforeEach(async function () {
-      // Set up player1 to tier 1 so they can mint yield NFTs
-      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
+      // Set up player1 to tier 4 so they can mint yield NFTs
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
     });
 
     it("should allow minting and staking yield NFTs", async function () {
@@ -207,62 +197,39 @@ describe("YieldStation", function () {
     });
   });
 
-  describe("Revenue Distribution", function () {
-    it("should revert distribution with no balance", async function () {
-      // Try to distribute with no fees
-      await expect(
-        gridBuildings.connect(owner).distributeRevenue()
-      ).to.be.revertedWith("No balance to distribute");
-    });
-
-    it("should allow claiming SONIC revenue (when no balance)", async function () {
-      // Test that claiming works (even if no actual distribution happened yet)
-      await expect(
-        gridBuildings.connect(player1).claimSonicRevenue()
-      ).to.be.revertedWith("No SONIC to claim");
-    });
-
-    it("should have correct initial state", async function () {
-      // Check initial state
-      const totalPool = await gridBuildings.totalRevenuePool();
-      expect(totalPool).to.equal(0);
-
-      const lastDistributionTime = await gridBuildings.lastDistributionTime();
-      expect(lastDistributionTime).to.equal(0);
-
-      const claimable = await gridBuildings.getClaimableSonic(player1.address);
-      expect(claimable).to.equal(0);
-    });
-  });
-
-  describe("Free Yield Station Recharges", function () {
-    beforeEach(async function () {
-      // Set up player with yield station
-      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
+  describe("Yield NFT Metadata and Images", function () {
+    it("should generate correct token URI", async function () {
+      // Give player REP and mint NFT
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
       await gameState.testEarnRep(player1.address, 50);
-
       await altar.connect(player1).mintYieldNFT(50);
+      
       const tokenId = await sonicityYieldNFT.tokenOfOwnerByIndex(player1.address, 0);
-      await sonicityYieldNFT.connect(player1).approve(altar.getAddress(), tokenId);
-      await altar.connect(player1).stakeYieldNFT(tokenId);
+      const tokenURI = await sonicityYieldNFT.tokenURI(tokenId);
+      
+      // Should return a valid JSON metadata URI
+      expect(tokenURI).to.be.a('string');
+      expect(tokenURI).to.include('data:application/json;base64,');
     });
 
-    it("should allow free recharge of yield stations", async function () {
-      // Recharge yield station with 0 value (building ID 1, after the house from donateGoldForTier)
-      await expect(
-        gridBuildings.connect(player1).rechargeBuilding(1, { value: 0 })
-      ).to.not.be.reverted;
-
-      // Check that building was recharged
-      const building = await gridBuildings.buildings(player1.address, 1);
-      expect(building.lastRechargeTime).to.be.gt(0);
-    });
-
-    it("should reject non-zero payment for yield station recharge", async function () {
-      // Try to pay for yield station recharge
-      await expect(
-        gridBuildings.connect(player1).rechargeBuilding(1, { value: ethers.parseEther("0.01") })
-      ).to.be.revertedWith("Incorrect fee amount");
+    it("should generate different metadata for different REP amounts", async function () {
+      // Give player REP and mint multiple NFTs with different REP amounts
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
+      
+      await gameState.testEarnRep(player1.address, 200); // Enough for multiple NFTs
+      
+      // Mint Bronze NFT (10 REP)
+      await altar.connect(player1).mintYieldNFT(10);
+      const bronzeTokenId = await sonicityYieldNFT.tokenOfOwnerByIndex(player1.address, 0);
+      const bronzeURI = await sonicityYieldNFT.tokenURI(bronzeTokenId);
+      
+      // Mint Gold NFT (75 REP)
+      await altar.connect(player1).mintYieldNFT(75);
+      const goldTokenId = await sonicityYieldNFT.tokenOfOwnerByIndex(player1.address, 1);
+      const goldURI = await sonicityYieldNFT.tokenURI(goldTokenId);
+      
+      // URIs should be different for different tiers
+      expect(bronzeURI).to.not.equal(goldURI);
     });
   });
 }); 

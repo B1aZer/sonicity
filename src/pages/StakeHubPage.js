@@ -47,7 +47,7 @@ export class StakePage extends BasePage {
             damaged: 0,
             availableNFTs: [],
             stakedBuildings: [],
-            byTier: { 0: [], 1: [], 2: [], 3: [] },
+            byTier: { 0: [], 1: [], 2: [], 3: [], 4: [] },
             selectedTier: 0,
             // Resource values
             gold: 0,
@@ -95,20 +95,6 @@ export class StakePage extends BasePage {
                         <div class="status-item">
                             <span class="status-label">Slots Available:</span>
                             <span class="status-value slots-available-value">0</span>
-                        </div>
-                    </div>
-                </div>
-                <!-- NFT Status Section -->
-                <div class="page-section nft-status-section">
-                    <h2>NFT Status</h2>
-                    <div class="status-grid">
-                        <div class="status-item">
-                            <span class="status-label">Total Unstaked:</span>
-                            <span class="status-value total-nfts-value">0</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Total Staked:</span>
-                            <span class="status-value total-staked-value">0</span>
                         </div>
                     </div>
                 </div>
@@ -167,11 +153,16 @@ export class StakePage extends BasePage {
                             <span class="tab-label">Tier 3 (REP Forges)</span>
                             <span class="tab-count">0</span>
                         </button>
+                        <button class="tab" data-tier="4">
+                            <span class="tab-label">Tier 4 (Yield Stations)</span>
+                            <span class="tab-count">0</span>
+                        </button>
                     </div>
                     <div class="tier-content active" data-tier="0"><div class="buildings-grid"></div></div>
                     <div class="tier-content" data-tier="1"><div class="buildings-grid"></div></div>
                     <div class="tier-content" data-tier="2"><div class="buildings-grid"></div></div>
                     <div class="tier-content" data-tier="3"><div class="buildings-grid"></div></div>
+                    <div class="tier-content" data-tier="4"><div class="buildings-grid"></div></div>
                 </div>
             </div>
         </div>
@@ -225,7 +216,7 @@ export class StakePage extends BasePage {
         const stakedBuildings = await this.getStakedBuildings(userAddress);
         const availableNFTs = await this.getAvailableNFTs(userAddress);
         // Group by buildingType (0: House, 1: Farm, 2: Diamond Station, 3: REP Forge)
-        const byTier = { 0: [], 1: [], 2: [], 3: [] };
+        const byTier = { 0: [], 1: [], 2: [], 3: [], 4: [] };
         let atCap = 0, damaged = 0;
         stakedBuildings.forEach(b => {
             byTier[b.buildingType]?.push(b);
@@ -258,8 +249,6 @@ export class StakePage extends BasePage {
     updateStatusSection() {
         this.element.querySelector('.buildings-constructed-value').textContent = this.state.usedSlots;
         this.element.querySelector('.slots-available-value').textContent = this.state.totalSlots - this.state.usedSlots;
-        this.element.querySelector('.total-nfts-value').textContent = this.state.availableNFTs.length;
-        this.element.querySelector('.total-staked-value').textContent = this.state.totalStaked;
         this.element.querySelector('.at-cap-value').textContent = this.state.atCap;
         this.element.querySelector('.damaged-value').textContent = this.state.damaged;
         
@@ -283,7 +272,7 @@ export class StakePage extends BasePage {
             playerTier = 0;
         }
         
-        for (let tier = 0; tier <= 3; tier++) {
+        for (let tier = 0; tier <= 4; tier++) {
             const tab = this.element.querySelector(`.tab[data-tier="${tier}"]`);
             const count = this.state.byTier[tier].length;
             tab.querySelector('.tab-count').textContent = count;
@@ -293,6 +282,7 @@ export class StakePage extends BasePage {
             // - Tier 1 (Farms): Requires player tier 1+
             // - Tier 2 (Diamond Stations): Requires player tier 2+
             // - Tier 3 (Rep Stations): Requires player tier 3+
+            // - Tier 4 (Yield Stations): Requires player tier 4+
             const isUnlocked = tier === 0 || tier <= playerTier;
             
             Logger.info(`Tier ${tier}: playerTier=${playerTier}, isUnlocked=${isUnlocked}`);
@@ -336,8 +326,8 @@ export class StakePage extends BasePage {
         }
         
         // Status section (like CityPage)
-        const tierNames = ['House', 'Farm', 'Diamond Station', 'REP Forge'];
-        const tierNamesPlural = ['Houses', 'Farms', 'Diamond Stations', 'REP Forges'];
+        const tierNames = ['House', 'Farm', 'Diamond Station', 'REP Forge', 'Yield Station'];
+        const tierNamesPlural = ['Houses', 'Farms', 'Diamond Stations', 'REP Forges', 'Yield Stations'];
         const rechargeHeader = buildingCount === 1 ? `Charge ${tierNames[tier]}` : `Charge ${tierNamesPlural[tier]}`;
         
         // Format upgrade progress for display
@@ -484,8 +474,8 @@ export class StakePage extends BasePage {
             }
             
             // Map buildingType to name/icon
-            const tierNames = ['House', 'Farm', 'Diamond Station', 'REP Forge'];
-            const icons = ['🏠', '🌾', '💎', '🔨'];
+            const tierNames = ['House', 'Farm', 'Diamond Station', 'REP Forge', 'Yield Station'];
+            const icons = ['🏠', '🌾', '💎', '🔨', '⚡']; // Added Yield Station icon
             const name = tierNames[item.buildingType] || 'Building';
             const icon = icons[item.buildingType] || '🏗️';
             
@@ -512,13 +502,18 @@ export class StakePage extends BasePage {
                 productionRate = item.level / 168; // rep per hour
                 resourceType = 'Rep';
                 productionDurationHours = 168;
+            } else if (item.buildingType === 4) { // Yield Station
+                // Yield Stations: 1 yield per 24 hours at level 1
+                productionRate = item.level / 24; // yield per hour
+                resourceType = 'Yield';
+                productionDurationHours = 24;
             }
             
             // Format production rate for display
             let productionRateDisplay = '';
-            if (item.buildingType === 2 || item.buildingType === 3) {
-                // For Diamond Stations and REP Forges, show as "X per Y hours"
-                const hoursPerUnit = item.buildingType === 2 ? 72 : 168;
+            if (item.buildingType === 2 || item.buildingType === 3 || item.buildingType === 4) {
+                // For Diamond Stations, REP Forges, and Yield Stations, show as "X per Y hours"
+                const hoursPerUnit = item.buildingType === 2 ? 72 : item.buildingType === 3 ? 168 : 24;
                 const unitsPerCycle = item.level;
                 productionRateDisplay = `${unitsPerCycle} per ${hoursPerUnit}h`;
             } else {
@@ -662,6 +657,7 @@ export class StakePage extends BasePage {
             case 1: return '🌾';
             case 2: return '💎';
             case 3: return '🔨';
+            case 4: return '⚡'; // Yield Station icon
             default: return '🏗️';
         }
     }
@@ -672,6 +668,7 @@ export class StakePage extends BasePage {
             case 1: return 'Farm';
             case 2: return 'Diamond Station';
             case 3: return 'REP Forge';
+            case 4: return 'Yield Station';
             default: return 'Unknown';
         }
     }
@@ -737,7 +734,7 @@ export class StakePage extends BasePage {
     async getNFTInfoForBuilding(buildingId) {
         // console.log(`[DEBUG] Looking for NFT info for building ${buildingId}`);
         
-        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.repNft];
+        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.repNft, this.contracts.yieldNft];
         
         for (const contract of nftContracts) {
             try {
@@ -776,28 +773,34 @@ export class StakePage extends BasePage {
 
     async getAvailableNFTs(userAddress) {
         // Get unstaked NFTs from all contracts
-        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.repNft];
+        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.repNft, this.contracts.yieldNft];
         const available = [];
         for (const contract of nftContracts) {
             const balance = await contract.balanceOf(userAddress);
             for (let i = 0; i < balance; i++) {
                 const tokenId = await contract.tokenOfOwnerByIndex(userAddress, i);
+                
                 // Check if staked
                 let isStaked = false;
                 try {
                     isStaked = await this.contracts.altar.isStaked(await contract.getContractAddress(), tokenId);
                 } catch (e) {}
                 if (isStaked) continue;
-                const tokenURI = await contract.tokenURI(tokenId);
-                let metadata = {};
+                
+                // Get token URI and metadata
+                let tokenURI, metadata = {};
                 try {
+                    tokenURI = await contract.tokenURI(tokenId);
                     const response = await fetch(tokenURI);
                     metadata = await response.json();
                 } catch (e) {}
+                
                 // Determine tier from contract type
                 let tier = 0;
                 if (contract === this.contracts.farmNft) tier = 1;
                 else if (contract === this.contracts.repNft) tier = 3;
+                else if (contract === this.contracts.yieldNft) tier = 4;
+                
                 available.push({
                     tokenId,
                     tier,
@@ -819,12 +822,19 @@ export class StakePage extends BasePage {
             // Determine tier from UI or NFT
             let tier = 0;
             if (collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()) tier = 1;
+            else if (collection.toLowerCase() === (await this.contracts.repNft.getContractAddress()).toLowerCase()) tier = 3;
+            else if (collection.toLowerCase() === (await this.contracts.yieldNft.getContractAddress()).toLowerCase()) tier = 4;
             
             // Approve NFT transfer
             const altarAddress = await this.contracts.altar.getContractAddress();
-            const nftContract = collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()
-                ? this.contracts.farmNft
-                : this.contracts.nft;
+            let nftContract = this.contracts.nft; // default
+            if (collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()) {
+                nftContract = this.contracts.farmNft;
+            } else if (collection.toLowerCase() === (await this.contracts.repNft.getContractAddress()).toLowerCase()) {
+                nftContract = this.contracts.repNft;
+            } else if (collection.toLowerCase() === (await this.contracts.yieldNft.getContractAddress()).toLowerCase()) {
+                nftContract = this.contracts.yieldNft;
+            }
             
             await nftContract.approve(altarAddress, tokenId);
             
@@ -874,7 +884,7 @@ export class StakePage extends BasePage {
             if (error.message && error.message.includes('missing revert data')) {
                 this.modal.error('Cannot unstake yet: NFT must be staked for at least 7 days before unstaking.', { title: 'Cannot Unstake Yet' });
             } else {
-                this.modal.error(`Failed to unstake NFT: ${error.message}`, { title: 'Unstaking Failed' });
+                this.modal.error(error.message || 'Failed to unstake NFT', { title: 'Unstaking Failed' });
             }
         }
     }
@@ -1001,6 +1011,9 @@ export class StakePage extends BasePage {
                 // Rep Station - use SonicityRep
                 nftContract = this.contracts.repNft;
                 contractAddress = await nftContract.getContractAddress();
+            } else if (tier === 4) { // Yield Station
+                nftContract = this.contracts.yieldNft;
+                contractAddress = await nftContract.getContractAddress();
             } else {
                 throw new Error(`Unsupported tier: ${tier}`);
             }
@@ -1021,13 +1034,13 @@ export class StakePage extends BasePage {
             // Show success modal
             this.modal.success(`${tierName} created successfully!`, { title: 'Building Created!' });
         } catch (error) {
-            this.modal.error(`Failed to create ${tierNames[tier].toLowerCase()}: ` + error.message, { title: 'Creation Failed' });
+            this.modal.error(error.message || `Failed to create ${tierNames[tier].toLowerCase()}`, { title: 'Creation Failed' });
         }
     }
 
     async destroyBuilding(item) {
         try {
-            this.showLoading("Destroying building...");
+            const loadingModal = this.modal.loading("Destroying building...");
             
             // Get NFT info for this building
             const nftInfo = await this.getNFTInfoForBuilding(item.id);
@@ -1035,16 +1048,19 @@ export class StakePage extends BasePage {
             if (nftInfo.isStaked && nftInfo.contractAddress && nftInfo.tokenId) {
                 // Unstake the NFT (this will destroy the building and preserve data)
                 await this.contracts.altar.unstake(nftInfo.contractAddress, nftInfo.tokenId);
-                this.showSuccess("Building destroyed successfully!");
+                loadingModal.close();
+                this.modal.success("Building destroyed successfully!", { title: 'Building Destroyed!' });
             } else {
                 // Fallback to direct destruction if no NFT found
                 await this.contracts.altar.destroyBuilding(item.id);
-                this.showSuccess("Building destroyed successfully!");
+                loadingModal.close();
+                this.modal.success("Building destroyed successfully!", { title: 'Building Destroyed!' });
             }
             
             await this.loadUserData();
         } catch (error) {
-            this.showError("Failed to destroy building: " + error.message);
+            Logger.error('Error destroying building:', error);
+            this.modal.error(error.message || 'Failed to destroy building', { title: 'Destruction Failed' });
         }
     }
 

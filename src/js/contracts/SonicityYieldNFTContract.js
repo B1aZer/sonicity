@@ -24,6 +24,22 @@ export class SonicityYieldNFTContract extends BaseContract {
     }
 
     /**
+     * Get token ID by index for an owner (ERC721Enumerable standard)
+     * @param {string} owner - The wallet address
+     * @param {number} index - The index of the token
+     * @returns {Promise<number>} Token ID
+     */
+    async tokenOfOwnerByIndex(owner, index) {
+        try {
+            const tokenId = await this.call('tokenOfOwnerByIndex', owner, index);
+            return parseInt(tokenId.toString());
+        } catch (error) {
+            Logger.error(`Error getting token of owner by index for ${owner}:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * Get all NFT token IDs owned by an address
      * @param {string} address - The wallet address
      * @returns {Promise<number[]>} Array of token IDs
@@ -34,8 +50,8 @@ export class SonicityYieldNFTContract extends BaseContract {
             const tokenIds = [];
             
             for (let i = 0; i < balance; i++) {
-                const tokenId = await this.call('tokenOfOwnerByIndex', address, i);
-                tokenIds.push(parseInt(tokenId.toString()));
+                const tokenId = await this.tokenOfOwnerByIndex(address, i);
+                tokenIds.push(tokenId);
             }
             
             Logger.info(`Found ${tokenIds.length} Yield NFTs for ${address}:`, tokenIds);
@@ -70,6 +86,21 @@ export class SonicityYieldNFTContract extends BaseContract {
      * @returns {Promise<string>} Token URI
      */
     async getTokenURI(tokenId) {
+        try {
+            const uri = await this.call('tokenURI', tokenId);
+            return uri;
+        } catch (error) {
+            Logger.error(`Error getting token URI for token ${tokenId}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get token URI (metadata) for a token (ERC721 standard)
+     * @param {number} tokenId - The token ID
+     * @returns {Promise<string>} Token URI
+     */
+    async tokenURI(tokenId) {
         try {
             const uri = await this.call('tokenURI', tokenId);
             return uri;
@@ -175,6 +206,50 @@ export class SonicityYieldNFTContract extends BaseContract {
             return parseInt(supply.toString());
         } catch (error) {
             Logger.error('Error getting total supply:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get total supply of minted NFTs (ERC721Enumerable standard)
+     * @returns {Promise<number>} Total supply
+     */
+    async totalSupply() {
+        try {
+            const supply = await this.call('totalSupply');
+            return parseInt(supply.toString());
+        } catch (error) {
+            Logger.error('Error getting total supply:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get the owner of a token (ERC721 standard)
+     * @param {number} tokenId - The token ID
+     * @returns {Promise<string>} Owner address
+     */
+    async ownerOf(tokenId) {
+        try {
+            const owner = await this.call('ownerOf', tokenId);
+            return owner;
+        } catch (error) {
+            Logger.error(`Error getting owner of token ${tokenId}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Approve a token for transfer (ERC721 standard)
+     * @param {string} to - The address to approve
+     * @param {number} tokenId - The token ID
+     * @returns {Promise<Object>} Transaction result
+     */
+    async approve(to, tokenId) {
+        try {
+            return await this.transact('approve', to, tokenId);
+        } catch (error) {
+            Logger.error(`Error approving token ${tokenId} for ${to}:`, error);
             throw error;
         }
     }

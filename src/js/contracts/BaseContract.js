@@ -81,6 +81,7 @@ export class BaseContract {
             return receipt;
         } catch (error) {
             console.error(`Error in transaction ${method}:`, error);
+            
             // Try to get more details about the error
             if (error.data) {
                 console.error('Error data:', error.data);
@@ -88,6 +89,19 @@ export class BaseContract {
             if (error.reason) {
                 console.error('Error reason:', error.reason);
             }
+            
+            // If it's a gas estimation error, try to provide a more helpful message
+            if (error.message && error.message.includes('missing revert data')) {
+                // This usually means the contract reverted during gas estimation
+                // We can't get the exact reason, but we can provide context
+                const errorMessage = `Transaction failed during simulation. This usually means the operation cannot be completed.`;
+                
+                // Create a new error with the helpful message
+                const helpfulError = new Error(errorMessage);
+                helpfulError.originalError = error;
+                throw helpfulError;
+            }
+            
             throw error;
         }
     }
