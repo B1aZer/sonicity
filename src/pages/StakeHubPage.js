@@ -370,7 +370,12 @@ export class StakePage extends BasePage {
             
             <div class="page-section tier-actions-section">
                 <h3>${tierNames[tier]} Actions</h3>
-                <button class="btn btn-md btn-primary create-building-btn">Create ${tierNames[tier]}</button>
+                ${tier === 4 ? 
+                    `<button class="btn btn-md btn-secondary" disabled title="Create Yield NFTs in Revenue Hub first">
+                        Create ${tierNames[tier]} (Use Revenue Hub)
+                    </button>` :
+                    `<button class="btn btn-md btn-primary create-building-btn">Create ${tierNames[tier]}</button>`
+                }
                 <button class="btn btn-md btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
             </div>
             
@@ -503,19 +508,28 @@ export class StakePage extends BasePage {
                 resourceType = 'Rep';
                 productionDurationHours = 168;
             } else if (item.buildingType === 4) { // Yield Station
-                // Yield Stations: 1 yield per 24 hours at level 1
-                productionRate = item.level / 24; // yield per hour
-                resourceType = 'Yield';
-                productionDurationHours = 24;
+                // Yield Stations have dynamic revenue rates based on weight and pool
+                // The actual rate is calculated in getStakedBuildings and stored in item.yieldRate
+                productionRate = item.yieldRate || 0; // Use stored rate from building data
+                resourceType = 'SONIC';
+                productionDurationHours = 24; // Yield stations last 24 hours
             }
             
             // Format production rate for display
             let productionRateDisplay = '';
-            if (item.buildingType === 2 || item.buildingType === 3 || item.buildingType === 4) {
-                // For Diamond Stations, REP Forges, and Yield Stations, show as "X per Y hours"
-                const hoursPerUnit = item.buildingType === 2 ? 72 : item.buildingType === 3 ? 168 : 24;
+            if (item.buildingType === 2 || item.buildingType === 3) {
+                // For Diamond Stations and REP Forges, show as "X per Y hours"
+                const hoursPerUnit = item.buildingType === 2 ? 72 : 168;
                 const unitsPerCycle = item.level;
                 productionRateDisplay = `${unitsPerCycle} per ${hoursPerUnit}h`;
+            } else if (item.buildingType === 4) {
+                // For Yield Stations, show dynamic rate in SONIC per second
+                if (productionRate > 0) {
+                    const ratePerHour = productionRate * 3600; // Convert per-second to per-hour
+                    productionRateDisplay = `${ratePerHour.toFixed(6)} SONIC/hr`;
+                } else {
+                    productionRateDisplay = '0 SONIC/hr';
+                }
             } else {
                 // For Houses and Farms, show as "X per hour"
                 productionRateDisplay = `${productionRate}/hr`;
@@ -726,6 +740,16 @@ export class StakePage extends BasePage {
                     damaged: building.damaged || false
                 };
             }
+
+            // For Yield Stations, get the actual revenue rate
+            if (building.buildingType === 4) {
+                try {
+                    const yieldInfo = await this.contracts.gridBuildings.getYieldStationInfo(userAddress, building.id);
+                    building.yieldRate = Number(yieldInfo.revenueRate) / 1e18; // Convert from wei to SONIC
+                } catch (error) {
+                    building.yieldRate = 0; // Fallback to 0 if error
+                }
+            }
         }
         
         return buildings;
@@ -844,8 +868,14 @@ export class StakePage extends BasePage {
             // Phase 2: Stake NFT
             const stakingModal = this.modal.loading('Staking NFT...');
             
-            // Stake NFT
-            await this.contracts.altar.stake(tokenId, tier, collection);
+            // Stake NFT - use specialized function for yield stations
+            if (tier === 4) {
+                // Yield stations use specialized staking function
+                await this.contracts.altar.stakeYieldNFT(tokenId);
+            } else {
+                // Regular buildings use generic stake function
+                await this.contracts.altar.stake(tokenId, tier, collection);
+            }
             
             // Close staking loading modal
             stakingModal.close();
@@ -986,7 +1016,7 @@ export class StakePage extends BasePage {
     }
 
     async createBuilding(tier) {
-        const tierNames = ['House', 'Farm', 'Diamond Station', 'Rep Station'];
+        const tierNames = ['House', 'Farm', 'Diamond Station', 'Rep Station', 'Yield Station'];
         
         try {
             const tierName = tierNames[tier];
@@ -1012,8 +1042,9 @@ export class StakePage extends BasePage {
                 nftContract = this.contracts.repNft;
                 contractAddress = await nftContract.getContractAddress();
             } else if (tier === 4) { // Yield Station
-                nftContract = this.contracts.yieldNft;
-                contractAddress = await nftContract.getContractAddress();
+                // Yield Stations can no longer be created directly in Stake Hub
+                // Users must first create NFTs in Revenue Hub, then stake them manually
+                throw new Error('Yield Stations must be created in Revenue Hub first. Go to Revenue Hub → Create Yield NFT → Return here to stake it.');
             } else {
                 throw new Error(`Unsupported tier: ${tier}`);
             }
