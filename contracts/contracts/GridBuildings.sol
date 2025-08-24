@@ -1125,12 +1125,23 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 totalFee = 0;
         for (uint256 i = 0; i < buildingIds.length; i++) {
             Building storage building = buildings[msg.sender][buildingIds[i]];
+            uint256 rechargeCost = _getRechargeCost(building.buildingType);
+            
+            // Special handling for yield stations
+            if (building.buildingType == GridBuildingType.YIELD_STATION) {
+                _rechargeYieldStation(msg.sender, buildingIds[i]);
+            } else {
+                // Regular building logic (add to revenue pool)
+                if (rechargeCost > 0) {
+                    revenuePool += rechargeCost / 2;
+                    poolLastUpdateTime = block.timestamp;
+                }
+            }
             
             // Set startProduction flag to true and reset last recharge time
             _rechargeBuilding(building);
             
             // Track recharge amount in GameState with correct building type
-            uint256 rechargeCost = _getRechargeCost(building.buildingType);
             (bool success, bytes memory returnData) = gameStateAddress.call(
                 abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, rechargeCost, uint8(building.buildingType))
             );
@@ -1171,12 +1182,23 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 totalFee = 0;
         for (uint256 i = 0; i < activeBuildings.length; i++) {
             Building storage building = buildings[msg.sender][activeBuildings[i]];
+            uint256 rechargeCost = _getRechargeCost(building.buildingType);
+            
+            // Special handling for yield stations
+            if (building.buildingType == GridBuildingType.YIELD_STATION) {
+                _rechargeYieldStation(msg.sender, activeBuildings[i]);
+            } else {
+                // Regular building logic (add to revenue pool)
+                if (rechargeCost > 0) {
+                    revenuePool += rechargeCost / 2;
+                    poolLastUpdateTime = block.timestamp;
+                }
+            }
             
             // Set startProduction flag to true and reset last recharge time
             _rechargeBuilding(building);
             
             // Track recharge amount in GameState with correct building type
-            uint256 rechargeCost = _getRechargeCost(building.buildingType);
             (bool success, bytes memory returnData) = gameStateAddress.call(
                 abi.encodeWithSignature("trackRechargeAmount(address,uint256,uint8)", msg.sender, rechargeCost, uint8(building.buildingType))
             );
