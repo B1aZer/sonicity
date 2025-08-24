@@ -101,11 +101,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         tierRequirements[4] = 10000;  // 10000 Gold for Tier 4
 
         // Initialize building slots per tier
-        buildingSlotsPerTier[0] = 9;   // 3x3 grid
-        buildingSlotsPerTier[1] = 12;  // 3x4 grid
-        buildingSlotsPerTier[2] = 16;  // 4x4 grid
-        buildingSlotsPerTier[3] = 20;  // 4x5 grid
-        buildingSlotsPerTier[4] = 25;  // 5x5 grid
+        buildingSlotsPerTier[0] = 4;   // 3x3 grid
+        buildingSlotsPerTier[1] = 6;  // 3x4 grid
+        buildingSlotsPerTier[2] = 9;  // 4x4 grid
+        buildingSlotsPerTier[3] = 12;  // 4x5 grid
+        buildingSlotsPerTier[4] = 16;  // 5x5 grid
     }
 
     /**
@@ -387,6 +387,17 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function setTierRequirement(uint8 tier, uint256 requirement) external onlyOwner {
         tierRequirements[tier] = requirement;
+    }
+
+    /**
+     * @dev Update building slots for a specific tier (only owner)
+     * @param tier The tier number (0-4)
+     * @param slots The new number of building slots for this tier
+     */
+    function setBuildingSlotsPerTier(uint8 tier, uint256 slots) external onlyOwner {
+        require(tier <= 4, "Invalid tier");
+        require(slots > 0, "Slots must be greater than 0");
+        buildingSlotsPerTier[tier] = slots;
     }
 
     /**
