@@ -101,11 +101,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         tierRequirements[4] = 10000;  // 10000 Gold for Tier 4
 
         // Initialize building slots per tier
-        buildingSlotsPerTier[0] = 4;   // 3x3 grid
-        buildingSlotsPerTier[1] = 6;  // 3x4 grid
-        buildingSlotsPerTier[2] = 9;  // 4x4 grid
-        buildingSlotsPerTier[3] = 12;  // 4x5 grid
-        buildingSlotsPerTier[4] = 16;  // 5x5 grid
+        buildingSlotsPerTier[0] = 4;   // 2x2 grid
+        buildingSlotsPerTier[1] = 6;  // 2x3 grid
+        buildingSlotsPerTier[2] = 9;  // 3x3 grid
+        buildingSlotsPerTier[3] = 12;  // 3x4 grid
+        buildingSlotsPerTier[4] = 16;  // 4x4 grid
     }
 
     /**
