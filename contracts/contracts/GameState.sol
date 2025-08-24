@@ -119,7 +119,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         state.rep = 0;
         state.food = 0;
         state.diamonds = 0;
-        state.buildingSlots = 9;
+        state.buildingSlots = buildingSlotsPerTier[0]; // Use tier 0 building slots
         state.tier = 0;
         state.treasury = 0;
         

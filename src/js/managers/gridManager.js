@@ -7,11 +7,11 @@ export class GridManager {
         this.totalSize = 0;
         this.tier = 0;
         this.gridDimensions = {
-            0: { width: 3, height: 3 },  // 9 slots (3x3)
-            1: { width: 4, height: 3 },  // 12 slots (4x3)
-            2: { width: 4, height: 4 },  // 16 slots (4x4)
-            3: { width: 5, height: 4 },  // 20 slots (5x4)
-            4: { width: 5, height: 5 }   // 25 slots (5x5)
+            0: { width: 2, height: 2 },  // 4 slots (2x2)
+            1: { width: 3, height: 2 },  // 6 slots (3x2)
+            2: { width: 3, height: 3 },  // 9 slots (3x3)
+            3: { width: 4, height: 3 },  // 12 slots (4x3)
+            4: { width: 4, height: 4 }   // 16 slots (4x4)
         };
     }
 
@@ -22,10 +22,10 @@ export class GridManager {
             const maxSlotsNumber = Number(maxSlots);
             
             // Determine tier based on number of slots
-            if (maxSlotsNumber <= 9) this.tier = 0;
-            else if (maxSlotsNumber <= 12) this.tier = 1;
-            else if (maxSlotsNumber <= 16) this.tier = 2;
-            else if (maxSlotsNumber <= 20) this.tier = 3;
+            if (maxSlotsNumber <= 4) this.tier = 0;
+            else if (maxSlotsNumber <= 6) this.tier = 1;
+            else if (maxSlotsNumber <= 9) this.tier = 2;
+            else if (maxSlotsNumber <= 12) this.tier = 3;
             else this.tier = 4;
 
             const dimensions = this.gridDimensions[this.tier];
