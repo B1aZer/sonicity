@@ -95,6 +95,10 @@ export class GridBuildingsContract extends BaseContract {
         return await this.call('getBuildingConfig', buildingType);
     }
 
+    async getYieldStationInfo(address, buildingId) {
+        return await this.call('getYieldStationInfo', address, buildingId);
+    }
+
     async getActiveBuildings(address) {
         if (!address) address = await this.getAddress();
         return await this.call('getActiveBuildings', address);
