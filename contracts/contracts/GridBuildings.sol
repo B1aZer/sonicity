@@ -1420,4 +1420,20 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (repAmount >= 11) return 2;  // Silver (11-50)
         return 1; // Bronze (1-10)
     }
+
+    /**
+     * @dev Test function to add money to revenue pool (only for testing)
+     * WARNING: Remove this function before production deployment!
+     */
+    function testAddRevenuePool() external payable {
+        // Hardcoded amount: 10 SONIC
+        uint256 amountToAdd = 10 ether;
+        
+        // TODO: REMOVE THIS FUNCTION BEFORE PRODUCTION DEPLOYMENT
+        // Only allow in test environment
+        require(block.chainid == 31337 || block.chainid == 1337, "Only available in test environment");
+        
+        revenuePool += amountToAdd;
+        poolLastUpdateTime = block.timestamp;
+    }
 }
