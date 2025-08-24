@@ -387,6 +387,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
         
+        // Check if building type is upgradeable (upgradeCost > 0)
+        require(config.upgradeCost > 0, "This building type cannot be upgraded");
+        
         // Check if player has unlocked the required upgrade level for this building type
         (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("getMaxUpgradeLevel(address,uint8)", msg.sender, uint8(building.buildingType))

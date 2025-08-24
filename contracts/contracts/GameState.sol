@@ -128,6 +128,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         state.maxUpgradeLevelByType[1] = 1; // FARM starts at level 1
         state.maxUpgradeLevelByType[2] = 1; // DIAMOND_STATION starts at level 1
         state.maxUpgradeLevelByType[3] = 1; // REP_FORGE starts at level 1
+        state.maxUpgradeLevelByType[4] = 1; // YIELD_STATION starts at level 1
 
         // Initialize core buildings for the new player
         (bool success, bytes memory returnData) = districtBuildingsAddress.call(
