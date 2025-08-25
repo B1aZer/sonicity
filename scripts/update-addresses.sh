@@ -22,6 +22,8 @@ GAME_STATE=$(jq -r '.gameStateProxy' "$PROJECT_ROOT/contracts/deployed-addresses
 DISTRICT_BUILDINGS=$(jq -r '.districtBuildingsProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 GRID_BUILDINGS=$(jq -r '.gridBuildingsProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 BATTLE_SYSTEM=$(jq -r '.battleSystemProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+HERO_NFT=$(jq -r '.heroNFTProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+TACTICS_NFT=$(jq -r '.tacticsNFTProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 
 # Check if jq was successful
 if [ -z "$SONICITY_NFT" ] || [ -z "$SONICITY_FARM" ] || [ -z "$SONICITY_DIAMOND" ] || [ -z "$SONICITY_REP" ] || [ -z "$ALTAR" ] || [ -z "$GAME_STATE" ] || [ -z "$DISTRICT_BUILDINGS" ] || [ -z "$GRID_BUILDINGS" ] || [ -z "$BATTLE_SYSTEM" ]; then
@@ -50,6 +52,15 @@ sed -i '' "s/DISTRICT_BUILDINGS: \".*\"/DISTRICT_BUILDINGS: \"$DISTRICT_BUILDING
 sed -i '' "s/GRID_BUILDINGS: \".*\"/GRID_BUILDINGS: \"$GRID_BUILDINGS\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/BATTLE_SYSTEM: \".*\"/BATTLE_SYSTEM: \"$BATTLE_SYSTEM\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 
+# Update Hero & Tactics contracts if they exist
+if [ ! -z "$HERO_NFT" ]; then
+    sed -i '' "s/HERO_NFT: \".*\"/HERO_NFT: \"$HERO_NFT\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+fi
+
+if [ ! -z "$TACTICS_NFT" ]; then
+    sed -i '' "s/TACTICS_NFT: \".*\"/TACTICS_NFT: \"$TACTICS_NFT\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+fi
+
 echo "Contract addresses updated successfully!"
 echo "SonicityNFT: $SONICITY_NFT"
 echo "SonicityFarm: $SONICITY_FARM"
@@ -65,4 +76,10 @@ echo "Altar: $ALTAR"
 echo "GameState: $GAME_STATE"
 echo "DistrictBuildings: $DISTRICT_BUILDINGS"
 echo "GridBuildings: $GRID_BUILDINGS"
-echo "BattleSystem: $BATTLE_SYSTEM" 
+echo "BattleSystem: $BATTLE_SYSTEM"
+if [ ! -z "$HERO_NFT" ]; then
+    echo "HeroNFT: $HERO_NFT"
+fi
+if [ ! -z "$TACTICS_NFT" ]; then
+    echo "TacticsNFT: $TACTICS_NFT"
+fi 

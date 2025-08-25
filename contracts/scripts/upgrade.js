@@ -60,6 +60,24 @@ async function main() {
     console.log("SonicityArtProxy upgraded to:", await sonicityArtProxy.getAddress());
   }
 
+  // Upgrade HeroNFT (if it exists)
+  if (addresses.heroNFTProxy) {
+    console.log("Upgrading HeroNFT...");
+    const HeroNFT = await ethers.getContractFactory("HeroNFT");
+    const heroNFTProxy = await upgrades.upgradeProxy(addresses.heroNFTProxy, HeroNFT);
+    await heroNFTProxy.waitForDeployment();
+    console.log("HeroNFT upgraded to:", await heroNFTProxy.getAddress());
+  }
+
+  // Upgrade TacticsNFT (if it exists)
+  if (addresses.tacticsNFTProxy) {
+    console.log("Upgrading TacticsNFT...");
+    const TacticsNFT = await ethers.getContractFactory("TacticsNFT");
+    const tacticsNFTProxy = await upgrades.upgradeProxy(addresses.tacticsNFTProxy, TacticsNFT);
+    await tacticsNFTProxy.waitForDeployment();
+    console.log("TacticsNFT upgraded to:", await tacticsNFTProxy.getAddress());
+  }
+
   // Set up contract interactions
   console.log("Setting up contract interactions...");
   
@@ -106,6 +124,33 @@ async function main() {
   // Set GridBuildings address in BattleSystem
   console.log("Setting GridBuildings address in BattleSystem...");
   await battleSystemProxy.setGridBuildingsAddress(await gridBuildingsProxy.getAddress());
+
+  // Set up Hero & Tactics contract interactions (if they exist)
+  if (addresses.heroNFTProxy) {
+    console.log("Setting up HeroNFT contract interactions...");
+    const heroNFTProxy = await ethers.getContractAt("HeroNFT", addresses.heroNFTProxy);
+    
+    // Set GameState address in HeroNFT
+    console.log("Setting GameState address in HeroNFT...");
+    await heroNFTProxy.setGameStateAddress(await gameStateProxy.getAddress());
+    
+    // Set HeroNFT address in GameState
+    console.log("Setting HeroNFT address in GameState...");
+    await gameStateProxy.setHeroNFTAddress(await heroNFTProxy.getAddress());
+  }
+
+  if (addresses.tacticsNFTProxy) {
+    console.log("Setting up TacticsNFT contract interactions...");
+    const tacticsNFTProxy = await ethers.getContractAt("TacticsNFT", addresses.tacticsNFTProxy);
+    
+    // Set GameState address in TacticsNFT
+    console.log("Setting GameState address in TacticsNFT...");
+    await tacticsNFTProxy.setGameStateAddress(await gameStateProxy.getAddress());
+    
+    // Set TacticsNFT address in GameState
+    console.log("Setting TacticsNFT address in GameState...");
+    await gameStateProxy.setTacticsNFTAddress(await tacticsNFTProxy.getAddress());
+  }
 
   // Set Altar contract address on all NFT contracts (in case they were redeployed)
   console.log("Setting Altar contract address on NFT contracts...");
@@ -159,6 +204,8 @@ async function main() {
     battleSystemProxy: await battleSystemProxy.getAddress(),
     ...(addresses.sonicityYieldNFT && { sonicityYieldNFT: await sonicityYieldNFT.getAddress() }),
     ...(addresses.sonicityArtProxy && { sonicityArtProxy: await sonicityArtProxy.getAddress() }),
+    ...(addresses.heroNFTProxy && { heroNFTProxy: await heroNFTProxy.getAddress() }),
+    ...(addresses.tacticsNFTProxy && { tacticsNFTProxy: await tacticsNFTProxy.getAddress() }),
   };
 
   fs.writeFileSync(

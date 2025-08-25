@@ -98,6 +98,24 @@ async function main() {
   const battleSystemImplAddress = await battleSystemImpl.getAddress();
   console.log("BattleSystem implementation deployed to:", battleSystemImplAddress);
 
+  // Deploy HeroNFT implementation
+  console.log("Deploying HeroNFT implementation...");
+  const HeroNFT = await ethers.getContractFactory("HeroNFT");
+  const heroNFTImpl = await HeroNFT.deploy();
+  console.log("Waiting for HeroNFT implementation deployment...");
+  await heroNFTImpl.waitForDeployment();
+  const heroNFTImplAddress = await heroNFTImpl.getAddress();
+  console.log("HeroNFT implementation deployed to:", heroNFTImplAddress);
+
+  // Deploy TacticsNFT implementation
+  console.log("Deploying TacticsNFT implementation...");
+  const TacticsNFT = await ethers.getContractFactory("TacticsNFT");
+  const tacticsNFTImpl = await TacticsNFT.deploy();
+  console.log("Waiting for TacticsNFT implementation deployment...");
+  await tacticsNFTImpl.waitForDeployment();
+  const tacticsNFTImplAddress = await tacticsNFTImpl.getAddress();
+  console.log("TacticsNFT implementation deployed to:", tacticsNFTImplAddress);
+
   // Deploy GameState proxy
   console.log("Deploying GameState proxy...");
   const gameStateProxy = await upgrades.deployProxy(GameState, [], {
@@ -152,6 +170,28 @@ async function main() {
   await battleSystemProxy.waitForDeployment();
   const battleSystemProxyAddress = await battleSystemProxy.getAddress();
   console.log("BattleSystem proxy deployed to:", battleSystemProxyAddress);
+
+  // Deploy HeroNFT proxy
+  console.log("Deploying HeroNFT proxy...");
+  const heroNFTProxy = await upgrades.deployProxy(HeroNFT, [], {
+    kind: 'uups',
+    initializer: 'initialize',
+  });
+  console.log("Waiting for HeroNFT proxy deployment...");
+  await heroNFTProxy.waitForDeployment();
+  const heroNFTProxyAddress = await heroNFTProxy.getAddress();
+  console.log("HeroNFT proxy deployed to:", heroNFTProxyAddress);
+
+  // Deploy TacticsNFT proxy
+  console.log("Deploying TacticsNFT proxy...");
+  const tacticsNFTProxy = await upgrades.deployProxy(TacticsNFT, [], {
+    kind: 'uups',
+    initializer: 'initialize',
+  });
+  console.log("Waiting for TacticsNFT proxy deployment...");
+  await tacticsNFTProxy.waitForDeployment();
+  const tacticsNFTProxyAddress = await tacticsNFTProxy.getAddress();
+  console.log("TacticsNFT proxy deployed to:", tacticsNFTProxyAddress);
 
   // Set up contract interactions
   console.log("Setting up contract interactions...");
@@ -228,6 +268,25 @@ async function main() {
   console.log("Setting GridBuildings address in BattleSystem...");
   await battleSystemProxy.setGridBuildingsAddress(gridBuildingsProxyAddress);
 
+  // Set up Hero & Tactics contract interactions
+  console.log("Setting up Hero & Tactics contract interactions...");
+  
+  // Set GameState address in HeroNFT
+  console.log("Setting GameState address in HeroNFT...");
+  await heroNFTProxy.setGameStateAddress(gameStateProxyAddress);
+  
+  // Set GameState address in TacticsNFT
+  console.log("Setting GameState address in TacticsNFT...");
+  await tacticsNFTProxy.setGameStateAddress(gameStateProxyAddress);
+  
+  // Set HeroNFT address in GameState
+  console.log("Setting HeroNFT address in GameState...");
+  await gameStateProxy.setHeroNFTAddress(heroNFTProxyAddress);
+  
+  // Set TacticsNFT address in GameState
+  console.log("Setting TacticsNFT address in GameState...");
+  await gameStateProxy.setTacticsNFTAddress(tacticsNFTProxyAddress);
+
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
   console.log("Contract addresses:");
@@ -247,6 +306,10 @@ async function main() {
   console.log("Altar proxy:", altarProxyAddress);
   console.log("BattleSystem implementation:", battleSystemImplAddress);
   console.log("BattleSystem proxy:", battleSystemProxyAddress);
+  console.log("HeroNFT implementation:", heroNFTImplAddress);
+  console.log("HeroNFT proxy:", heroNFTProxyAddress);
+  console.log("TacticsNFT implementation:", tacticsNFTImplAddress);
+  console.log("TacticsNFT proxy:", tacticsNFTProxyAddress);
 
   // Save addresses to a file for frontend use
   const addresses = {
@@ -266,6 +329,10 @@ async function main() {
     altarProxy: altarProxyAddress,
     battleSystemImpl: battleSystemImplAddress,
     battleSystemProxy: battleSystemProxyAddress,
+    heroNFTImpl: heroNFTImplAddress,
+    heroNFTProxy: heroNFTProxyAddress,
+    tacticsNFTImpl: tacticsNFTImplAddress,
+    tacticsNFTProxy: tacticsNFTProxyAddress,
   };
 
   const fs = require('fs');

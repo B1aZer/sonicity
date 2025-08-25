@@ -12,7 +12,9 @@ export const CONTRACT_ADDRESSES = {
     GAME_STATE: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0", // Will be updated by update-addresses.sh
     DISTRICT_BUILDINGS: "0x9A676e781A523b5d0C0e43731313A708CB607508", // Will be updated by update-addresses.sh
     GRID_BUILDINGS: "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1", // Will be updated by update-addresses.sh
-    BATTLE_SYSTEM: "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d" // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d", // Will be updated by update-addresses.sh
+    HERO_NFT: "0x0000000000000000000000000000000000000000", // Will be updated by update-addresses.sh
+    TACTICS_NFT: "0x0000000000000000000000000000000000000000" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
