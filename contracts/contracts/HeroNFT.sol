@@ -305,10 +305,11 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
         uint256 cavalryCount,
         uint256 siegeCount
     ) external view returns (uint256) {
-        if (heroId == 0) return 0; // No hero deployed
-        
         require(_ownerOf(heroId) != address(0), "Hero does not exist");
         Hero memory hero = heroes[heroId];
+        
+        // Check if the hero is actually deployed
+        if (!hero.isDeployed) return 0;
         
         if (hero.class == HeroClass.WARRIOR) {
             return infantryCount * hero.troopBonus;

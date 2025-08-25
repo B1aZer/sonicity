@@ -1011,6 +1011,45 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     /**
+     * @dev Calculate total battle power including hero bonuses
+     * @param basePower Base power from troops
+     * @param heroId Hero ID (0 if no hero)
+     * @param infantryCount Number of infantry troops
+     * @param cavalryCount Number of cavalry troops
+     * @param siegeCount Number of siege troops
+     * @return uint256 Total power including hero bonuses
+     */
+    function calculateTotalBattlePower(
+        uint256 basePower,
+        uint256 heroId,
+        uint256 infantryCount,
+        uint256 cavalryCount,
+        uint256 siegeCount
+    ) internal view returns (uint256) {
+        if (heroId == 0 || heroNFTAddress == address(0)) {
+            return basePower;
+        }
+        
+        // Calculate hero bonus
+        (bool success, bytes memory data) = heroNFTAddress.staticcall(
+            abi.encodeWithSignature(
+                "calculateHeroBonus(uint256,uint256,uint256,uint256)",
+                heroId,
+                infantryCount,
+                cavalryCount,
+                siegeCount
+            )
+        );
+        
+        if (!success) {
+            return basePower; // Return base power if hero bonus calculation fails
+        }
+        
+        uint256 heroBonus = abi.decode(data, (uint256));
+        return basePower + heroBonus;
+    }
+
+    /**
      * @dev Deploy hero to current battle
      * @param heroId Hero ID to deploy
      */
@@ -1033,10 +1072,42 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         
         // Update battle hero deployment
         HeroTacticsDeployment storage deployment = battleHeroTactics[msg.sender];
-        if (activeBattles[msg.sender].attacker == msg.sender) {
+        Battle storage battle = activeBattles[msg.sender];
+        
+        if (battle.attacker == msg.sender) {
             deployment.attackerHeroId = heroId;
+            
+            // Recalculate attacker power with hero bonus
+            uint256 basePower = (
+                battle.deployedInfantry * troopConfigs[TroopType.INFANTRY].power +
+                battle.deployedCavalry * troopConfigs[TroopType.CAVALRY].power +
+                battle.deployedSiege * troopConfigs[TroopType.SIEGE].power
+            );
+            
+            uint256 totalPower = calculateTotalBattlePower(
+                basePower,
+                heroId,
+                battle.deployedInfantry,
+                battle.deployedCavalry,
+                battle.deployedSiege
+            );
+            
+            battle.attackerPower = totalPower;
         } else {
             deployment.defenderHeroId = heroId;
+            
+            // For defender, we need to recalculate their power too
+            // Note: Defender power is typically from defense tower, but we can add hero bonuses
+            uint256 basePower = battle.defenderPower;
+            uint256 totalPower = calculateTotalBattlePower(
+                basePower,
+                heroId,
+                0, // Defender doesn't deploy troops, so no troop counts
+                0,
+                0
+            );
+            
+            battle.defenderPower = totalPower;
         }
         
         // Note: Player should call deployHero directly in HeroNFT contract

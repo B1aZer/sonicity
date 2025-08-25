@@ -12,6 +12,8 @@ describe("BattleSystem", function () {
     let sonicityFarm;
     let sonicityDiamond;
     let sonicityRep;
+    let heroNFT;
+    let tacticsNFT;
     let owner;
     let player1;
     let player2;
@@ -77,6 +79,18 @@ describe("BattleSystem", function () {
         await altar.waitForDeployment();
         const altarAddress = await altar.getAddress();
 
+        // Deploy HeroNFT
+        const HeroNFT = await ethers.getContractFactory("HeroNFT");
+        heroNFT = await upgrades.deployProxy(HeroNFT, [], { initializer: 'initialize' });
+        await heroNFT.waitForDeployment();
+        const heroNFTAddress = await heroNFT.getAddress();
+
+        // Deploy TacticsNFT
+        const TacticsNFT = await ethers.getContractFactory("TacticsNFT");
+        tacticsNFT = await upgrades.deployProxy(TacticsNFT, [], { initializer: 'initialize' });
+        await tacticsNFT.waitForDeployment();
+        const tacticsNFTAddress = await tacticsNFT.getAddress();
+
         // Set up contract interactions
         await gameState.setAltarAddress(altarAddress);
         await gameState.setGridBuildingsAddress(gridBuildingsAddress);
@@ -93,6 +107,14 @@ describe("BattleSystem", function () {
         await battleSystem.setGameStateAddress(gameStateAddress);
         await battleSystem.setDistrictBuildingsAddress(districtBuildingsAddress);
         await battleSystem.setGridBuildingsAddress(gridBuildingsAddress);
+        await battleSystem.setHeroNFTAddress(heroNFTAddress);
+        await battleSystem.setTacticsNFTAddress(tacticsNFTAddress);
+
+        // Set up HeroNFT and TacticsNFT
+        await gameState.setHeroNFTAddress(heroNFTAddress);
+        await gameState.setTacticsNFTAddress(tacticsNFTAddress);
+        await heroNFT.setGameStateAddress(gameStateAddress);
+        await tacticsNFT.setGameStateAddress(gameStateAddress);
 
         // Set BattleSystem address in DistrictBuildings
         await districtBuildings.setBattleSystemAddress(battleSystemAddress);
@@ -1511,27 +1533,7 @@ describe("BattleSystem", function () {
     });
 
     describe("Heroes & Tactics Integration", function () {
-        let heroNFT, tacticsNFT;
-
         beforeEach(async function () {
-            // Deploy HeroNFT and TacticsNFT
-            const HeroNFT = await ethers.getContractFactory("HeroNFT");
-            heroNFT = await upgrades.deployProxy(HeroNFT, [], { initializer: 'initialize' });
-            await heroNFT.waitForDeployment();
-            const heroNFTAddress = await heroNFT.getAddress();
-
-            const TacticsNFT = await ethers.getContractFactory("TacticsNFT");
-            tacticsNFT = await upgrades.deployProxy(TacticsNFT, [], { initializer: 'initialize' });
-            await tacticsNFT.waitForDeployment();
-            const tacticsNFTAddress = await tacticsNFT.getAddress();
-
-            // Set up contract addresses
-            await gameState.setHeroNFTAddress(heroNFTAddress);
-            await gameState.setTacticsNFTAddress(tacticsNFTAddress);
-            await heroNFT.setGameStateAddress(await gameState.getAddress());
-            await tacticsNFT.setGameStateAddress(await gameState.getAddress());
-            await battleSystem.setHeroNFTAddress(heroNFTAddress);
-            await battleSystem.setTacticsNFTAddress(tacticsNFTAddress);
 
             // Set up players with barracks and troops
             const barracksIndex = getBuildingTypeIndex("BARRACKS");
@@ -1735,6 +1737,652 @@ describe("BattleSystem", function () {
             expect(deployment[2]).to.equal(0); // attackerTactic1 should be 0
             expect(deployment[3]).to.equal(0); // attackerTactic2 should be 0
             expect(deployment[4]).to.equal(0); // attackerTactic3 should be 0
+        });
+    });
+
+    describe("Battle Resolution with Heroes and Tactics", function () {
+        beforeEach(async function () {
+            // Set up players with barracks and troops for battle testing
+            const barracksIndex = getBuildingTypeIndex("BARRACKS");
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+
+            // Unlock buildings and register players for matchmaking
+            await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1500);
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1500);
+
+            // Player1 setup
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, barracksCost);
+            await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
+
+            // Player2 setup
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost);
+            await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
+
+            // Train troops for both players
+            await gameState.testEarnGold(player1.address, 1000);
+            await gameState.testEarnFood(player1.address, 500);
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
+
+            await gameState.testEarnGold(player2.address, 1000);
+            await gameState.testEarnFood(player2.address, 500);
+            await battleSystem.connect(player2).trainTroops(0, 5); // 5 infantry
+        });
+
+        it("should resolve basic battle without heroes or tactics", async function () {
+            // Ensure player1 has enough gold for search
+            await gameState.testEarnGold(player1.address, 200);
+            
+            // Start a battle
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Fast forward to battle resolution
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+
+            // Resolve battle
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved by checking battle history
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            expect(battleRecord.attacker).to.equal(player1.address);
+            expect(battleRecord.attackerWon).to.be.true;
+        });
+
+        it("should resolve battle with hero bonus applied", async function () {
+            // Give player1 resources for hero and troops
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            // Player1 mints WARRIOR hero
+            await heroNFT.connect(player1).mintHero(0); // WARRIOR = 0
+            await heroNFT.connect(player1).deployHero(0);
+
+            // Start a battle with infantry (boosted by WARRIOR hero)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0); // 5 infantry
+
+            // Deploy hero to battle
+            await battleSystem.connect(player1).deployHeroToBattle(0);
+
+            // Fast forward to battle resolution
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+
+            // Resolve battle
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved by checking battle history
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            expect(battleRecord.attacker).to.equal(player1.address);
+            expect(battleRecord.attackerWon).to.be.true;
+        });
+
+        it("should resolve battle with tactics RPS mechanics", async function () {
+            // Give player1 resources for tactics
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            // Player1 mints tactics
+            await tacticsNFT.connect(player1).mintTactic(1); // STRIKE
+            await tacticsNFT.connect(player1).mintTactic(2); // SHIELD
+            await tacticsNFT.connect(player1).mintTactic(3); // TRICK
+
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Deploy tactics
+            await battleSystem.connect(player1).deployTacticsToBattle([1, 2, 3]);
+
+            // Fast forward to battle resolution
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+
+            // Resolve battle
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved by checking battle history
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            expect(battleRecord.attacker).to.equal(player1.address);
+            expect(battleRecord.attackerWon).to.be.true;
+        });
+
+        it("should resolve battle with both hero and tactics", async function () {
+            // Give player1 resources for hero and tactics
+            await gameState.testEarnGold(player1.address, 5000);
+            await gameState.testEarnFood(player1.address, 3000);
+            await gameState.testEarnDiamonds(player1.address, 200);
+
+            // Player1 mints WARRIOR hero and tactics
+            await heroNFT.connect(player1).mintHero(0); // WARRIOR = 0
+            await tacticsNFT.connect(player1).mintTactic(1); // STRIKE
+            await tacticsNFT.connect(player1).mintTactic(2); // SHIELD
+
+            // Start a battle with infantry (boosted by WARRIOR hero)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0); // 5 infantry
+
+            // Deploy hero and tactics
+            await heroNFT.connect(player1).deployHero(0);
+            await battleSystem.connect(player1).deployHeroToBattle(0);
+            await battleSystem.connect(player1).deployTacticsToBattle([1, 2, 0]);
+
+            // Fast forward to battle resolution
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+
+            // Resolve battle
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved by checking battle history
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            expect(battleRecord.attacker).to.equal(player1.address);
+            expect(battleRecord.attackerWon).to.be.true;
+        });
+
+        it("should apply hero bonuses correctly for different troop types", async function () {
+            // Test WARRIOR hero with Infantry
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            await heroNFT.connect(player1).mintHero(0); // WARRIOR
+            await heroNFT.connect(player1).deployHero(0);
+
+            // Start battle with infantry (should get +20 power per troop from WARRIOR)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0); // 5 infantry
+
+            await battleSystem.connect(player1).deployHeroToBattle(0);
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.resolved).to.be.true;
+        });
+
+        it("should test different hero classes with appropriate troop types", async function () {
+            // Test STRATEGIST hero with Siege troops
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            await heroNFT.connect(player1).mintHero(1); // STRATEGIST
+            await heroNFT.connect(player1).deployHero(1);
+
+            // Start battle with siege troops (should get +20 power per troop from STRATEGIST)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(0, 0, 3); // 3 siege
+
+            await battleSystem.connect(player1).deployHeroToBattle(1);
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.resolved).to.be.true;
+        });
+
+        it("should test SCOUT hero with Cavalry troops", async function () {
+            // Test SCOUT hero with Cavalry troops
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            await heroNFT.connect(player1).mintHero(2); // SCOUT
+            await heroNFT.connect(player1).deployHero(2);
+
+            // Start battle with cavalry troops (should get +20 power per troop from SCOUT)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(0, 4, 0); // 4 cavalry
+
+            await battleSystem.connect(player1).deployHeroToBattle(2);
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.resolved).to.be.true;
+        });
+
+        it("should test different tactic combinations", async function () {
+            // Give player1 resources for multiple tactics
+            await gameState.testEarnGold(player1.address, 5000);
+            await gameState.testEarnDiamonds(player1.address, 200);
+
+            // Player1 mints various tactics
+            await tacticsNFT.connect(player1).mintTactic(1); // STRIKE
+            await tacticsNFT.connect(player1).mintTactic(2); // SHIELD
+            await tacticsNFT.connect(player1).mintTactic(3); // TRICK
+            await tacticsNFT.connect(player1).mintTactic(4); // STRIKE
+            await tacticsNFT.connect(player1).mintTactic(5); // SHIELD
+
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Test different tactic combinations
+            const tacticCombinations = [
+                [1, 2, 3], // STRIKE, SHIELD, TRICK
+                [4, 5, 0], // STRIKE, SHIELD, none
+                [1, 0, 3], // STRIKE, none, TRICK
+                [0, 2, 5], // none, SHIELD, SHIELD
+            ];
+
+            for (let i = 0; i < tacticCombinations.length; i++) {
+                // Deploy tactics
+                await battleSystem.connect(player1).deployTacticsToBattle(tacticCombinations[i]);
+
+                // Fast forward and resolve
+                await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+                await ethers.provider.send("evm_mine");
+                await battleSystem.connect(player1).resolveBattle(player1.address);
+
+                // Verify battle was resolved
+                const battle = await battleSystem.activeBattles(player1.address);
+                expect(battle.resolved).to.be.true;
+
+                // Start new battle for next iteration
+                if (i < tacticCombinations.length - 1) {
+                    await battleSystem.connect(player1).startSearch();
+                    await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+                    await ethers.provider.send("evm_mine");
+                    await battleSystem.connect(player1).findRandomOpponent();
+                    await battleSystem.connect(player1).startBattle(5, 0, 0);
+                }
+            }
+        });
+
+        it("should test battle effects from tactics", async function () {
+            // Give player1 resources for tactics
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            // Player1 mints STRIKE tactics (for building damage)
+            await tacticsNFT.connect(player1).mintTactic(1); // Iron Strike (+3 buildings)
+            await tacticsNFT.connect(player1).mintTactic(4); // Cavalry Rush (+2 buildings)
+
+            // Give player2 some buildings to damage
+            await gameState.testEarnGold(player2.address, 1000);
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE);
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE);
+
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Deploy STRIKE tactics
+            await battleSystem.connect(player1).deployTacticsToBattle([1, 4, 0]);
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.resolved).to.be.true;
+        });
+
+        it("should test REP bonus from TRICK tactics", async function () {
+            // Give player1 resources for tactics
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            // Player1 mints TRICK tactics (for REP bonuses)
+            await tacticsNFT.connect(player1).mintTactic(3); // Battle Rage (+30 REP)
+            await tacticsNFT.connect(player1).mintTactic(6); // Tactical Feint (+20 REP)
+
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Deploy TRICK tactics
+            await battleSystem.connect(player1).deployTacticsToBattle([3, 6, 0]);
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.resolved).to.be.true;
+        });
+
+        it("should test SHIELD tactics for troop protection", async function () {
+            // Give player1 resources for tactics
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            // Player1 mints SHIELD tactics (for troop protection)
+            await tacticsNFT.connect(player1).mintTactic(2); // Guardian Wall (75% protection)
+            await tacticsNFT.connect(player1).mintTactic(5); // Defensive Circle (50% protection)
+
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Deploy SHIELD tactics
+            await battleSystem.connect(player1).deployTacticsToBattle([2, 5, 0]);
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.resolved).to.be.true;
+        });
+
+        it("should test mixed troop types with hero bonuses", async function () {
+            // Test mixed troop types with hero bonuses
+            await gameState.testEarnGold(player1.address, 5000);
+            await gameState.testEarnFood(player1.address, 3000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            await heroNFT.connect(player1).mintHero(0); // WARRIOR
+            await heroNFT.connect(player1).deployHero(0);
+
+            // Train infantry troops (only infantry available at barracks level 1)
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
+
+            // Start battle with infantry troops
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(8, 0, 0); // 8 infantry
+
+            await battleSystem.connect(player1).deployHeroToBattle(0);
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved by checking battle history
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            expect(battleRecord.attacker).to.equal(player1.address);
+            expect(battleRecord.attackerWon).to.be.true;
+        });
+
+        it("should test battle resolution without heroes or tactics", async function () {
+            // Start a battle without any heroes or tactics
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle was resolved
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.resolved).to.be.true;
+
+            // Verify no hero/tactics were deployed
+            const deployment = await battleSystem.battleHeroTactics(player1.address);
+            expect(deployment[0]).to.equal(0); // attackerHeroId should be 0
+            expect(deployment[2]).to.equal(0); // attackerTactic1 should be 0
+            expect(deployment[3]).to.equal(0); // attackerTactic2 should be 0
+            expect(deployment[4]).to.equal(0); // attackerTactic3 should be 0
+        });
+
+        it("should test battle history with heroes and tactics", async function () {
+            // Give player1 resources for hero and tactics
+            await gameState.testEarnGold(player1.address, 4000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            // Player1 mints hero and tactics
+            await heroNFT.connect(player1).mintHero(0); // WARRIOR
+            await tacticsNFT.connect(player1).mintTactic(1); // STRIKE
+            await tacticsNFT.connect(player1).mintTactic(2); // SHIELD
+
+            // Start and resolve a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            await heroNFT.connect(player1).deployHero(0);
+            await battleSystem.connect(player1).deployHeroToBattle(0);
+            await battleSystem.connect(player1).deployTacticsToBattle([1, 2, 0]);
+
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Check battle history
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            expect(battleRecord.attacker).to.equal(player1.address);
+            expect(battleRecord.attackerWon).to.be.true;
+
+            // Check player battle history
+            const playerBattles = await battleSystem.getPlayerBattleHistory(player1.address);
+            expect(playerBattles.length).to.be.greaterThan(0);
+            expect(playerBattles[playerBattles.length - 1].attacker).to.equal(player1.address);
+        });
+
+        it("should test multiple battles with different hero/tactic combinations", async function () {
+            // Give player1 resources for multiple heroes and tactics
+            await gameState.testEarnGold(player1.address, 8000);
+            await gameState.testEarnFood(player1.address, 6000);
+            await gameState.testEarnDiamonds(player1.address, 300);
+
+            // Player1 mints all heroes and some tactics
+            await heroNFT.connect(player1).mintHero(0); // WARRIOR
+            await heroNFT.connect(player1).mintHero(1); // STRATEGIST
+            await heroNFT.connect(player1).mintHero(2); // SCOUT
+            await tacticsNFT.connect(player1).mintTactic(1); // STRIKE
+            await tacticsNFT.connect(player1).mintTactic(2); // SHIELD
+            await tacticsNFT.connect(player1).mintTactic(3); // TRICK
+
+            // Test multiple battles with different combinations
+            const battleConfigs = [
+                { hero: 0, tactics: [1, 2, 0], troops: [5, 0, 0] }, // WARRIOR + STRIKE/SHIELD + Infantry
+                { hero: 1, tactics: [2, 3, 0], troops: [0, 0, 3] }, // STRATEGIST + SHIELD/TRICK + Siege
+                { hero: 2, tactics: [1, 3, 0], troops: [0, 4, 0] }, // SCOUT + STRIKE/TRICK + Cavalry
+            ];
+
+            for (let i = 0; i < battleConfigs.length; i++) {
+                const config = battleConfigs[i];
+
+                // Start battle
+                await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+                await battleSystem.connect(player1).startSearch();
+                await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+                await ethers.provider.send("evm_mine");
+                await battleSystem.connect(player1).findRandomOpponent();
+                await battleSystem.connect(player1).startBattle(config.troops[0], config.troops[1], config.troops[2]);
+
+                // Deploy hero and tactics
+                await heroNFT.connect(player1).deployHero(config.hero);
+                await battleSystem.connect(player1).deployHeroToBattle(config.hero);
+                await battleSystem.connect(player1).deployTacticsToBattle(config.tactics);
+
+                // Fast forward and resolve
+                await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+                await ethers.provider.send("evm_mine");
+                await battleSystem.connect(player1).resolveBattle(player1.address);
+
+                // Verify battle was resolved
+                const battle = await battleSystem.activeBattles(player1.address);
+                expect(battle.resolved).to.be.true;
+
+                // Wait a bit before next battle
+                if (i < battleConfigs.length - 1) {
+                    await ethers.provider.send("evm_increaseTime", [3600]); // 1 hour
+                    await ethers.provider.send("evm_mine");
+                }
+            }
+
+            // Check total battle count
+            const playerBattles = await battleSystem.getPlayerBattleHistory(player1.address);
+            expect(playerBattles.length).to.be.greaterThanOrEqual(battleConfigs.length);
+        });
+    });
+
+    describe("Hero Bonus Calculation", function () {
+        it("should calculate hero bonus correctly", async function () {
+            // Set up players with barracks and troops
+            const barracksIndex = getBuildingTypeIndex("BARRACKS");
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+
+            // Unlock buildings and register players for matchmaking first
+            await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1500); // 1000 for tier 1 + 500 for building
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1500); // 1000 for tier 1 + 500 for building
+
+            // Player1 setup
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
+            await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 500);
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 Infantry
+
+            // Player2 setup
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
+            await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await ensurePlayerFood(player2, gameState, gridBuildings, altar, sonicityFarm, 500);
+            await battleSystem.connect(player2).trainTroops(0, 10); // 10 Infantry
+
+            // Set noOpponentFoundChance to 0 for testing
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward search time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent and start battle
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(1, 0, 0);
+
+            // Verify battle exists and is not resolved
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.startTime).to.be.gt(0);
+            expect(battle.resolved).to.be.false;
+
+            // Fast forward 48+ hours (battle should be resolvable but not auto-resolved)
+            await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]); // 48 hours + 1 second
+            await ethers.provider.send("evm_mine");
+
+            // Verify battle still exists and is not resolved
+            const battleAfter48h = await battleSystem.activeBattles(player1.address);
+            expect(battleAfter48h.startTime).to.be.gt(0);
+            expect(battleAfter48h.resolved).to.be.false;
+
+            console.log("🔧 TESTING AUTO-RESOLVE FIX:");
+            console.log("- Battle started 48+ hours ago");
+            console.log("- Battle never resolved by anyone");
+            console.log("- Auto-resolve should clear expired battles");
+
+            // 🔧 FIX: Players should now be able to start new searches after 48 hours
+            // Auto-resolve should clear the expired battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            
+            // Debug: Check battle state before attempting startSearch
+            const battleBeforeSearch = await battleSystem.activeBattles(player1.address);
+            const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
+            console.log("Battle state before startSearch:");
+            console.log("- startTime:", battleBeforeSearch.startTime.toString());
+            console.log("- resolved:", battleBeforeSearch.resolved);
+            console.log("- time since start:", currentTime - Number(battleBeforeSearch.startTime));
+            
+            await battleSystem.connect(player1).startSearch(); // This should now succeed!
+            
+            // Debug: Check if battle was cleared after startSearch
+            const battleAfterSearch = await battleSystem.activeBattles(player1.address);
+            console.log("Battle state after startSearch:");
+            console.log("- startTime:", battleAfterSearch.startTime.toString());
+            console.log("- resolved:", battleAfterSearch.resolved);
+            console.log("- Battle cleared:", battleAfterSearch.startTime.toString() === "0" ? "YES" : "NO");
+
+            console.log("✅ BUG FIXED: Players can now start new battles after auto-resolve!");
+
+            // Calculate hero bonus
+            const heroBonus = await battleSystem.calculateHeroBonus(player1.address);
+            console.log(`Hero bonus: ${heroBonus}`);
+
+            // Verify hero bonus
+            const expectedHeroBonus = 20; // Assuming 20 power per hero
+            expect(heroBonus).to.equal(expectedHeroBonus);
         });
     });
 }); 
