@@ -523,12 +523,13 @@ export class StakePage extends BasePage {
                 const unitsPerCycle = item.level;
                 productionRateDisplay = `${unitsPerCycle} per ${hoursPerUnit}h`;
             } else if (item.buildingType === 4) {
-                // For Yield Stations, show dynamic rate in SONIC per second
+                // For Yield Stations, show dynamic rate in SONIC per hour
                 if (productionRate > 0) {
                     const ratePerHour = productionRate * 3600; // Convert per-second to per-hour
-                    productionRateDisplay = `${ratePerHour.toFixed(6)} SONIC/hr`;
+                    productionRateDisplay = `${ratePerHour.toFixed(2)} SONIC/hr`;
+                    console.log(`[DEBUG] Yield Station productionRate: ${productionRate} SONIC/sec, ratePerHour: ${ratePerHour}, display: ${productionRateDisplay}`);
                 } else {
-                    productionRateDisplay = '0 SONIC/hr';
+                    productionRateDisplay = '0.00 SONIC/hr';
                 }
             } else {
                 // For Houses and Farms, show as "X per hour"
@@ -745,8 +746,11 @@ export class StakePage extends BasePage {
             if (building.buildingType === 4) {
                 try {
                     const yieldInfo = await this.contracts.gridBuildings.getYieldStationInfo(userAddress, building.id);
-                    building.yieldRate = Number(yieldInfo.revenueRate) / 1e18; // Convert from wei to SONIC
+                    // Convert from wei per second to SONIC per second
+                    building.yieldRate = Number(yieldInfo.revenueRate) / 1e18;
+                    console.log(`[DEBUG] Building ${building.id} yieldRate: ${building.yieldRate} SONIC/sec, ${building.yieldRate * 3600} SONIC/hr`);
                 } catch (error) {
+                    console.error(`[ERROR] Failed to get yield rate for building ${building.id}:`, error);
                     building.yieldRate = 0; // Fallback to 0 if error
                 }
             }

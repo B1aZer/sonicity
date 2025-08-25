@@ -264,26 +264,24 @@ describe("GridBuildings", function () {
       // Verify player is in Tier 1
       const playerState = await gameState.playerState(player1Address);
       expect(playerState.tier, "Player should be tier 1").to.equal(1);
+      expect(playerState.buildingSlots, "Tier 1 should have 6 building slots").to.equal(6);
       
-      // For Tier 0, verify we can't create more than 9 houses
-      // First verify current count
+      // Verify current counts (1 house + 1 farm from beforeEach)
       const initialHouseCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.HOUSE);
-      expect(initialHouseCount, "Initial house count should be 1").to.equal(BigInt(1)); // Should have 2 houses from beforeEach
+      expect(initialHouseCount, "Initial house count should be 1").to.equal(BigInt(1));
 
-      // First verify current counts
       const initialFarmCount = await gridBuildings.buildingCounts(player1Address, GridBuildingType.FARM);
-      expect(initialFarmCount, "Initial farm count should be 2").to.equal(BigInt(1)); // Should have 2 farms from beforeEach (1 from main + 1 from Farm Management)
+      expect(initialFarmCount, "Initial farm count should be 1").to.equal(BigInt(1));
 
-      // Create farms until we reach the limit
-      for (let i = 0; i < 9; i++) {
+      // Create farms until we reach the tier 1 limit (6 total - 2 existing = 4 more)
+      for (let i = 0; i < 4; i++) {
         await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
       }
-      await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
 
       const activeBuildings = await gridBuildings.getActiveBuildings(player1Address);
-      expect(activeBuildings.length, "Active buildings should be 12").to.equal(12);
+      expect(activeBuildings.length, "Active buildings should be 6").to.equal(6);
       
-      // Try to create one more farm (should fail as we've reached the 12 building limit)
+      // Try to create one more farm (should fail as we've reached the 6 building limit for tier 1)
       await expect(
         mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM)
       ).to.be.revertedWith("Building slot limit reached for current tier");
@@ -1088,10 +1086,10 @@ describe("GridBuildings", function () {
     it("Should not damage more buildings than specified", async function () {
       const player1Address = await player1.getAddress();
       
-      // Create multiple houses
+      // This test section's beforeEach already creates 2 houses + 2 farms = 4 buildings
+      // Tier 1 has 6 slots, so we can create 2 more buildings
       const { buildingId: house1Id } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       const { buildingId: house2Id } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
-      const { buildingId: house3Id } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
       
       // Try to damage 2 buildings
       const damageAmount = 2;

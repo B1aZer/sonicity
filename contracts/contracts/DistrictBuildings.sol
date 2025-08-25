@@ -265,7 +265,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Hire heroes",
             tier: 2,
             isCoreBuilding: false,
-            disabled: true
+            disabled: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.ADVENTURE_CAMP] = DistrictBuildingConfig({
@@ -301,7 +301,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Learn new tactics",
             tier: 2,
             isCoreBuilding: false,
-            disabled: true
+            disabled: false
         });
     }
 
@@ -364,7 +364,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
     function _initializeTier4Buildings() internal {
         districtBuildingConfigs[DistrictBuildingType.COUNCIL_HALL] = DistrictBuildingConfig({
             name: "Council Hall",
-            unlockCost: 10000,
+            unlockCost: 14000,
             buildCost: 500,
             upgradeCost: 0,
             maxLevel: 1,
@@ -376,7 +376,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
 
         districtBuildingConfigs[DistrictBuildingType.FORTRESS_WALLS] = DistrictBuildingConfig({
             name: "Fortress Walls",
-            unlockCost: 12000,
+            unlockCost: 18000,
             buildCost: 500,
             upgradeCost: 0,
             maxLevel: 1,
@@ -388,7 +388,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
 
         districtBuildingConfigs[DistrictBuildingType.EMBASSY_HOME] = DistrictBuildingConfig({
             name: "Embassy Home",
-            unlockCost: 15000,
+            unlockCost: 25000,
             buildCost: 500,
             upgradeCost: 0,
             maxLevel: 1,
@@ -400,7 +400,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
 
         districtBuildingConfigs[DistrictBuildingType.TREASURY_VAULT] = DistrictBuildingConfig({
             name: "Treasury Vault",
-            unlockCost: 20000,
+            unlockCost: 30000,
             buildCost: 1000,
             upgradeCost: 0,
             maxLevel: 1,

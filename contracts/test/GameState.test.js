@@ -216,7 +216,7 @@ describe("GameState", function () {
       // Get initial state
       const initialState = await gameState.playerState(player1Address);
       expect(initialState.tier).to.equal(0);
-      expect(initialState.buildingSlots).to.equal(9);
+      expect(initialState.buildingSlots).to.equal(4);
       
       // Donate 4000 gold
       await gameState.connect(player1).donateGold(4000);
@@ -224,7 +224,7 @@ describe("GameState", function () {
       // Check final state
       const finalState = await gameState.playerState(player1Address);
       expect(finalState.tier).to.equal(2); // Should be tier 2 (meets 1000 and 2500 requirements)
-      expect(finalState.buildingSlots).to.equal(16); // Tier 2 gives 16 slots
+      expect(finalState.buildingSlots).to.equal(9); // Tier 2 gives 9 slots
       expect(finalState.treasury).to.equal(4000);
       
       // Verify tier requirements
