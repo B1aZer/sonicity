@@ -15,12 +15,44 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     address public gameStateAddress;
     address public districtBuildingsAddress;
     address public gridBuildingsAddress;
+    address public heroNFTAddress;
+    address public tacticsNFTAddress;
 
     // Troop types
     enum TroopType {
         INFANTRY,
         CAVALRY,
         SIEGE
+    }
+
+    // Tactic types for RPS mechanics
+    enum TacticType { STRIKE, SHIELD, TRICK }
+
+    // Battle effect types
+    enum EffectType { 
+        STRIKE_DAMAGE,      // Damage buildings (+3, +2, +1)
+        SHIELD_PROTECTION,  // Protect troops (75%, 50%, 25% reduction)
+        TRICK_REP_BONUS     // REP points (+30, +20, +15)
+    }
+
+    // Battle effect structure
+    struct BattleEffect {
+        EffectType effectType;
+        uint256 magnitude;  // Amount of damage/bonus
+        address target;     // Target player
+        uint256 duration;   // Duration for temporary effects (0 for instant)
+    }
+
+    // Hero & Tactics deployment data
+    struct HeroTacticsDeployment {
+        uint256 attackerHeroId;    // 0 if no hero deployed
+        uint256 defenderHeroId;    // 0 if no hero deployed
+        uint8 attackerTactic1;     // 0 if no tactic
+        uint8 attackerTactic2;     // 0 if no tactic
+        uint8 attackerTactic3;     // 0 if no tactic
+        uint8 defenderTactic1;     // 0 if no tactic
+        uint8 defenderTactic2;     // 0 if no tactic
+        uint8 defenderTactic3;     // 0 if no tactic
     }
 
     // Battle state
@@ -53,6 +85,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     // Mappings
     mapping(address => mapping(TroopType => uint256)) public playerTroops;
     mapping(address => Battle) public activeBattles;
+    mapping(address => HeroTacticsDeployment) public battleHeroTactics;
     mapping(TroopType => TroopConfig) public troopConfigs;
 
     // Constants
@@ -294,8 +327,22 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             deployedSiege: siegeCount
         });
 
+        // Initialize hero and tactics deployment data
+        HeroTacticsDeployment memory deployment = HeroTacticsDeployment({
+            attackerHeroId: 0,                // No hero deployed initially
+            defenderHeroId: 0,                // No hero deployed initially
+            attackerTactic1: 0,               // No tactics deployed initially
+            attackerTactic2: 0,               // No tactics deployed initially
+            attackerTactic3: 0,               // No tactics deployed initially
+            defenderTactic1: 0,               // No tactics deployed initially
+            defenderTactic2: 0,               // No tactics deployed initially
+            defenderTactic3: 0                // No tactics deployed initially
+        });
+
         activeBattles[msg.sender] = newBattle;
         activeBattles[defender] = newBattle;
+        battleHeroTactics[msg.sender] = deployment;
+        battleHeroTactics[defender] = deployment;
 
         // Lock troops
         playerTroops[msg.sender][TroopType.INFANTRY] -= infantryCount;
@@ -875,6 +922,182 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         return playerBattles[player].length;
     }
 
+    // Hero & Tactics Functions
+
+    /**
+     * @dev Calculate RPS multiplier for tactics
+     * @param attackerTactics Attacker's tactics
+     * @param defenderTactics Defender's tactics
+     * @return uint256 Power multiplier (100 = no bonus, 130 = 30% bonus)
+     */
+    function calculateRPSMultiplier(uint8[3] memory attackerTactics, uint8[3] memory defenderTactics) internal view returns (uint256) {
+        uint256 totalMultiplier = 100; // Base multiplier
+        
+        for (uint8 round = 0; round < 3; round++) {
+            if (attackerTactics[round] > 0 && defenderTactics[round] > 0) {
+                // Get tactic types
+                (bool success, bytes memory data) = tacticsNFTAddress.staticcall(
+                    abi.encodeWithSignature("getTactic(uint8)", attackerTactics[round])
+                );
+                if (!success) continue;
+                
+                TacticType attackerType = abi.decode(data, (TacticType));
+                
+                (success, data) = tacticsNFTAddress.staticcall(
+                    abi.encodeWithSignature("getTactic(uint8)", defenderTactics[round])
+                );
+                if (!success) continue;
+                
+                TacticType defenderType = abi.decode(data, (TacticType));
+                
+                // Apply RPS logic: STRIKE > SHIELD > TRICK > STRIKE
+                if ((attackerType == TacticType.STRIKE && defenderType == TacticType.SHIELD) ||
+                    (attackerType == TacticType.SHIELD && defenderType == TacticType.TRICK) ||
+                    (attackerType == TacticType.TRICK && defenderType == TacticType.STRIKE)) {
+                    totalMultiplier += 30; // 30% bonus for winning RPS
+                }
+            }
+        }
+        
+        return totalMultiplier;
+    }
+
+    /**
+     * @dev Select random effect from winning tactics
+     * @param winningTactics Array of winning tactic IDs
+     * @param isAttackerWinner Whether the attacker won
+     * @return BattleEffect The selected effect
+     */
+    function selectRandomEffect(uint8[3] memory winningTactics, bool isAttackerWinner) internal view returns (BattleEffect memory) {
+        // Count winning tactics by type
+        uint8 strikeCount = 0;
+        uint8 shieldCount = 0;
+        uint8 trickCount = 0;
+        
+        for (uint8 i = 0; i < 3; i++) {
+            if (winningTactics[i] > 0) {
+                (bool success, bytes memory data) = tacticsNFTAddress.staticcall(
+                    abi.encodeWithSignature("getTactic(uint8)", winningTactics[i])
+                );
+                if (success) {
+                    TacticType tacticType = abi.decode(data, (TacticType));
+                    if (tacticType == TacticType.STRIKE) strikeCount++;
+                    else if (tacticType == TacticType.SHIELD) shieldCount++;
+                    else if (tacticType == TacticType.TRICK) trickCount++;
+                }
+            }
+        }
+        
+        // Randomly select effect type based on winning tactics
+        uint256 random = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao))) % 100;
+        address target = isAttackerWinner ? activeBattles[msg.sender].defender : activeBattles[msg.sender].attacker;
+        
+        if (strikeCount > 0 && random < 33) {
+            // Select STRIKE effect (damage buildings)
+            uint256 magnitude = random % 3 + 1; // 1, 2, or 3 buildings
+            return BattleEffect(EffectType.STRIKE_DAMAGE, magnitude, target, 0);
+        } else if (shieldCount > 0 && random < 66) {
+            // Select SHIELD effect (protect troops)
+            uint256 magnitude = random < 50 ? 75 : (random < 75 ? 50 : 25); // 75%, 50%, or 25% protection
+            return BattleEffect(EffectType.SHIELD_PROTECTION, magnitude, target, 0);
+        } else if (trickCount > 0) {
+            // Select TRICK effect (REP bonus)
+            uint256 magnitude = random < 50 ? 30 : (random < 75 ? 20 : 15); // 30, 20, or 15 REP
+            return BattleEffect(EffectType.TRICK_REP_BONUS, magnitude, target, 0);
+        }
+        
+        // Default to STRIKE effect if no winning tactics
+        return BattleEffect(EffectType.STRIKE_DAMAGE, 1, target, 0);
+    }
+
+    /**
+     * @dev Deploy hero to current battle
+     * @param heroId Hero ID to deploy
+     */
+    function deployHeroToBattle(uint256 heroId) external {
+        require(activeBattles[msg.sender].startTime > 0, "No active battle");
+        require(!activeBattles[msg.sender].resolved, "Battle already resolved");
+        require(heroNFTAddress != address(0), "HeroNFT not configured");
+        
+        // Check if player owns the hero and it's not already deployed
+        (bool success, bytes memory data) = heroNFTAddress.staticcall(
+            abi.encodeWithSignature("ownerOf(uint256)", heroId)
+        );
+        require(success && abi.decode(data, (address)) == msg.sender, "Not your hero or hero doesn't exist");
+        
+        // Check if hero is already deployed
+        (success, data) = heroNFTAddress.staticcall(
+            abi.encodeWithSignature("getDeployedHero(address)", msg.sender)
+        );
+        require(success && abi.decode(data, (uint256)) == 0, "Hero already deployed");
+        
+        // Update battle hero deployment
+        HeroTacticsDeployment storage deployment = battleHeroTactics[msg.sender];
+        if (activeBattles[msg.sender].attacker == msg.sender) {
+            deployment.attackerHeroId = heroId;
+        } else {
+            deployment.defenderHeroId = heroId;
+        }
+        
+        // Note: Player should call deployHero directly in HeroNFT contract
+        // This function only tracks the deployment in BattleSystem
+    }
+
+    /**
+     * @dev Deploy tactics to current battle
+     * @param tactics Array of tactic IDs to deploy [tactic1, tactic2, tactic3] (0 if no tactic)
+     */
+    function deployTacticsToBattle(uint8[3] memory tactics) external {
+        require(activeBattles[msg.sender].startTime > 0, "No active battle");
+        require(!activeBattles[msg.sender].resolved, "Battle already resolved");
+        require(tacticsNFTAddress != address(0), "TacticsNFT not configured");
+        
+        // Validate tactics ownership
+        (bool success, bytes memory data) = tacticsNFTAddress.staticcall(
+            abi.encodeWithSignature("validateTacticsForBattle(address,uint8[3])", msg.sender, tactics)
+        );
+        require(success && abi.decode(data, (bool)), "Invalid tactics or not owned");
+        
+        // Update battle tactics deployment
+        HeroTacticsDeployment storage deployment = battleHeroTactics[msg.sender];
+        if (activeBattles[msg.sender].attacker == msg.sender) {
+            deployment.attackerTactic1 = tactics[0];
+            deployment.attackerTactic2 = tactics[1];
+            deployment.attackerTactic3 = tactics[2];
+        } else {
+            deployment.defenderTactic1 = tactics[0];
+            deployment.defenderTactic2 = tactics[1];
+            deployment.defenderTactic3 = tactics[2];
+        }
+    }
+
+    /**
+     * @dev Apply battle effect
+     * @param effect The battle effect to apply
+     */
+    function applyBattleEffect(BattleEffect memory effect) internal {
+        if (effect.effectType == EffectType.STRIKE_DAMAGE) {
+            // Damage grid buildings
+            (bool success,) = gridBuildingsAddress.call(
+                abi.encodeWithSignature("damageBuildings(address,uint256)", effect.target, effect.magnitude)
+            );
+            if (success) {
+                activeBattles[msg.sender].gridBuildingsDamaged += effect.magnitude;
+            }
+        } else if (effect.effectType == EffectType.SHIELD_PROTECTION) {
+            // Reduce troop losses (implemented in battle resolution)
+            // This is a placeholder - actual implementation would track troop protection
+        } else if (effect.effectType == EffectType.TRICK_REP_BONUS) {
+            // Award REP points
+            (bool success,) = gameStateAddress.call(
+                abi.encodeWithSignature("awardRepPoints(address,uint256)", effect.target, effect.magnitude)
+            );
+            if (success) {
+                activeBattles[msg.sender].repPoints += effect.magnitude;
+            }
+        }
+    }
+
     // Admin functions
 
     function setGameStateAddress(address _gameStateAddress) external onlyOwner {
@@ -887,6 +1110,22 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function setGridBuildingsAddress(address _gridBuildingsAddress) external onlyOwner {
         gridBuildingsAddress = _gridBuildingsAddress;
+    }
+
+    /**
+     * @dev Set HeroNFT address
+     * @param _heroNFTAddress The HeroNFT contract address
+     */
+    function setHeroNFTAddress(address _heroNFTAddress) external onlyOwner {
+        heroNFTAddress = _heroNFTAddress;
+    }
+
+    /**
+     * @dev Set TacticsNFT address
+     * @param _tacticsNFTAddress The TacticsNFT contract address
+     */
+    function setTacticsNFTAddress(address _tacticsNFTAddress) external onlyOwner {
+        tacticsNFTAddress = _tacticsNFTAddress;
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}

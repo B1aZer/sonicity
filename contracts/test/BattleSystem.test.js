@@ -1509,4 +1509,232 @@ describe("BattleSystem", function () {
             console.log("✅ BUG FIXED: Players can now start new battles after auto-resolve!");
         });
     });
+
+    describe("Heroes & Tactics Integration", function () {
+        let heroNFT, tacticsNFT;
+
+        beforeEach(async function () {
+            // Deploy HeroNFT and TacticsNFT
+            const HeroNFT = await ethers.getContractFactory("HeroNFT");
+            heroNFT = await upgrades.deployProxy(HeroNFT, [], { initializer: 'initialize' });
+            await heroNFT.waitForDeployment();
+            const heroNFTAddress = await heroNFT.getAddress();
+
+            const TacticsNFT = await ethers.getContractFactory("TacticsNFT");
+            tacticsNFT = await upgrades.deployProxy(TacticsNFT, [], { initializer: 'initialize' });
+            await tacticsNFT.waitForDeployment();
+            const tacticsNFTAddress = await tacticsNFT.getAddress();
+
+            // Set up contract addresses
+            await gameState.setHeroNFTAddress(heroNFTAddress);
+            await gameState.setTacticsNFTAddress(tacticsNFTAddress);
+            await heroNFT.setGameStateAddress(await gameState.getAddress());
+            await tacticsNFT.setGameStateAddress(await gameState.getAddress());
+            await battleSystem.setHeroNFTAddress(heroNFTAddress);
+            await battleSystem.setTacticsNFTAddress(tacticsNFTAddress);
+
+            // Set up players with barracks and troops
+            const barracksIndex = getBuildingTypeIndex("BARRACKS");
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+
+            // Unlock buildings and register players for matchmaking first
+            await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1500); // 1000 for tier 1 + 500 for building
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1500); // 1000 for tier 1 + 500 for building
+
+            // Player1 setup
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
+            await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 500);
+            await battleSystem.connect(player1).trainTroops(0, 10); // 10 Infantry
+
+            // Player2 setup
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
+            await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await ensurePlayerFood(player2, gameState, gridBuildings, altar, sonicityFarm, 500);
+            await battleSystem.connect(player2).trainTroops(0, 10); // 10 Infantry
+
+            // Set noOpponentFoundChance to 0 for testing
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+        });
+
+        it("should allow hero minting and deployment", async function () {
+            // Give player1 resources for hero minting
+            await gameState.testEarnGold(player1.address, 2000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            // Check resources before minting
+            const gold = await gameState.getPlayerGold(player1.address);
+            const food = await gameState.getPlayerFood(player1.address);
+            const diamonds = await gameState.getPlayerDiamonds(player1.address);
+            console.log(`Player1 resources - Gold: ${gold}, Food: ${food}, Diamonds: ${diamonds}`);
+
+            // Player1 mints a WARRIOR hero
+            await heroNFT.connect(player1).mintHero(0); // WARRIOR = 0
+            console.log(`Hero minted successfully`);
+            const hasHero = await heroNFT.hasHero(player1.address, 0);
+            console.log(`Has hero: ${hasHero}`);
+            expect(hasHero).to.be.true;
+
+            // Check what hero ID was actually minted
+            const tokenIdCounter = await heroNFT.getTokenIdCounter();
+            console.log(`Token ID counter: ${tokenIdCounter}`);
+            const deployedHero = await heroNFT.getDeployedHero(player1.address);
+            console.log(`Currently deployed hero: ${deployedHero}`);
+
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Deploy hero in HeroNFT contract first
+            await heroNFT.connect(player1).deployHero(0);
+            
+            // Then track deployment in BattleSystem
+            await battleSystem.connect(player1).deployHeroToBattle(0);
+
+            // Verify hero is deployed
+            const deployment = await battleSystem.battleHeroTactics(player1.address);
+            expect(deployment.attackerHeroId).to.equal(0);
+        });
+
+        it("should allow tactics minting and deployment", async function () {
+            // Give player1 resources for tactics minting
+            await gameState.testEarnGold(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+
+            // Player1 mints tactics
+            await tacticsNFT.connect(player1).mintTactic(1); // STRIKE
+            await tacticsNFT.connect(player1).mintTactic(2); // SHIELD
+            expect(await tacticsNFT.hasTactic(player1.address, 1)).to.be.true;
+            expect(await tacticsNFT.hasTactic(player1.address, 2)).to.be.true;
+
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Deploy tactics to battle
+            await battleSystem.connect(player1).deployTacticsToBattle([1, 2, 0]);
+
+            // Verify tactics are deployed
+            const deployment = await battleSystem.battleHeroTactics(player1.address);
+            console.log(`Deployment:`, deployment);
+            console.log(`Deployment type:`, typeof deployment);
+            console.log(`Deployment keys:`, Object.keys(deployment));
+            console.log(`attackerTactics:`, deployment.attackerTactics);
+            console.log(`Field 0:`, deployment[0]);
+            console.log(`Field 1:`, deployment[1]);
+            console.log(`Field 2:`, deployment[2]);
+            console.log(`Field 3:`, deployment[3]);
+            console.log(`Field 4:`, deployment[4]);
+            console.log(`Field 5:`, deployment[5]);
+            console.log(`Field 6:`, deployment[6]);
+            console.log(`Field 7:`, deployment[7]);
+            // Verify tactics are deployed correctly
+            expect(deployment[0]).to.equal(0); // attackerHeroId should be 0
+            expect(deployment[1]).to.equal(0); // defenderHeroId should be 0
+            expect(deployment[2]).to.equal(1); // attackerTactic1 should be 1
+            expect(deployment[3]).to.equal(2); // attackerTactic2 should be 2
+            expect(deployment[4]).to.equal(0); // attackerTactic3 should be 0
+        });
+
+        it("should allow hero and tactics deployment in same battle", async function () {
+            // Give player1 resources for hero and tactics
+            await gameState.testEarnGold(player1.address, 4000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 200);
+
+            // Player1 mints hero and tactics
+            await heroNFT.connect(player1).mintHero(0); // WARRIOR = 0
+            await tacticsNFT.connect(player1).mintTactic(1); // STRIKE
+            await tacticsNFT.connect(player1).mintTactic(2); // SHIELD
+
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Deploy hero in HeroNFT contract first
+            await heroNFT.connect(player1).deployHero(0);
+            
+            // Then track deployment in BattleSystem
+            await battleSystem.connect(player1).deployHeroToBattle(0);
+
+            // Deploy tactics
+            await battleSystem.connect(player1).deployTacticsToBattle([1, 2, 0]);
+
+            // Verify both hero and tactics are deployed
+            const deployment = await battleSystem.battleHeroTactics(player1.address);
+            expect(deployment[0]).to.equal(0); // attackerHeroId should be 0
+            expect(deployment[2]).to.equal(1); // attackerTactic1 should be 1
+            expect(deployment[3]).to.equal(2); // attackerTactic2 should be 2
+            expect(deployment[4]).to.equal(0); // attackerTactic3 should be 0
+        });
+
+        it("should fail to deploy hero if not owned", async function () {
+            // Start a battle without minting hero
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Try to deploy hero that player doesn't own
+            await expect(
+                battleSystem.connect(player1).deployHeroToBattle(1)
+            ).to.be.revertedWith("Not your hero or hero doesn't exist");
+        });
+
+        it("should fail to deploy tactics if not owned", async function () {
+            // Start a battle without minting tactics
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Try to deploy tactics that player doesn't own
+            await expect(
+                battleSystem.connect(player1).deployTacticsToBattle([1, 0, 0])
+            ).to.be.revertedWith("Invalid tactics or not owned");
+        });
+
+        it("should maintain backward compatibility - battles without heroes/tactics work normally", async function () {
+            // Start a battle without deploying any heroes or tactics
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0);
+
+            // Verify battle was created normally
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.attacker).to.equal(player1.address);
+            expect(battle.defender).to.equal(player2.address);
+            expect(battle.resolved).to.be.false;
+
+            // Verify no hero/tactics deployed
+            const deployment = await battleSystem.battleHeroTactics(player1.address);
+            expect(deployment[0]).to.equal(0); // attackerHeroId should be 0
+            expect(deployment[2]).to.equal(0); // attackerTactic1 should be 0
+            expect(deployment[3]).to.equal(0); // attackerTactic2 should be 0
+            expect(deployment[4]).to.equal(0); // attackerTactic3 should be 0
+        });
+    });
 }); 

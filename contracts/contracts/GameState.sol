@@ -616,6 +616,21 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Test function to earn diamonds (only for testing)
+     * @param player The address of the player
+     * @param amount The amount of diamonds to earn
+     */
+    function testEarnDiamonds(address player, uint256 amount) external {
+        // Only allow owner to call this function
+        require(msg.sender == owner(), "Only owner can call this function");
+        // Only allow in test environment
+        require(block.chainid == 31337 || block.chainid == 1337, "Only available in test environment");
+        
+        playerState[player].diamonds += amount;
+        emit DiamondsEarned(player, amount);
+    }
+
+    /**
      * @dev Burn treasury during battles
      * @param player The address of the player whose treasury is being burned
      * @param amount The amount of treasury to burn

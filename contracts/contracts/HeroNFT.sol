@@ -207,6 +207,14 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
     function getDeployedHero(address player) external view returns (uint256) {
         return deployedHero[player];
     }
+
+    /**
+     * @dev Get current token ID counter (for testing)
+     * @return uint256 The current token ID counter
+     */
+    function getTokenIdCounter() external view returns (uint256) {
+        return _tokenIdCounter;
+    }
     
     /**
      * @dev Check if player has sufficient resources for hero
