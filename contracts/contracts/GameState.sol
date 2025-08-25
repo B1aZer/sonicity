@@ -21,6 +21,10 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     address public gridBuildingsAddress;
     // Reference to the BattleSystem contract
     address public battleSystemAddress;
+    // Reference to the HeroNFT contract
+    address public heroNFTAddress;
+    // Reference to the TacticsNFT contract
+    address public tacticsNFTAddress;
 
     // Upgrade level thresholds (in SONIC wei)
     uint256 public constant UPGRADE_LEVEL_2_THRESHOLD = 0.1 ether;    // 0.1 SONIC for level 2
@@ -410,6 +414,22 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Update hero NFT address (only owner)
+     * @param _heroNFTAddress The new hero NFT address
+     */
+    function setHeroNFTAddress(address _heroNFTAddress) external onlyOwner {
+        heroNFTAddress = _heroNFTAddress;
+    }
+
+    /**
+     * @dev Update tactics NFT address (only owner)
+     * @param _tacticsNFTAddress The new tactics NFT address
+     */
+    function setTacticsNFTAddress(address _tacticsNFTAddress) external onlyOwner {
+        tacticsNFTAddress = _tacticsNFTAddress;
+    }
+
+    /**
      * @dev Get player's treasury
      * @param player The address of the player
      * @return uint256 Player's treasury balance
@@ -433,18 +453,22 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @param goldAmount The amount of gold to deduct (0 if not needed)
      * @param foodAmount The amount of food to deduct (0 if not needed)
      * @param repAmount The amount of rep to deduct (0 if not needed)
+     * @param diamondAmount The amount of diamonds to deduct (0 if not needed)
      */
     function deductResources(
         address player,
         uint256 goldAmount,
         uint256 foodAmount,
-        uint256 repAmount
+        uint256 repAmount,
+        uint256 diamondAmount
     ) external {
         require(
             msg.sender == districtBuildingsAddress || 
             msg.sender == gridBuildingsAddress || 
             msg.sender == battleSystemAddress ||
-            msg.sender == altarAddress, 
+            msg.sender == altarAddress ||
+            msg.sender == heroNFTAddress ||
+            msg.sender == tacticsNFTAddress, 
             "Unauthorized caller"
         );
         PlayerState storage state = playerState[player];
@@ -463,6 +487,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         if (repAmount > 0) {
             require(state.rep >= repAmount, "Insufficient rep");
             state.rep -= repAmount;
+        }
+        
+        if (diamondAmount > 0) {
+            require(state.diamonds >= diamondAmount, "Insufficient diamonds");
+            state.diamonds -= diamondAmount;
         }
         
         emit ResourcesDeducted(player, goldAmount, foodAmount, repAmount);
@@ -516,12 +545,14 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      * @param goldAmount The amount of gold to deduct (0 if not needed)
      * @param foodAmount The amount of food to deduct (0 if not needed)
      * @param repAmount The amount of rep to deduct (0 if not needed)
+     * @param diamondAmount The amount of diamonds to deduct (0 if not needed)
      */
     function testDeductResources(
         address player,
         uint256 goldAmount,
         uint256 foodAmount,
-        uint256 repAmount
+        uint256 repAmount,
+        uint256 diamondAmount
     ) external {
         // Only allow owner to call this function
         require(msg.sender == owner(), "Only owner can call this function");
@@ -544,6 +575,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         if (repAmount > 0) {
             require(state.rep >= repAmount, "Insufficient rep");
             state.rep -= repAmount;
+        }
+        
+        if (diamondAmount > 0) {
+            require(state.diamonds >= diamondAmount, "Insufficient diamonds");
+            state.diamonds -= diamondAmount;
         }
         
         emit ResourcesDeducted(player, goldAmount, foodAmount, repAmount);

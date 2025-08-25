@@ -107,7 +107,7 @@ async function donateGoldForTier(player, gameState, gridBuildings, altar, sonici
         if (currentGold > initialGold) {
             // Player has more gold than initial - deduct the excess
             const excessGold = currentGold - initialGold;
-            await gameState.testDeductResources(playerAddress, excessGold, 0, 0);
+            await gameState.testDeductResources(playerAddress, excessGold, 0, 0, 0);
             log(`Player (${playerAddress.slice(-6)}) deducted ${excessGold} gold to restore to initial amount: ${initialGold}`);
         } else {
             // Player has less gold than initial - add more
@@ -226,10 +226,10 @@ async function ensurePlayerResource({
     if (resource > amountBigInt) {
         const excess = resource - amountBigInt;
         if (resourceName === 'gold') {
-            await gameState.testDeductResources(playerAddress, excess, 0, 0);
+            await gameState.testDeductResources(playerAddress, excess, 0, 0, 0);
             log(`Player (${playerAddress.slice(-6)}): deducted ${excess} excess ${resourceName} to reach exact amount: ${amountBigInt}`);
         } else if (resourceName === 'food') {
-            await gameState.testDeductResources(playerAddress, 0, excess, 0);
+            await gameState.testDeductResources(playerAddress, 0, excess, 0, 0);
             log(`Player (${playerAddress.slice(-6)}): deducted ${excess} excess ${resourceName} to reach exact amount: ${amountBigInt}`);
         }
         resource = amountBigInt;

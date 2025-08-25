@@ -199,7 +199,7 @@ describe("BattleSystem", function () {
             await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 50);
             
             // Now deduct the food so the player doesn't have enough
-            await gameState.testDeductResources(player1.address, 0, 50, 0);
+            await gameState.testDeductResources(player1.address, 0, 50, 0, 0);
             
             await expect(
                 battleSystem.connect(player1).trainTroops(0, 1)

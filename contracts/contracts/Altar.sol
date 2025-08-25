@@ -394,7 +394,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         require(userRep >= repAmount, "Insufficient REP balance");
         
         // Deduct REP from user
-        gameState.deductResources(msg.sender, 0, 0, repAmount);
+        gameState.deductResources(msg.sender, 0, 0, repAmount, 0);
         
         // Get next token ID for yield NFT
         uint256 tokenId = yieldNFT.totalSupply() + 1;

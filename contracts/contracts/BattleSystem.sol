@@ -207,11 +207,12 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         // Check and deduct resources
         (success, returnData) = gameStateAddress.call(
             abi.encodeWithSignature(
-                "deductResources(address,uint256,uint256,uint256)",
+                "deductResources(address,uint256,uint256,uint256,uint256)",
                 msg.sender,
                 config.goldCost * amount,
                 config.foodCost * amount,
-                0  // No rep cost for training
+                0,  // No rep cost for training
+                0   // No diamond cost for training
             )
         );
         if (!success) {
@@ -735,11 +736,12 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         // Deduct search cost
         (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature(
-                "deductResources(address,uint256,uint256,uint256)",
+                "deductResources(address,uint256,uint256,uint256,uint256)",
                 msg.sender,
                 searchCost,  // gold cost
                 0,          // no food cost
-                0           // no rep cost
+                0,          // no rep cost
+                0           // no diamond cost
             )
         );
         if (!success) {
