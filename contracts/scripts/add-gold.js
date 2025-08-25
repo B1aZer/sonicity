@@ -17,7 +17,7 @@ async function main() {
     const [owner] = await ethers.getSigners();
     console.log(`Using owner address: ${owner.address}`);
 
-    const address = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+    const address = "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc";
     const goldAmount = 1000; // 1000 gold
     const foodAmount = 30; // 500 food
 
