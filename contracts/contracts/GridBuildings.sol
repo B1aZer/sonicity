@@ -714,6 +714,12 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function calculateClaimableResources(address player, uint256 buildingId) external view returns (uint256) {
         Building storage building = buildings[player][buildingId];
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
+        
+        // Special handling for yield stations - use the yield revenue calculation
+        if (building.buildingType == GridBuildingType.YIELD_STATION) {
+            return _calculateYieldRevenue(player, buildingId, building, block.timestamp);
+        }
+        
         return _calculateClaimable(building, block.timestamp);
     }
 
@@ -1275,6 +1281,32 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         require(building.buildingType != GridBuildingType(0) || building.level != 0, "Building does not exist");
         require(!building.damaged, "Building is damaged");
 
+        // Special handling for yield stations - use the yield station collection logic
+        if (building.buildingType == GridBuildingType.YIELD_STATION) {
+            // Update accumulated revenue
+            _updateAccumulatedRevenue(msg.sender, buildingId);
+            
+            uint256 claimableAmount = accumulatedRevenue[msg.sender][buildingId];
+            if (claimableAmount == 0) {
+                return 0;
+            }
+            
+            require(claimableAmount <= revenuePool, "Insufficient pool balance");
+            
+            // Reset accumulated revenue
+            accumulatedRevenue[msg.sender][buildingId] = 0;
+            
+            // Reduce revenue pool
+            revenuePool -= claimableAmount;
+            
+            // Transfer SONIC to player
+            (bool success, ) = payable(msg.sender).call{value: claimableAmount}("");
+            require(success, "Failed to transfer revenue");
+            
+            emit SonicClaimed(msg.sender, claimableAmount);
+            return claimableAmount;
+        }
+
         uint256 amount = _calculateClaimable(building, block.timestamp);
 
         // If no resources to claim, just return 0 (no revert)
@@ -1461,4 +1493,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         revenuePool += amountToAdd;
         poolLastUpdateTime = block.timestamp;
     }
+
+
 }

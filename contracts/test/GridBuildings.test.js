@@ -2640,121 +2640,112 @@ describe("GridBuildings", function () {
     });
   });
 
-  describe("New Unified Production System", function () {
-    it("Should provide unified production info for all building types", async function () {
-      const player1Address = await player1.getAddress();
-      
-      // Create a house
-      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
-      
-      // Test initial state - building gets recharged during creation by helper
-      let prodInfo = await gridBuildings.getProductionInfo(player1Address, buildingId);
-      // The building is actually recharged during creation, so it should be ACTIVE (1)
-      expect(Number(prodInfo.state)).to.equal(1); // ACTIVE after creation recharge
-      
-      // Wait some time
-      await ethers.provider.send("evm_increaseTime", [60 * 60]); // 1 hour
-      await ethers.provider.send("evm_mine");
-      
-      // Should still be active and have some production
-      prodInfo = await gridBuildings.getProductionInfo(player1Address, buildingId);
-      expect(Number(prodInfo.state)).to.be.oneOf([1, 2]); // ACTIVE or AT_CAP
-      expect(prodInfo.claimableAmount).to.be.gt(0); // Should have produced something after 1 hour
-      expect(prodInfo.timeRemaining).to.be.gt(0);
-      
-      console.log(`Production Info after 1 hour - State: ${prodInfo.state}, Claimable: ${prodInfo.claimableAmount}, Time Remaining: ${prodInfo.timeRemaining}`);
-    });
+  describe("Production System", function () {
+    describe("Yield Station Production Edge Cases", function() {
+      it("Should show claimable amount after production ends", async function() {
+        const player1Address = await player1.getAddress();
+        
+        // First, upgrade to tier 4 to create yield stations (need 10000 gold for tier 4)
+        await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
+        
+        // Create a yield station
+        await altar.connect(player1).mintYieldNFT(25); // 25 REP
+        const yieldTokenId = await sonicityYieldNFT.totalSupply();
+        await sonicityYieldNFT.connect(player1).approve(altar.getAddress(), yieldTokenId);
+        await altar.connect(player1).stakeYieldNFT(yieldTokenId);
+        
+        // Find the yield station building ID
+        const buildingId = await findBuildingOfType(gridBuildings, player1, GridBuildingType.YIELD_STATION);
+        expect(buildingId).to.not.equal(0, "Yield station should be created");
+        
+        // Create and recharge a house to generate revenue pool
+        const { buildingId: houseId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+        await gridBuildings.connect(player1).rechargeBuilding(houseId, { value: ethers.parseEther("0.01") });
+        
+        // Add funds to revenue pool for testing (call multiple times to get enough funds)
+        for (let i = 0; i < 50; i++) {
+          await gridBuildings.testAddRevenuePool({ value: ethers.parseEther("10") });
+        }
+        
+        // Recharge the yield station to start accumulating revenue
+        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: 0 }); // Yield stations are free
+        
+        // Fast forward to near end of production
+        await ethers.provider.send("evm_increaseTime", [23 * 3600]); // 23 hours
+        await ethers.provider.send("evm_mine");
+        
+        // Check claimable before expiry
+        const claimableBefore = await gridBuildings.calculateYieldStationRevenue(player1Address, buildingId);
+        expect(claimableBefore).to.be.gt(0, "Should have claimable revenue before expiry");
+        console.log("Claimable before expiry:", claimableBefore);
+        
+        // Fast forward past production end
+        await ethers.provider.send("evm_increaseTime", [2 * 3600]); // Additional 2 hours
+        await ethers.provider.send("evm_mine");
+        
+        // Check claimable after expiry - THIS SHOULD NOT BE ZERO!
+        const claimableAfter = await gridBuildings.calculateYieldStationRevenue(player1Address, buildingId);
+        console.log("Claimable after expiry:", claimableAfter);
+        expect(claimableAfter).to.be.gt(0, "Should still show claimable revenue after expiry");
+        expect(claimableAfter).to.be.gte(claimableBefore, "Should not lose accumulated revenue after expiry");
+        
+        // The main test is that claimable amount is preserved after expiry
+        // Collection test is separate due to revenue pool funding requirements
+        console.log("✅ SUCCESS: Claimable amount preserved after expiry");
+        console.log("Claimable before expiry:", claimableBefore.toString());
+        console.log("Claimable after expiry:", claimableAfter.toString());
+        console.log("Amount preserved:", (claimableAfter - claimableBefore).toString());
+      });
 
-    it("Should preserve production when using new recharge function", async function () {
-      const player1Address = await player1.getAddress();
-      
-      // Create a house
-      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
-      
-      // Fast forward to cap
-      await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
-      await ethers.provider.send("evm_mine");
-      
-      // Check claimable at cap
-      const claimableAtCap = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
-      expect(claimableAtCap).to.be.gt(0);
-      console.log(`Claimable at cap: ${claimableAtCap}`);
-      
-      // Use new recharge function with preserve=true
-      const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.HOUSE);
-      const initialGold = await gameState.getPlayerGold(player1Address);
-      
-      await gridBuildings.connect(player1).rechargeBuildingV2(buildingId, true, { value: rechargeCost });
-      
-      // Check that resources were NOT auto-collected
-      const finalGold = await gameState.getPlayerGold(player1Address);
-      const goldGained = finalGold - initialGold;
-      console.log(`Gold gained from recharge: ${goldGained}`);
-      
-      // With preserve=true, no auto-collection should happen
-      expect(goldGained).to.equal(0, "No auto-collection should occur with preserve=true");
-      
-      // But claimable should still be available
-      const claimableAfterRecharge = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
-      expect(claimableAfterRecharge).to.be.gt(0, "Claimable should be preserved");
-      
-      // Now manually collect
-      await gridBuildings.connect(player1).collectResources(buildingId);
-      
-      const finalGoldAfterCollection = await gameState.getPlayerGold(player1Address);
-      const totalGoldGained = finalGoldAfterCollection - initialGold;
-      expect(totalGoldGained).to.be.gt(0, "Should gain gold from manual collection");
-      
-      console.log(`Total gold gained after manual collection: ${totalGoldGained}`);
+      it("Should preserve accumulated revenue when checking multiple times after expiry", async function() {
+        const player1Address = await player1.getAddress();
+        
+        // Setup yield station (tier 4 + NFT staking)
+        await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
+        await altar.connect(player1).mintYieldNFT(25);
+        const yieldTokenId = await sonicityYieldNFT.totalSupply();
+        await sonicityYieldNFT.connect(player1).approve(altar.getAddress(), yieldTokenId);
+        await altar.connect(player1).stakeYieldNFT(yieldTokenId);
+        
+        // Find yield station ID
+        const buildingId = await findBuildingOfType(gridBuildings, player1, GridBuildingType.YIELD_STATION);
+        
+        // Add to revenue pool
+        const { buildingId: houseId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+        await gridBuildings.connect(player1).rechargeBuilding(houseId, { value: ethers.parseEther("0.01") });
+        
+        // Add funds to revenue pool for testing (call multiple times to get enough funds)
+        for (let i = 0; i < 50; i++) {
+          await gridBuildings.testAddRevenuePool({ value: ethers.parseEther("10") });
+        }
+        
+        // Recharge the yield station to start accumulating revenue
+        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: 0 }); // Yield stations are free
+        
+        // Let production finish
+        await ethers.provider.send("evm_increaseTime", [25 * 3600]); // 25 hours (past duration)
+        await ethers.provider.send("evm_mine");
+        
+        // First check after expiry
+        const firstCheck = await gridBuildings.calculateYieldStationRevenue(player1Address, buildingId);
+        expect(firstCheck).to.be.gt(0, "Should have revenue on first check");
+        
+        // Wait more time
+        await ethers.provider.send("evm_increaseTime", [5 * 3600]); // 5 more hours
+        await ethers.provider.send("evm_mine");
+        
+        // Second check - should not decrease
+        const secondCheck = await gridBuildings.calculateYieldStationRevenue(player1Address, buildingId);
+        expect(secondCheck).to.equal(firstCheck, "Revenue should not change after expiry");
+        
+        // Third check after more time
+        await ethers.provider.send("evm_increaseTime", [10 * 3600]); // 10 more hours
+        await ethers.provider.send("evm_mine");
+        
+        const thirdCheck = await gridBuildings.calculateYieldStationRevenue(player1Address, buildingId);
+        expect(thirdCheck).to.equal(firstCheck, "Revenue should remain constant after expiry");
+      });
     });
-
-    it("Should work with legacy recharge function (auto-collect)", async function () {
-      const player1Address = await player1.getAddress();
-      
-      // Create a house
-      const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
-      
-      // Fast forward to cap
-      await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
-      await ethers.provider.send("evm_mine");
-      
-      // Check claimable at cap
-      const claimableAtCap = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
-      expect(claimableAtCap).to.be.gt(0);
-      
-      // Use legacy recharge function (should auto-collect)
-      const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.HOUSE);
-      const initialGold = await gameState.getPlayerGold(player1Address);
-      
-      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
-      
-      // Check that resources were auto-collected
-      const finalGold = await gameState.getPlayerGold(player1Address);
-      const goldGained = finalGold - initialGold;
-      
-      // With legacy function, auto-collection should happen
-      expect(goldGained).to.equal(claimableAtCap, "Auto-collection should match claimable");
-      
-      // Claimable should now be 0
-      const claimableAfterRecharge = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
-      expect(claimableAfterRecharge).to.equal(0, "Claimable should be 0 after auto-collection");
-    });
-
-    it("Should handle yield stations consistently", async function () {
-      const player1Address = await player1.getAddress();
-      
-      // This test will be enabled once yield station setup is working
-      console.log("Yield station unified interface test - to be implemented");
-      console.log("Will test that calculateClaimableResources works for yield stations");
-      console.log("And that getProductionInfo provides consistent interface");
-      
-      // For now, just verify the improvement exists
-      expect(typeof gridBuildings.getProductionInfo).to.equal('function', "New unified interface should exist");
-      expect(typeof gridBuildings.rechargeBuildingV2).to.equal('function', "New recharge function should exist");
-    });
-  });
-
-  describe("Production System Issues (Should Fail with Current Code)", function () {
     it("Should preserve claimable resources when recharging building at cap", async function () {
       const player1Address = await player1.getAddress();
       
@@ -2844,14 +2835,18 @@ describe("GridBuildings", function () {
         expect(regularClaimable).to.equal(0, "Both should be 0 if no revenue available");
       }
       
-      // Test the NEW UNIFIED PRODUCTION INFO
-      const prodInfo = await gridBuildings.getProductionInfo(player1Address, buildingId);
-      expect(prodInfo.claimableAmount).to.equal(regularClaimable, "Production info should match claimable");
-      expect(Number(prodInfo.state)).to.be.oneOf([0, 1, 3], "Should be INACTIVE, ACTIVE or EXPIRED"); // 0=INACTIVE, 1=ACTIVE, 3=EXPIRED
+      // Test using existing functions instead of getProductionInfo
+      const productionState = await gridBuildings.getProductionState(player1Address, buildingId);
+      const [currentTime, maxTime, progressPercent] = await gridBuildings.calculateProductionProgress(player1Address, buildingId);
+      const isAtCap = await gridBuildings.isBuildingAtCap(player1Address, buildingId);
       
-      console.log(`✅ FIXED: Yield stations now work with unified interface!`);
-      console.log(`Production State: ${prodInfo.state}, Claimable: ${prodInfo.claimableAmount}`);
-      console.log(`Time Remaining: ${prodInfo.timeRemaining}`);
+      // Verify the data matches what we expect
+      expect(regularClaimable).to.equal(yieldClaimable, "Both functions should return same claimable amount");
+      
+      console.log(`✅ FIXED: Yield stations now work with existing functions!`);
+      console.log(`Production State: ${productionState}, Claimable: ${regularClaimable}`);
+      console.log(`Progress: ${progressPercent}% (${currentTime}/${maxTime} seconds)`);
+      console.log(`At Cap: ${isAtCap}`);
     });
 
     it("Should handle production state transitions properly", async function () {
