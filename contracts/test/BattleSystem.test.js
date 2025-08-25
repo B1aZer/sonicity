@@ -1429,4 +1429,84 @@ describe("BattleSystem", function () {
             ).to.be.revertedWith("Already in a battle");
         });
     });
+
+    describe("Battle Limbo Issue", function () {
+        beforeEach(async function () {
+            // Set up players with troops
+            const barracksIndex = getBuildingTypeIndex("BARRACKS");
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
+            await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
+
+            // Train troops for player1
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 50);
+            await battleSystem.connect(player1).trainTroops(0, 1); // 1 Infantry
+
+            // Set up tier 1 for both players
+            await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
+
+            // Set noOpponentFoundChance to 0 for testing
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+        });
+
+        it("should demonstrate battle limbo - players locked forever if battle never resolved", async function () {
+            // Start a battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            
+            // Fast forward search time
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Find opponent and start battle
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(1, 0, 0);
+
+            // Verify battle exists and is not resolved
+            const battle = await battleSystem.activeBattles(player1.address);
+            expect(battle.startTime).to.be.gt(0);
+            expect(battle.resolved).to.be.false;
+
+            // Fast forward 48+ hours (battle should be resolvable but not auto-resolved)
+            await ethers.provider.send("evm_increaseTime", [48 * 60 * 60 + 1]); // 48 hours + 1 second
+            await ethers.provider.send("evm_mine");
+
+            // Verify battle still exists and is not resolved
+            const battleAfter48h = await battleSystem.activeBattles(player1.address);
+            expect(battleAfter48h.startTime).to.be.gt(0);
+            expect(battleAfter48h.resolved).to.be.false;
+
+            console.log("🔧 TESTING AUTO-RESOLVE FIX:");
+            console.log("- Battle started 48+ hours ago");
+            console.log("- Battle never resolved by anyone");
+            console.log("- Auto-resolve should clear expired battles");
+
+            // 🔧 FIX: Players should now be able to start new searches after 48 hours
+            // Auto-resolve should clear the expired battle
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            
+            // Debug: Check battle state before attempting startSearch
+            const battleBeforeSearch = await battleSystem.activeBattles(player1.address);
+            const currentTime = (await ethers.provider.getBlock("latest")).timestamp;
+            console.log("Battle state before startSearch:");
+            console.log("- startTime:", battleBeforeSearch.startTime.toString());
+            console.log("- resolved:", battleBeforeSearch.resolved);
+            console.log("- time since start:", currentTime - Number(battleBeforeSearch.startTime));
+            
+            await battleSystem.connect(player1).startSearch(); // This should now succeed!
+            
+            // Debug: Check if battle was cleared after startSearch
+            const battleAfterSearch = await battleSystem.activeBattles(player1.address);
+            console.log("Battle state after startSearch:");
+            console.log("- startTime:", battleAfterSearch.startTime.toString());
+            console.log("- resolved:", battleAfterSearch.resolved);
+            console.log("- Battle cleared:", battleAfterSearch.startTime.toString() === "0" ? "YES" : "NO");
+
+            console.log("✅ BUG FIXED: Players can now start new battles after auto-resolve!");
+        });
+    });
 }); 

@@ -58,6 +58,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     // Constants
     uint256 public BATTLE_DURATION;
     uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
+    uint256 public constant BATTLE_TIMEOUT = 48 hours; // Auto-resolve after 48 hours
     uint256 public noOpponentFoundChance;
     uint256 public searchCost; // Cost in gold to start a search
     uint256 public searchDuration; // Duration of search
@@ -130,6 +131,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     );
     event SearchStarted(address indexed player, uint256 startTime);
     event SearchCompleted(address indexed player);
+    event BattleAutoResolved(address indexed attacker, address indexed defender, string reason);
 
     struct BattleEffects {
         uint256 gridBuildingsDamaged;
@@ -244,6 +246,11 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         address defender = playerSearches[msg.sender].foundOpponent;
         require(defender != address(0), "No opponent found");
         require(defender != msg.sender, "Cannot attack yourself");
+        
+        // Auto-resolve expired battles before checking if players are in battle
+        autoResolveExpiredBattle(msg.sender);
+        autoResolveExpiredBattle(defender);
+        
         require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
         require(activeBattles[defender].startTime == 0, "Defender already in a battle");
         require(infantryCount > 0 || cavalryCount > 0 || siegeCount > 0, "Must deploy at least one troop");
@@ -683,7 +690,45 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         return opponents;
     }
 
+    function autoResolveExpiredBattle(address player) internal {
+        Battle storage battle = activeBattles[player];
+        
+        // Check if battle exists and is expired (past BATTLE_TIMEOUT)
+        if (battle.startTime > 0 && 
+            !battle.resolved && 
+            block.timestamp >= battle.startTime + BATTLE_TIMEOUT) {
+            
+            // Auto-resolve as timeout (no rewards, no effects)
+            battle.resolved = true;
+            
+            // Record battle history as timeout
+            uint256 currentBattleId = nextBattleId++;
+            battleHistory[currentBattleId] = BattleRecord({
+                attacker: battle.attacker,
+                defender: battle.defender,
+                timestamp: block.timestamp,
+                attackerWon: false, // Timeout - no winner
+                attackerPower: 0,
+                defenderPower: 0,
+                treasuryBurned: 0,
+                gridBuildingsDamaged: 0,
+                districtBuildingsDamaged: 0,
+                repPoints: 0
+            });
+            
+            // Clear both players from active battles
+            delete activeBattles[battle.attacker];
+            delete activeBattles[battle.defender];
+            
+            // Emit auto-resolve event
+            emit BattleAutoResolved(battle.attacker, battle.defender, "Timeout after 48 hours");
+        }
+    }
+
     function startSearch() external nonReentrant {
+        // Auto-resolve expired battle before checking if player is in battle
+        autoResolveExpiredBattle(msg.sender);
+        
         // Only check if player is in battle
         require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
 
