@@ -176,7 +176,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
 
         districtBuildingConfigs[DistrictBuildingType.OUTPOST] = DistrictBuildingConfig({
             name: "Outpost",
-            unlockCost: 300,
+            unlockCost: 600,
             buildCost: 120,
             upgradeCost: 0,
             maxLevel: 1,
