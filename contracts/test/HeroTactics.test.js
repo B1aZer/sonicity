@@ -84,12 +84,18 @@ describe("Hero & Tactics System", function () {
         });
 
         it("Should calculate hero bonuses correctly", async function () {
-            // No hero deployed
-            let bonus = await heroNFT.calculateHeroBonus(0, 10, 5, 3);
-            expect(bonus).to.equal(0);
+            // Test with non-existent hero ID (should revert)
+            await expect(
+                heroNFT.calculateHeroBonus(999, 10, 5, 3)
+            ).to.be.revertedWith("Hero does not exist");
 
-            // Note: We can't test minting without setting up GameState properly
-            // This would require more complex setup with resource management
+            // Test with hero ID 0 but no hero minted (should revert)
+            await expect(
+                heroNFT.calculateHeroBonus(0, 10, 5, 3)
+            ).to.be.revertedWith("Hero does not exist");
+
+            // Note: Testing with actual minted heroes would require GameState setup
+            // This is tested in the BattleSystem tests with proper resource management
         });
     });
 

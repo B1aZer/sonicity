@@ -287,6 +287,14 @@ async function main() {
   console.log("Setting TacticsNFT address in GameState...");
   await gameStateProxy.setTacticsNFTAddress(tacticsNFTProxyAddress);
 
+  // Set HeroNFT address in BattleSystem
+  console.log("Setting HeroNFT address in BattleSystem...");
+  await battleSystemProxy.setHeroNFTAddress(heroNFTProxyAddress);
+
+  // Set TacticsNFT address in BattleSystem
+  console.log("Setting TacticsNFT address in BattleSystem...");
+  await battleSystemProxy.setTacticsNFTAddress(tacticsNFTProxyAddress);
+
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
   console.log("Contract addresses:");

@@ -137,6 +137,10 @@ async function main() {
     // Set HeroNFT address in GameState
     console.log("Setting HeroNFT address in GameState...");
     await gameStateProxy.setHeroNFTAddress(await heroNFTProxy.getAddress());
+
+    // Set HeroNFT address in BattleSystem
+    console.log("Setting HeroNFT address in BattleSystem...");
+    await battleSystemProxy.setHeroNFTAddress(await heroNFTProxy.getAddress());
   }
 
   if (addresses.tacticsNFTProxy) {
@@ -150,6 +154,10 @@ async function main() {
     // Set TacticsNFT address in GameState
     console.log("Setting TacticsNFT address in GameState...");
     await gameStateProxy.setTacticsNFTAddress(await tacticsNFTProxy.getAddress());
+
+    // Set TacticsNFT address in BattleSystem
+    console.log("Setting TacticsNFT address in BattleSystem...");
+    await battleSystemProxy.setTacticsNFTAddress(await tacticsNFTProxy.getAddress());
   }
 
   // Set Altar contract address on all NFT contracts (in case they were redeployed)

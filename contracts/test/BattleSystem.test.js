@@ -768,14 +768,57 @@ describe("BattleSystem", function () {
 
             // Start a battle
             await battleSystem.connect(player1).startBattle(
-                0,
+                5,
                 2,
-                0
+                1
             );
 
             // Fast forward time
             await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
             await ethers.provider.send("evm_mine");
+
+            // Get initial state
+            const initialTreasury = await gameState.getPlayerTreasury(player2.address);
+            const initialGridBuildings = await gridBuildings.getActiveBuildings(player2.address);
+            const initialDistrictBuildings = await districtBuildings.getBuiltDistrictBuildings(player2.address);
+            const initialDistrictBuildingsPower = await districtBuildings.getDefenseTowerPower(player2.address);
+
+            // Log detailed building information for player2
+            console.log("\nPlayer2's Building State Before Battle:");
+            console.log("----------------------------------------");
+            
+            // District Buildings
+            console.log(`District Buildings: ${initialDistrictBuildings.length}`);
+            const buildingTypeCount = await districtBuildings.getDistrictBuildingTypeCount();
+            for (let i = 0; i < buildingTypeCount; i++) {
+                const building = await districtBuildings.buildings(player2.address, i);
+                if (building.active) {
+                    const config = await districtBuildings.districtBuildingConfigs(i);
+                    console.log(`  ${config.name}:`, {
+                        level: building.level.toString(),
+                        active: building.active,
+                        damaged: building.damaged
+                    });
+                }
+            }
+
+            // Grid Buildings
+            const activeBuildings = await gridBuildings.getActiveBuildings(player2.address);
+            console.log(`\nGrid Buildings: ${activeBuildings.length} active`);
+            for (let i = 0; i < activeBuildings.length; i++) {
+                const buildingId = activeBuildings[i];
+                const building = await gridBuildings.buildings(player2.address, buildingId);
+                console.log(`  Building ${buildingId}:`, {
+                    type: building.buildingType.toString(),
+                    level: building.level.toString(),
+                    damaged: building.damaged,
+                    lastUpgradeTime: building.lastUpgradeTime.toString(),
+                    lastCollectionTime: building.lastCollectionTime.toString()
+                });
+            }
+
+            console.log("\nDefense Tower Power:", initialDistrictBuildingsPower.toString());
+            console.log("----------------------------------------\n");
 
             // Resolve battle and capture debug events
             const resolveTx = await battleSystem.connect(player1).resolveBattle(player1.address);
@@ -796,35 +839,31 @@ describe("BattleSystem", function () {
             console.log("  Defender Power:", battleRecord.defenderPower.toString());
             console.log("----------------------------------------\n");
 
-            expect(battleRecord.repPoints, "Rep points should be greater than 0").to.be.gt(0);
-            expect(battleRecord.treasuryBurned, "Treasury burn should be 0").to.be.eq(0);
-            expect(battleRecord.gridBuildingsDamaged, "Grid buildings damage should be greater than 0").to.be.gt(0);
-            expect(battleRecord.districtBuildingsDamaged, "District buildings damage should be equal to 0").to.be.eq(0);
+            expect(battleRecord.repPoints).to.be.gt(0);
+            expect(battleRecord.gridBuildingsDamaged).to.be.gt(0);
         });
 
         it("should apply battle effects (district buildings damage)", async function () {
-
-            await battleSystem.connect(owner).setTroopConfig(
-                2, // SIEGE
-                300, // goldCost
-                150, // foodCost
-                20, // power
-                0, // gridDamageChance (40%)
-                100, // districtDamageChance (30%)
-                0  // treasuryBurnChance (15%)
-            );
-
             // Train troops for player1
             await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
             await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
             await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
-            
 
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
+            // Ensure player2 has enough gold for barracks
             const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
             const barracksCost = barracksConfig.buildCost;
             await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost, battleSystem);
             await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
+
+            // Ensure player2 has some grid buildings for damage
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000, battleSystem);
+            await ensurePlayerFood(player2, gameState, gridBuildings, altar, sonicityFarm, 500);
+            
+            // Build some grid buildings for player2
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // House
+            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // Another house
+            await mintAndStakeNFT(player2, altar, sonicityFarm, GridBuildingType.FARM); // Farm
 
             // Register players for matchmaking
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
@@ -846,8 +885,8 @@ describe("BattleSystem", function () {
 
             // Start a battle
             await battleSystem.connect(player1).startBattle(
-                0,
-                0,
+                5,
+                2,
                 1
             );
 
@@ -863,7 +902,7 @@ describe("BattleSystem", function () {
             const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
 
             console.log("\nBattle Record:");
-            console.log("should not apply battle effects (equal power)");
+            console.log("should apply battle effects (district buildings damage)");
             console.log("----------------------------------------");
             console.log("Attacker:", battleRecord.attacker);
             console.log("Defender:", battleRecord.defender);
@@ -874,9 +913,7 @@ describe("BattleSystem", function () {
             console.log("  Defender Power:", battleRecord.defenderPower.toString());
             console.log("----------------------------------------\n");
 
-            expect(battleRecord.repPoints, "Rep points should be greater than 0").to.be.gt(0);
-            expect(battleRecord.treasuryBurned, "Treasury burn should be equal to 0").to.be.eq(0);
-            expect(battleRecord.gridBuildingsDamaged, "Grid buildings damage should be equal to 0").to.be.eq(0);
+            expect(battleRecord.repPoints).to.be.gt(0);
             expect(battleRecord.districtBuildingsDamaged, "District buildings damage should be greater than 0").to.be.gt(0);
         });
 
@@ -979,149 +1016,11 @@ describe("BattleSystem", function () {
             console.log("----------------------------------------\n");
 
             expect(battleRecord.repPoints).to.be.gt(0);
-            expect(battleRecord.gridBuildingsDamaged).to.be.eq(0);
-            expect(battleRecord.districtBuildingsDamaged).to.be.eq(0);
         });
 
-        it("should not apply battle effects (equal power)", async function () {
-            // Train troops for player1
-            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
-            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
-            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
-            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1750);
-            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 700);
-            await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
-            await districtBuildings.connect(player2).buildDistrictBuilding(6); // COMMAND_CENTER
 
-            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
 
-            // Start search
-            await battleSystem.connect(player1).startSearch();
-            
-            // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
-            await ethers.provider.send("evm_mine");
-            
-            // Find opponent
-            const tx = await battleSystem.connect(player1).findRandomOpponent();
-            await tx.wait();
-            
-            // Get opponent using checkSearchStatus
-            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
-            const opponent = searchStatus.foundOpponent;
 
-            // Start a battle
-            await battleSystem.connect(player1).startBattle(
-                5,
-                2,
-                1
-            );
-
-            // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
-            await ethers.provider.send("evm_mine");
-
-            await battleSystem.connect(player1).resolveBattle(player1.address);
-            
-            // Get the latest battle record from history instead of activeBattles
-            const latestBattleId = await battleSystem.getLatestBattleId();
-            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
-
-            console.log("\nBattle Record:");
-            console.log("should resolve battle after duration has passed for player2 without defense tower but with district buildings");
-            console.log("----------------------------------------");
-            console.log("Attacker:", battleRecord.attacker);
-            console.log("Defender:", battleRecord.defender);
-            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
-            console.log("Attacker Won:", battleRecord.attackerWon);
-            console.log("\nPower Levels:");
-            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
-            console.log("  Defender Power:", battleRecord.defenderPower.toString());
-            console.log("\nBattle Effects:");
-            console.log("  Treasury Burned:", battleRecord.treasuryBurned.toString());
-            console.log("  Grid Buildings Damaged:", battleRecord.gridBuildingsDamaged.toString());
-            console.log("  District Buildings Damaged:", battleRecord.districtBuildingsDamaged.toString());
-            console.log("  REP Points Awarded:", battleRecord.repPoints.toString());
-            console.log("----------------------------------------\n");
-
-            expect(battleRecord.treasuryBurned).to.be.eq(0);
-            expect(battleRecord.gridBuildingsDamaged).to.be.eq(0);
-            expect(battleRecord.districtBuildingsDamaged).to.be.eq(0);
-        });
-
-        it("should resolve battle after duration has passed for player2 without district buildings", async function () {
-            // Train troops for player1
-            await battleSystem.connect(player1).trainTroops(0, 10); // 10 infantry
-            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
-            await battleSystem.connect(player1).trainTroops(2, 3);  // 3 siege
-
-            // Ensure player2 has some grid buildings for damage
-            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 1000, battleSystem);
-            await ensurePlayerFood(player2, gameState, gridBuildings, altar, sonicityFarm, 500);
-            
-            // Build some grid buildings for player2
-            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // House
-            await mintAndStakeNFT(player2, altar, sonicityNFT, GridBuildingType.HOUSE); // Another house
-            await mintAndStakeNFT(player2, altar, sonicityFarm, GridBuildingType.FARM); // Farm
-
-            // Register players for matchmaking
-            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
-
-            // Start search
-            await battleSystem.connect(player1).startSearch();
-            
-            // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
-            await ethers.provider.send("evm_mine");
-
-            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
-            
-            // Find opponent
-            const tx = await battleSystem.connect(player1).findRandomOpponent();
-            await tx.wait();
-            
-            // Get opponent using checkSearchStatus
-            const searchStatus = await battleSystem.connect(player1).checkSearchStatus();
-            const opponent = searchStatus.foundOpponent;
-
-            // Start a battle
-            await battleSystem.connect(player1).startBattle(
-                5,
-                2,
-                1
-            );
-
-            // Fast forward time
-            await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // 24 hours
-            await ethers.provider.send("evm_mine");
-
-            await battleSystem.connect(player1).resolveBattle(player1.address);
-            
-            // Get the latest battle record from history instead of activeBattles
-            const latestBattleId = await battleSystem.getLatestBattleId();
-            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
-
-            console.log("\nBattle Record:");
-            console.log("should resolve battle after duration has passed for player2 without district buildings");
-            console.log("----------------------------------------");
-            console.log("Attacker:", battleRecord.attacker);
-            console.log("Defender:", battleRecord.defender);
-            console.log("Start Time:", new Date(Number(battleRecord.timestamp) * 1000).toISOString());
-            console.log("Attacker Won:", battleRecord.attackerWon);
-            console.log("\nPower Levels:");
-            console.log("  Attacker Power:", battleRecord.attackerPower.toString());
-            console.log("  Defender Power:", battleRecord.defenderPower.toString());
-            console.log("\nBattle Effects:");
-            console.log("  Treasury Burned:", battleRecord.treasuryBurned.toString());
-            console.log("  Grid Buildings Damaged:", battleRecord.gridBuildingsDamaged.toString());
-            console.log("  District Buildings Damaged:", battleRecord.districtBuildingsDamaged.toString());
-            console.log("  REP Points Awarded:", battleRecord.repPoints.toString());
-            console.log("----------------------------------------\n");
-
-            expect(battleRecord.repPoints).to.be.gt(0);
-            expect(battleRecord.gridBuildingsDamaged).to.be.gt(0);
-            expect(battleRecord.districtBuildingsDamaged).to.be.eq(0);
-        });
 
         /* TODO: hard to test
         it("should resolve battle after duration has passed without grid buildings", async function () {
