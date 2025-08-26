@@ -27,6 +27,9 @@ export class GamePage extends BasePage {
             // All contracts are already initialized by BasePage.initializeContracts()
             // Just update the resource display
             await this.updateResourceDisplay();
+            
+            // Check for outpost warnings on page load
+            await this.checkOutpostWarning();
         } catch (error) {
             Logger.error('Error initializing game page:', error);
             this.modal.error('Failed to initialize game page. Please try refreshing the page.');
@@ -94,6 +97,59 @@ export class GamePage extends BasePage {
         }
     }
 
+    async checkOutpostWarning() {
+        try {
+            const playerAddress = await this.contracts.gameState.getAddress();
+            const activeBattle = await this.contracts.battleSystem.activeBattles(playerAddress);
+            
+            // Check if player is in battle as defender and hasn't seen the warning yet
+            if (activeBattle && 
+                activeBattle[2] > 0n && // startTime
+                activeBattle[1] === playerAddress && // defender
+                !activeBattle[12]) { // outpostWarningShown
+                
+                // Get current blockchain time
+                const provider = this.contracts.gameState.provider;
+                const currentBlock = await provider.getBlock('latest');
+                const now = currentBlock.timestamp;
+                
+                // Calculate time remaining until battle resolution
+                const battleStartTime = Number(activeBattle[2]); // startTime
+                const battleDuration = 24 * 60 * 60; // 24 hours in seconds
+                const battleEndTime = battleStartTime + battleDuration;
+                const timeRemaining = Math.max(0, battleEndTime - now);
+                const hoursRemaining = Math.floor(timeRemaining / (60 * 60));
+                const minutesRemaining = Math.floor((timeRemaining % (60 * 60)) / 60);
+                
+                const timeString = hoursRemaining > 0 
+                    ? `${hoursRemaining}h ${minutesRemaining}m remaining`
+                    : `${minutesRemaining}m remaining`;
+                
+                // Show warning modal
+                const modalContent = `Enemy forces are gathering at your borders!<br><br>
+                    Time until battle: ${timeString}.<br><br>
+                    Your outpost has detected hostile movements. Prepare your defenses!`;
+                
+                const result = await this.modal.confirm(
+                    modalContent,
+                    { 
+                        title: 'Outpost Alert',
+                        confirmButtonText: 'Acknowledge',
+                        showCancelButton: false,
+                        icon: 'warning'
+                    }
+                );
+                
+                if (result.isConfirmed) {
+                    // User confirmed the warning
+                    await this.contracts.battleSystem.confirmOutpostWarning();
+                }
+            }
+        } catch (error) {
+            Logger.error('Error checking outpost warning:', error);
+        }
+    }
+
     async setupGame() {
         try {
             const renderDiv = this.element.querySelector('#renderDiv');
@@ -108,10 +164,13 @@ export class GamePage extends BasePage {
             // Update resource display initially
             await this.updateResourceDisplay();
             
-            // Set up periodic updates for resource display
+            // Set up periodic updates for resource display and outpost warnings
             this.resourceUpdateInterval = setInterval(() => {
                 this.updateResourceDisplay().catch(error => {
                     Logger.error('Error in periodic resource update:', error);
+                });
+                this.checkOutpostWarning().catch(error => {
+                    Logger.error('Error checking outpost warning:', error);
                 });
             }, 10000); // Update every 10 seconds
             

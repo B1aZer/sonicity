@@ -168,4 +168,9 @@ export class BattleSystemContract extends BaseContract {
             treasuryBurnChance: config.treasuryBurnChance
         };
     }
+
+    async confirmOutpostWarning() {
+        const contract = await this.getContract();
+        return contract.confirmOutpostWarning();
+    }
 } 
