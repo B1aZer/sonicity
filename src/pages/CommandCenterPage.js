@@ -224,7 +224,7 @@ export class CommandCenterPage extends BasePage {
                 </div>
 
                 <div class="page-section troop-deployment-section" style="display: none;">
-                    <h2>Deploy Troops</h2>
+                    <h2>Start Battle</h2>
                     <div class="deployment-form">
                         <div class="troop-input-group">
                             <label for="deploy-infantry">Infantry:</label>
@@ -242,7 +242,7 @@ export class CommandCenterPage extends BasePage {
                             <span class="max-troops">/ <span id="max-siege">0</span></span>
                         </div>
                         <button class="btn btn-primary deploy-troops-btn" disabled>
-                            Deploy Troops
+                            Start Battle
                         </button>
                     </div>
                 </div>
@@ -314,7 +314,7 @@ export class CommandCenterPage extends BasePage {
                 const siegeCount = parseInt(siegeInput.value) || 0;
 
                 if (infantryCount === 0 && cavalryCount === 0 && siegeCount === 0) {
-                    this.modal.error('Please deploy at least one troop type');
+                    this.modal.error('Please select at least one troop type to start battle');
                     return;
                 }
 
@@ -324,7 +324,7 @@ export class CommandCenterPage extends BasePage {
                     siegeCount
                 );
 
-                this.modal.success('Battle started! Troops have been deployed.');
+                this.modal.success('Battle started! Your troops are marching to battle.');
                 await this.loadCommandCenterData();
             } catch (error) {
                 Logger.error('Error starting battle:', error);
