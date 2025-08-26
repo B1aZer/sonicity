@@ -1569,5 +1569,98 @@ describe("BattleSystem", function () {
             
             console.log(`  ✅ Hero minted successfully with remaining resources`);
         });
+
+        it("should test garrison deployment - defender can deploy troops during battle", async function () {
+            // Scenario: Defender deploys troops to garrison after being attacked
+            
+            // Add more troops for testing (barracks already built in beforeEach)
+            await gameState.testEarnGold(player1.address, 5000); // More gold for upgrades and training
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnGold(player2.address, 5000); // More gold for upgrades and training
+            await gameState.testEarnFood(player2.address, 2000);
+
+            // Upgrade barracks to level 3 to train all troop types
+            const barracksIndex = getBuildingTypeIndex("BARRACKS");
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            
+            // Upgrade to level 2 (for cavalry)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, barracksConfig.upgradeCost);
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex);
+            
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksConfig.upgradeCost);
+            await districtBuildings.connect(player2).upgradeDistrictBuilding(barracksIndex);
+            
+            // Upgrade to level 3 (for siege)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, BigInt(barracksConfig.upgradeCost) * BigInt(2));
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex);
+            
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, BigInt(barracksConfig.upgradeCost) * BigInt(2));
+            await districtBuildings.connect(player2).upgradeDistrictBuilding(barracksIndex);
+
+            // Player1 trains additional troops for attack
+            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry (infantry already trained)
+
+            // Player2 trains additional troops for defense
+            await battleSystem.connect(player2).trainTroops(2, 3);  // 3 siege (infantry already trained)
+            
+            // Check current troop counts for Player2
+            const player2InfantryBefore = await battleSystem.playerTroops(player2.address, 0);
+            const player2CavalryBefore = await battleSystem.playerTroops(player2.address, 1);
+            const player2SiegeBefore = await battleSystem.playerTroops(player2.address, 2);
+            console.log(`Player2 troops before deployment: ${player2InfantryBefore} infantry, ${player2CavalryBefore} cavalry, ${player2SiegeBefore} siege`);
+
+            // Player2 builds garrison
+            const garrisonIndex = 9; // GARRISON = 9
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 300); // Garrison build cost
+            await districtBuildings.connect(player2).buildDistrictBuilding(garrisonIndex);
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 5, 0); // 10 infantry, 5 cavalry
+
+            // Check initial battle state
+            const battleBeforeGarrison = await battleSystem.activeBattles(player1.address);
+            const initialDefenderPower = battleBeforeGarrison.defenderPower;
+            expect(initialDefenderPower).to.equal(0); // No defense tower, no garrison troops
+
+            // Player2 deploys troops to garrison (defender action)
+            await battleSystem.connect(player2).deployTroopsToGarrison(8, 0, 3); // 8 infantry, 0 cavalry, 3 siege
+
+            // Check battle state after garrison deployment
+            const battleAfterGarrison = await battleSystem.activeBattles(player1.address);
+            const finalDefenderPower = battleAfterGarrison.defenderPower;
+            
+            // Debug: Check if the battle was updated for both players
+            const battleAfterGarrisonPlayer2 = await battleSystem.activeBattles(player2.address);
+            console.log(`Debug - Player1 battle defender power: ${finalDefenderPower}`);
+            console.log(`Debug - Player2 battle defender power: ${battleAfterGarrisonPlayer2.defenderPower}`);
+            
+            // Calculate expected defender power
+            const expectedDefenderPower = (8 * 10) + (0 * 15) + (3 * 20); // infantry + cavalry + siege
+            expect(Number(finalDefenderPower)).to.equal(expectedDefenderPower);
+
+            // Verify troops are locked (not available for other actions)
+            const remainingInfantry = await battleSystem.playerTroops(player2.address, 0);
+            const remainingCavalry = await battleSystem.playerTroops(player2.address, 1);
+            const remainingSiege = await battleSystem.playerTroops(player2.address, 2);
+            expect(remainingInfantry).to.equal(Number(player2InfantryBefore) - 8); // 8 infantry deployed
+            expect(remainingCavalry).to.equal(0); // No cavalry deployed
+            expect(remainingSiege).to.equal(0);   // All siege deployed
+
+            // Try to deploy again - should fail
+            await expect(
+                battleSystem.connect(player2).deployTroopsToGarrison(1, 0, 0)
+            ).to.be.revertedWith("Troops already deployed to garrison");
+
+            console.log(`🏰 Garrison Deployment Test:`);
+            console.log(`  Initial defender power: ${initialDefenderPower}`);
+            console.log(`  Final defender power: ${finalDefenderPower}`);
+            console.log(`  Expected power: ${expectedDefenderPower}`);
+            console.log(`  ✅ Defender successfully deployed troops to garrison`);
+        });
     });
 }); 

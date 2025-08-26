@@ -55,6 +55,13 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint8 defenderTactic3;     // 0 if no tactic
     }
 
+    // Troop deployment data
+    struct TroopDeployment {
+        uint256 infantry;
+        uint256 cavalry;
+        uint256 siege;
+    }
+
     // Battle state
     struct Battle {
         address attacker;
@@ -67,9 +74,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 gridBuildingsDamaged;
         uint256 districtBuildingsDamaged;
         uint256 repPoints;
-        uint256 deployedInfantry;  // Add deployed troop counts
-        uint256 deployedCavalry;
-        uint256 deployedSiege;
+        TroopDeployment attackerTroops;  // Attacker deployed troop counts
+        TroopDeployment defenderTroops;  // Defender deployed troop counts
     }
 
     // Troop costs and effects
@@ -153,6 +159,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     );
     event TroopsTrained(address indexed player, TroopType troopType, uint256 amount);
     event TroopsDeployed(address indexed player, TroopType troopType, uint256 amount);
+    event TroopsDeployedToGarrison(address indexed player, uint256 infantryCount, uint256 cavalryCount, uint256 siegeCount);
     event PlayerRegisteredForMatchmaking(address indexed player);
     event PlayerUnregisteredFromMatchmaking(address indexed player);
     event BattleRecorded(
@@ -322,9 +329,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             gridBuildingsDamaged: 0,
             districtBuildingsDamaged: 0,
             repPoints: 0,
-            deployedInfantry: infantryCount,  // Store deployed counts
-            deployedCavalry: cavalryCount,
-            deployedSiege: siegeCount
+            attackerTroops: TroopDeployment(infantryCount, cavalryCount, siegeCount),
+            defenderTroops: TroopDeployment(0, 0, 0)  // Defender deployed counts (initially 0)
         });
 
         // Initialize hero and tactics deployment data
@@ -348,6 +354,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         playerTroops[msg.sender][TroopType.INFANTRY] -= infantryCount;
         playerTroops[msg.sender][TroopType.CAVALRY] -= cavalryCount;
         playerTroops[msg.sender][TroopType.SIEGE] -= siegeCount;
+        
+        // emit warning if defender has outpost
 
         emit BattleStarted(msg.sender, defender, block.timestamp);
     }
@@ -554,7 +562,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function applyCavalryEffects(address attacker, address defender) internal returns (uint256) {
         Battle storage battle = activeBattles[attacker];
-        uint256 cavalryCount = battle.deployedCavalry;  // Use deployed count instead of total
+        uint256 cavalryCount = battle.attackerTroops.cavalry;  // Use deployed count instead of total
         if (cavalryCount == 0) return 0;
 
         uint256 damageChance = troopConfigs[TroopType.CAVALRY].gridDamageChance;
@@ -594,7 +602,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 defenderPower
     ) internal returns (uint256 districtBuildingsDamaged, uint256 treasuryBurned) {
         Battle storage battle = activeBattles[attacker];
-        uint256 siegeCount = battle.deployedSiege;  // Use deployed count instead of total
+        uint256 siegeCount = battle.attackerTroops.siege;  // Use deployed count instead of total
         if (siegeCount == 0) return (0, 0);
 
         // Apply district building damage
@@ -1118,17 +1126,17 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             
             // Recalculate attacker power with hero bonus
             uint256 basePower = (
-                battle.deployedInfantry * troopConfigs[TroopType.INFANTRY].power +
-                battle.deployedCavalry * troopConfigs[TroopType.CAVALRY].power +
-                battle.deployedSiege * troopConfigs[TroopType.SIEGE].power
+                battle.attackerTroops.infantry * troopConfigs[TroopType.INFANTRY].power +
+                battle.attackerTroops.cavalry * troopConfigs[TroopType.CAVALRY].power +
+                battle.attackerTroops.siege * troopConfigs[TroopType.SIEGE].power
             );
             
             uint256 totalPower = calculateTotalBattlePower(
                 basePower,
                 heroId,
-                battle.deployedInfantry,
-                battle.deployedCavalry,
-                battle.deployedSiege
+                battle.attackerTroops.infantry,
+                battle.attackerTroops.cavalry,
+                battle.attackerTroops.siege
             );
             
             battle.attackerPower = totalPower;
@@ -1180,6 +1188,73 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             deployment.defenderTactic2 = tactics[1];
             deployment.defenderTactic3 = tactics[2];
         }
+    }
+
+    /**
+     * @dev Deploy troops to garrison for defense
+     * @param infantryCount Number of infantry to deploy
+     * @param cavalryCount Number of cavalry to deploy
+     * @param siegeCount Number of siege units to deploy
+     */
+    function deployTroopsToGarrison(
+        uint256 infantryCount,
+        uint256 cavalryCount,
+        uint256 siegeCount
+    ) external nonReentrant {
+        require(activeBattles[msg.sender].startTime > 0, "Not in battle");
+        require(activeBattles[msg.sender].defender == msg.sender, "Not the defender");
+        require(!activeBattles[msg.sender].resolved, "Battle already resolved");
+        
+        // Check if garrison is built
+        (bool success, bytes memory data) = districtBuildingsAddress.staticcall(
+            abi.encodeWithSignature("getBuildingIdByName(string)", "GARRISON")
+        );
+        require(success, "Failed to get garrison building ID");
+        uint8 garrisonId = abi.decode(data, (uint8));
+        require(garrisonId != 255, "Garrison building not found");
+        
+        (success, data) = districtBuildingsAddress.staticcall(
+            abi.encodeWithSignature("isDistrictBuildingBuilt(address,uint8)", 
+                msg.sender, garrisonId)
+        );
+        require(success && abi.decode(data, (bool)), "Garrison not built");
+ 
+        // Check troop availability
+        require(playerTroops[msg.sender][TroopType.INFANTRY] >= infantryCount, "Not enough infantry");
+        require(playerTroops[msg.sender][TroopType.CAVALRY] >= cavalryCount, "Not enough cavalry");
+        require(playerTroops[msg.sender][TroopType.SIEGE] >= siegeCount, "Not enough siege units");
+        
+        // Check if already deployed
+        Battle storage battle = activeBattles[msg.sender];
+        require(battle.defenderTroops.infantry == 0 && battle.defenderTroops.cavalry == 0 && battle.defenderTroops.siege == 0, 
+            "Troops already deployed to garrison");
+        
+        // Deploy troops to garrison
+        battle.defenderTroops.infantry = infantryCount;
+        battle.defenderTroops.cavalry = cavalryCount;
+        battle.defenderTroops.siege = siegeCount;
+        
+        // Lock troops
+        playerTroops[msg.sender][TroopType.INFANTRY] -= infantryCount;
+        playerTroops[msg.sender][TroopType.CAVALRY] -= cavalryCount;
+        playerTroops[msg.sender][TroopType.SIEGE] -= siegeCount;
+        
+        // Recalculate defender power
+        uint256 defenderTroopPower = (
+            infantryCount * troopConfigs[TroopType.INFANTRY].power +
+            cavalryCount * troopConfigs[TroopType.CAVALRY].power +
+            siegeCount * troopConfigs[TroopType.SIEGE].power
+        );
+        battle.defenderPower += defenderTroopPower;
+        
+        // Also update the battle for the attacker to keep them in sync
+        Battle storage attackerBattle = activeBattles[battle.attacker];
+        attackerBattle.defenderTroops.infantry = infantryCount;
+        attackerBattle.defenderTroops.cavalry = cavalryCount;
+        attackerBattle.defenderTroops.siege = siegeCount;
+        attackerBattle.defenderPower += defenderTroopPower;
+        
+        emit TroopsDeployedToGarrison(msg.sender, infantryCount, cavalryCount, siegeCount);
     }
 
     /**

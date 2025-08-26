@@ -236,7 +236,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Stake troops to defend",
             tier: 1,
             isCoreBuilding: false,
-            disabled: true
+            disabled: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.COMMAND_CENTER] = DistrictBuildingConfig({
@@ -726,6 +726,21 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         names[21] = "EMBASSY_HOME";
         names[22] = "TREASURY_VAULT";
         return names;
+    }
+
+    /**
+     * @dev Get building ID by name
+     * @param buildingName The name of the building
+     * @return uint8 The building ID, or 255 if not found
+     */
+    function getBuildingIdByName(string memory buildingName) public pure returns (uint8) {
+        string[] memory names = getBuildingNames();
+        for (uint8 i = 0; i < names.length; i++) {
+            if (keccak256(bytes(names[i])) == keccak256(bytes(buildingName))) {
+                return i;
+            }
+        }
+        return 255; // Not found
     }
 
     function getBuiltDistrictBuildings(address player) external view returns (uint8[] memory) {
