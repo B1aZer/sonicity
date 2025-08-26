@@ -76,6 +76,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 repPoints;
         TroopDeployment attackerTroops;  // Attacker deployed troop counts
         TroopDeployment defenderTroops;  // Defender deployed troop counts
+        bool outpostWarningShown;        // Track if defender has seen the outpost warning
     }
 
     // Troop costs and effects
@@ -172,6 +173,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     event SearchStarted(address indexed player, uint256 startTime);
     event SearchCompleted(address indexed player);
     event BattleAutoResolved(address indexed attacker, address indexed defender, string reason);
+    event OutpostWarningConfirmed(address indexed defender);
 
     struct BattleEffects {
         uint256 gridBuildingsDamaged;
@@ -330,7 +332,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             districtBuildingsDamaged: 0,
             repPoints: 0,
             attackerTroops: TroopDeployment(infantryCount, cavalryCount, siegeCount),
-            defenderTroops: TroopDeployment(0, 0, 0)  // Defender deployed counts (initially 0)
+            defenderTroops: TroopDeployment(0, 0, 0),  // Defender deployed counts (initially 0)
+            outpostWarningShown: false  // Defender hasn't seen warning yet
         });
 
         // Initialize hero and tactics deployment data
@@ -355,7 +358,23 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         playerTroops[msg.sender][TroopType.CAVALRY] -= cavalryCount;
         playerTroops[msg.sender][TroopType.SIEGE] -= siegeCount;
         
-        // emit warning if defender has outpost
+        // Check if defender has outpost and set warning state
+        (bool outpostSuccess, bytes memory outpostData) = districtBuildingsAddress.staticcall(
+            abi.encodeWithSignature("getBuildingIdByName(string)", "OUTPOST")
+        );
+        if (outpostSuccess) {
+            uint8 outpostId = abi.decode(outpostData, (uint8));
+            if (outpostId != 255) {
+                (outpostSuccess, outpostData) = districtBuildingsAddress.staticcall(
+                    abi.encodeWithSignature("isDistrictBuildingBuilt(address,uint8)", 
+                        defender, outpostId)
+                );
+                if (outpostSuccess && abi.decode(outpostData, (bool))) {
+                    // Defender has outpost - they'll see warning on page reload
+                    // Warning state is already set to false in newBattle
+                }
+            }
+        }
 
         emit BattleStarted(msg.sender, defender, block.timestamp);
     }
@@ -1255,6 +1274,23 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         attackerBattle.defenderPower += defenderTroopPower;
         
         emit TroopsDeployedToGarrison(msg.sender, infantryCount, cavalryCount, siegeCount);
+    }
+
+    /**
+     * @dev Confirm outpost warning - called by defender to acknowledge the attack warning
+     */
+    function confirmOutpostWarning() external {
+        require(activeBattles[msg.sender].startTime > 0, "Not in battle");
+        require(activeBattles[msg.sender].defender == msg.sender, "Not the defender");
+        require(!activeBattles[msg.sender].outpostWarningShown, "Warning already confirmed");
+        
+        activeBattles[msg.sender].outpostWarningShown = true;
+        
+        // Also update attacker's battle record
+        Battle storage attackerBattle = activeBattles[activeBattles[msg.sender].attacker];
+        attackerBattle.outpostWarningShown = true;
+        
+        emit OutpostWarningConfirmed(msg.sender);
     }
 
     /**

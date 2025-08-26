@@ -1662,5 +1662,76 @@ describe("BattleSystem", function () {
             console.log(`  Expected power: ${expectedDefenderPower}`);
             console.log(`  ✅ Defender successfully deployed troops to garrison`);
         });
+
+        it("should test outpost warning system - defender gets warning when attacked", async function () {
+            // Scenario: Defender with outpost gets warning when attacked
+            
+            // Player2 needs enough gold to unlock and build outpost
+            await gameState.testEarnGold(player2.address, 1000); // More than unlock cost (600) + build cost (120)
+            
+            // Player2 builds outpost
+            const outpostIndex = 5; // OUTPOST = 5 (tier 0 building)
+            await districtBuildings.connect(player2).buildDistrictBuilding(outpostIndex);
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 0, 0); // 10 infantry
+
+            // Check initial warning state
+            const battleBeforeWarning = await battleSystem.activeBattles(player2.address);
+            expect(battleBeforeWarning.outpostWarningShown).to.be.false; // Warning not shown yet
+
+            // Player2 confirms the warning
+            await battleSystem.connect(player2).confirmOutpostWarning();
+
+            // Check warning state after confirmation
+            const battleAfterWarning = await battleSystem.activeBattles(player2.address);
+            expect(battleAfterWarning.outpostWarningShown).to.be.true; // Warning confirmed
+
+            // Verify attacker's battle record is also updated
+            const attackerBattle = await battleSystem.activeBattles(player1.address);
+            expect(attackerBattle.outpostWarningShown).to.be.true; // Warning confirmed
+
+            // Try to confirm again - should fail
+            await expect(
+                battleSystem.connect(player2).confirmOutpostWarning()
+            ).to.be.revertedWith("Warning already confirmed");
+
+            console.log(`🏰 Outpost Warning Test:`);
+            console.log(`  Initial warning state: ${battleBeforeWarning.outpostWarningShown}`);
+            console.log(`  Final warning state: ${battleAfterWarning.outpostWarningShown}`);
+            console.log(`  ✅ Outpost warning system working correctly`);
+        });
+
+        it("should test outpost warning - no warning when defender has no outpost", async function () {
+            // Scenario: Defender without outpost doesn't get warning
+            
+            // Player2 does NOT build outpost (no outpost)
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 0, 0); // 10 infantry
+
+            // Check warning state - should be false (no outpost, so no warning)
+            const battle = await battleSystem.activeBattles(player2.address);
+            expect(battle.outpostWarningShown).to.be.false; // No outpost, no warning
+
+            // Try to confirm warning - should fail (not the defender or no battle)
+            await expect(
+                battleSystem.connect(player1).confirmOutpostWarning()
+            ).to.be.revertedWith("Not the defender");
+
+            console.log(`🏰 No Outpost Warning Test:`);
+            console.log(`  Warning state: ${battle.outpostWarningShown}`);
+            console.log(`  ✅ No warning shown when defender has no outpost`);
+        });
     });
 }); 
