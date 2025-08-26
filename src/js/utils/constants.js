@@ -2,19 +2,19 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Will be updated by update-addresses.sh
-    SONICITY_FARM: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", // Will be updated by update-addresses.sh
-    SONICITY_DIAMOND: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", // Will be updated by update-addresses.sh
-    SONICITY_REP: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9", // Will be updated by update-addresses.sh
-    SONICITY_YIELD_NFT: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9", // Will be updated by update-addresses.sh
-    SONICITY_ART_PROXY: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707", // Will be updated by update-addresses.sh
-    ALTAR: "0x68B1D87F95878fE05B998F19b66F4baba5De1aed", // Will be updated by update-addresses.sh
-    GAME_STATE: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0", // Will be updated by update-addresses.sh
-    DISTRICT_BUILDINGS: "0x9A676e781A523b5d0C0e43731313A708CB607508", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1", // Will be updated by update-addresses.sh
-    BATTLE_SYSTEM: "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d", // Will be updated by update-addresses.sh
-    HERO_NFT: "0x0000000000000000000000000000000000000000", // Will be updated by update-addresses.sh
-    TACTICS_NFT: "0x0000000000000000000000000000000000000000" // Will be updated by update-addresses.sh
+    SONICITY_NFT: "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d", // Will be updated by update-addresses.sh
+    SONICITY_FARM: "0x59b670e9fA9D0A427751Af201D676719a970857b", // Will be updated by update-addresses.sh
+    SONICITY_DIAMOND: "0x4ed7c70F96B99c776995fB64377f0d4aB3B0e1C1", // Will be updated by update-addresses.sh
+    SONICITY_REP: "0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44", // Will be updated by update-addresses.sh
+    SONICITY_YIELD_NFT: "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f", // Will be updated by update-addresses.sh
+    SONICITY_ART_PROXY: "0x4A679253410272dd5232B3Ff7cF5dbB88f295319", // Will be updated by update-addresses.sh
+    ALTAR: "0x851356ae760d987E095750cCeb3bC6014560891C", // Will be updated by update-addresses.sh
+    GAME_STATE: "0x9E545E3C0baAB3E08CdfD552C960A1050f373042", // Will be updated by update-addresses.sh
+    DISTRICT_BUILDINGS: "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8", // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0x95401dc811bb5740090279Ba06cfA8fcF6113778", // Will be updated by update-addresses.sh
+    HERO_NFT: "0x70e0bA845a1A0F2DA3359C97E0285013525FFC49", // Will be updated by update-addresses.sh
+    TACTICS_NFT: "0x99bbA657f2BbC93c02D617f8bA121cB8Fc104Acf" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
@@ -34,7 +34,7 @@ export const SHOW_PERFORMANCE_MONITOR = true;
 // Building definitions combining visual and game properties
 // NOTE: These building types must match the DistrictBuildingType enum in DistrictBuildings.sol
 // Contract enum order: CITY_HALL, ALTAR, MINE, SHOP, WORKSHOP, OUTPOST, DEFENSE_TOWER, BARRACKS, 
-// SCOUT_GUILD, COMMAND_CENTER, GARRISON, TAVERN, ADVENTURE_CAMP, MAGE_TOWER, TACTICS_CENTER, 
+// SCOUT_GUILD, GARRISON, COMMAND_CENTER, TAVERN, ADVENTURE_CAMP, MAGE_TOWER, TACTICS_CENTER, 
 // GEM_WORKSHOP, DIAMOND_VAULT, ARCANUM_OF_NAMES, REFINERY, COUNCIL_HALL, FORTRESS_WALLS, 
 // EMBASSY_HOME, TREASURY_VAULT
 export const BUILDINGS = {
@@ -222,19 +222,14 @@ export const BUILDINGS = {
             }
         }
     },
-    COMMAND_CENTER: {
-        name: 'Command Center',
-        size: new THREE.Vector3(30, 30, 30),
-        color: 0xDAA520, // Goldenrod
+    GARRISON: {
+        name: 'Garrison',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x696969, // Dim Gray
         position: { x: 35, y: 0, z: -55 },
         rotation: 0,
         tier: 1,
-        assets: {
-            baseUrl: 'assets/command_center',
-            levels: {
-                1: { url: 'assets/command_center.glb' }
-            }
-        }
+        assets: null,
     },
     OUTPOST: {
         name: 'Outpost',
@@ -245,14 +240,19 @@ export const BUILDINGS = {
         tier: 0,
         assets: null, // Model not yet implemented
     },
-    GARRISON: {
-        name: 'Garrison',
-        size: new THREE.Vector3(15, 15, 15),
-        color: 0x696969, // Dim Gray
+    COMMAND_CENTER: {
+        name: 'Command Center',
+        size: new THREE.Vector3(30, 30, 30),
+        color: 0xDAA520, // Goldenrod
         position: { x: 50, y: 0, z: -45 },
         rotation: 0,
         tier: 1,
-        assets: null,
+        assets: {
+            baseUrl: 'assets/command_center',
+            levels: {
+                1: { url: 'assets/command_center.glb' }
+            }
+        }
     },
     TAVERN: {
         name: 'Tavern',
@@ -377,6 +377,126 @@ export const GRID_BUILDINGS = Object.entries(BUILDINGS)
     .filter(([_, building]) => building.isGridBuilding)
     .map(([type]) => type);
 
+// Hero system constants
+/*
+export const HERO_CLASSES = {
+    WARRIOR: 0,
+    STRATEGIST: 1,
+    SCOUT: 2
+};
+
+export const HERO_TEMPLATES = {
+    [HERO_CLASSES.WARRIOR]: {
+        name: "Iron Guardian",
+        class: HERO_CLASSES.WARRIOR,
+        troopBonus: 20,
+        description: "Specializes in infantry combat",
+        troopType: "INFANTRY"
+    },
+    [HERO_CLASSES.STRATEGIST]: {
+        name: "Shadow Tactician", 
+        class: HERO_CLASSES.STRATEGIST,
+        troopBonus: 20,
+        description: "Specializes in siege warfare",
+        troopType: "SIEGE"
+    },
+    [HERO_CLASSES.SCOUT]: {
+        name: "Swift Scout",
+        class: HERO_CLASSES.SCOUT,
+        troopBonus: 20,
+        description: "Specializes in cavalry tactics",
+        troopType: "CAVALRY"
+    }
+};
+
+// Tactics system constants
+export const TACTIC_TYPES = {
+    STRIKE: 0,
+    SHIELD: 1,
+    TRICK: 2
+};
+
+export const TACTICS = {
+    1: {
+        id: 1,
+        name: "Iron Strike",
+        type: TACTIC_TYPES.STRIKE,
+        effectMagnitude: 3,
+        description: "Damage +3 buildings",
+        cost: { gold: 800, diamonds: 8 }
+    },
+    2: {
+        id: 2,
+        name: "Guardian Wall",
+        type: TACTIC_TYPES.SHIELD,
+        effectMagnitude: 75,
+        description: "Lose 75% fewer troops",
+        cost: { gold: 800, diamonds: 8 }
+    },
+    3: {
+        id: 3,
+        name: "Battle Rage",
+        type: TACTIC_TYPES.TRICK,
+        effectMagnitude: 30,
+        description: "Gain +30 REP points",
+        cost: { gold: 800, diamonds: 8 }
+    },
+    4: {
+        id: 4,
+        name: "Cavalry Rush",
+        type: TACTIC_TYPES.STRIKE,
+        effectMagnitude: 2,
+        description: "Damage +2 buildings",
+        cost: { gold: 800, diamonds: 8 }
+    },
+    5: {
+        id: 5,
+        name: "Defensive Circle",
+        type: TACTIC_TYPES.SHIELD,
+        effectMagnitude: 50,
+        description: "Lose 50% fewer troops",
+        cost: { gold: 800, diamonds: 8 }
+    },
+    6: {
+        id: 6,
+        name: "Tactical Feint",
+        type: TACTIC_TYPES.TRICK,
+        effectMagnitude: 20,
+        description: "Gain +20 REP points",
+        cost: { gold: 800, diamonds: 8 }
+    },
+    7: {
+        id: 7,
+        name: "Swift Strike",
+        type: TACTIC_TYPES.STRIKE,
+        effectMagnitude: 1,
+        description: "Damage +1 building",
+        cost: { gold: 800, diamonds: 8 }
+    },
+    8: {
+        id: 8,
+        name: "Shadow Guard",
+        type: TACTIC_TYPES.SHIELD,
+        effectMagnitude: 25,
+        description: "Lose 25% fewer troops",
+        cost: { gold: 800, diamonds: 8 }
+    },
+    9: {
+        id: 9,
+        name: "Stealth Trap",
+        type: TACTIC_TYPES.TRICK,
+        effectMagnitude: 15,
+        description: "Gain +15 REP points",
+        cost: { gold: 800, diamonds: 8 }
+    }
+};
+
+// Helper functions for hero and tactics
+export const getHeroByClass = (heroClass) => HERO_TEMPLATES[heroClass];
+export const getTacticById = (tacticId) => TACTICS[tacticId];
+export const getTacticsByType = (tacticType) => Object.values(TACTICS).filter(tactic => tactic.type === tacticType);
+*/
+
 // Helper to get district buildings only
 export const DISTRICT_BUILDINGS = Object.entries(BUILDINGS)
     .filter(([_, building]) => !building.isGridBuilding)
@@ -437,7 +557,7 @@ export const SCOUT_GUILD_MESSAGES = [
 export function validateBuildingConstants() {
     const expectedDistrictBuildings = [
         'CITY_HALL', 'ALTAR', 'MINE', 'SHOP', 'WORKSHOP', 'OUTPOST', 'DEFENSE_TOWER', 
-        'BARRACKS', 'SCOUT_GUILD', 'COMMAND_CENTER', 'GARRISON', 'TAVERN', 'ADVENTURE_CAMP', 
+        'BARRACKS', 'SCOUT_GUILD', 'GARRISON', 'COMMAND_CENTER', 'TAVERN', 'ADVENTURE_CAMP', 
         'MAGE_TOWER', 'TACTICS_CENTER', 'GEM_WORKSHOP', 'DIAMOND_VAULT', 'ARCANUM_OF_NAMES', 
         'REFINERY', 'COUNCIL_HALL', 'FORTRESS_WALLS', 'EMBASSY_HOME', 'TREASURY_VAULT'
     ];

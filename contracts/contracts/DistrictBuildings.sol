@@ -28,8 +28,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         DEFENSE_TOWER,
         BARRACKS,
         SCOUT_GUILD,
-        COMMAND_CENTER,
         GARRISON,     // New building for staking troops to defend district
+        COMMAND_CENTER,
         TAVERN,       // Allows to hire heroes
         ADVENTURE_CAMP, // Allows heroes to start adventure - explore map etc
         MAGE_TOWER,   // Explore relics found on the adventure
@@ -227,18 +227,6 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             disabled: false
         });
 
-        districtBuildingConfigs[DistrictBuildingType.COMMAND_CENTER] = DistrictBuildingConfig({
-            name: "Command Center",
-            unlockCost: 1750,
-            buildCost: 250,
-            upgradeCost: 0,
-            maxLevel: 1,
-            description: "Deploy troops for raids",
-            tier: 1,
-            isCoreBuilding: false,
-            disabled: false
-        });
-
         districtBuildingConfigs[DistrictBuildingType.GARRISON] = DistrictBuildingConfig({
             name: "Garrison",
             unlockCost: 2000,
@@ -249,6 +237,18 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             tier: 1,
             isCoreBuilding: false,
             disabled: true
+        });
+
+        districtBuildingConfigs[DistrictBuildingType.COMMAND_CENTER] = DistrictBuildingConfig({
+            name: "Command Center",
+            unlockCost: 2500,
+            buildCost: 250,
+            upgradeCost: 0,
+            maxLevel: 1,
+            description: "Deploy troops for raids",
+            tier: 1,
+            isCoreBuilding: false,
+            disabled: false
         });
     }
 
@@ -711,8 +711,8 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         names[6] = "DEFENSE_TOWER";
         names[7] = "BARRACKS";
         names[8] = "SCOUT_GUILD";
-        names[9] = "COMMAND_CENTER";
-        names[10] = "GARRISON";
+        names[9] = "GARRISON";
+        names[10] = "COMMAND_CENTER";
         names[11] = "TAVERN";
         names[12] = "ADVENTURE_CAMP";
         names[13] = "MAGE_TOWER";
