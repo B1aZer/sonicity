@@ -1,5 +1,46 @@
 ## todo
 
+UI/UX polish - Make the prototype look good
+Gameplay balance - Ensure the core loop is fun
+
+## todo
+
+- update docs
+- think what to do with loop to bring more fun
+
+## gameplay feedback
+
+- mno grid management , buildings at start , reps at end,
+- grid is too big
+- gord os worthless at the end, no purpose
+
+- gameplay is dull, you only build and recharge, but no mini games
+- no action, no management
+
+- game look like extraction
+- you only recharge without purpose
+
+1. Make grid more compact ? maybe introduce some dependencies (aka micro strategy)
+2. How make some action? building/player related?
+3. visible money accumulation (aka sushiswap)
+
+
+## todo
+
+- upgrade lvl error 
+- I dont think Charge REP Forges (input wiht amount of buldings) charges correctly
+
+## todo
+
+- we need to repkaece tier 3
+ - - rep r\leaderboard
+ - -  merne yield  nfts
+ - - arcanum of names actually add something to image
+
+ - hide qol, we probably need finish prod time to make this correctly (sonic amount)
+
+## todo
+
 1 do we need arcanum ? We mostly dont need ANY of tier 3 buidlings, exxcept maybe decrease time but no
 - do we need teir 4 buildings ?
 2. How revenue hub will look like. It should be similar to other 2
