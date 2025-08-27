@@ -183,12 +183,12 @@ export class TacticsCenterPage extends BasePage {
                 const tacticTypeName = tacticTypeNames[tacticInfo.tacticType];
 
                 // Confirm minting
-                const confirmed = await this.modal.confirm(
+                const result = await this.modal.confirm(
                     `Mint <b>${tacticInfo.name}</b> (${tacticTypeName}) for <b>${cost.goldCost} Gold and ${cost.diamondCost} Diamonds</b>?`,
                     { title: 'Confirm Tactic Minting' }
                 );
 
-                if (confirmed) {
+                if (result.isConfirmed) {
                     await this.mintTactic(tacticId, tacticInfo.name);
                 }
             });

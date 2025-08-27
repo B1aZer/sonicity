@@ -691,12 +691,12 @@ export class CommandCenterPage extends BasePage {
                     return;
                 }
 
-                const confirmed = await this.modal.confirm(
+                const result = await this.modal.confirm(
                     `Deploy ${TacticsNFTContract.getTacticName(tacticId)} to this battle?`,
                     { title: 'Confirm Tactic Deployment' }
                 );
 
-                if (confirmed) {
+                if (result.isConfirmed) {
                     await this.deployTactic(tacticId);
                 }
             });
