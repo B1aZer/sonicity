@@ -3,20 +3,25 @@ export class BattleProgressBar {
         this.element = document.createElement('div');
         this.element.className = 'battle-progress-container';
         this.battleTimerInterval = null;
+        this.battleSystemContract = null;
     }
 
-    render(battleData, playerRole) {
+    render(battleData, playerRole, contracts = null) {
         if (!battleData || battleData.startTime === 0n) {
             this.element.style.display = 'none';
             return this.element;
         }
 
-        const now = Math.floor(Date.now() / 1000);
+        // Use blockchain time instead of JavaScript time
         const battleStartTime = Number(battleData.startTime);
         const battleDuration = 24 * 60 * 60; // 24 hours in seconds
-        const elapsed = now - battleStartTime;
+        
+        // For now, we'll use JavaScript time as a fallback
+        // The timer updates will use actual blockchain time
+        const currentTime = Math.floor(Date.now() / 1000);
+        const elapsed = currentTime - battleStartTime;
         const remaining = Math.max(0, battleDuration - elapsed);
-        const progress = Math.min(100, (elapsed / battleDuration) * 100);
+        const progress = Math.min(100, Math.max(0, (elapsed / battleDuration) * 100));
 
         // Calculate power comparison without revealing exact numbers
         const attackerPower = Number(battleData.attackerPower || 0);
@@ -102,6 +107,9 @@ export class BattleProgressBar {
             </div>
         `;
 
+        // Store contracts for timer updates
+        this.contracts = contracts;
+        
         // Start timer updates
         this.startTimerUpdates(battleData);
         
@@ -125,34 +133,53 @@ export class BattleProgressBar {
             clearInterval(this.battleTimerInterval);
         }
 
-        // Update timer every second
-        this.battleTimerInterval = setInterval(() => {
-            const now = Math.floor(Date.now() / 1000);
-            const battleStartTime = Number(battleData.startTime);
-            const battleDuration = 24 * 60 * 60;
-            const elapsed = now - battleStartTime;
-            const remaining = Math.max(0, battleDuration - elapsed);
-            const progress = Math.min(100, (elapsed / battleDuration) * 100);
+        // Update timer every 5 seconds (same as other pages)
+        this.battleTimerInterval = setInterval(async () => {
+            try {
+                const battleStartTime = Number(battleData.startTime);
+                const battleDuration = 24 * 60 * 60;
+                
+                // Get current blockchain time if contracts are available
+                let currentTime;
+                if (this.contracts && this.contracts.battleSystem) {
+                    try {
+                        const block = await this.contracts.battleSystem.provider.getBlock("latest");
+                        currentTime = block.timestamp;
+                    } catch (error) {
+                        console.warn('Failed to get blockchain time, using JavaScript time:', error);
+                        currentTime = Math.floor(Date.now() / 1000);
+                    }
+                } else {
+                    // Fallback to JavaScript time
+                    currentTime = Math.floor(Date.now() / 1000);
+                }
+                
+                const elapsed = currentTime - battleStartTime;
+                const remaining = Math.max(0, battleDuration - elapsed);
+                const progress = Math.min(100, Math.max(0, (elapsed / battleDuration) * 100));
 
-            // Update timer display
-            const hours = Math.floor(remaining / 3600);
-            const minutes = Math.floor((remaining % 3600) / 60);
-            const timeString = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                // Update timer display
+                const hours = Math.floor(remaining / 3600);
+                const minutes = Math.floor((remaining % 3600) / 60);
+                const timeString = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
-            const timeElement = this.element.querySelector('.time-remaining');
-            const progressElement = this.element.querySelector('.progress-bar');
-            const progressLabel = this.element.querySelector('.progress-label');
+                const timeElement = this.element.querySelector('.time-remaining');
+                const progressElement = this.element.querySelector('.progress-bar');
+                const progressLabel = this.element.querySelector('.progress-label');
 
-            if (timeElement) timeElement.textContent = timeString;
-            if (progressElement) progressElement.style.width = `${progress}%`;
-            if (progressLabel) progressLabel.textContent = `Battle Progress: ${Math.round(progress)}%`;
+                if (timeElement) timeElement.textContent = timeString;
+                if (progressElement) progressElement.style.width = `${progress}%`;
+                if (progressLabel) progressLabel.textContent = `Battle Progress: ${Math.round(progress)}%`;
 
-            // Stop timer when battle is complete
-            if (remaining <= 0) {
-                clearInterval(this.battleTimerInterval);
-                this.battleTimerInterval = null;
+                // Stop timer when battle is complete
+                if (remaining <= 0) {
+                    clearInterval(this.battleTimerInterval);
+                    this.battleTimerInterval = null;
+                }
+            } catch (error) {
+                console.error('Error updating battle timer:', error);
             }
-        }, 1000);
+        }, 5000); // Update every 5 seconds like other pages
     }
 
     destroy() {

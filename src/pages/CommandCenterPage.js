@@ -219,7 +219,7 @@ export class CommandCenterPage extends BasePage {
         }
 
         // Render the battle progress bar
-        const progressBarElement = this.battleProgressBar.render(activeBattle, playerRole);
+        const progressBarElement = this.battleProgressBar.render(activeBattle, playerRole, this.contracts);
         
         // Clear container and append progress bar
         container.innerHTML = '';

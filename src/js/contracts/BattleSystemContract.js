@@ -96,6 +96,13 @@ export class BattleSystemContract extends BaseContract {
         return contract.activeBattles(player);
     }
 
+    async getCurrentBlockTimestamp() {
+        const contract = await this.getContract();
+        const provider = contract.provider;
+        const latestBlock = await provider.getBlock('latest');
+        return latestBlock.timestamp;
+    }
+
     async battleHistory(index) {
         const contract = await this.getContract();
         return contract.battleHistory(index);
