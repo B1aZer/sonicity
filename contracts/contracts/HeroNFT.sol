@@ -24,8 +24,6 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
         string name;
         HeroClass class;
         uint8 troopBonus;  // +20 power per troop type
-        bool isDeployed;
-        uint256 lastBattleTime;
     }
     
     // Hero costs (Gold + Food + Diamonds)
@@ -39,7 +37,7 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
     mapping(uint256 => Hero) public heroes;
     mapping(address => mapping(HeroClass => bool)) public playerHeroes;
     mapping(address => mapping(HeroClass => uint256)) public playerHeroIds; // Track hero ID by class
-    mapping(address => uint256) public deployedHero;
+
     mapping(HeroClass => Hero) public heroTemplates;
     mapping(HeroClass => HeroCost) public heroCosts;
 
@@ -48,8 +46,6 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
 
     // Events
     event HeroMinted(address indexed player, uint256 indexed heroId, HeroClass indexed class);
-    event HeroDeployed(address indexed player, uint256 indexed heroId);
-    event HeroUndeployed(address indexed player, uint256 indexed heroId);
     
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -74,27 +70,21 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
         heroTemplates[HeroClass.WARRIOR] = Hero({
             name: "Iron Guardian",
             class: HeroClass.WARRIOR,
-            troopBonus: 20,
-            isDeployed: false,
-            lastBattleTime: 0
+            troopBonus: 20
         });
         
         // STRATEGIST - Shadow Tactician
         heroTemplates[HeroClass.STRATEGIST] = Hero({
             name: "Shadow Tactician",
             class: HeroClass.STRATEGIST,
-            troopBonus: 20,
-            isDeployed: false,
-            lastBattleTime: 0
+            troopBonus: 20
         });
         
         // SCOUT - Swift Scout
         heroTemplates[HeroClass.SCOUT] = Hero({
             name: "Swift Scout",
             class: HeroClass.SCOUT,
-            troopBonus: 20,
-            isDeployed: false,
-            lastBattleTime: 0
+            troopBonus: 20
         });
     }
     
@@ -163,39 +153,7 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
         return playerHeroIds[player][class];
     }
 
-    /**
-     * @dev Deploy hero by class (convenience function)
-     * @param class The hero class to deploy
-     */
-    function deployHeroByClass(HeroClass class) external {
-        uint256 heroId = playerHeroIds[msg.sender][class];
-        require(playerHeroes[msg.sender][class], "Hero not owned");
-        _deployHero(heroId, msg.sender);
-    }
 
-    /**
-     * @dev Undeploy hero by class (convenience function)
-     * @param class The hero class to undeploy
-     */
-    function undeployHeroByClass(HeroClass class) external {
-        uint256 heroId = playerHeroIds[msg.sender][class];
-        require(playerHeroes[msg.sender][class], "Hero not owned");
-        _undeployHero(heroId, msg.sender);
-    }
-
-    /**
-     * @dev Get deployed hero class for a player
-     * @param player The player address
-     * @return bool Whether a hero is deployed
-     * @return HeroClass The deployed hero class (only valid if first return is true)
-     */
-    function getDeployedHeroInfo(address player) external view returns (bool, HeroClass) {
-        uint256 deployedHeroId = deployedHero[player];
-        if (deployedHeroId == 0) return (false, HeroClass.WARRIOR); // No hero deployed
-        
-        Hero memory hero = heroes[deployedHeroId];
-        return (true, hero.class);
-    }
 
     /**
      * @dev Check if player has a specific hero
@@ -217,64 +175,7 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
         return heroes[heroId];
     }
     
-    /**
-     * @dev Deploy hero for battle
-     * @param heroId The hero ID to deploy
-     */
-    function deployHero(uint256 heroId) external {
-        _deployHero(heroId, msg.sender);
-    }
 
-    /**
-     * @dev Internal function to deploy hero for battle
-     * @param heroId The hero ID to deploy
-     * @param player The player address
-     */
-    function _deployHero(uint256 heroId, address player) internal {
-        require(_ownerOf(heroId) != address(0), "Hero does not exist");
-        require(ownerOf(heroId) == player, "Not your hero");
-        require(!heroes[heroId].isDeployed, "Hero already deployed");
-        require(deployedHero[player] == 0, "Already have deployed hero");
-        
-        heroes[heroId].isDeployed = true;
-        deployedHero[player] = heroId;
-        
-        emit HeroDeployed(player, heroId);
-    }
-    
-    /**
-     * @dev Undeploy hero after battle
-     * @param heroId The hero ID to undeploy
-     */
-    function undeployHero(uint256 heroId) external {
-        _undeployHero(heroId, msg.sender);
-    }
-
-    /**
-     * @dev Internal function to undeploy hero after battle
-     * @param heroId The hero ID to undeploy
-     * @param player The player address
-     */
-    function _undeployHero(uint256 heroId, address player) internal {
-        require(_ownerOf(heroId) != address(0), "Hero does not exist");
-        require(ownerOf(heroId) == player, "Not your hero");
-        require(heroes[heroId].isDeployed, "Hero not deployed");
-        require(deployedHero[player] == heroId, "Not your deployed hero");
-        
-        heroes[heroId].isDeployed = false;
-        deployedHero[player] = 0;
-        
-        emit HeroUndeployed(player, heroId);
-    }
-    
-    /**
-     * @dev Get deployed hero for player
-     * @param player The player address
-     * @return uint256 The deployed hero ID (0 if none)
-     */
-    function getDeployedHero(address player) external view returns (uint256) {
-        return deployedHero[player];
-    }
 
     /**
      * @dev Get current token ID counter (for testing)

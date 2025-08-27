@@ -38,35 +38,7 @@ export class HeroNFTContract extends BaseContract {
         return contract.getHero(heroId);
     }
 
-    async deployHero(heroId) {
-        const contract = await this.getContract();
-        return contract.deployHero(heroId);
-    }
 
-    async deployHeroByClass(heroClass) {
-        const contract = await this.getContract();
-        return contract.deployHeroByClass(heroClass);
-    }
-
-    async undeployHero(heroId) {
-        const contract = await this.getContract();
-        return contract.undeployHero(heroId);
-    }
-
-    async undeployHeroByClass(heroClass) {
-        const contract = await this.getContract();
-        return contract.undeployHeroByClass(heroClass);
-    }
-
-    async getDeployedHero(player) {
-        const contract = await this.getContract();
-        return contract.getDeployedHero(player);
-    }
-
-    async getDeployedHeroInfo(player) {
-        const contract = await this.getContract();
-        return contract.getDeployedHeroInfo(player);
-    }
 
     async getPlayerHeroCount(player) {
         const contract = await this.getContract();
