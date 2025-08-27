@@ -261,7 +261,12 @@ export const BUILDINGS = {
         position: { x: -25, y: 0, z: -75 },
         rotation: 0,
         tier: 2,
-        assets: null, // Model not yet implemented
+        assets: {
+            baseUrl: 'assets/tavern',
+            levels: {
+                1: { url: 'assets/tavern.glb' }
+            }
+        }
     },
     ADVENTURE_CAMP: {
         name: 'Adventure Camp',

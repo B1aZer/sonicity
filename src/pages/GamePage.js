@@ -402,6 +402,10 @@ export class GamePage extends BasePage {
                     Logger.info('Command Center clicked');
                     window.history.pushState({}, '', '/command-center');
                     window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isTavern) {
+                    Logger.info('Tavern clicked');
+                    window.history.pushState({}, '', '/tavern');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                 }
             }
         });

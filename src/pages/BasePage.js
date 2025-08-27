@@ -9,6 +9,7 @@ import { SonicityYieldNFTContract } from '../js/contracts/SonicityYieldNFTContra
 import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
+import { HeroNFTContract } from '../js/contracts/HeroNFTContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 
@@ -27,7 +28,8 @@ export class BasePage {
             yieldNft: new SonicityYieldNFTContract(),
             districtBuildings: new DistrictBuildingsContract(),
             gridBuildings: new GridBuildingsContract(),
-            battleSystem: new BattleSystemContract()
+            battleSystem: new BattleSystemContract(),
+            heroNFT: new HeroNFTContract()
         };
         
         // Page state management
@@ -108,6 +110,10 @@ export class BasePage {
                 }),
                 this.contracts.battleSystem.initialize().catch(e => {
                     Logger.warn('BattleSystem contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.heroNFT.initialize().catch(e => {
+                    Logger.warn('HeroNFT contract initialization failed:', e);
                     return null;
                 })
             ];

@@ -17,6 +17,7 @@ import { ScoutGuildPage } from '../../pages/ScoutGuildPage.js';
 import { CommandCenterPage } from '../../pages/CommandCenterPage.js';
 import { GarrisonPage } from '../../pages/GarrisonPage.js';
 import { RevenueHubPage } from '../../pages/RevenueHubPage.js';
+import { TavernPage } from '../../pages/TavernPage.js';
 import Logger from '../utils/logger.js';
 
 export class Router {
@@ -56,7 +57,8 @@ export class Router {
             'scout-guild': ScoutGuildPage,
             'command-center': CommandCenterPage,
             'garrison': GarrisonPage,
-            'revenue-hub': RevenueHubPage
+            'revenue-hub': RevenueHubPage,
+            'tavern': TavernPage
         };
     }
 
