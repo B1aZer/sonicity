@@ -115,17 +115,7 @@ export class TavernPage extends BasePage {
                 const isOwned = this.state.ownedHeroes[className];
                 const cost = this.state.heroCosts[className];
                 
-                // Update ownership status
-                const statusElement = heroCard.querySelector('.shop-item-stock');
-                if (statusElement) {
-                    if (isOwned) {
-                        statusElement.innerHTML = '<i class="fas fa-check-circle"></i>Owned';
-                        statusElement.className = 'shop-item-stock in-stock';
-                    } else {
-                        statusElement.innerHTML = '<i class="fas fa-plus-circle"></i>Available';
-                        statusElement.className = 'shop-item-stock in-stock';
-                    }
-                }
+
 
                 // Update mint button
                 const mintButton = heroCard.querySelector('.mint-hero-btn');
@@ -280,9 +270,6 @@ export class TavernPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Iron Guardian (WARRIOR)</h3>
-                                    <span class="shop-item-stock in-stock">
-                                        <i class="fas fa-plus-circle"></i>Available
-                                    </span>
                                 </div>
                                 <div class="shop-item-desc">
                                     A mighty warrior who boosts Infantry power by +20 per troop. 
@@ -318,9 +305,6 @@ export class TavernPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Shadow Tactician (STRATEGIST)</h3>
-                                    <span class="shop-item-stock in-stock">
-                                        <i class="fas fa-plus-circle"></i>Available
-                                    </span>
                                 </div>
                                 <div class="shop-item-desc">
                                     A cunning strategist who boosts Siege power by +20 per troop. 
@@ -356,9 +340,6 @@ export class TavernPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Swift Scout (SCOUT)</h3>
-                                    <span class="shop-item-stock in-stock">
-                                        <i class="fas fa-plus-circle"></i>Available
-                                    </span>
                                 </div>
                                 <div class="shop-item-desc">
                                     A swift scout who boosts Cavalry power by +20 per troop. 
