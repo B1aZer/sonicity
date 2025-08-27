@@ -212,7 +212,7 @@ export class BarracksPage extends BasePage {
                                             <h3>${troop.name}</h3>
                                         </div>
                                         <div class="shop-item-desc">${troop.description}</div>
-                                        <div class="shop-item-cost">
+                                        <div class="cost-component">
                                             <div class="cost-item">
                                                 <i class="fas fa-coins cost-icon"></i>
                                                 <span class="cost-value" data-state="${goldCostKey}">0</span>

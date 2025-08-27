@@ -134,7 +134,7 @@ export class TacticsCenterPage extends BasePage {
 
                 // Update cost display
                 if (cost) {
-                    const costElement = tacticCard.querySelector('.tactic-cost');
+                    const costElement = tacticCard.querySelector('.cost-component');
                     if (costElement) {
                         costElement.innerHTML = `
                             <div class="cost-item">
@@ -293,7 +293,7 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="shop-item-desc">
                                     Devastating attack that damages +3 buildings. Perfect for aggressive players who want to maximize destruction.
                                 </div>
-                                <div class="tactic-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">800</span>
@@ -323,7 +323,7 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="shop-item-desc">
                                     Defensive formation that reduces troop losses by 75%. Essential for protecting your army during battles.
                                 </div>
-                                <div class="tactic-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">800</span>
@@ -353,7 +353,7 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="shop-item-desc">
                                     Inspires your troops to earn +30 REP points from battles. Great for players focused on reputation building.
                                 </div>
-                                <div class="tactic-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">800</span>
@@ -383,7 +383,7 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="shop-item-desc">
                                     Swift cavalry attack that damages +2 buildings. Ideal for players who prefer fast, mobile warfare.
                                 </div>
-                                <div class="tactic-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">800</span>
@@ -413,7 +413,7 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="shop-item-desc">
                                     Tactical formation that reduces troop losses by 50%. Balanced defense for various battle scenarios.
                                 </div>
-                                <div class="tactic-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">800</span>
@@ -443,7 +443,7 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="shop-item-desc">
                                     Deceptive maneuver that earns +20 REP points from battles. Subtle but effective reputation building.
                                 </div>
-                                <div class="tactic-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">800</span>
@@ -473,7 +473,7 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="shop-item-desc">
                                     Quick attack that damages +1 building. Light but reliable damage for consistent results.
                                 </div>
-                                <div class="tactic-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">800</span>
@@ -503,7 +503,7 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="shop-item-desc">
                                     Stealthy defense that reduces troop losses by 25%. Minimal but effective protection.
                                 </div>
-                                <div class="tactic-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">800</span>
@@ -533,7 +533,7 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="shop-item-desc">
                                     Hidden trap that earns +15 REP points from battles. Subtle reputation gains for careful players.
                                 </div>
-                                <div class="tactic-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">800</span>

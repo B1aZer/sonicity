@@ -60,7 +60,7 @@ export class ShopPage extends BasePage {
                                         <h3>${item.name}</h3>
                                     </div>
                                     <div class="shop-item-desc">${item.description}</div>
-                                    <div class="shop-item-cost">
+                                    <div class="cost-component">
                                         <div class="cost-item">
                                             <i class="fas fa-coins cost-icon"></i>
                                             <span class="cost-value">${item.cost}</span>
