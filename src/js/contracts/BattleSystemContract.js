@@ -206,9 +206,9 @@ export class BattleSystemContract extends BaseContract {
         return contract.deployToGarrison(infantry, cavalry, siege, heroClass);
     }
 
-    async deployTacticsToBattle(tacticIds) {
+    async deployTacticToBattle(tacticId) {
         const contract = await this.getContract();
-        return contract.deployTacticsToBattle(tacticIds);
+        return contract.deployTacticToBattle(tacticId);
     }
 
     async battleHeroTactics(player) {

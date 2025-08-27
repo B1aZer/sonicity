@@ -161,6 +161,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     event TroopsTrained(address indexed player, TroopType troopType, uint256 amount);
     event TroopsDeployed(address indexed player, TroopType troopType, uint256 amount);
     event TroopsDeployedToGarrison(address indexed player, uint256 infantryCount, uint256 cavalryCount, uint256 siegeCount);
+    event TacticDeployed(address indexed player, string role, uint8 slot, uint8 tacticId);
     event PlayerRegisteredForMatchmaking(address indexed player);
     event PlayerUnregisteredFromMatchmaking(address indexed player);
     event BattleRecorded(
@@ -1242,34 +1243,55 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     /**
-     * @dev Deploy tactics to current battle
-     * @param tactics Array of tactic IDs to deploy [tactic1, tactic2, tactic3] (0 if no tactic)
+     * @dev Deploy a single tactic to the next available slot
+     * @param tacticId The tactic ID to deploy
      */
-    function deployTacticsToBattle(uint8[3] memory tactics) external {
+    function deployTacticToBattle(uint8 tacticId) external {
         require(activeBattles[msg.sender].startTime > 0, "No active battle");
         require(!activeBattles[msg.sender].resolved, "Battle already resolved");
         require(tacticsNFTAddress != address(0), "TacticsNFT not configured");
+        require(tacticId > 0 && tacticId <= 9, "Invalid tactic ID");
         
-        // Validate tactics ownership
+        // Validate tactic ownership
         (bool success, bytes memory data) = tacticsNFTAddress.staticcall(
-            abi.encodeWithSignature("validateTacticsForBattle(address,uint8[3])", msg.sender, tactics)
+            abi.encodeWithSignature("hasTactic(address,uint8)", msg.sender, tacticId)
         );
-        require(success && abi.decode(data, (bool)), "Invalid tactics or not owned");
+        require(success && abi.decode(data, (bool)), "Tactic not owned");
         
-        // Update battle tactics deployment (preserve existing tactics)
+        // Find next available slot and deploy
         HeroTacticsDeployment storage deployment = battleHeroTactics[msg.sender];
         if (activeBattles[msg.sender].attacker == msg.sender) {
-            // Only set non-zero tactics (preserve existing ones)
-            if (tactics[0] > 0) deployment.attackerTactic1 = tactics[0];
-            if (tactics[1] > 0) deployment.attackerTactic2 = tactics[1];
-            if (tactics[2] > 0) deployment.attackerTactic3 = tactics[2];
+            // Deploy to attacker slot
+            if (deployment.attackerTactic1 == 0) {
+                deployment.attackerTactic1 = tacticId;
+                emit TacticDeployed(msg.sender, "attacker", 1, tacticId);
+            } else if (deployment.attackerTactic2 == 0) {
+                deployment.attackerTactic2 = tacticId;
+                emit TacticDeployed(msg.sender, "attacker", 2, tacticId);
+            } else if (deployment.attackerTactic3 == 0) {
+                deployment.attackerTactic3 = tacticId;
+                emit TacticDeployed(msg.sender, "attacker", 3, tacticId);
+            } else {
+                revert("All attacker tactic slots are full");
+            }
         } else {
-            // Only set non-zero tactics (preserve existing ones)
-            if (tactics[0] > 0) deployment.defenderTactic1 = tactics[0];
-            if (tactics[1] > 0) deployment.defenderTactic2 = tactics[1];
-            if (tactics[2] > 0) deployment.defenderTactic3 = tactics[2];
+            // Deploy to defender slot
+            if (deployment.defenderTactic1 == 0) {
+                deployment.defenderTactic1 = tacticId;
+                emit TacticDeployed(msg.sender, "defender", 1, tacticId);
+            } else if (deployment.defenderTactic2 == 0) {
+                deployment.defenderTactic2 = tacticId;
+                emit TacticDeployed(msg.sender, "defender", 2, tacticId);
+            } else if (deployment.defenderTactic3 == 0) {
+                deployment.defenderTactic3 = tacticId;
+                emit TacticDeployed(msg.sender, "defender", 3, tacticId);
+            } else {
+                revert("All defender tactic slots are full");
+            }
         }
     }
+
+
 
     /**
      * @dev Internal function to deploy troops to garrison

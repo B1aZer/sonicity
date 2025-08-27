@@ -44,7 +44,6 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
     
     // Events
     event TacticMinted(address indexed player, uint8 tacticId, string name);
-    event TacticDeployed(address indexed player, uint8 tacticId);
     
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {

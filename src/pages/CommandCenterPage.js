@@ -784,7 +784,7 @@ export class CommandCenterPage extends BasePage {
             const address = WalletManager.getCurrentWallet();
 
             // Deploy tactic to battle
-            await this.contracts.battleSystem.deployTacticsToBattle([tacticId]);
+            await this.contracts.battleSystem.deployTacticToBattle(tacticId);
             
             this.modal.success(`${TacticsNFTContract.getTacticName(tacticId)} deployed successfully!`);
             
