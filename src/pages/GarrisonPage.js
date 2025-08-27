@@ -351,31 +351,27 @@ export class GarrisonPage extends BasePage {
                 const infantryCount = parseInt(infantryInput.value) || 0;
                 const cavalryCount = parseInt(cavalryInput.value) || 0;
                 const siegeCount = parseInt(siegeInput.value) || 0;
-                const heroClass = heroSelect.value !== '' ? parseInt(heroSelect.value) : null;
+                const heroClass = heroSelect.value !== '' ? parseInt(heroSelect.value) : 255;
 
                 if (infantryCount === 0 && cavalryCount === 0 && siegeCount === 0) {
                     this.modal.error('Please select at least one troop type to deploy to garrison');
                     return;
                 }
 
-                // Deploy troops first
-                await this.contracts.battleSystem.deployTroopsToGarrison(
+                // Deploy troops and hero in a single transaction
+                await this.contracts.battleSystem.deployToGarrison(
                     infantryCount,
                     cavalryCount,
-                    siegeCount
+                    siegeCount,
+                    heroClass
                 );
 
-                // Deploy hero if selected
-                if (heroClass !== null) {
-                    await this.contracts.battleSystem.deployHeroToBattleByClass(heroClass);
-                }
-
-                const heroText = heroClass !== null ? ` and hero deployed` : '';
+                const heroText = heroClass !== 255 ? ` and hero deployed` : '';
                 this.modal.success(`Troops deployed to garrison${heroText}! Your defenses are strengthened.`);
                 await this.loadGarrisonData();
             } catch (error) {
-                Logger.error('Error deploying troops to garrison:', error);
-                this.modal.error('Failed to deploy troops to garrison: ' + error.message);
+                Logger.error('Error deploying to garrison:', error);
+                this.modal.error('Failed to deploy to garrison: ' + error.message);
             }
         });
 

@@ -1702,6 +1702,49 @@ describe("BattleSystem", function () {
             await gameState.testEarnFood(player2.address, 1500); // Extra food for hero minting (WARRIOR costs 1000)
             await gameState.testEarnDiamonds(player2.address, 50); // Extra diamonds for hero minting (WARRIOR costs 40)
             await heroNFT.connect(player2).mintHero(0); // WARRIOR
+            const mintedHeroId = await heroNFT.getHeroIdByClass(player2.address, 0);
+            console.log(`Debug - Minted hero ID: ${mintedHeroId}`);
+            
+            // Debug: Check if hero is actually owned
+            try {
+                const heroOwner = await heroNFT.ownerOf(mintedHeroId);
+                console.log(`Debug - Hero owner: ${heroOwner}`);
+            } catch (error) {
+                console.log(`Debug - Error getting hero owner: ${error.message}`);
+            }
+            
+            // Deploy hero in HeroNFT contract first
+            try {
+                await heroNFT.connect(player2).deployHeroByClass(0); // Deploy WARRIOR
+                console.log(`Debug - Hero deployment successful`);
+                
+                // Check deployment state immediately after
+                const deployedHeroIdAfter = await heroNFT.deployedHero(player2.address);
+                console.log(`Debug - Deployed hero ID immediately after: ${deployedHeroIdAfter}`);
+            } catch (error) {
+                console.log(`Debug - Hero deployment failed: ${error.message}`);
+                // Try deploying by hero ID instead
+                try {
+                    await heroNFT.connect(player2).deployHero(mintedHeroId);
+                    console.log(`Debug - Hero deployment by ID successful`);
+                } catch (error2) {
+                    console.log(`Debug - Hero deployment by ID failed: ${error2.message}`);
+                }
+            }
+
+            // Debug: Check if hero is owned and deployed
+            const hasHero = await heroNFT.hasHero(player2.address, 0);
+            const heroId = await heroNFT.getHeroIdByClass(player2.address, 0);
+            const deployedHeroInfo = await heroNFT.getDeployedHeroInfo(player2.address);
+            console.log(`Debug - Hero owned: ${hasHero}, Hero ID: ${heroId}, Deployed: ${deployedHeroInfo[0]}`);
+            
+            // Debug: Check deployment state directly
+            try {
+                const deployedHeroId = await heroNFT.deployedHero(player2.address);
+                console.log(`Debug - Deployed hero ID: ${deployedHeroId}`);
+            } catch (error) {
+                console.log(`Debug - Error getting deployed hero ID: ${error.message}`);
+            }
 
             // Start battle - Player1 attacks Player2
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
@@ -1717,7 +1760,12 @@ describe("BattleSystem", function () {
             expect(initialDefenderPower).to.equal(0);
 
             // Player2 deploys troops and hero to garrison in single transaction
-            await battleSystem.connect(player2).deployToGarrison(8, 0, 3, 0); // 8 infantry, 0 cavalry, 3 siege, WARRIOR hero
+            try {
+                await battleSystem.connect(player2).deployToGarrison(8, 0, 3, 0); // 8 infantry, 0 cavalry, 3 siege, WARRIOR hero
+                console.log(`Debug - BattleSystem deployment successful`);
+            } catch (error) {
+                console.log(`Debug - BattleSystem deployment failed: ${error.message}`);
+            }
 
             // Check battle state after deployment
             const battleAfterGarrison = await battleSystem.activeBattles(player1.address);
@@ -1730,6 +1778,7 @@ describe("BattleSystem", function () {
             
             // Check that hero is deployed
             const heroTacticsDeployment = await battleSystem.battleHeroTactics(player2.address);
+            console.log(`Debug - Battle hero tactics - attackerHeroId: ${heroTacticsDeployment.attackerHeroId}, defenderHeroId: ${heroTacticsDeployment.defenderHeroId}`);
             expect(heroTacticsDeployment.defenderHeroId).to.be.gt(0);
 
             // Check that defender power increased (including hero bonus)
