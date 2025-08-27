@@ -203,23 +203,11 @@ export class TacticsCenterPage extends BasePage {
             mintButton.disabled = true;
             mintButton.textContent = 'Minting...';
             
-            this.showStatus(`
-                <div class="loading">
-                    <div class="step">Minting ${tacticName}...</div>
-                    <div class="description">Please confirm the transaction in your wallet</div>
-                </div>
-            `, 'loading');
-
             // Mint the tactic
             const receipt = await this.contracts.tacticsNFT.mintTactic(tacticId);
             
             // Show success message
-            this.showStatus(`
-                <div class="success">
-                    <div class="step">${tacticName} minted successfully!</div>
-                    <div class="description">Your tactic is ready for deployment</div>
-                </div>
-            `, 'success');
+            this.modal.success(`${tacticName} minted successfully! Your tactic is ready for deployment.`);
 
             // Reload data
             await this.loadTacticsCenterData();
@@ -234,20 +222,7 @@ export class TacticsCenterPage extends BasePage {
         }
     }
 
-    showStatus(message, type = 'info') {
-        const statusElement = this.element.querySelector('.status-message');
-        if (statusElement) {
-            statusElement.innerHTML = message;
-            statusElement.className = `status-message ${type}`;
-            statusElement.style.display = 'block';
-            
-            if (type === 'success') {
-                setTimeout(() => {
-                    statusElement.style.display = 'none';
-                }, 3000);
-            }
-        }
-    }
+
 
     render() {
         this.element.innerHTML = `
@@ -273,8 +248,7 @@ export class TacticsCenterPage extends BasePage {
                     </div>
                 </div>
 
-                <!-- Status Message -->
-                <div class="status-message" style="display: none;"></div>
+
 
                 <!-- Tactics Section -->
                 <div class="page-section">

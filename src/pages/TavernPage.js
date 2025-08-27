@@ -236,20 +236,7 @@ export class TavernPage extends BasePage {
         }
     }
 
-    showStatus(message, type = 'info') {
-        const statusElement = this.element.querySelector('.status-message');
-        if (statusElement) {
-            statusElement.innerHTML = message;
-            statusElement.className = `status-message ${type}`;
-            statusElement.style.display = 'block';
-            
-            if (type === 'success') {
-                setTimeout(() => {
-                    statusElement.style.display = 'none';
-                }, 3000);
-            }
-        }
-    }
+
 
     render() {
         this.element.innerHTML = `
@@ -279,8 +266,7 @@ export class TavernPage extends BasePage {
                     </div>
                 </div>
 
-                <!-- Status Message -->
-                <div class="status-message" style="display: none;"></div>
+
 
                 <!-- Heroes Section -->
                 <div class="page-section">
