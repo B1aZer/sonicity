@@ -461,15 +461,20 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(!battle.resolved, "Battle already resolved");
         require(block.timestamp >= battle.startTime + BATTLE_DURATION, "Battle duration not elapsed");
 
-        // Calculate tactics power bonuses
+        // Calculate tactics RPS multipliers
         HeroTacticsDeployment storage attackerDeployment = battleHeroTactics[battle.attacker];
         HeroTacticsDeployment storage defenderDeployment = battleHeroTactics[battle.defender];
-        uint256 attackerTacticsPower = calculateTacticsPower(attackerDeployment.attackerTactic1, attackerDeployment.attackerTactic2, attackerDeployment.attackerTactic3);
-        uint256 defenderTacticsPower = calculateTacticsPower(defenderDeployment.defenderTactic1, defenderDeployment.defenderTactic2, defenderDeployment.defenderTactic3);
         
-        // Apply tactics power to final battle power
-        uint256 finalAttackerPower = battle.attackerPower + attackerTacticsPower;
-        uint256 finalDefenderPower = battle.defenderPower + defenderTacticsPower;
+        // Convert to arrays for RPS calculation
+        uint8[3] memory attackerTactics = [attackerDeployment.attackerTactic1, attackerDeployment.attackerTactic2, attackerDeployment.attackerTactic3];
+        uint8[3] memory defenderTactics = [defenderDeployment.defenderTactic1, defenderDeployment.defenderTactic2, defenderDeployment.defenderTactic3];
+        
+        // Calculate RPS multipliers for both sides together
+        (uint256 attackerRPSMultiplier, uint256 defenderRPSMultiplier) = calculateRPSMultipliers(attackerTactics, defenderTactics);
+        
+        // Apply RPS multipliers to final battle power
+        uint256 finalAttackerPower = (battle.attackerPower * attackerRPSMultiplier) / 100;
+        uint256 finalDefenderPower = (battle.defenderPower * defenderRPSMultiplier) / 100;
 
         bool attackerWon = finalAttackerPower > finalDefenderPower;
         
@@ -1034,41 +1039,61 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     // Hero & Tactics Functions
 
     /**
-     * @dev Calculate RPS multiplier for tactics
-     * @param attackerTactics Attacker's tactics
-     * @param defenderTactics Defender's tactics
-     * @return uint256 Power multiplier (100 = no bonus, 130 = 30% bonus)
+     * @dev Helper function to get tactic type from tactic ID
+     * @param tacticId The tactic ID
+     * @return TacticType The tactic type
      */
-    function calculateRPSMultiplier(uint8[3] memory attackerTactics, uint8[3] memory defenderTactics) internal view returns (uint256) {
-        uint256 totalMultiplier = 100; // Base multiplier
+    function getTacticType(uint8 tacticId) internal pure returns (TacticType) {
+        // Map tactic IDs to their types based on the TacticsNFT initialization
+        if (tacticId == 1 || tacticId == 4 || tacticId == 7) return TacticType.STRIKE;
+        if (tacticId == 2 || tacticId == 5 || tacticId == 8) return TacticType.SHIELD;
+        if (tacticId == 3 || tacticId == 6 || tacticId == 9) return TacticType.TRICK;
+        revert("Invalid tactic ID");
+    }
+
+
+
+    /**
+     * @dev Calculate RPS multipliers for both players together
+     * @param player1Tactics Player1's tactics
+     * @param player2Tactics Player2's tactics
+     * @return (uint256, uint256) Power multipliers for both players (100 = no bonus, 130 = 30% bonus)
+     */
+    function calculateRPSMultipliers(uint8[3] memory player1Tactics, uint8[3] memory player2Tactics) internal pure returns (uint256, uint256) {
+        uint256 player1Multiplier = 100; // Base multiplier
+        uint256 player2Multiplier = 100; // Base multiplier
         
         for (uint8 round = 0; round < 3; round++) {
-            if (attackerTactics[round] > 0 && defenderTactics[round] > 0) {
-                // Get tactic types
-                (bool success, bytes memory data) = tacticsNFTAddress.staticcall(
-                    abi.encodeWithSignature("getTactic(uint8)", attackerTactics[round])
-                );
-                if (!success) continue;
-                
-                TacticType attackerType = abi.decode(data, (TacticType));
-                
-                (success, data) = tacticsNFTAddress.staticcall(
-                    abi.encodeWithSignature("getTactic(uint8)", defenderTactics[round])
-                );
-                if (!success) continue;
-                
-                TacticType defenderType = abi.decode(data, (TacticType));
+            // Case 1: Both players have tactics - normal RPS comparison
+            if (player1Tactics[round] > 0 && player2Tactics[round] > 0) {
+                // Get tactic types using helper function
+                TacticType player1Type = getTacticType(player1Tactics[round]);
+                TacticType player2Type = getTacticType(player2Tactics[round]);
                 
                 // Apply RPS logic: STRIKE > SHIELD > TRICK > STRIKE
-                if ((attackerType == TacticType.STRIKE && defenderType == TacticType.SHIELD) ||
-                    (attackerType == TacticType.SHIELD && defenderType == TacticType.TRICK) ||
-                    (attackerType == TacticType.TRICK && defenderType == TacticType.STRIKE)) {
-                    totalMultiplier += 30; // 30% bonus for winning RPS
+                if ((player1Type == TacticType.STRIKE && player2Type == TacticType.SHIELD) ||
+                    (player1Type == TacticType.SHIELD && player2Type == TacticType.TRICK) ||
+                    (player1Type == TacticType.TRICK && player2Type == TacticType.STRIKE)) {
+                    player1Multiplier += 30; // Player1 wins RPS
+                } else if ((player2Type == TacticType.STRIKE && player1Type == TacticType.SHIELD) ||
+                           (player2Type == TacticType.SHIELD && player1Type == TacticType.TRICK) ||
+                           (player2Type == TacticType.TRICK && player1Type == TacticType.STRIKE)) {
+                    player2Multiplier += 30; // Player2 wins RPS
                 }
+                // If same type, it's a tie (no bonus for either)
             }
+            // Case 2: Player1 has tactic, Player2 has empty slot - Player1 wins RPS
+            else if (player1Tactics[round] > 0 && player2Tactics[round] == 0) {
+                player1Multiplier += 30; // Player1 wins RPS (Player2 has no tactic)
+            }
+            // Case 3: Player2 has tactic, Player1 has empty slot - Player2 wins RPS
+            else if (player2Tactics[round] > 0 && player1Tactics[round] == 0) {
+                player2Multiplier += 30; // Player2 wins RPS (Player1 has no tactic)
+            }
+            // Case 4: Both have empty slots - no RPS battle (no bonus)
         }
         
-        return totalMultiplier;
+        return (player1Multiplier, player2Multiplier);
     }
 
     /**
@@ -1301,49 +1326,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         }
     }
 
-    /**
-     * @dev Calculate total power bonus from deployed tactics
-     * @param tactic1 First tactic ID (0 if none)
-     * @param tactic2 Second tactic ID (0 if none)
-     * @param tactic3 Third tactic ID (0 if none)
-     * @return uint256 Total power bonus from all tactics
-     */
-    function calculateTacticsPower(uint8 tactic1, uint8 tactic2, uint8 tactic3) internal view returns (uint256) {
-        uint256 totalPower = 0;
-        
-        // Calculate power for each deployed tactic
-        if (tactic1 > 0) {
-            totalPower += getTacticPower(tactic1);
-        }
-        if (tactic2 > 0) {
-            totalPower += getTacticPower(tactic2);
-        }
-        if (tactic3 > 0) {
-            totalPower += getTacticPower(tactic3);
-        }
-        
-        return totalPower;
-    }
 
-    /**
-     * @dev Get power bonus for a specific tactic
-     * @param tacticId The tactic ID
-     * @return uint256 Power bonus for this tactic
-     */
-    function getTacticPower(uint8 tacticId) internal view returns (uint256) {
-        // Define power bonuses for each tactic
-        if (tacticId == 1) return 50;  // Iron Strike: +50 power
-        if (tacticId == 2) return 60;  // Guardian Wall: +60 power
-        if (tacticId == 3) return 40;  // Battle Rage: +40 power
-        if (tacticId == 4) return 45;  // Cavalry Rush: +45 power
-        if (tacticId == 5) return 55;  // Defensive Circle: +55 power
-        if (tacticId == 6) return 35;  // Tactical Feint: +35 power
-        if (tacticId == 7) return 40;  // Swift Strike: +40 power
-        if (tacticId == 8) return 50;  // Shadow Guard: +50 power
-        if (tacticId == 9) return 30;  // Stealth Trap: +30 power
-        
-        return 0; // Unknown tactic
-    }
 
     /**
      * @dev Internal function to deploy troops to garrison
