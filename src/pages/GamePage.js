@@ -126,9 +126,10 @@ export class GamePage extends BasePage {
                     : `${minutesRemaining}m remaining`;
                 
                 // Show warning modal
-                const modalContent = `Enemy forces are gathering at your borders!<br><br>
-                    Time until battle: ${timeString}.<br><br>
-                    Your outpost has detected hostile movements. Prepare your defenses!`;
+                const modalContent = `ENEMY ATTACK IN PROGRESS!<br><br>
+                    Your outpost has detected an active enemy assault!<br><br>
+                    Battle duration: ${timeString}.<br><br>
+                    Deploy your troops to the Garrison and prepare your defenses!`;
                 
                 const result = await this.modal.confirm(
                     modalContent,

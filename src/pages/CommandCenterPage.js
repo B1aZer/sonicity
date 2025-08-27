@@ -299,7 +299,7 @@ export class CommandCenterPage extends BasePage {
 
 
                 <div class="page-section troops-section">
-                    <h2>Current Troops</h2>
+                    <h2>Available Troops</h2>
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Infantry:</span>
@@ -349,18 +349,6 @@ export class CommandCenterPage extends BasePage {
                     </div>
                 </div>
 
-                <div class="page-section opponent-status-section">
-                    <h2>Battle Status</h2>
-                    <div class="status-display">
-                        <div class="status-text">No Active Search</div>
-                        <div class="status-details">Visit the Scout Guild to search for opponents</div>
-                        <div class="battle-timer" style="display: none;"></div>
-                        <button class="btn btn-primary resolve-battle-btn" style="display: none;">
-                            Resolve Battle
-                        </button>
-                    </div>
-                </div>
-
                 <div class="page-section troop-deployment-section" style="display: none;">
                     <h2>Start Battle</h2>
                     <div class="deployment-form">
@@ -387,6 +375,18 @@ export class CommandCenterPage extends BasePage {
                         </div>
                         <button class="btn btn-primary deploy-troops-btn" disabled>
                             Start Battle
+                        </button>
+                    </div>
+                </div>
+
+                <div class="page-section opponent-status-section">
+                    <h2>Battle Status</h2>
+                    <div class="status-display">
+                        <div class="status-text">No Active Search</div>
+                        <div class="status-details">Visit the Scout Guild to search for opponents</div>
+                        <div class="battle-timer" style="display: none;"></div>
+                        <button class="btn btn-primary resolve-battle-btn" style="display: none;">
+                            Resolve Battle
                         </button>
                     </div>
                 </div>

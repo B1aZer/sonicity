@@ -276,39 +276,6 @@ export class GarrisonPage extends BasePage {
             <div class="page-container garrison-container">
                 <h1 class="page-title">Garrison</h1>
                 
-                <div class="page-section deployed-troops-section">
-                    <h2>Deployed Troops</h2>
-                    <div class="status-grid">
-                        <div class="status-item">
-                            <span class="status-label">Infantry Deployed:</span>
-                            <span id="deployed-infantry" class="status-value">0</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Cavalry Deployed:</span>
-                            <span id="deployed-cavalry" class="status-value">0</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Siege Deployed:</span>
-                            <span id="deployed-siege" class="status-value">0</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Hero Deployed:</span>
-                            <span id="deployed-hero" class="status-value">None</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="page-section tactics-deployment-section" style="display: none;">
-                    <h2>Deploy Tactics <span class="deployed-tactics-count">0/3</span></h2>
-                    <p class="section-description">
-                        Deploy up to 3 tactics during battle to gain strategic advantages. 
-                        Each tactic provides unique bonuses to your defensive forces.
-                    </p>
-                    <div class="tactics-grid">
-                        <!-- Tactic cards will be dynamically added here -->
-                    </div>
-                </div>
-
                 <div class="page-section troops-section">
                     <h2>Available Troops</h2>
                     <div class="status-grid">
@@ -327,30 +294,42 @@ export class GarrisonPage extends BasePage {
                     </div>
                 </div>
 
-                <div class="page-section battle-status-section">
-                    <h2>Battle Status</h2>
-                    <div class="status-display">
-                        <div class="status-text">No Active Battle</div>
-                        <div class="status-details">Deploy troops to garrison when under attack</div>
-                        <div class="battle-timer" style="display: none;"></div>
-                        <button class="btn btn-primary resolve-battle-btn" style="display: none;">
-                            Resolve Battle
-                        </button>
+                <div class="page-section deployed-troops-section" style="display: none;">
+                    <h2>Deployed Troops</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Deployed Infantry:</span>
+                            <span id="deployed-infantry" class="status-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Deployed Cavalry:</span>
+                            <span id="deployed-cavalry" class="status-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Deployed Siege:</span>
+                            <span id="deployed-siege" class="status-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Deployed Hero:</span>
+                            <span id="deployed-hero" class="status-value">None</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="page-section tactics-deployment-section" style="display: none;">
+                    <h2>Deploy Tactics <span class="deployed-tactics-count">0/3</span></h2>
+                    <p class="section-description">
+                        Deploy up to 3 tactics during battle to gain strategic advantages. 
+                        Each tactic provides unique bonuses to your defensive forces.
+                    </p>
+                    <div class="tactics-grid">
+                        <!-- Tactic cards will be dynamically added here -->
                     </div>
                 </div>
 
                 <div class="page-section troop-deployment-section" style="display: none;">
                     <h2>Deploy to Garrison</h2>
                     <div class="deployment-form">
-                        <div class="hero-selection-group">
-                            <label for="deploy-hero">Deploy Hero (Optional):</label>
-                            <select id="deploy-hero" class="input input-md">
-                                <option value="">No Hero</option>
-                                <option value="0">WARRIOR - Infantry Bonus</option>
-                                <option value="1">STRATEGIST - Cavalry Bonus</option>
-                                <option value="2">SCOUT - Siege Bonus</option>
-                            </select>
-                        </div>
                         <div class="troop-input-group">
                             <label for="deploy-infantry">Infantry:</label>
                             <input type="number" id="deploy-infantry" min="0" value="0" class="input input-sm">
@@ -366,8 +345,26 @@ export class GarrisonPage extends BasePage {
                             <input type="number" id="deploy-siege" min="0" value="0" class="input input-sm">
                             <span class="max-troops">/ <span id="max-siege">0</span></span>
                         </div>
+                        <div class="troop-input-group">
+                            <label for="deploy-hero">Deploy Hero (Optional):</label>
+                            <select id="deploy-hero" class="input input-md">
+                                <option value="">No Hero</option>
+                            </select>
+                        </div>
                         <button class="btn btn-primary deploy-troops-btn" disabled>
                             Deploy to Garrison
+                        </button>
+                    </div>
+                </div>
+
+                <div class="page-section battle-status-section">
+                    <h2>Battle Status</h2>
+                    <div class="status-display">
+                        <div class="status-text">No Active Battle</div>
+                        <div class="status-details">Deploy troops to garrison when under attack</div>
+                        <div class="battle-timer" style="display: none;"></div>
+                        <button class="btn btn-primary resolve-battle-btn" style="display: none;">
+                            Resolve Battle
                         </button>
                     </div>
                 </div>
