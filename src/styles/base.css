@@ -104,6 +104,11 @@
 
     /* Cards */
     --card-bg: radial-gradient(circle at center, var(--bg-dark-secondary), var(--bg-dark));
+    --section-bg: repeating-radial-gradient(
+        circle at center,
+        var(--bg-dark),
+        transparent 3px
+    );
 }
 
 /* Base Styles */

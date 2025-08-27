@@ -4,8 +4,8 @@
     border-radius: var(--radius-lg);
     overflow: hidden;
     box-shadow: var(--shadow-md);
-    background: var(--card-bg);
-    border: var(--border-primary);
+    background: var(--section-bg);
+    border: var(--border-secondary);
 }
 
 .battle-progress-banner {
@@ -20,9 +20,9 @@
     align-items: center;
     margin-bottom: var(--spacing-lg);
     padding: var(--spacing-md) var(--spacing-lg);
-    background: rgba(220, 53, 69, 0.1);
+    background: var(--card-bg);
     border-radius: var(--radius-md);
-    border: 1px solid rgba(220, 53, 69, 0.3);
+    border: var(--border-tertiary);
 }
 
 .battle-indicator {
@@ -31,7 +31,6 @@
     gap: var(--spacing-sm);
     font-weight: bold;
     font-size: var(--font-size-base);
-    color: var(--color-danger);
 }
 
 .battle-indicator i {
@@ -39,8 +38,7 @@
 }
 
 .battle-text {
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    color: var(--color-danger);
 }
 
 .battle-timer {
@@ -64,10 +62,10 @@
 .progress-bar-container {
     position: relative;
     height: 24px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-darker);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: var(--border-header);
 }
 
 .progress-bar {
@@ -98,16 +96,15 @@
     font-size: var(--font-size-xs);
     font-weight: bold;
     color: var(--text-primary);
-    text-shadow: var(--shadow-text);
     white-space: nowrap;
 }
 
 /* Power Comparison Section */
 .power-comparison-section {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--card-bg);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: var(--border-tertiary);
 }
 
 .power-indicator {
@@ -142,18 +139,18 @@
 }
 
 .attacker-side {
-    background: rgba(220, 53, 69, 0.1);
-    border: 1px solid rgba(220, 53, 69, 0.3);
+    background: var(--bg-dark-secondary);
+    border: var(--border-tertiary);
 }
 
 .defender-side {
-    background: rgba(255, 215, 0, 0.1);
-    border: 1px solid rgba(255, 215, 0, 0.3);
+    background: var(--bg-dark-secondary);
+    border: var(--border-tertiary);
 }
 
 .player-side {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: var(--color-accent);
+    background: var(--bg-dark);
+    border: var(--border-tertiary);
     box-shadow: 0 0 10px var(--color-accent);
 }
 
@@ -204,7 +201,6 @@
     font-size: var(--font-size-lg);
     font-weight: bold;
     color: var(--text-primary);
-    text-shadow: var(--shadow-text);
     animation: pulse 2s infinite;
 }
 
@@ -212,9 +208,9 @@
     font-size: var(--font-size-sm);
     font-weight: bold;
     color: var(--text-primary);
-    text-shadow: var(--shadow-text);
     padding: var(--spacing-sm) var(--spacing-lg);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--bg-dark-secondary);
+    border: var(--border-secondary);
     border-radius: 20px;
     display: inline-block;
 }

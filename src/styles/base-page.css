@@ -178,11 +178,7 @@
 .page-section {
     margin-bottom: var(--spacing-xl);
     padding: var(--spacing-lg);
-    background: repeating-radial-gradient(
-        circle at center,
-        var(--bg-dark),
-        transparent 3px
-      );
+    background: var(--section-bg);
     box-shadow: var(--shadow-md);
     /* 
     background:

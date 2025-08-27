@@ -64,7 +64,6 @@ export class BattleProgressBar {
                     <div class="battle-indicator">
                         <i class="fas fa-crosshairs"></i>
                         <span class="battle-text">BATTLE IN PROGRESS</span>
-                        <i class="fas fa-crosshairs"></i>
                     </div>
                     <div class="battle-timer">
                         <i class="fas fa-clock"></i>
