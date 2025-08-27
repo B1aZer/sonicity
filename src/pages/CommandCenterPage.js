@@ -183,12 +183,40 @@ export class CommandCenterPage extends BasePage {
 
         // Enable/disable deployment section based on search status and active battle
         if (activeBattle.startTime > 0n) {
-            deploymentSection.style.display = 'none';
-            deployButton.disabled = true;
+            // Battle is active - check if troops are already deployed
+            const deployedInfantry = Number(activeBattle.attackerTroops?.infantry || 0);
+            const deployedCavalry = Number(activeBattle.attackerTroops?.cavalry || 0);
+            const deployedSiege = Number(activeBattle.attackerTroops?.siege || 0);
+            
+            if (deployedInfantry > 0 || deployedCavalry > 0 || deployedSiege > 0) {
+                // Troops already deployed - show section but disable deployment
+                deploymentSection.style.display = 'block';
+                deployButton.disabled = true;
+                deployButton.textContent = 'Troops Already Deployed';
+                deployButton.title = 'You can only deploy troops once per battle';
+                
+                // Disable inputs
+                infantryInput.disabled = true;
+                cavalryInput.disabled = true;
+                siegeInput.disabled = true;
+            } else {
+                // No troops deployed yet - hide deployment section
+                deploymentSection.style.display = 'none';
+                deployButton.disabled = true;
+            }
         } else if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
+            // Search completed with opponent found - enable deployment
             deploymentSection.style.display = 'block';
             deployButton.disabled = false;
+            deployButton.textContent = 'Deploy to Battle';
+            deployButton.title = '';
+            
+            // Enable inputs
+            infantryInput.disabled = false;
+            cavalryInput.disabled = false;
+            siegeInput.disabled = false;
         } else {
+            // No search or no opponent found - hide deployment section
             deploymentSection.style.display = 'none';
             deployButton.disabled = true;
         }
@@ -533,7 +561,22 @@ export class CommandCenterPage extends BasePage {
                 await this.loadCommandCenterData();
             } catch (error) {
                 Logger.error('Error starting battle:', error);
-                this.modal.error('Failed to start battle: ' + error.message);
+                
+                // Provide more specific error messages
+                let errorMessage = 'Failed to start battle';
+                if (error.message.includes('Not enough')) {
+                    errorMessage = 'You don\'t have enough troops available for deployment.';
+                } else if (error.message.includes('Not in battle')) {
+                    errorMessage = 'You are not currently in a battle.';
+                } else if (error.message.includes('No opponent found')) {
+                    errorMessage = 'No opponent was found. Please try searching again.';
+                } else if (error.message.includes('Must deploy at least one troop')) {
+                    errorMessage = 'You must deploy at least one troop to start a battle.';
+                } else {
+                    errorMessage += ': ' + error.message;
+                }
+                
+                this.modal.error(errorMessage);
             }
         });
 

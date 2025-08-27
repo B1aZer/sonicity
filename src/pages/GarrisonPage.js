@@ -263,10 +263,36 @@ export class GarrisonPage extends BasePage {
 
         // Enable/disable deployment section based on active battle and defender status
         const playerAddress = await this.contracts.gameState.getAddress();
-        if (activeBattle.startTime > 0n && activeBattle[1] === playerAddress) {
+        if (activeBattle.startTime > 0n && activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
             // Player is defender in active battle
             deploymentSection.style.display = 'block';
-            deployButton.disabled = false;
+            
+            // Check if troops are already deployed
+            const deployedInfantry = Number(activeBattle.defenderTroops.infantry || 0);
+            const deployedCavalry = Number(activeBattle.defenderTroops.cavalry || 0);
+            const deployedSiege = Number(activeBattle.defenderTroops.siege || 0);
+            
+            if (deployedInfantry > 0 || deployedCavalry > 0 || deployedSiege > 0) {
+                // Troops already deployed - disable deployment
+                deployButton.disabled = true;
+                deployButton.textContent = 'Troops Already Deployed';
+                deployButton.title = 'You can only deploy troops once per battle';
+                
+                // Disable inputs
+                infantryInput.disabled = true;
+                cavalryInput.disabled = true;
+                siegeInput.disabled = true;
+            } else {
+                // No troops deployed yet - enable deployment
+                deployButton.disabled = false;
+                deployButton.textContent = 'Deploy to Garrison';
+                deployButton.title = '';
+                
+                // Enable inputs
+                infantryInput.disabled = false;
+                cavalryInput.disabled = false;
+                siegeInput.disabled = false;
+            }
         } else {
             deploymentSection.style.display = 'none';
             deployButton.disabled = true;
@@ -523,7 +549,22 @@ export class GarrisonPage extends BasePage {
                 await this.loadGarrisonData();
             } catch (error) {
                 Logger.error('Error deploying to garrison:', error);
-                this.modal.error('Failed to deploy to garrison: ' + error.message);
+                
+                // Provide more specific error messages
+                let errorMessage = 'Failed to deploy to garrison';
+                if (error.message.includes('Troops already deployed')) {
+                    errorMessage = 'Troops are already deployed to garrison. You can only deploy once per battle.';
+                } else if (error.message.includes('Not enough')) {
+                    errorMessage = 'You don\'t have enough troops available for deployment.';
+                } else if (error.message.includes('Not in battle')) {
+                    errorMessage = 'You are not currently in a battle.';
+                } else if (error.message.includes('Not the defender')) {
+                    errorMessage = 'Only the defender can deploy troops to garrison.';
+                } else {
+                    errorMessage += ': ' + error.message;
+                }
+                
+                this.modal.error(errorMessage);
             }
         });
 
