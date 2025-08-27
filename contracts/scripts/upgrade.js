@@ -42,22 +42,14 @@ async function main() {
   await battleSystemProxy.waitForDeployment();
   console.log("BattleSystem upgraded to:", await battleSystemProxy.getAddress());
 
-  // Upgrade SonicityYieldNFT (if it exists)
+  // Note: SonicityYieldNFT and SonicityArtProxy are regular contracts, not proxies
+  // They don't need to be upgraded via the proxy system
   if (addresses.sonicityYieldNFT) {
-    console.log("Upgrading SonicityYieldNFT...");
-    const SonicityYieldNFT = await ethers.getContractFactory("SonicityYieldNFT");
-    const sonicityYieldNFT = await upgrades.upgradeProxy(addresses.sonicityYieldNFT, SonicityYieldNFT);
-    await sonicityYieldNFT.waitForDeployment();
-    console.log("SonicityYieldNFT upgraded to:", await sonicityYieldNFT.getAddress());
+    console.log("SonicityYieldNFT is a regular contract (not a proxy) - skipping upgrade");
   }
 
-  // Upgrade SonicityArtProxy (if it exists)
   if (addresses.sonicityArtProxy) {
-    console.log("Upgrading SonicityArtProxy...");
-    const SonicityArtProxy = await ethers.getContractFactory("SonicityArtProxy");
-    const sonicityArtProxy = await upgrades.upgradeProxy(addresses.sonicityArtProxy, SonicityArtProxy);
-    await sonicityArtProxy.waitForDeployment();
-    console.log("SonicityArtProxy upgraded to:", await sonicityArtProxy.getAddress());
+    console.log("SonicityArtProxy is a regular contract (not a proxy) - skipping upgrade");
   }
 
   // Upgrade HeroNFT (if it exists)
@@ -210,10 +202,6 @@ async function main() {
     gridBuildingsProxy: await gridBuildingsProxy.getAddress(),
     altarProxy: await altarProxy.getAddress(),
     battleSystemProxy: await battleSystemProxy.getAddress(),
-    ...(addresses.sonicityYieldNFT && { sonicityYieldNFT: await sonicityYieldNFT.getAddress() }),
-    ...(addresses.sonicityArtProxy && { sonicityArtProxy: await sonicityArtProxy.getAddress() }),
-    ...(addresses.heroNFTProxy && { heroNFTProxy: await heroNFTProxy.getAddress() }),
-    ...(addresses.tacticsNFTProxy && { tacticsNFTProxy: await tacticsNFTProxy.getAddress() }),
   };
 
   fs.writeFileSync(
