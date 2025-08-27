@@ -1256,16 +1256,18 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         );
         require(success && abi.decode(data, (bool)), "Invalid tactics or not owned");
         
-        // Update battle tactics deployment
+        // Update battle tactics deployment (preserve existing tactics)
         HeroTacticsDeployment storage deployment = battleHeroTactics[msg.sender];
         if (activeBattles[msg.sender].attacker == msg.sender) {
-            deployment.attackerTactic1 = tactics[0];
-            deployment.attackerTactic2 = tactics[1];
-            deployment.attackerTactic3 = tactics[2];
+            // Only set non-zero tactics (preserve existing ones)
+            if (tactics[0] > 0) deployment.attackerTactic1 = tactics[0];
+            if (tactics[1] > 0) deployment.attackerTactic2 = tactics[1];
+            if (tactics[2] > 0) deployment.attackerTactic3 = tactics[2];
         } else {
-            deployment.defenderTactic1 = tactics[0];
-            deployment.defenderTactic2 = tactics[1];
-            deployment.defenderTactic3 = tactics[2];
+            // Only set non-zero tactics (preserve existing ones)
+            if (tactics[0] > 0) deployment.defenderTactic1 = tactics[0];
+            if (tactics[1] > 0) deployment.defenderTactic2 = tactics[1];
+            if (tactics[2] > 0) deployment.defenderTactic3 = tactics[2];
         }
     }
 

@@ -753,8 +753,9 @@ export class GarrisonPage extends BasePage {
         try {
             const address = WalletManager.getCurrentWallet();
 
-            // Deploy tactic to battle
-            await this.contracts.battleSystem.deployTacticsToBattle([tacticId]);
+            // Deploy tactic to battle (fill array with 0s for unused slots)
+            const tacticsArray = [tacticId, 0, 0];
+            await this.contracts.battleSystem.deployTacticsToBattle(tacticsArray);
             
             this.modal.success(`${TacticsNFTContract.getTacticName(tacticId)} deployed successfully!`);
             
