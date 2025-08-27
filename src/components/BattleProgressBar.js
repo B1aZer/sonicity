@@ -1,3 +1,5 @@
+import Logger from '../js/utils/logger.js';
+
 export class BattleProgressBar {
     constructor() {
         this.element = document.createElement('div');
@@ -28,6 +30,11 @@ export class BattleProgressBar {
         const defenderPower = Number(battleData.defenderPower || 0);
         const totalPower = attackerPower + defenderPower;
         
+        // Log power values for debugging (only when there's an issue)
+        if (attackerPower === 0 && defenderPower === 0) {
+            Logger.warn('BattleProgressBar - Both powers are 0, this might indicate an issue');
+        }
+        
         let powerComparison = 'Even';
         let attackerAdvantage = 0;
         let defenderAdvantage = 0;
@@ -35,6 +42,14 @@ export class BattleProgressBar {
         if (totalPower > 0) {
             const attackerPercentage = (attackerPower / totalPower) * 100;
             const defenderPercentage = (defenderPower / totalPower) * 100;
+            
+            // Only log if there's an extreme imbalance (for debugging)
+            if (attackerPercentage > 90 || defenderPercentage > 90) {
+                Logger.info('BattleProgressBar - Extreme power imbalance:', {
+                    attackerPercentage: Math.round(attackerPercentage),
+                    defenderPercentage: Math.round(defenderPercentage)
+                });
+            }
             
             if (attackerPercentage > 60) {
                 powerComparison = 'Attacker Dominating';
@@ -55,6 +70,11 @@ export class BattleProgressBar {
                 powerComparison = 'Defender Slightly Ahead';
                 defenderAdvantage = 1;
             }
+        }
+        
+        // Only log the final comparison if it's interesting
+        if (powerComparison !== 'Even') {
+            Logger.info('BattleProgressBar - Power comparison:', powerComparison);
         }
 
         // Format time remaining
@@ -146,7 +166,7 @@ export class BattleProgressBar {
                         const block = await this.contracts.battleSystem.provider.getBlock("latest");
                         currentTime = block.timestamp;
                     } catch (error) {
-                        console.warn('Failed to get blockchain time, using JavaScript time:', error);
+                        Logger.warn('BattleProgressBar - Failed to get blockchain time, using JavaScript time:', error);
                         currentTime = Math.floor(Date.now() / 1000);
                     }
                 } else {
@@ -163,6 +183,11 @@ export class BattleProgressBar {
                 const minutes = Math.floor((remaining % 3600) / 60);
                 const timeString = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 
+                // Only log significant time milestones (every hour)
+                if (Math.floor(remaining / 3600) !== Math.floor((remaining + 300) / 3600)) { // Log when hour changes
+                    Logger.info('BattleProgressBar - Time milestone:', `${Math.floor(remaining / 3600)}h remaining`);
+                }
+
                 const timeElement = this.element.querySelector('.time-remaining');
                 const progressElement = this.element.querySelector('.progress-bar');
                 const progressLabel = this.element.querySelector('.progress-label');
@@ -173,11 +198,12 @@ export class BattleProgressBar {
 
                 // Stop timer when battle is complete
                 if (remaining <= 0) {
+                    Logger.info('BattleProgressBar - Battle complete');
                     clearInterval(this.battleTimerInterval);
                     this.battleTimerInterval = null;
                 }
             } catch (error) {
-                console.error('Error updating battle timer:', error);
+                Logger.error('BattleProgressBar - Error updating battle timer:', error);
             }
         }, 5000); // Update every 5 seconds like other pages
     }
