@@ -380,6 +380,63 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     /**
+     * @dev Start a battle with troops and hero in a single transaction
+     * @param infantryCount Number of infantry to deploy
+     * @param cavalryCount Number of cavalry to deploy
+     * @param siegeCount Number of siege units to deploy
+     * @param heroClass Hero class to deploy (255 for no hero)
+     */
+    function startBattleWithHero(
+        uint256 infantryCount,
+        uint256 cavalryCount,
+        uint256 siegeCount,
+        uint8 heroClass
+    ) external nonReentrant {
+        // Start the battle first using existing function
+        this.startBattle(infantryCount, cavalryCount, siegeCount);
+        
+        // Deploy hero if specified (heroClass != 255)
+        if (heroClass != 255) {
+            require(heroNFTAddress != address(0), "HeroNFT not configured");
+            
+            // Check if player owns the hero class
+            (bool heroSuccess, bytes memory data) = heroNFTAddress.staticcall(
+                abi.encodeWithSignature("hasHero(address,uint8)", msg.sender, heroClass)
+            );
+            require(heroSuccess && abi.decode(data, (bool)), "Hero not owned");
+            
+            // Get hero ID by class
+            (heroSuccess, data) = heroNFTAddress.staticcall(
+                abi.encodeWithSignature("getHeroIdByClass(address,uint8)", msg.sender, heroClass)
+            );
+            require(heroSuccess, "Failed to get hero ID by class");
+            
+            uint256 heroId = abi.decode(data, (uint256));
+            
+            // Deploy the hero in BattleSystem
+            Battle storage battle = activeBattles[msg.sender];
+            HeroTacticsDeployment storage heroDeployment = battleHeroTactics[msg.sender];
+            require(heroDeployment.attackerHeroId == 0, "Hero already deployed in this battle");
+            heroDeployment.attackerHeroId = heroId;
+            
+            // Recalculate attacker power with hero bonus
+            uint256 totalPower = calculateTotalBattlePower(
+                battle.attackerPower,
+                heroId,
+                infantryCount,
+                cavalryCount,
+                siegeCount
+            );
+            
+            battle.attackerPower = totalPower;
+            
+            // Also update the battle for the defender to keep them in sync
+            Battle storage defenderBattle = activeBattles[battle.defender];
+            defenderBattle.attackerPower = totalPower;
+        }
+    }
+
+    /**
      * @dev Resolve a battle after the duration has passed
      * @param battleId ID of the battle to resolve
      */

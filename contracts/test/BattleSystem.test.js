@@ -1713,38 +1713,10 @@ describe("BattleSystem", function () {
                 console.log(`Debug - Error getting hero owner: ${error.message}`);
             }
             
-            // Deploy hero in HeroNFT contract first
-            try {
-                await heroNFT.connect(player2).deployHeroByClass(0); // Deploy WARRIOR
-                console.log(`Debug - Hero deployment successful`);
-                
-                // Check deployment state immediately after
-                const deployedHeroIdAfter = await heroNFT.deployedHero(player2.address);
-                console.log(`Debug - Deployed hero ID immediately after: ${deployedHeroIdAfter}`);
-            } catch (error) {
-                console.log(`Debug - Hero deployment failed: ${error.message}`);
-                // Try deploying by hero ID instead
-                try {
-                    await heroNFT.connect(player2).deployHero(mintedHeroId);
-                    console.log(`Debug - Hero deployment by ID successful`);
-                } catch (error2) {
-                    console.log(`Debug - Hero deployment by ID failed: ${error2.message}`);
-                }
-            }
-
-            // Debug: Check if hero is owned and deployed
+            // Debug: Check if hero is owned
             const hasHero = await heroNFT.hasHero(player2.address, 0);
             const heroId = await heroNFT.getHeroIdByClass(player2.address, 0);
-            const deployedHeroInfo = await heroNFT.getDeployedHeroInfo(player2.address);
-            console.log(`Debug - Hero owned: ${hasHero}, Hero ID: ${heroId}, Deployed: ${deployedHeroInfo[0]}`);
-            
-            // Debug: Check deployment state directly
-            try {
-                const deployedHeroId = await heroNFT.deployedHero(player2.address);
-                console.log(`Debug - Deployed hero ID: ${deployedHeroId}`);
-            } catch (error) {
-                console.log(`Debug - Error getting deployed hero ID: ${error.message}`);
-            }
+            console.log(`Debug - Hero owned: ${hasHero}, Hero ID: ${heroId}`);
 
             // Start battle - Player1 attacks Player2
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);

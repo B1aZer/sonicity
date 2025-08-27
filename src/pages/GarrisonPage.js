@@ -67,6 +67,9 @@ export class GarrisonPage extends BasePage {
             // Update troop deployment section
             await this.updateTroopDeploymentSection(infantryCount, cavalryCount, siegeCount, activeBattle);
 
+            // Load and update hero selection dropdown
+            await this.updateHeroSelectionDropdown(address);
+
             // Start battle timer if there's an active battle
             if (activeBattle.startTime > 0n) {
                 await this.startBattleTimer(Number(activeBattle.startTime), Number(battleDuration));
@@ -293,6 +296,37 @@ export class GarrisonPage extends BasePage {
                 </div>
             </div>
         `;
+    }
+
+    async updateHeroSelectionDropdown(playerAddress) {
+        try {
+            const heroSelect = this.element.querySelector('#deploy-hero');
+            if (!heroSelect) return;
+
+            // Clear existing options except "No Hero"
+            heroSelect.innerHTML = '<option value="">No Hero</option>';
+
+            // Check which heroes the player owns
+            const heroClasses = [
+                { value: 0, name: 'WARRIOR', description: 'Infantry Bonus' },
+                { value: 1, name: 'STRATEGIST', description: 'Cavalry Bonus' },
+                { value: 2, name: 'SCOUT', description: 'Siege Bonus' }
+            ];
+
+            for (const heroClass of heroClasses) {
+                const hasHero = await this.contracts.heroNFT.hasHero(playerAddress, heroClass.value);
+                if (hasHero) {
+                    const option = document.createElement('option');
+                    option.value = heroClass.value;
+                    option.textContent = `${heroClass.name} - ${heroClass.description}`;
+                    heroSelect.appendChild(option);
+                }
+            }
+
+            Logger.info('Hero selection dropdown updated');
+        } catch (error) {
+            Logger.error('Error updating hero selection dropdown:', error);
+        }
     }
 
     async loadBattleHistory() {

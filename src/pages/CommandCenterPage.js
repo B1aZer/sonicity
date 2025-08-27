@@ -69,6 +69,12 @@ export class CommandCenterPage extends BasePage {
             // Update troop deployment section
             this.updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount, activeBattle);
 
+            // Update deployed troops display
+            this.updateDeployedTroopsDisplay(activeBattle);
+
+            // Load and update hero selection dropdown
+            await this.updateHeroSelectionDropdown(address);
+
             // Start battle timer if there's an active battle
             if (activeBattle.startTime > 0n) {
                 await this.startBattleTimer(Number(activeBattle.startTime), Number(battleDuration));
@@ -174,6 +180,33 @@ export class CommandCenterPage extends BasePage {
         deploymentSection.querySelector('#max-siege').textContent = siegeCount.toString();
     }
 
+    updateDeployedTroopsDisplay(activeBattle) {
+        const deployedInfantry = this.element.querySelector('#deployed-infantry');
+        const deployedCavalry = this.element.querySelector('#deployed-cavalry');
+        const deployedSiege = this.element.querySelector('#deployed-siege');
+        const deployedHero = this.element.querySelector('#deployed-hero');
+        const deployedSection = this.element.querySelector('.deployed-troops-section');
+
+        if (activeBattle.startTime > 0n) {
+            // Show deployed troops from battle data
+            deployedInfantry.textContent = Number(activeBattle[11][0] || 0).toString();
+            deployedCavalry.textContent = Number(activeBattle[11][1] || 0).toString();
+            deployedSiege.textContent = Number(activeBattle[11][2] || 0).toString();
+            
+            // Show deployed hero
+            const attackerHeroId = Number(activeBattle[8] || 0); // attackerHeroId
+            if (attackerHeroId > 0) {
+                deployedHero.textContent = `Hero ID: ${attackerHeroId}`;
+            } else {
+                deployedHero.textContent = 'None';
+            }
+            
+            deployedSection.style.display = 'block';
+        } else {
+            deployedSection.style.display = 'none';
+        }
+    }
+
     render() {
         this.element.innerHTML = `
             <div class="page-container command-center-container">
@@ -211,6 +244,28 @@ export class CommandCenterPage extends BasePage {
                     </div>
                 </div>
 
+                <div class="page-section deployed-troops-section" style="display: none;">
+                    <h2>Deployed Troops</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Deployed Infantry:</span>
+                            <span id="deployed-infantry" class="status-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Deployed Cavalry:</span>
+                            <span id="deployed-cavalry" class="status-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Deployed Siege:</span>
+                            <span id="deployed-siege" class="status-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Deployed Hero:</span>
+                            <span id="deployed-hero" class="status-value">None</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="page-section opponent-status-section">
                     <h2>Battle Status</h2>
                     <div class="status-display">
@@ -240,6 +295,12 @@ export class CommandCenterPage extends BasePage {
                             <label for="deploy-siege">Siege:</label>
                             <input type="number" id="deploy-siege" min="0" value="0" class="input input-sm">
                             <span class="max-troops">/ <span id="max-siege">0</span></span>
+                        </div>
+                        <div class="troop-input-group">
+                            <label for="deploy-hero">Deploy Hero (Optional):</label>
+                            <select id="deploy-hero" class="input input-md">
+                                <option value="">No Hero</option>
+                            </select>
                         </div>
                         <button class="btn btn-primary deploy-troops-btn" disabled>
                             Start Battle
@@ -300,31 +361,61 @@ export class CommandCenterPage extends BasePage {
         }
     }
 
+    async updateHeroSelectionDropdown(playerAddress) {
+        try {
+            const heroSelect = this.element.querySelector('#deploy-hero');
+            if (!heroSelect) return;
+            heroSelect.innerHTML = '<option value="">No Hero</option>';
+            const heroClasses = [
+                { value: 0, name: 'WARRIOR', description: 'Infantry Bonus' },
+                { value: 1, name: 'STRATEGIST', description: 'Cavalry Bonus' },
+                { value: 2, name: 'SCOUT', description: 'Siege Bonus' }
+            ];
+            for (const heroClass of heroClasses) {
+                const hasHero = await this.contracts.heroNFT.hasHero(playerAddress, heroClass.value);
+                if (hasHero) {
+                    const option = document.createElement('option');
+                    option.value = heroClass.value;
+                    option.textContent = `${heroClass.name} - ${heroClass.description}`;
+                    heroSelect.appendChild(option);
+                }
+            }
+            Logger.info('Hero selection dropdown updated');
+        } catch (error) {
+            Logger.error('Error updating hero selection dropdown:', error);
+        }
+    }
+
     setupEventListeners() {
         const deployButton = this.element.querySelector('.deploy-troops-btn');
         const resolveBattleBtn = this.element.querySelector('.resolve-battle-btn');
         const infantryInput = this.element.querySelector('#deploy-infantry');
         const cavalryInput = this.element.querySelector('#deploy-cavalry');
         const siegeInput = this.element.querySelector('#deploy-siege');
+        const heroSelect = this.element.querySelector('#deploy-hero');
 
         deployButton.addEventListener('click', async () => {
             try {
                 const infantryCount = parseInt(infantryInput.value) || 0;
                 const cavalryCount = parseInt(cavalryInput.value) || 0;
                 const siegeCount = parseInt(siegeInput.value) || 0;
+                const heroClass = heroSelect.value === "" ? 255 : parseInt(heroSelect.value);
 
                 if (infantryCount === 0 && cavalryCount === 0 && siegeCount === 0) {
                     this.modal.error('Please select at least one troop type to start battle');
                     return;
                 }
 
-                await this.contracts.battleSystem.startBattle(
+                // Use combined function for troops and hero deployment
+                await this.contracts.battleSystem.startBattleWithHero(
                     infantryCount,
                     cavalryCount,
-                    siegeCount
+                    siegeCount,
+                    heroClass
                 );
 
-                this.modal.success('Battle started! Your troops are marching to battle.');
+                const heroText = heroClass !== 255 ? ` with hero` : '';
+                this.modal.success(`Battle started${heroText}! Your troops are marching to battle.`);
                 await this.loadCommandCenterData();
             } catch (error) {
                 Logger.error('Error starting battle:', error);

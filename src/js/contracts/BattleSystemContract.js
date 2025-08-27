@@ -71,6 +71,11 @@ export class BattleSystemContract extends BaseContract {
         return contract.startBattle(infantry, cavalry, siege);
     }
 
+    async startBattleWithHero(infantry, cavalry, siege, heroClass) {
+        const contract = await this.getContract();
+        return contract.startBattleWithHero(infantry, cavalry, siege, heroClass);
+    }
+
     async resolveBattle(attacker) {
         const contract = await this.getContract();
         return contract.resolveBattle(attacker);
