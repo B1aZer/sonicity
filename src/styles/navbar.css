@@ -250,7 +250,6 @@
     color: var(--text-primary);
     word-break: break-all;
     font-family: var(--font-family-navbar);
-    background-color: var(--bg-lighter);
     padding: var(--spacing-xs);
     border-radius: var(--radius-sm);
 }
