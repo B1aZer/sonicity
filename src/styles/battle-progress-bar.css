@@ -51,7 +51,7 @@
 
 .time-remaining {
     font-weight: bold;
-    color: var(--text-muted);
+    color: var(--color-accent);
 }
 
 /* Progress Bar Section */
@@ -193,8 +193,8 @@
     color: var(--color-danger);
 }
 
-.defender-side .side-label {
-    color: var(--text-primary);
+.defender-side.player-side .side-label {
+    color: var(--color-accent);
 }
 
 .vs-indicator {
