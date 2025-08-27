@@ -197,12 +197,12 @@ export class TavernPage extends BasePage {
                 }
 
                 // Confirm minting
-                const confirmed = await this.modal.confirm(
+                const result = await this.modal.confirm(
                     `Mint <b>${heroClass}</b> hero for <b>${cost.goldCost} Gold, ${cost.foodCost} Food, and ${cost.diamondCost} Diamonds</b>?`,
                     { title: 'Confirm Hero Minting' }
                 );
 
-                if (confirmed) {
+                if (result.isConfirmed) {
                     await this.mintHero(heroClassValue, heroClass);
                 }
             });
@@ -216,24 +216,12 @@ export class TavernPage extends BasePage {
             // Disable button and show loading state
             mintButton.disabled = true;
             mintButton.textContent = 'Minting...';
-            
-            this.showStatus(`
-                <div class="loading">
-                    <div class="step">Minting ${heroClassName} hero...</div>
-                    <div class="description">Please confirm the transaction in your wallet</div>
-                </div>
-            `, 'loading');
 
             // Mint the hero
             const receipt = await this.contracts.heroNFT.mintHero(heroClassValue);
             
             // Show success message
-            this.showStatus(`
-                <div class="success">
-                    <div class="step">${heroClassName} hero minted successfully!</div>
-                    <div class="description">Your hero is ready for battle</div>
-                </div>
-            `, 'success');
+            this.modal.success(`${heroClassName} hero minted successfully! Your hero is ready for battle.`);
 
             // Reload data
             await this.loadTavernData();
