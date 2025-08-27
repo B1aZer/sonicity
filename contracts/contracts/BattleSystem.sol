@@ -284,6 +284,20 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 cavalryCount,
         uint256 siegeCount
     ) external nonReentrant {
+        _startBattle(infantryCount, cavalryCount, siegeCount);
+    }
+
+    /**
+     * @dev Internal function to start a battle
+     * @param infantryCount Number of infantry to deploy
+     * @param cavalryCount Number of cavalry to deploy
+     * @param siegeCount Number of siege units to deploy
+     */
+    function _startBattle(
+        uint256 infantryCount,
+        uint256 cavalryCount,
+        uint256 siegeCount
+    ) internal {
         require(playerSearches[msg.sender].active, "No active search");
         require(block.timestamp >= playerSearches[msg.sender].startTime + searchDuration, "Search not complete");
         address defender = playerSearches[msg.sender].foundOpponent;
@@ -393,7 +407,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint8 heroClass
     ) external nonReentrant {
         // Start the battle first using existing function
-        this.startBattle(infantryCount, cavalryCount, siegeCount);
+        _startBattle(infantryCount, cavalryCount, siegeCount);
         
         // Deploy hero if specified (heroClass != 255)
         if (heroClass != 255) {

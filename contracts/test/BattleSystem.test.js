@@ -1483,14 +1483,12 @@ describe("BattleSystem", function () {
             await gameState.testEarnFood(player1.address, 2000);
             await gameState.testEarnDiamonds(player1.address, 100);
             await heroNFT.connect(player1).mintHero(0); // WARRIOR
-            await heroNFT.connect(player1).deployHeroByClass(0);
 
             // Player2: Strategic STRATEGIST with siege focus (but only infantry available)
             await gameState.testEarnGold(player2.address, 3000);
             await gameState.testEarnFood(player2.address, 2000);
             await gameState.testEarnDiamonds(player2.address, 100);
             await heroNFT.connect(player2).mintHero(1); // STRATEGIST
-            await heroNFT.connect(player2).deployHeroByClass(1);
 
             // Build defense tower for player2 to have defense power
             const defenseTowerIndex = getBuildingTypeIndex("DEFENSE_TOWER");
@@ -1498,16 +1496,15 @@ describe("BattleSystem", function () {
             await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, defenseTowerConfig.buildCost);
             await districtBuildings.connect(player2).buildDistrictBuilding(defenseTowerIndex);
 
-            // Start battle - Player1 attacks Player2
+            // Start battle with hero - Player1 attacks Player2
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             await battleSystem.connect(player1).findRandomOpponent();
-            await battleSystem.connect(player1).startBattle(15, 0, 0); // 15 infantry
+            await battleSystem.connect(player1).startBattleWithHero(15, 0, 0, 0); // 15 infantry + WARRIOR hero
 
-            // Deploy heroes to battle
-            await battleSystem.connect(player1).deployHeroToBattleByClass(0); // WARRIOR
+            // Deploy hero for defender
             await battleSystem.connect(player2).deployHeroToBattleByClass(1); // STRATEGIST
 
             // Fast forward and resolve
