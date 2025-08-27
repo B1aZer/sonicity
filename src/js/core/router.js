@@ -18,6 +18,7 @@ import { CommandCenterPage } from '../../pages/CommandCenterPage.js';
 import { GarrisonPage } from '../../pages/GarrisonPage.js';
 import { RevenueHubPage } from '../../pages/RevenueHubPage.js';
 import { TavernPage } from '../../pages/TavernPage.js';
+import { TacticsCenterPage } from '../../pages/TacticsCenterPage.js';
 import Logger from '../utils/logger.js';
 
 export class Router {
@@ -58,7 +59,8 @@ export class Router {
             'command-center': CommandCenterPage,
             'garrison': GarrisonPage,
             'revenue-hub': RevenueHubPage,
-            'tavern': TavernPage
+            'tavern': TavernPage,
+            'tactics-center': TacticsCenterPage
         };
     }
 

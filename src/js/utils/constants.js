@@ -293,7 +293,12 @@ export const BUILDINGS = {
         position: { x: 35, y: 0, z: -85 },
         rotation: 0,
         tier: 2,
-        assets: null,
+        assets: {
+            baseUrl: 'assets/tactics-center',
+            levels: {
+                1: { url: 'assets/tactics-center.glb' }
+            }
+        }
     },
     GEM_WORKSHOP: {
         name: 'Gem Workshop',

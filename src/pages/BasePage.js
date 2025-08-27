@@ -10,6 +10,7 @@ import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsCont
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 import { HeroNFTContract } from '../js/contracts/HeroNFTContract.js';
+import { TacticsNFTContract } from '../js/contracts/TacticsNFTContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 
@@ -29,7 +30,8 @@ export class BasePage {
             districtBuildings: new DistrictBuildingsContract(),
             gridBuildings: new GridBuildingsContract(),
             battleSystem: new BattleSystemContract(),
-            heroNFT: new HeroNFTContract()
+            heroNFT: new HeroNFTContract(),
+            tacticsNFT: new TacticsNFTContract()
         };
         
         // Page state management
@@ -114,6 +116,10 @@ export class BasePage {
                 }),
                 this.contracts.heroNFT.initialize().catch(e => {
                     Logger.warn('HeroNFT contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.tacticsNFT.initialize().catch(e => {
+                    Logger.warn('TacticsNFT contract initialization failed:', e);
                     return null;
                 })
             ];
