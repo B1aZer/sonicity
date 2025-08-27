@@ -70,7 +70,8 @@
 */
 
 /* Opponent Status Section */
-.command-center-page .opponent-status-section .status-display {
+.command-center-page .opponent-status-section .status-display,
+.garrison-page .battle-status-section .status-display {
     background: var(--card-bg);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg);
@@ -79,41 +80,47 @@
     border: var(--border-tertiary);
 }
 
-.command-center-page .status-text {
+.command-center-page .status-text,
+.garrison-page .status-text {
     font-size: var(--font-size-lg);
     font-weight: bold;
     color: var(--text-primary);
     margin-bottom: var(--spacing-sm);
 }
 
-.command-center-page .status-details {
+.command-center-page .status-details,
+.garrison-page .status-details {
     color: var(--text-muted);
     font-size: var(--font-size-sm);
     margin-bottom: var(--spacing-md);
 }
 
 /* Troop Deployment Section */
-.command-center-page .troop-deployment-section .deployment-form {
-    background: var(--bg-dark-secondary);
+.command-center-page .troop-deployment-section .deployment-form,
+.garrison-page .troop-deployment-section .deployment-form {
+    background: var(--card-bg);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg);
     margin-top: var(--spacing-md);
-    border: 1px solid var(--border-color);
+    border: var(--border-tertiary);
 }
 
-.command-center-page .troop-input-group {
+.command-center-page .troop-input-group,
+.garrison-page .troop-input-group {
     display: flex;
     align-items: center;
     margin-bottom: var(--spacing-md);
     gap: var(--spacing-sm);
 }
 
-.command-center-page .troop-input-group label {
+.command-center-page .troop-input-group label,
+.garrison-page .troop-input-group label {
     min-width: 80px;
     color: var(--text-primary);
 }
 
-.command-center-page .troop-input-group input {
+.command-center-page .troop-input-group input,
+.garrison-page .troop-input-group input {
     width: 80px;
     padding: var(--spacing-sm);
     border: 1px solid var(--border-color);
@@ -123,17 +130,20 @@
     text-align: center;
 }
 
-.command-center-page .troop-input-group input:focus {
+.command-center-page .troop-input-group input:focus,
+.garrison-page .troop-input-group input:focus {
     outline: none;
     border-color: var(--primary-color);
 }
 
-.command-center-page .max-troops {
+.command-center-page .max-troops,
+.garrison-page .max-troops {
     color: var(--text-muted);
     font-size: var(--font-size-sm);
 }
 
-.command-center-page .deploy-troops-btn {
+.command-center-page .deploy-troops-btn,
+.garrison-page .deploy-troops-btn {
     width: 100%;
     margin-top: var(--spacing-md);
     padding: var(--spacing-md);
@@ -141,9 +151,23 @@
     font-weight: bold;
 }
 
-.command-center-page .deploy-troops-btn:disabled {
+.command-center-page .deploy-troops-btn:disabled,
+.garrison-page .deploy-troops-btn:disabled {
     opacity: 0.7;
     cursor: not-allowed;
+}
+
+/* Hero Selection Group */
+.garrison-page .hero-selection-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    gap: var(--spacing-sm);
+}
+
+.garrison-page .hero-selection-group label {
+    min-width: 120px;
+    color: var(--text-primary);
 }
 
 
@@ -185,8 +209,8 @@
 .no-history {
     text-align: center;
     color: var(--text-muted);
-    padding: 2rem;
-    background: var(--bg-dark-secondary);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+    padding: var(--spacing-md);
+    background: var(--card-bg);
+    border-radius: var(--radius-md);
+    border: var(--border-tertiary);
 }

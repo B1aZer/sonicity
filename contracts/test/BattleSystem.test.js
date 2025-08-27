@@ -1663,6 +1663,93 @@ describe("BattleSystem", function () {
             console.log(`  ✅ Defender successfully deployed troops to garrison`);
         });
 
+        it("should test combined garrison deployment - troops and hero in single transaction", async function () {
+            // Scenario: Defender deploys troops and hero to garrison in single transaction
+            
+            // Add more troops for testing
+            await gameState.testEarnGold(player1.address, 5000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnGold(player2.address, 5000);
+            await gameState.testEarnFood(player2.address, 2000);
+
+            // Upgrade barracks to level 3
+            const barracksIndex = getBuildingTypeIndex("BARRACKS");
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            
+            // Upgrade to level 2 (for cavalry)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, barracksConfig.upgradeCost);
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksConfig.upgradeCost);
+            await districtBuildings.connect(player2).upgradeDistrictBuilding(barracksIndex);
+            
+            // Upgrade to level 3 (for siege)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, BigInt(barracksConfig.upgradeCost) * BigInt(2));
+            await districtBuildings.connect(player1).upgradeDistrictBuilding(barracksIndex);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, BigInt(barracksConfig.upgradeCost) * BigInt(2));
+            await districtBuildings.connect(player2).upgradeDistrictBuilding(barracksIndex);
+
+            // Train troops
+            await battleSystem.connect(player1).trainTroops(1, 5);  // 5 cavalry
+            await battleSystem.connect(player2).trainTroops(2, 3);  // 3 siege
+
+            // Player2 builds garrison
+            const garrisonIndex = 9; // GARRISON = 9
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 300);
+            await districtBuildings.connect(player2).buildDistrictBuilding(garrisonIndex);
+
+            // Mint hero for player2 (ensure enough resources)
+            await gameState.testEarnGold(player2.address, 2000); // Extra gold for hero minting (WARRIOR costs 1500)
+            await gameState.testEarnFood(player2.address, 1500); // Extra food for hero minting (WARRIOR costs 1000)
+            await gameState.testEarnDiamonds(player2.address, 50); // Extra diamonds for hero minting (WARRIOR costs 40)
+            await heroNFT.connect(player2).mintHero(0); // WARRIOR
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 5, 0); // 10 infantry, 5 cavalry
+
+            // Check initial battle state
+            const battleBeforeGarrison = await battleSystem.activeBattles(player1.address);
+            const initialDefenderPower = battleBeforeGarrison.defenderPower;
+            expect(initialDefenderPower).to.equal(0);
+
+            // Player2 deploys troops and hero to garrison in single transaction
+            await battleSystem.connect(player2).deployToGarrison(8, 0, 3, 0); // 8 infantry, 0 cavalry, 3 siege, WARRIOR hero
+
+            // Check battle state after deployment
+            const battleAfterGarrison = await battleSystem.activeBattles(player1.address);
+            const finalDefenderPower = battleAfterGarrison.defenderPower;
+            
+            // Check that troops are deployed
+            expect(battleAfterGarrison.defenderTroops.infantry).to.equal(8);
+            expect(battleAfterGarrison.defenderTroops.cavalry).to.equal(0);
+            expect(battleAfterGarrison.defenderTroops.siege).to.equal(3);
+            
+            // Check that hero is deployed
+            const heroTacticsDeployment = await battleSystem.battleHeroTactics(player2.address);
+            expect(heroTacticsDeployment.defenderHeroId).to.be.gt(0);
+
+            // Check that defender power increased (including hero bonus)
+            // Base power: (8 infantry * 10) + (0 cavalry * 15) + (3 siege * 20) = 80 + 0 + 60 = 140
+            // WARRIOR hero gives bonus to infantry: 8 infantry * hero bonus
+            const expectedBasePower = (8 * 10) + (0 * 15) + (3 * 20); // 140
+            expect(Number(finalDefenderPower)).to.be.gte(expectedBasePower);
+
+            // Try to deploy again - should fail
+            await expect(
+                battleSystem.connect(player2).deployToGarrison(1, 0, 0, 255)
+            ).to.be.revertedWith("Troops already deployed to garrison");
+
+            console.log(`⚔️ Combined Garrison Deployment Test:`);
+            console.log(`  Initial defender power: ${initialDefenderPower}`);
+            console.log(`  Final defender power: ${finalDefenderPower}`);
+            console.log(`  Hero deployed: ${heroTacticsDeployment.defenderHeroId}`);
+            console.log(`  ✅ Defender successfully deployed troops and hero to garrison in single transaction`);
+        });
+
         it("should test outpost warning system - defender gets warning when attacked", async function () {
             // Scenario: Defender with outpost gets warning when attacked
             

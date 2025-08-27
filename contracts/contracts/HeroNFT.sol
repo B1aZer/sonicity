@@ -102,6 +102,9 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
      * @dev Initialize hero costs
      */
     function _initializeHeroCosts() internal {
+        // Initialize token ID counter to 1 to avoid issues with token ID 0
+        _tokenIdCounter = 1;
+    
         // WARRIOR - Iron Guardian
         heroCosts[HeroClass.WARRIOR] = HeroCost({
             goldCost: 1500,
@@ -373,8 +376,8 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
         require(_ownerOf(heroId) != address(0), "Hero does not exist");
         Hero memory hero = heroes[heroId];
         
-        // Check if the hero is actually deployed
-        if (!hero.isDeployed) return 0;
+        // No need to check deployment state - BattleSystem handles that
+        // Hero bonus is calculated based on hero class and troop counts
         
         if (hero.class == HeroClass.WARRIOR) {
             return infantryCount * hero.troopBonus;

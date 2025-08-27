@@ -173,4 +173,24 @@ export class BattleSystemContract extends BaseContract {
         const contract = await this.getContract();
         return contract.confirmOutpostWarning();
     }
+
+    async deployHeroToBattleByClass(heroClass) {
+        const contract = await this.getContract();
+        return contract.deployHeroToBattleByClass(heroClass);
+    }
+
+    async deployHeroToBattle(heroId) {
+        const contract = await this.getContract();
+        return contract.deployHeroToBattle(heroId);
+    }
+
+    async deployTroopsToGarrison(infantry, cavalry, siege) {
+        const contract = await this.getContract();
+        return contract.deployTroopsToGarrison(infantry, cavalry, siege);
+    }
+
+    async deployToGarrison(infantry, cavalry, siege, heroClass) {
+        const contract = await this.getContract();
+        return contract.deployToGarrison(infantry, cavalry, siege, heroClass);
+    }
 } 

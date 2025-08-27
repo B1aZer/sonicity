@@ -1053,21 +1053,12 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 cavalryCount,
         uint256 siegeCount
     ) internal view returns (uint256) {
-        if (heroNFTAddress == address(0)) {
+        if (heroNFTAddress == address(0) || heroId == 0) {
             return basePower;
         }
         
-        // Check if hero is actually deployed in the HeroNFT contract
+        // Calculate hero bonus directly - no need to check deployment state
         (bool success, bytes memory data) = heroNFTAddress.staticcall(
-            abi.encodeWithSignature("getDeployedHero(address)", msg.sender)
-        );
-        
-        if (!success || abi.decode(data, (uint256)) != heroId) {
-            return basePower; // Return base power if hero is not deployed
-        }
-        
-        // Calculate hero bonus
-        (success, data) = heroNFTAddress.staticcall(
             abi.encodeWithSignature(
                 "calculateHeroBonus(uint256,uint256,uint256,uint256)",
                 heroId,
@@ -1108,7 +1099,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         
         uint256 heroId = abi.decode(data, (uint256));
         
-        // Deploy the hero
+        // Deploy the hero in BattleSystem
         _deployHeroToBattle(heroId);
     }
 
@@ -1117,6 +1108,11 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      * @param heroId Hero ID to deploy
      */
     function deployHeroToBattle(uint256 heroId) external {
+        require(activeBattles[msg.sender].startTime > 0, "No active battle");
+        require(!activeBattles[msg.sender].resolved, "Battle already resolved");
+        require(heroNFTAddress != address(0), "HeroNFT not configured");
+        
+        // Deploy the hero in BattleSystem
         _deployHeroToBattle(heroId);
     }
 
@@ -1125,10 +1121,6 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      * @param heroId Hero ID to deploy
      */
     function _deployHeroToBattle(uint256 heroId) internal {
-        require(activeBattles[msg.sender].startTime > 0, "No active battle");
-        require(!activeBattles[msg.sender].resolved, "Battle already resolved");
-        require(heroNFTAddress != address(0), "HeroNFT not configured");
-        
         // Check if player owns the hero
         (bool success, bytes memory data) = heroNFTAddress.staticcall(
             abi.encodeWithSignature("ownerOf(uint256)", heroId)
@@ -1176,9 +1168,6 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             
             battle.defenderPower = totalPower;
         }
-        
-        // Note: Player should call deployHero directly in HeroNFT contract
-        // This function only tracks the deployment in BattleSystem
     }
 
     /**
@@ -1210,20 +1199,16 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     /**
-     * @dev Deploy troops to garrison for defense
+     * @dev Internal function to deploy troops to garrison
      * @param infantryCount Number of infantry to deploy
      * @param cavalryCount Number of cavalry to deploy
      * @param siegeCount Number of siege units to deploy
      */
-    function deployTroopsToGarrison(
+    function _deployTroopsToGarrison(
         uint256 infantryCount,
         uint256 cavalryCount,
         uint256 siegeCount
-    ) external nonReentrant {
-        require(activeBattles[msg.sender].startTime > 0, "Not in battle");
-        require(activeBattles[msg.sender].defender == msg.sender, "Not the defender");
-        require(!activeBattles[msg.sender].resolved, "Battle already resolved");
-        
+    ) internal {
         // Check if garrison is built
         (bool success, bytes memory data) = districtBuildingsAddress.staticcall(
             abi.encodeWithSignature("getBuildingIdByName(string)", "GARRISON")
@@ -1274,6 +1259,85 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         attackerBattle.defenderPower += defenderTroopPower;
         
         emit TroopsDeployedToGarrison(msg.sender, infantryCount, cavalryCount, siegeCount);
+    }
+
+    /**
+     * @dev Deploy troops to garrison for defense
+     * @param infantryCount Number of infantry to deploy
+     * @param cavalryCount Number of cavalry to deploy
+     * @param siegeCount Number of siege units to deploy
+     */
+    function deployTroopsToGarrison(
+        uint256 infantryCount,
+        uint256 cavalryCount,
+        uint256 siegeCount
+    ) external nonReentrant {
+        require(activeBattles[msg.sender].startTime > 0, "Not in battle");
+        require(activeBattles[msg.sender].defender == msg.sender, "Not the defender");
+        require(!activeBattles[msg.sender].resolved, "Battle already resolved");
+        
+        _deployTroopsToGarrison(infantryCount, cavalryCount, siegeCount);
+    }
+
+    /**
+     * @dev Deploy troops and hero to garrison in a single transaction
+     * @param infantryCount Number of infantry to deploy
+     * @param cavalryCount Number of cavalry to deploy
+     * @param siegeCount Number of siege units to deploy
+     * @param heroClass Hero class to deploy (255 for no hero)
+     */
+    function deployToGarrison(
+        uint256 infantryCount,
+        uint256 cavalryCount,
+        uint256 siegeCount,
+        uint8 heroClass
+    ) external nonReentrant {
+        require(activeBattles[msg.sender].startTime > 0, "Not in battle");
+        require(activeBattles[msg.sender].defender == msg.sender, "Not the defender");
+        require(!activeBattles[msg.sender].resolved, "Battle already resolved");
+        
+        // Deploy troops first using existing function
+        _deployTroopsToGarrison(infantryCount, cavalryCount, siegeCount);
+        
+        // Deploy hero if specified (heroClass != 255)
+        if (heroClass != 255) {
+            require(heroNFTAddress != address(0), "HeroNFT not configured");
+            
+            // Check if player owns the hero class
+            (bool success, bytes memory data) = heroNFTAddress.staticcall(
+                abi.encodeWithSignature("hasHero(address,uint8)", msg.sender, heroClass)
+            );
+            require(success && abi.decode(data, (bool)), "Hero not owned");
+            
+            // Get hero ID by class
+            (success, data) = heroNFTAddress.staticcall(
+                abi.encodeWithSignature("getHeroIdByClass(address,uint8)", msg.sender, heroClass)
+            );
+            require(success, "Failed to get hero ID by class");
+            
+            uint256 heroId = abi.decode(data, (uint256));
+            
+            // Deploy the hero in BattleSystem
+            Battle storage battle = activeBattles[msg.sender];
+            HeroTacticsDeployment storage deployment = battleHeroTactics[msg.sender];
+            require(deployment.defenderHeroId == 0, "Hero already deployed in this battle");
+            deployment.defenderHeroId = heroId;
+            
+            // Recalculate defender power with hero bonus
+            uint256 totalPower = calculateTotalBattlePower(
+                battle.defenderPower,
+                heroId,
+                infantryCount,
+                cavalryCount,
+                siegeCount
+            );
+            
+            battle.defenderPower = totalPower;
+            
+            // Also update the battle for the attacker to keep them in sync
+            Battle storage attackerBattle = activeBattles[battle.attacker];
+            attackerBattle.defenderPower = totalPower;
+        }
     }
 
     /**
