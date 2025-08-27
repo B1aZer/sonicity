@@ -48,28 +48,13 @@ export class TacticsNFTContract extends BaseContract {
         return contract.getPlayerTactics(player);
     }
 
-    async deployTactic(tacticId) {
+    async getTacticsByType(tacticType) {
         const contract = await this.getContract();
-        return contract.deployTactic(tacticId);
+        return contract.getTacticsByType(tacticType);
     }
 
-    async undeployTactic(tacticId) {
+    async validateTacticsForBattle(player, tacticIds) {
         const contract = await this.getContract();
-        return contract.undeployTactic(tacticId);
-    }
-
-    async getDeployedTactic(player) {
-        const contract = await this.getContract();
-        return contract.getDeployedTactic(player);
-    }
-
-    async getDeployedTacticInfo(player) {
-        const contract = await this.getContract();
-        return contract.getDeployedTacticInfo(player);
-    }
-
-    async calculateTacticEffect(tacticId, baseValue) {
-        const contract = await this.getContract();
-        return contract.calculateTacticEffect(tacticId, baseValue);
+        return contract.validateTacticsForBattle(player, tacticIds);
     }
 } 

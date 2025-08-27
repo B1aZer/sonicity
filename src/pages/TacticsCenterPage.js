@@ -18,8 +18,7 @@ export class TacticsCenterPage extends BasePage {
             gold: 0,
             diamonds: 0,
             tacticCosts: {},
-            ownedTactics: {},
-            deployedTactic: null
+            ownedTactics: {}
         });
         
         this.render();
@@ -82,14 +81,10 @@ export class TacticsCenterPage extends BasePage {
                 ownedTactics[tacticId] = await this.contracts.tacticsNFT.hasTactic(address, tacticId);
             }
 
-            // Load deployed tactic info
-            const deployedTacticInfo = await this.contracts.tacticsNFT.getDeployedTacticInfo(address);
-
             this.setState({
                 gold,
                 diamonds,
-                ownedTactics,
-                deployedTactic: deployedTacticInfo[0] ? deployedTacticInfo[1] : null
+                ownedTactics
             });
 
             this.updateDisplay();
@@ -109,14 +104,13 @@ export class TacticsCenterPage extends BasePage {
             const tacticCard = this.element.querySelector(`#tactic-${tacticId}`);
             if (tacticCard) {
                 const isOwned = this.state.ownedTactics[tacticId];
-                const isDeployed = this.state.deployedTactic === tacticId;
                 const cost = this.state.tacticCosts[tacticId];
                 
                 // Update ownership status
                 const statusElement = tacticCard.querySelector('.tactic-status');
                 if (statusElement) {
                     if (isOwned) {
-                        statusElement.textContent = isDeployed ? 'Deployed' : 'Owned';
+                        statusElement.textContent = 'Owned';
                         statusElement.className = 'tactic-status owned';
                     } else {
                         statusElement.textContent = 'Available';
