@@ -715,9 +715,7 @@ export class CommandCenterPage extends BasePage {
         const tacticType = TacticsNFTContract.getTacticType(tacticId);
         const tacticEffect = TacticsNFTContract.getTacticEffect(tacticId);
 
-        const statusClass = isDeployed ? 'shop-item-stock in-stock' : 'shop-item-stock in-stock';
-        const statusText = isDeployed ? 'Deployed' : 'Available';
-        const statusIcon = isDeployed ? 'fa-check-circle' : 'fa-plus-circle';
+
 
         const card = document.createElement('div');
         card.className = `shop-item-card ${isDeployed ? 'deployed' : ''}`;
@@ -728,9 +726,6 @@ export class CommandCenterPage extends BasePage {
             <div class="shop-item-info">
                 <div class="shop-item-title-row">
                     <h3>${tacticName}</h3>
-                    <span class="${statusClass}">
-                        <i class="fas ${statusIcon}"></i>${statusText}
-                    </span>
                 </div>
                 <div class="shop-item-desc">
                     <strong>${tacticType}</strong> - ${tacticEffect}. Deploy during combat to gain tactical superiority.
