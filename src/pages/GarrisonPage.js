@@ -640,18 +640,16 @@ export class GarrisonPage extends BasePage {
             
             // Get deployed tactics from battle system
             const battleHeroTactics = await this.contracts.battleSystem.battleHeroTactics(address);
+
+            
             const deployedTactics = [];
             
             // Check which tactics are deployed (defender tactics)
-            if (battleHeroTactics.defenderTactics && battleHeroTactics.defenderTactics.length > 0) {
-                for (let i = 0; i < battleHeroTactics.defenderTactics.length; i++) {
-                    const tacticId = Number(battleHeroTactics.defenderTactics[i]);
-                    if (tacticId > 0) {
-                        deployedTactics.push(tacticId);
-                    }
-                }
-            }
+            if (battleHeroTactics.defenderTactic1 > 0) deployedTactics.push(Number(battleHeroTactics.defenderTactic1));
+            if (battleHeroTactics.defenderTactic2 > 0) deployedTactics.push(Number(battleHeroTactics.defenderTactic2));
+            if (battleHeroTactics.defenderTactic3 > 0) deployedTactics.push(Number(battleHeroTactics.defenderTactic3));
             
+
             return deployedTactics;
         } catch (error) {
             Logger.error('Error getting deployed tactics:', error);
@@ -752,10 +750,10 @@ export class GarrisonPage extends BasePage {
     async deployTactic(tacticId) {
         try {
             const address = WalletManager.getCurrentWallet();
-
-            // Deploy tactic to battle (fill array with 0s for unused slots)
-            const tacticsArray = [tacticId, 0, 0];
-            await this.contracts.battleSystem.deployTacticsToBattle(tacticsArray);
+            Logger.info(`Deploying tactic ${tacticId} (${TacticsNFTContract.getTacticName(tacticId)})`);
+            
+            const tx = await this.contracts.battleSystem.deployTacticToBattle(tacticId);
+            await tx.wait();
             
             this.modal.success(`${TacticsNFTContract.getTacticName(tacticId)} deployed successfully!`);
             
