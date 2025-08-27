@@ -3,8 +3,10 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { WalletManager } from '../js/utils/wallet.js';
 import { TacticsNFTContract } from '../js/contracts/TacticsNFTContract.js';
+import { BattleProgressBar } from '../components/BattleProgressBar.js';
 
 import('../styles/command-center-page.css');
+import('../styles/battle-progress-bar.css');
 
 
 export class GarrisonPage extends BasePage {
@@ -14,6 +16,9 @@ export class GarrisonPage extends BasePage {
         Logger.info('GarrisonPage constructor called');
         
         this.element.className = 'base-page garrison-page';
+        
+        // Initialize Battle Progress Bar
+        this.battleProgressBar = new BattleProgressBar();
         
         this.render();
     }
@@ -85,6 +90,9 @@ export class GarrisonPage extends BasePage {
 
             // Load battle history
             await this.loadBattleHistory();
+
+            // Render Battle Progress Bar
+            this.renderBattleProgressBar(activeBattle, address);
 
             // Load and update tactics deployment section if in battle
             if (activeBattle.startTime > 0n) {
@@ -271,10 +279,35 @@ export class GarrisonPage extends BasePage {
         deploymentSection.querySelector('#max-siege').textContent = siegeCount.toString();
     }
 
+    renderBattleProgressBar(activeBattle, playerAddress) {
+        const container = this.element.querySelector('#battle-progress-container');
+        if (!container) return;
+
+        // Determine player role
+        let playerRole = 'none';
+        if (activeBattle && activeBattle.startTime > 0n) {
+            if (activeBattle.attacker.toLowerCase() === playerAddress.toLowerCase()) {
+                playerRole = 'attacker';
+            } else if (activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
+                playerRole = 'defender';
+            }
+        }
+
+        // Render the battle progress bar
+        const progressBarElement = this.battleProgressBar.render(activeBattle, playerRole);
+        
+        // Clear container and append progress bar
+        container.innerHTML = '';
+        container.appendChild(progressBarElement);
+    }
+
     render() {
         this.element.innerHTML = `
             <div class="page-container garrison-container">
                 <h1 class="page-title">Garrison</h1>
+                
+                <!-- Battle Progress Bar Container -->
+                <div id="battle-progress-container"></div>
                 
                 <div class="page-section troops-section">
                     <h2>Available Troops</h2>
@@ -697,6 +730,9 @@ export class GarrisonPage extends BasePage {
     unmount() {
         if (this.battleTimerInterval) {
             clearInterval(this.battleTimerInterval);
+        }
+        if (this.battleProgressBar) {
+            this.battleProgressBar.destroy();
         }
         this.element.remove();
     }

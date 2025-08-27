@@ -3,8 +3,10 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { WalletManager } from '../js/utils/wallet.js';
 import { TacticsNFTContract } from '../js/contracts/TacticsNFTContract.js';
+import { BattleProgressBar } from '../components/BattleProgressBar.js';
 
 import('../styles/command-center-page.css');
+import('../styles/battle-progress-bar.css');
 
 
 export class CommandCenterPage extends BasePage {
@@ -14,6 +16,9 @@ export class CommandCenterPage extends BasePage {
         Logger.info('CommandCenterPage constructor called');
         
         this.element.className = 'base-page command-center-page';
+        
+        // Initialize Battle Progress Bar
+        this.battleProgressBar = new BattleProgressBar();
         
         this.render();
     }
@@ -90,6 +95,9 @@ export class CommandCenterPage extends BasePage {
 
             // Load battle history
             await this.loadBattleHistory();
+
+            // Render Battle Progress Bar
+            this.renderBattleProgressBar(activeBattle, address);
 
             // Load and update tactics deployment section if in battle
             if (activeBattle.startTime > 0n) {
@@ -196,6 +204,28 @@ export class CommandCenterPage extends BasePage {
         deploymentSection.querySelector('#max-siege').textContent = siegeCount.toString();
     }
 
+    renderBattleProgressBar(activeBattle, playerAddress) {
+        const container = this.element.querySelector('#battle-progress-container');
+        if (!container) return;
+
+        // Determine player role
+        let playerRole = 'none';
+        if (activeBattle && activeBattle.startTime > 0n) {
+            if (activeBattle.attacker.toLowerCase() === playerAddress.toLowerCase()) {
+                playerRole = 'attacker';
+            } else if (activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
+                playerRole = 'defender';
+            }
+        }
+
+        // Render the battle progress bar
+        const progressBarElement = this.battleProgressBar.render(activeBattle, playerRole);
+        
+        // Clear container and append progress bar
+        container.innerHTML = '';
+        container.appendChild(progressBarElement);
+    }
+
     async updateDeployedTroopsDisplay(activeBattle) {
         Logger.info('Updating deployed troops display...');
         Logger.info('Active battle data:', {
@@ -296,7 +326,8 @@ export class CommandCenterPage extends BasePage {
             <div class="page-container command-center-container">
                 <h1 class="page-title">Command Center</h1>
                 
-
+                <!-- Battle Progress Bar Container -->
+                <div id="battle-progress-container"></div>
 
                 <div class="page-section troops-section">
                     <h2>Available Troops</h2>
@@ -731,6 +762,9 @@ export class CommandCenterPage extends BasePage {
     unmount() {
         if (this.battleTimerInterval) {
             clearInterval(this.battleTimerInterval);
+        }
+        if (this.battleProgressBar) {
+            this.battleProgressBar.destroy();
         }
         this.element.remove();
     }
