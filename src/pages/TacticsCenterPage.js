@@ -107,14 +107,14 @@ export class TacticsCenterPage extends BasePage {
                 const cost = this.state.tacticCosts[tacticId];
                 
                 // Update ownership status
-                const statusElement = tacticCard.querySelector('.tactic-status');
+                const statusElement = tacticCard.querySelector('.shop-item-stock');
                 if (statusElement) {
                     if (isOwned) {
-                        statusElement.textContent = 'Owned';
-                        statusElement.className = 'tactic-status owned';
+                        statusElement.innerHTML = '<i class="fas fa-check-circle"></i>Owned';
+                        statusElement.className = 'shop-item-stock in-stock';
                     } else {
-                        statusElement.textContent = 'Available';
-                        statusElement.className = 'tactic-status available';
+                        statusElement.innerHTML = '<i class="fas fa-plus-circle"></i>Available';
+                        statusElement.className = 'shop-item-stock in-stock';
                     }
                 }
 
@@ -288,7 +288,7 @@ export class TacticsCenterPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Iron Strike (STRIKE)</h3>
-                                    <span class="tactic-status available">Available</span>
+                                    <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
                                     Devastating attack that damages +3 buildings. Perfect for aggressive players who want to maximize destruction.
@@ -318,7 +318,7 @@ export class TacticsCenterPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Guardian Wall (SHIELD)</h3>
-                                    <span class="tactic-status available">Available</span>
+                                    <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
                                     Defensive formation that reduces troop losses by 75%. Essential for protecting your army during battles.
@@ -348,7 +348,7 @@ export class TacticsCenterPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Battle Rage (TRICK)</h3>
-                                    <span class="tactic-status available">Available</span>
+                                    <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
                                     Inspires your troops to earn +30 REP points from battles. Great for players focused on reputation building.
@@ -378,7 +378,7 @@ export class TacticsCenterPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Cavalry Rush (STRIKE)</h3>
-                                    <span class="tactic-status available">Available</span>
+                                    <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
                                     Swift cavalry attack that damages +2 buildings. Ideal for players who prefer fast, mobile warfare.
@@ -408,7 +408,7 @@ export class TacticsCenterPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Defensive Circle (SHIELD)</h3>
-                                    <span class="tactic-status available">Available</span>
+                                    <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
                                     Tactical formation that reduces troop losses by 50%. Balanced defense for various battle scenarios.
@@ -438,7 +438,7 @@ export class TacticsCenterPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Tactical Feint (TRICK)</h3>
-                                    <span class="tactic-status available">Available</span>
+                                    <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
                                     Deceptive maneuver that earns +20 REP points from battles. Subtle but effective reputation building.
@@ -468,7 +468,7 @@ export class TacticsCenterPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Swift Strike (STRIKE)</h3>
-                                    <span class="tactic-status available">Available</span>
+                                    <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
                                     Quick attack that damages +1 building. Light but reliable damage for consistent results.
@@ -498,7 +498,7 @@ export class TacticsCenterPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Shadow Guard (SHIELD)</h3>
-                                    <span class="tactic-status available">Available</span>
+                                    <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
                                     Stealthy defense that reduces troop losses by 25%. Minimal but effective protection.
@@ -528,7 +528,7 @@ export class TacticsCenterPage extends BasePage {
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
                                     <h3>Stealth Trap (TRICK)</h3>
-                                    <span class="tactic-status available">Available</span>
+                                    <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
                                     Hidden trap that earns +15 REP points from battles. Subtle reputation gains for careful players.
