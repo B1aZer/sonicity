@@ -1,4 +1,6 @@
 import { BaseContract } from './BaseContract.js';
+import { CONTRACT_ADDRESSES } from '../utils/constants.js';
+import HeroNFTABI from '../../../contracts/artifacts/contracts/HeroNFT.sol/HeroNFT.json';
 
 export class HeroNFTContract extends BaseContract {
     // Hero class enum values
@@ -8,8 +10,12 @@ export class HeroNFTContract extends BaseContract {
         SCOUT: 2
     };
 
+    constructor() {
+        super(CONTRACT_ADDRESSES.HERO_NFT, HeroNFTABI.abi);
+    }
+
     async initialize() {
-        await super.initialize('HeroNFT');
+        await super.initialize();
     }
 
     async mintHero(heroClass) {
