@@ -151,7 +151,7 @@ export class TavernPage extends BasePage {
                                 <span class="cost-value">${cost.goldCost}</span>
                             </div>
                             <div class="cost-item">
-                                <i class="fas fa-apple-alt cost-icon"></i>
+                                <i class="fas fa-wheat-awn cost-icon"></i>
                                 <span class="cost-value">${cost.foodCost}</span>
                             </div>
                             <div class="cost-item">
@@ -320,7 +320,7 @@ export class TavernPage extends BasePage {
                                         <span class="cost-value">1500</span>
                                     </div>
                                     <div class="cost-item">
-                                        <i class="fas fa-apple-alt cost-icon"></i>
+                                        <i class="fas fa-wheat-awn cost-icon"></i>
                                         <span class="cost-value">1000</span>
                                     </div>
                                     <div class="cost-item">
@@ -358,7 +358,7 @@ export class TavernPage extends BasePage {
                                         <span class="cost-value">1200</span>
                                     </div>
                                     <div class="cost-item">
-                                        <i class="fas fa-apple-alt cost-icon"></i>
+                                        <i class="fas fa-wheat-awn cost-icon"></i>
                                         <span class="cost-value">1200</span>
                                     </div>
                                     <div class="cost-item">
@@ -396,7 +396,7 @@ export class TavernPage extends BasePage {
                                         <span class="cost-value">1000</span>
                                     </div>
                                     <div class="cost-item">
-                                        <i class="fas fa-apple-alt cost-icon"></i>
+                                        <i class="fas fa-wheat-awn cost-icon"></i>
                                         <span class="cost-value">1000</span>
                                     </div>
                                     <div class="cost-item">
