@@ -19,8 +19,7 @@ export class TavernPage extends BasePage {
             food: 0,
             diamonds: 0,
             heroCosts: {},
-            ownedHeroes: {},
-            deployedHero: null
+            ownedHeroes: {}
         });
         
         this.render();
@@ -88,15 +87,11 @@ export class TavernPage extends BasePage {
                 ownedHeroes[className] = await this.contracts.heroNFT.hasHero(address, heroClassValue);
             }
 
-            // Load deployed hero info
-            const deployedHeroInfo = await this.contracts.heroNFT.getDeployedHeroInfo(address);
-
             this.setState({
                 gold,
                 food,
                 diamonds,
-                ownedHeroes,
-                deployedHero: deployedHeroInfo[0] ? deployedHeroInfo[1] : null
+                ownedHeroes
             });
 
             this.updateDisplay();
@@ -118,14 +113,13 @@ export class TavernPage extends BasePage {
             const heroCard = this.element.querySelector(`#hero-${className.toLowerCase()}`);
             if (heroCard) {
                 const isOwned = this.state.ownedHeroes[className];
-                const isDeployed = this.state.deployedHero === className;
                 const cost = this.state.heroCosts[className];
                 
                 // Update ownership status
                 const statusElement = heroCard.querySelector('.hero-status');
                 if (statusElement) {
                     if (isOwned) {
-                        statusElement.textContent = isDeployed ? 'Deployed' : 'Owned';
+                        statusElement.textContent = 'Owned';
                         statusElement.className = 'hero-status owned';
                     } else {
                         statusElement.textContent = 'Available';
@@ -149,7 +143,7 @@ export class TavernPage extends BasePage {
 
                 // Update cost display
                 if (cost) {
-                    const costElement = heroCard.querySelector('.hero-cost');
+                    const costElement = heroCard.querySelector('.cost-component');
                     if (costElement) {
                         costElement.innerHTML = `
                             <div class="cost-item">
@@ -318,7 +312,7 @@ export class TavernPage extends BasePage {
                                     A mighty warrior who boosts Infantry power by +20 per troop. 
                                     Perfect for players who prefer overwhelming force with large infantry armies.
                                 </div>
-                                <div class="hero-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">1500</span>
@@ -354,7 +348,7 @@ export class TavernPage extends BasePage {
                                     A cunning strategist who boosts Siege power by +20 per troop. 
                                     Ideal for players who rely on powerful siege weapons to break enemy defenses.
                                 </div>
-                                <div class="hero-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">1200</span>
@@ -390,7 +384,7 @@ export class TavernPage extends BasePage {
                                     A swift scout who boosts Cavalry power by +20 per troop. 
                                     Perfect for players who prefer fast, mobile cavalry tactics.
                                 </div>
-                                <div class="hero-cost">
+                                <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
                                         <span class="cost-value">1000</span>

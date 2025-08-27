@@ -121,4 +121,46 @@
   }
   
 
+}
+
+/* Hero cost styling for single line display 
+.hero-cost {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 8px;
+}
+
+.hero-cost .cost-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+*/
+/* Standard cost component for all shop pages */
+.cost-component {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 8px;
+}
+
+.cost-component .cost-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+}
+
+.cost-component .cost-icon {
+  font-size: var(--font-size-md);
+  color: var(--color-accent);
+}
+
+.cost-component .cost-value {
+  font-weight: 500;
+  color: var(--text-primary);
 } 
