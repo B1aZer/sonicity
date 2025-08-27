@@ -1,6 +1,8 @@
 import { BasePage } from './BasePage.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
+import { WalletManager } from '../js/utils/wallet.js';
+import { TacticsNFTContract } from '../js/contracts/TacticsNFTContract.js';
 
 import('../styles/command-center-page.css');
 
@@ -39,8 +41,7 @@ export class GarrisonPage extends BasePage {
 
     async loadGarrisonData() {
         try {
-            const signer = await this.contracts.gameState.getSigner();
-            const address = await signer.getAddress();
+            const address = WalletManager.getCurrentWallet();
 
             // Load troop counts and battle data
             const [infantryCount, cavalryCount, siegeCount, activeBattle, battleDuration] = await Promise.all([
@@ -51,6 +52,13 @@ export class GarrisonPage extends BasePage {
                 this.contracts.battleSystem.battleDuration()
             ]);
 
+            // Load owned tactics for battle deployment
+            const ownedTactics = {};
+            for (let tacticId = 1; tacticId <= 9; tacticId++) {
+                ownedTactics[tacticId] = await this.contracts.tacticsNFT.hasTactic(address, tacticId);
+            }
+            Logger.info('Owned tactics loaded:', ownedTactics);
+
             Logger.info('Garrison data loaded:', { infantryCount, cavalryCount, siegeCount, activeBattle, battleDuration });
 
             // Update troop displays
@@ -59,7 +67,7 @@ export class GarrisonPage extends BasePage {
             this.element.querySelector('#siege-count').textContent = siegeCount.toString();
 
             // Update deployed troops display
-            this.updateDeployedTroopsDisplay(activeBattle);
+            await this.updateDeployedTroopsDisplay(activeBattle);
 
             // Update battle status section
             this.updateBattleStatus(activeBattle);
@@ -77,38 +85,103 @@ export class GarrisonPage extends BasePage {
 
             // Load battle history
             await this.loadBattleHistory();
+
+            // Load and update tactics deployment section if in battle
+            if (activeBattle.startTime > 0n) {
+                Logger.info('Active battle detected, loading tactics deployment section');
+                await this.loadTacticsDeploymentSection(ownedTactics, activeBattle);
+            } else {
+                Logger.info('No active battle, tactics deployment section will be hidden');
+            }
         } catch (error) {
             Logger.error('Error loading garrison data:', error);
             this.modal.error('Failed to load garrison data: ' + error.message);
         }
     }
 
-    updateDeployedTroopsDisplay(activeBattle) {
+    async updateDeployedTroopsDisplay(activeBattle) {
+        Logger.info('Garrison: Updating deployed troops display...');
+        Logger.info('Garrison: Active battle data:', {
+            startTime: activeBattle.startTime?.toString(),
+            attacker: activeBattle.attacker,
+            defender: activeBattle.defender,
+            attackerTroops: {
+                infantry: activeBattle.attackerTroops?.infantry?.toString(),
+                cavalry: activeBattle.attackerTroops?.cavalry?.toString(),
+                siege: activeBattle.attackerTroops?.siege?.toString()
+            },
+            defenderTroops: {
+                infantry: activeBattle.defenderTroops?.infantry?.toString(),
+                cavalry: activeBattle.defenderTroops?.cavalry?.toString(),
+                siege: activeBattle.defenderTroops?.siege?.toString()
+            }
+        });
+        
         const deployedInfantry = this.element.querySelector('#deployed-infantry');
         const deployedCavalry = this.element.querySelector('#deployed-cavalry');
         const deployedSiege = this.element.querySelector('#deployed-siege');
         const deployedHero = this.element.querySelector('#deployed-hero');
+        const tacticsSection = this.element.querySelector('.tactics-deployment-section');
 
         if (activeBattle.startTime > 0n) {
+            Logger.info('Garrison: Active battle detected');
+            
+            // Check if player is attacker or defender
+            const address = WalletManager.getCurrentWallet();
+            const isAttacker = activeBattle.attacker.toLowerCase() === address.toLowerCase();
+            Logger.info('Garrison: Player role check:', { address, attacker: activeBattle.attacker, isAttacker });
+            
             // Show deployed troops from battle data
-            deployedInfantry.textContent = Number(activeBattle[11][0] || 0).toString();
-            deployedCavalry.textContent = Number(activeBattle[11][1] || 0).toString();
-            deployedSiege.textContent = Number(activeBattle[11][2] || 0).toString();
+            if (isAttacker) {
+                // Player is attacker, show attacker troops
+                const infantry = Number(activeBattle.attackerTroops?.infantry || 0);
+                const cavalry = Number(activeBattle.attackerTroops?.cavalry || 0);
+                const siege = Number(activeBattle.attackerTroops?.siege || 0);
+                
+                Logger.info('Garrison: Setting attacker troops:', { infantry, cavalry, siege });
+                deployedInfantry.textContent = infantry.toString();
+                deployedCavalry.textContent = cavalry.toString();
+                deployedSiege.textContent = siege.toString();
+            } else {
+                // Player is defender, show defender troops
+                const infantry = Number(activeBattle.defenderTroops?.infantry || 0);
+                const cavalry = Number(activeBattle.defenderTroops?.cavalry || 0);
+                const siege = Number(activeBattle.defenderTroops?.siege || 0);
+                
+                Logger.info('Garrison: Setting defender troops:', { infantry, cavalry, siege });
+                deployedInfantry.textContent = infantry.toString();
+                deployedCavalry.textContent = cavalry.toString();
+                deployedSiege.textContent = siege.toString();
+            }
             
             // Show deployed hero
-            const defenderHeroId = Number(activeBattle[9] || 0); // defenderHeroId
-            if (defenderHeroId > 0) {
-                // We need to get hero class from hero ID - for now show the ID
-                deployedHero.textContent = `Hero ID: ${defenderHeroId}`;
-            } else {
-                deployedHero.textContent = 'None';
+            try {
+                const heroTactics = await this.contracts.battleSystem.battleHeroTactics(address);
+                Logger.info('Garrison: Hero tactics data:', heroTactics);
+                const heroId = isAttacker ? heroTactics.attackerHeroId : heroTactics.defenderHeroId;
+                Logger.info('Garrison: Hero ID for player:', { heroId: heroId.toString(), isAttacker });
+                
+                if (heroId > 0) {
+                    // Get hero name from hero ID using contract helper
+                    const heroName = await this.contracts.heroNFT.getHeroNameByHeroId(heroId);
+                    deployedHero.textContent = heroName;
+                } else {
+                    deployedHero.textContent = 'None';
+                }
+            } catch (error) {
+                Logger.error('Garrison: Error getting hero tactics:', error);
+                deployedHero.textContent = 'Error';
             }
+            
+            tacticsSection.style.display = 'block';
         } else {
+            Logger.info('Garrison: No active battle, no deployed troops');
             // No active battle, no deployed troops
             deployedInfantry.textContent = '0';
             deployedCavalry.textContent = '0';
             deployedSiege.textContent = '0';
             deployedHero.textContent = 'None';
+            tacticsSection.style.display = 'none';
         }
     }
 
@@ -222,6 +295,17 @@ export class GarrisonPage extends BasePage {
                             <span class="status-label">Hero Deployed:</span>
                             <span id="deployed-hero" class="status-value">None</span>
                         </div>
+                    </div>
+                </div>
+
+                <div class="page-section tactics-deployment-section" style="display: none;">
+                    <h2>Deploy Tactics <span class="deployed-tactics-count">0/3</span></h2>
+                    <p class="section-description">
+                        Deploy up to 3 tactics during battle to gain strategic advantages. 
+                        Each tactic provides unique bonuses to your defensive forces.
+                    </p>
+                    <div class="tactics-grid">
+                        <!-- Tactic cards will be dynamically added here -->
                     </div>
                 </div>
 
@@ -411,8 +495,7 @@ export class GarrisonPage extends BasePage {
 
         resolveBattleBtn.addEventListener('click', async () => {
             try {
-                const signer = await this.contracts.gameState.getSigner();
-                const address = await signer.getAddress();
+                const address = WalletManager.getCurrentWallet();
                 
                 await this.contracts.battleSystem.resolveBattle(address);
                 
@@ -460,6 +543,158 @@ export class GarrisonPage extends BasePage {
             Logger.error('Error during garrison page initialization:', error);
             this.modal.error('Failed to initialize garrison page. Please try refreshing the page.');
         });
+    }
+
+    async loadTacticsDeploymentSection(ownedTactics, activeBattle) {
+        const tacticsSection = this.element.querySelector('.tactics-deployment-section');
+        if (!tacticsSection) return;
+
+        // Get deployed tactics for this battle
+        const deployedTactics = await this.getDeployedTacticsForBattle(activeBattle);
+        
+        // Update tactics display
+        this.updateTacticsDisplay(ownedTactics, deployedTactics);
+        
+        // Setup tactics deployment event listeners
+        this.setupTacticsEventListeners(ownedTactics, deployedTactics);
+    }
+
+    async getDeployedTacticsForBattle(activeBattle) {
+        try {
+            const address = WalletManager.getCurrentWallet();
+            
+            // Get deployed tactics from battle system
+            const battleHeroTactics = await this.contracts.battleSystem.battleHeroTactics(address);
+            const deployedTactics = [];
+            
+            // Check which tactics are deployed (defender tactics)
+            if (battleHeroTactics.defenderTactics && battleHeroTactics.defenderTactics.length > 0) {
+                for (let i = 0; i < battleHeroTactics.defenderTactics.length; i++) {
+                    const tacticId = Number(battleHeroTactics.defenderTactics[i]);
+                    if (tacticId > 0) {
+                        deployedTactics.push(tacticId);
+                    }
+                }
+            }
+            
+            return deployedTactics;
+        } catch (error) {
+            Logger.error('Error getting deployed tactics:', error);
+            return [];
+        }
+    }
+
+    updateTacticsDisplay(ownedTactics, deployedTactics) {
+        const tacticsGrid = this.element.querySelector('.tactics-grid');
+        if (!tacticsGrid) return;
+
+        tacticsGrid.innerHTML = '';
+        
+        // Create tactic cards for owned tactics
+        for (let tacticId = 1; tacticId <= 9; tacticId++) {
+            if (ownedTactics[tacticId]) {
+                const tacticCard = this.createTacticCard(tacticId, deployedTactics.includes(tacticId));
+                tacticsGrid.appendChild(tacticCard);
+            }
+        }
+
+        // Update deployed count
+        const deployedCount = this.element.querySelector('.deployed-tactics-count');
+        if (deployedCount) {
+            deployedCount.textContent = `${deployedTactics.length}/3`;
+        }
+    }
+
+    createTacticCard(tacticId, isDeployed) {
+        const tacticName = TacticsNFTContract.getTacticName(tacticId);
+        const tacticType = TacticsNFTContract.getTacticType(tacticId);
+        const tacticEffect = TacticsNFTContract.getTacticEffect(tacticId);
+
+        const statusClass = isDeployed ? 'shop-item-stock in-stock' : 'shop-item-stock in-stock';
+        const statusText = isDeployed ? 'Deployed' : 'Available';
+        const statusIcon = isDeployed ? 'fa-check-circle' : 'fa-plus-circle';
+
+        const card = document.createElement('div');
+        card.className = `shop-item-card ${isDeployed ? 'deployed' : ''}`;
+        card.innerHTML = `
+            <div class="shop-item-image">
+                <img src="/images/tactics/tactic${tacticId}.png" alt="${tacticName}" onerror="this.src='/images/tactics/default.png'" />
+            </div>
+            <div class="shop-item-info">
+                <div class="shop-item-title-row">
+                    <h3>${tacticName}</h3>
+                    <span class="${statusClass}">
+                        <i class="fas ${statusIcon}"></i>${statusText}
+                    </span>
+                </div>
+                <div class="shop-item-desc">
+                    <strong>${tacticType}</strong> - ${tacticEffect}. Deploy during combat to gain tactical superiority.
+                </div>
+            </div>
+            <div class="shop-item-action-row">
+                <button class="btn ${isDeployed ? 'btn-secondary' : 'btn-primary'}" 
+                        data-tactic-id="${tacticId}" 
+                        ${isDeployed ? 'disabled' : ''}>
+                    ${isDeployed ? 'Deployed' : 'Deploy'}
+                </button>
+            </div>
+        `;
+
+        return card;
+    }
+
+    setupTacticsEventListeners(ownedTactics, deployedTactics) {
+        const deployButtons = this.element.querySelectorAll('[data-tactic-id]');
+        
+        deployButtons.forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const tacticId = parseInt(btn.getAttribute('data-tactic-id'));
+                
+                if (deployedTactics.length >= 3) {
+                    this.modal.error('You can only deploy up to 3 tactics per battle');
+                    return;
+                }
+
+                if (deployedTactics.includes(tacticId)) {
+                    this.modal.error('This tactic is already deployed');
+                    return;
+                }
+
+                const confirmed = await this.modal.confirm(
+                    `Deploy ${TacticsNFTContract.getTacticName(tacticId)} to this battle?`,
+                    { title: 'Confirm Tactic Deployment' }
+                );
+
+                if (confirmed) {
+                    await this.deployTactic(tacticId);
+                }
+            });
+        });
+    }
+
+
+
+    async deployTactic(tacticId) {
+        try {
+            const address = WalletManager.getCurrentWallet();
+
+            // Deploy tactic to battle
+            await this.contracts.battleSystem.deployTacticsToBattle([tacticId]);
+            
+            this.modal.success(`${TacticsNFTContract.getTacticName(tacticId)} deployed successfully!`);
+            
+            // Reload tactics section
+            const activeBattle = await this.contracts.battleSystem.activeBattles(address);
+            const ownedTactics = {};
+            for (let id = 1; id <= 9; id++) {
+                ownedTactics[id] = await this.contracts.tacticsNFT.hasTactic(address, id);
+            }
+            await this.loadTacticsDeploymentSection(ownedTactics, activeBattle);
+            
+        } catch (error) {
+            Logger.error('Error deploying tactic:', error);
+            this.modal.error('Failed to deploy tactic: ' + error.message);
+        }
     }
 
     unmount() {

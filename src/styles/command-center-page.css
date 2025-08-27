@@ -199,3 +199,30 @@
     border-radius: var(--radius-md);
     border: var(--border-tertiary);
 }
+
+.command-center-page .deployed-tactics-count,
+.garrison-page .deployed-tactics-count {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    font-weight: bold;
+}
+
+.command-center-page .section-description,
+.garrison-page .section-description {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.5;
+}
+
+/* Reuse existing shop-item-card styles for tactic cards */
+.command-center-page .tactics-grid,
+.garrison-page .tactics-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 0;
+}

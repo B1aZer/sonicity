@@ -59,4 +59,39 @@ export class HeroNFTContract extends BaseContract {
         const contract = await this.getContract();
         return contract.calculateHeroBonus(heroId, infantryCount, cavalryCount, siegeCount);
     }
+
+    // Helper methods for hero names and classes
+    static getHeroName(heroClass) {
+        const heroNames = {
+            0: 'Iron Guardian (WARRIOR)',
+            1: 'Shadow Tactician (STRATEGIST)',
+            2: 'Swift Scout (SCOUT)'
+        };
+        return heroNames[heroClass] || `Hero Class ${heroClass}`;
+    }
+
+    static getHeroClass(heroClass) {
+        const heroClasses = {
+            0: 'WARRIOR',
+            1: 'STRATEGIST', 
+            2: 'SCOUT'
+        };
+        return heroClasses[heroClass] || `UNKNOWN`;
+    }
+
+    async getHeroClass(heroId) {
+        const contract = await this.getContract();
+        const hero = await contract.getHero(heroId);
+        return hero.class;
+    }
+
+    async getHeroNameByHeroId(heroId) {
+        try {
+            const heroClass = await this.getHeroClass(heroId);
+            return HeroNFTContract.getHeroName(heroClass);
+        } catch (error) {
+            console.error('Error getting hero name by ID:', error);
+            return `Hero ID ${heroId}`;
+        }
+    }
 } 
