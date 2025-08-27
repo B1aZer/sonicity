@@ -119,22 +119,7 @@
     color: var(--text-primary);
 }
 
-.command-center-page .troop-input-group input,
-.garrison-page .troop-input-group input {
-    width: 80px;
-    padding: var(--spacing-sm);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    background: var(--bg-dark);
-    color: var(--text-primary);
-    text-align: center;
-}
-
-.command-center-page .troop-input-group input:focus,
-.garrison-page .troop-input-group input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-}
+/* Removed page-specific input styling - using reusable .input-sm class instead */
 
 .command-center-page .max-troops,
 .garrison-page .max-troops {
