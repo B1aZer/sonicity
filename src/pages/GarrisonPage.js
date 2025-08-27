@@ -129,6 +129,7 @@ export class GarrisonPage extends BasePage {
         const deployedCavalry = this.element.querySelector('#deployed-cavalry');
         const deployedSiege = this.element.querySelector('#deployed-siege');
         const deployedHero = this.element.querySelector('#deployed-hero');
+        const deployedSection = this.element.querySelector('.deployed-troops-section');
         const tacticsSection = this.element.querySelector('.tactics-deployment-section');
 
         if (activeBattle.startTime > 0n) {
@@ -181,14 +182,17 @@ export class GarrisonPage extends BasePage {
                 deployedHero.textContent = 'Error';
             }
             
+            deployedSection.style.display = 'block';
             tacticsSection.style.display = 'block';
+            Logger.info('Garrison: Deployed troops and tactics sections are now visible');
         } else {
-            Logger.info('Garrison: No active battle, no deployed troops');
+            Logger.info('Garrison: No active battle, hiding deployed troops and tactics sections');
             // No active battle, no deployed troops
             deployedInfantry.textContent = '0';
             deployedCavalry.textContent = '0';
             deployedSiege.textContent = '0';
             deployedHero.textContent = 'None';
+            deployedSection.style.display = 'none';
             tacticsSection.style.display = 'none';
         }
     }

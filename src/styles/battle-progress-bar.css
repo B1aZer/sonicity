@@ -51,7 +51,7 @@
 
 .time-remaining {
     font-weight: bold;
-    color: var(--color-accent);
+    color: var(--text-muted);
 }
 
 /* Progress Bar Section */
@@ -70,7 +70,7 @@
 
 .progress-bar {
     height: 100%;
-    background: linear-gradient(90deg, var(--color-danger) 0%, var(--color-warning) 100%);
+    background: linear-gradient(90deg, rgba(0,0,0,0) 0%, var(--color-danger) 100%);
     border-radius: var(--radius-lg);
     transition: width var(--transition-slow);
     position: relative;
@@ -194,7 +194,7 @@
 }
 
 .defender-side .side-label {
-    color: var(--color-accent);
+    color: var(--text-primary);
 }
 
 .vs-indicator {
