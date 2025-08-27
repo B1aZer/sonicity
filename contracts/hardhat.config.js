@@ -9,7 +9,7 @@ module.exports = {
       viaIR: true, // Re-enabled to avoid stack too deep error
       optimizer: {
         enabled: true,
-        runs: 200
+        runs: 1
       }
     }
   },
