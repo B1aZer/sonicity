@@ -259,11 +259,6 @@
 }
 
 /* Hover Effects */
-.battle-progress-container:hover {
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-2px);
-    transition: all var(--transition-normal);
-}
 
 .power-bar.active:hover {
     transform: scaleY(1.4);
