@@ -1839,4 +1839,401 @@ describe("BattleSystem", function () {
             console.log(`  ✅ No warning shown when defender has no outpost`);
         });
     });
+
+    describe("Tactics Battle Scenarios", function () {
+        beforeEach(async function () {
+            // Set up players with proper resources and buildings
+            const barracksIndex = getBuildingTypeIndex("BARRACKS");
+            const barracksConfig = await districtBuildings.districtBuildingConfigs(barracksIndex);
+            const barracksCost = barracksConfig.buildCost;
+
+            // Unlock buildings and register players for matchmaking
+            await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 2000);
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 2000);
+
+            // Player1 setup - Attacker with infantry focus
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, barracksCost);
+            await districtBuildings.connect(player1).buildDistrictBuilding(barracksIndex);
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 2000);
+            await ensurePlayerFood(player1, gameState, gridBuildings, altar, sonicityFarm, 1000);
+            await battleSystem.connect(player1).trainTroops(0, 20); // 20 infantry
+
+            // Player2 setup - Defender with mixed troops and garrison
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, barracksCost);
+            await districtBuildings.connect(player2).buildDistrictBuilding(barracksIndex);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 2000);
+            await ensurePlayerFood(player2, gameState, gridBuildings, altar, sonicityFarm, 1000);
+            await battleSystem.connect(player2).trainTroops(0, 10); // 10 infantry
+
+            // Build garrison for Player2 (defender)
+            const garrisonIndex = 9; // GARRISON = 9
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 300); // Garrison build cost
+            await districtBuildings.connect(player2).buildDistrictBuilding(garrisonIndex);
+
+            // Set noOpponentFoundChance to 0 for testing
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+        });
+
+        it("should test battle with no tactics deployed - pure troop vs troop", async function () {
+            // Scenario: Both players have no tactics, pure troop power comparison
+            
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(15, 0, 0); // 15 infantry
+
+            // Player2 deploys troops to garrison (no tactics)
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle outcome
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            
+            // Calculate expected powers (no tactics, no heroes)
+            const player1Power = 15 * 10; // 15 infantry * 10 power = 150
+            const player2Power = 10 * 10; // 10 infantry * 10 power = 100
+            
+            expect(Number(battleRecord.attackerPower)).to.equal(player1Power);
+            expect(Number(battleRecord.defenderPower)).to.equal(player2Power);
+            expect(battleRecord.attackerWon).to.be.true; // 150 vs 100 power
+            
+            console.log(`⚔️ No Tactics Battle:`);
+            console.log(`  Player1 (15 infantry): ${player1Power} power`);
+            console.log(`  Player2 (10 infantry): ${player2Power} power`);
+            console.log(`  Winner: ${battleRecord.attackerWon ? 'Player1' : 'Player2'}`);
+            console.log(`  ✅ Pure troop power comparison working correctly`);
+        });
+
+        it("should test battle with attacker tactics vs no defender tactics", async function () {
+            // Scenario: Attacker has tactics, defender has none - tactics advantage
+            
+            // Player1 mints tactics
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+            await tacticsNFT.connect(player1).mintTactic(1); // Offensive Tactic
+            await tacticsNFT.connect(player1).mintTactic(2); // Defensive Tactic
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(15, 0, 0); // 15 infantry
+
+            // Player2 deploys troops to garrison (no tactics)
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Player1 deploys tactics during battle
+            await battleSystem.connect(player1).deployTacticToBattle(1); // Offensive Tactic
+            await battleSystem.connect(player1).deployTacticToBattle(2); // Defensive Tactic
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle outcome
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            
+            // Calculate expected powers with tactics bonuses
+            const player1BasePower = 15 * 10; // 15 infantry * 10 power = 150
+            const player1TacticBonus = 50 + 60; // Offensive + Defensive = 110
+            const player1TotalPower = player1BasePower + player1TacticBonus;
+            
+            const player2Power = 10 * 10; // 10 infantry * 10 power = 100
+            
+            expect(Number(battleRecord.attackerPower)).to.equal(player1TotalPower);
+            expect(Number(battleRecord.defenderPower)).to.equal(player2Power);
+            expect(battleRecord.attackerWon).to.be.true; // 260 vs 100 power
+            
+            console.log(`⚔️ Attacker Tactics vs No Defender Tactics:`);
+            console.log(`  Player1 (15 infantry + 2 tactics): ${player1TotalPower} power`);
+            console.log(`  Player2 (10 infantry): ${player2Power} power`);
+            console.log(`  Winner: ${battleRecord.attackerWon ? 'Player1' : 'Player2'}`);
+            console.log(`  ✅ Tactics power bonuses working correctly`);
+        });
+
+        it("should test battle with defender tactics vs no attacker tactics", async function () {
+            // Scenario: Defender has tactics, attacker has none - defensive advantage
+            
+            // Player2 mints tactics
+            await gameState.testEarnGold(player2.address, 3000);
+            await gameState.testEarnFood(player2.address, 2000);
+            await gameState.testEarnDiamonds(player2.address, 100);
+            await tacticsNFT.connect(player2).mintTactic(3); // Defensive Tactic
+            await tacticsNFT.connect(player2).mintTactic(4); // Counter Tactic
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(15, 0, 0); // 15 infantry
+
+            // Player2 deploys troops to garrison
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Player2 deploys tactics during battle
+            await battleSystem.connect(player2).deployTacticToBattle(3); // Defensive Tactic
+            await battleSystem.connect(player2).deployTacticToBattle(4); // Counter Tactic
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle outcome
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            
+            // Calculate expected powers with tactics bonuses
+            const player1Power = 15 * 10; // 15 infantry * 10 power = 150
+            
+            const player2BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player2TacticBonus = 40 + 45; // Defensive + Counter = 85
+            const player2TotalPower = player2BasePower + player2TacticBonus;
+            
+            expect(Number(battleRecord.attackerPower)).to.equal(player1Power);
+            expect(Number(battleRecord.defenderPower)).to.equal(player2TotalPower);
+            expect(battleRecord.attackerWon).to.be.false; // 150 vs 185 power (defender wins)
+            
+            console.log(`⚔️ Defender Tactics vs No Attacker Tactics:`);
+            console.log(`  Player1 (15 infantry): ${player1Power} power`);
+            console.log(`  Player2 (10 infantry + 2 tactics): ${player2TotalPower} power`);
+            console.log(`  Winner: ${battleRecord.attackerWon ? 'Player1' : 'Player2'}`);
+            console.log(`  ✅ Defensive tactics advantage working correctly`);
+        });
+
+        it("should test battle with unequal tactics deployment - 3 vs 1", async function () {
+            // Scenario: Attacker deploys 3 tactics, defender deploys 1 - overwhelming advantage
+            
+            // Both players mint tactics
+            await gameState.testEarnGold(player1.address, 5000);
+            await gameState.testEarnFood(player1.address, 3000);
+            await gameState.testEarnDiamonds(player1.address, 150);
+            await tacticsNFT.connect(player1).mintTactic(1); // Offensive
+            await tacticsNFT.connect(player1).mintTactic(2); // Defensive
+            await tacticsNFT.connect(player1).mintTactic(5); // Counter
+
+            await gameState.testEarnGold(player2.address, 2000);
+            await gameState.testEarnFood(player2.address, 1500);
+            await gameState.testEarnDiamonds(player2.address, 50);
+            await tacticsNFT.connect(player2).mintTactic(3); // Defensive
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 0, 0); // 10 infantry
+
+            // Player2 deploys troops to garrison
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Deploy tactics
+            await battleSystem.connect(player1).deployTacticToBattle(1); // Offensive
+            await battleSystem.connect(player1).deployTacticToBattle(2); // Defensive
+            await battleSystem.connect(player1).deployTacticToBattle(5); // Counter
+            await battleSystem.connect(player2).deployTacticToBattle(3); // Defensive
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle outcome
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            
+            // Calculate expected powers
+            const player1BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player1TacticBonus = 50 + 60 + 55; // Offensive + Defensive + Counter = 165
+            const player1TotalPower = player1BasePower + player1TacticBonus;
+            
+            const player2BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player2TacticBonus = 40; // Defensive = 40
+            const player2TotalPower = player2BasePower + player2TacticBonus;
+            
+            expect(Number(battleRecord.attackerPower)).to.equal(player1TotalPower);
+            expect(Number(battleRecord.defenderPower)).to.equal(player2TotalPower);
+            expect(battleRecord.attackerWon).to.be.true; // 265 vs 140 power
+            
+            console.log(`⚔️ Unequal Tactics (3 vs 1):`);
+            console.log(`  Player1 (10 infantry + 3 tactics): ${player1TotalPower} power`);
+            console.log(`  Player2 (10 infantry + 1 tactic): ${player2TotalPower} power`);
+            console.log(`  Winner: ${battleRecord.attackerWon ? 'Player1' : 'Player2'}`);
+            console.log(`  ✅ Tactics quantity advantage working correctly`);
+        });
+
+        it("should test battle with full tactics deployment - 3 vs 3", async function () {
+            // Scenario: Both players deploy maximum 3 tactics - ultimate tactics battle
+            
+            // Both players mint full tactics
+            await gameState.testEarnGold(player1.address, 8000);
+            await gameState.testEarnFood(player1.address, 5000);
+            await gameState.testEarnDiamonds(player1.address, 200);
+            await tacticsNFT.connect(player1).mintTactic(1); // Offensive
+            await tacticsNFT.connect(player1).mintTactic(2); // Defensive
+            await tacticsNFT.connect(player1).mintTactic(5); // Counter
+
+            await gameState.testEarnGold(player2.address, 8000);
+            await gameState.testEarnFood(player2.address, 5000);
+            await gameState.testEarnDiamonds(player2.address, 200);
+            await tacticsNFT.connect(player2).mintTactic(3); // Defensive
+            await tacticsNFT.connect(player2).mintTactic(4); // Counter
+            await tacticsNFT.connect(player2).mintTactic(6); // Offensive
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 0, 0); // 10 infantry
+
+            // Player2 deploys troops to garrison
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Deploy all tactics
+            await battleSystem.connect(player1).deployTacticToBattle(1); // Offensive
+            await battleSystem.connect(player1).deployTacticToBattle(2); // Defensive
+            await battleSystem.connect(player1).deployTacticToBattle(5); // Counter
+            await battleSystem.connect(player2).deployTacticToBattle(3); // Defensive
+            await battleSystem.connect(player2).deployTacticToBattle(4); // Counter
+            await battleSystem.connect(player2).deployTacticToBattle(6); // Offensive
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle outcome
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            
+            // Calculate expected powers
+            const player1BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player1TacticBonus = 50 + 60 + 55; // Offensive + Defensive + Counter = 165
+            const player1TotalPower = player1BasePower + player1TacticBonus;
+            
+            const player2BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player2TacticBonus = 40 + 45 + 35; // Defensive + Counter + Offensive = 120
+            const player2TotalPower = player2BasePower + player2TacticBonus;
+            
+            expect(Number(battleRecord.attackerPower)).to.equal(player1TotalPower);
+            expect(Number(battleRecord.defenderPower)).to.equal(player2TotalPower);
+            // Should be a close battle with attacker winning
+            expect(battleRecord.attackerWon).to.be.true; // 265 vs 220 power
+            
+            console.log(`⚔️ Full Tactics Battle (3 vs 3):`);
+            console.log(`  Player1 (10 infantry + 3 tactics): ${player1TotalPower} power`);
+            console.log(`  Player2 (10 infantry + 3 tactics): ${player2TotalPower} power`);
+            console.log(`  Winner: ${battleRecord.attackerWon ? 'Player1' : 'Player2'}`);
+            console.log(`  ✅ Maximum tactics deployment working correctly`);
+        });
+
+        it("should test tactics deployment limits - cannot deploy more than 3", async function () {
+            // Scenario: Player tries to deploy more than 3 tactics - should fail
+            
+            // Player1 mints 4 tactics
+            await gameState.testEarnGold(player1.address, 10000);
+            await gameState.testEarnFood(player1.address, 6000);
+            await gameState.testEarnDiamonds(player1.address, 250);
+            await tacticsNFT.connect(player1).mintTactic(1); // Offensive
+            await tacticsNFT.connect(player1).mintTactic(2); // Defensive
+            await tacticsNFT.connect(player1).mintTactic(5); // Counter
+            await tacticsNFT.connect(player1).mintTactic(6); // Offensive
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 0, 0); // 10 infantry
+
+            // Player2 deploys troops to garrison
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Deploy 3 tactics successfully
+            await battleSystem.connect(player1).deployTacticToBattle(1); // Offensive
+            await battleSystem.connect(player1).deployTacticToBattle(2); // Defensive
+            await battleSystem.connect(player1).deployTacticToBattle(5); // Counter
+
+            // Try to deploy 4th tactic - should fail
+            await expect(
+                battleSystem.connect(player1).deployTacticToBattle(6)
+            ).to.be.revertedWith("All attacker tactic slots are full");
+
+            console.log(`⚔️ Tactics Deployment Limits:`);
+            console.log(`  ✅ Successfully deployed 3 tactics`);
+            console.log(`  ✅ Correctly prevented 4th tactic deployment`);
+        });
+
+        it("should test tactics power calculation accuracy", async function () {
+            // Scenario: Verify that tactics power bonuses are calculated correctly
+            
+            // Player1 mints specific tactics with known power values
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+            await tacticsNFT.connect(player1).mintTactic(1); // Offensive: +50 power
+            await tacticsNFT.connect(player1).mintTactic(2); // Defensive: +60 power
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(5, 0, 0); // 5 infantry
+
+            // Player2 deploys troops to garrison
+            await battleSystem.connect(player2).deployToGarrison(5, 0, 0, 255); // 5 infantry, no hero
+
+            // Deploy tactics
+            await battleSystem.connect(player1).deployTacticToBattle(1); // Offensive: +50
+            await battleSystem.connect(player1).deployTacticToBattle(2); // Defensive: +60
+
+            // Fast forward and resolve
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.BATTLE_DURATION()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).resolveBattle(player1.address);
+
+            // Verify battle outcome
+            const latestBattleId = await battleSystem.getLatestBattleId();
+            const battleRecord = await battleSystem.getBattleRecord(latestBattleId);
+            
+            // Calculate expected powers with exact values
+            const player1BasePower = 5 * 10; // 5 infantry * 10 power = 50
+            const player1TacticBonus = 50 + 60; // Offensive + Defensive = 110
+            const player1TotalPower = player1BasePower + player1TacticBonus; // 50 + 110 = 160
+            
+            const player2Power = 5 * 10; // 5 infantry * 10 power = 50
+            
+            expect(Number(battleRecord.attackerPower)).to.equal(player1TotalPower);
+            expect(Number(battleRecord.defenderPower)).to.equal(player2Power);
+            expect(battleRecord.attackerWon).to.be.true; // 160 vs 50 power
+            
+            console.log(`⚔️ Tactics Power Calculation:`);
+            console.log(`  Player1 base power: ${player1BasePower}`);
+            console.log(`  Player1 tactic bonus: ${player1TacticBonus}`);
+            console.log(`  Player1 total power: ${player1TotalPower}`);
+            console.log(`  Player2 power: ${player2Power}`);
+            console.log(`  ✅ Tactics power calculation accurate`);
+        });
+    });
 }); 

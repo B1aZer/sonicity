@@ -461,7 +461,17 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(!battle.resolved, "Battle already resolved");
         require(block.timestamp >= battle.startTime + BATTLE_DURATION, "Battle duration not elapsed");
 
-        bool attackerWon = battle.attackerPower > battle.defenderPower;
+        // Calculate tactics power bonuses
+        HeroTacticsDeployment storage attackerDeployment = battleHeroTactics[battle.attacker];
+        HeroTacticsDeployment storage defenderDeployment = battleHeroTactics[battle.defender];
+        uint256 attackerTacticsPower = calculateTacticsPower(attackerDeployment.attackerTactic1, attackerDeployment.attackerTactic2, attackerDeployment.attackerTactic3);
+        uint256 defenderTacticsPower = calculateTacticsPower(defenderDeployment.defenderTactic1, defenderDeployment.defenderTactic2, defenderDeployment.defenderTactic3);
+        
+        // Apply tactics power to final battle power
+        uint256 finalAttackerPower = battle.attackerPower + attackerTacticsPower;
+        uint256 finalDefenderPower = battle.defenderPower + defenderTacticsPower;
+
+        bool attackerWon = finalAttackerPower > finalDefenderPower;
         
         if (attackerWon) {
             // Apply effects
@@ -483,8 +493,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             defender: battle.defender,
             timestamp: battle.startTime,
             attackerWon: attackerWon,
-            attackerPower: battle.attackerPower,
-            defenderPower: battle.defenderPower,
+            attackerPower: finalAttackerPower,
+            defenderPower: finalDefenderPower,
             treasuryBurned: battle.treasuryBurned,
             gridBuildingsDamaged: battle.gridBuildingsDamaged,
             districtBuildingsDamaged: battle.districtBuildingsDamaged,
@@ -1291,7 +1301,49 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         }
     }
 
+    /**
+     * @dev Calculate total power bonus from deployed tactics
+     * @param tactic1 First tactic ID (0 if none)
+     * @param tactic2 Second tactic ID (0 if none)
+     * @param tactic3 Third tactic ID (0 if none)
+     * @return uint256 Total power bonus from all tactics
+     */
+    function calculateTacticsPower(uint8 tactic1, uint8 tactic2, uint8 tactic3) internal view returns (uint256) {
+        uint256 totalPower = 0;
+        
+        // Calculate power for each deployed tactic
+        if (tactic1 > 0) {
+            totalPower += getTacticPower(tactic1);
+        }
+        if (tactic2 > 0) {
+            totalPower += getTacticPower(tactic2);
+        }
+        if (tactic3 > 0) {
+            totalPower += getTacticPower(tactic3);
+        }
+        
+        return totalPower;
+    }
 
+    /**
+     * @dev Get power bonus for a specific tactic
+     * @param tacticId The tactic ID
+     * @return uint256 Power bonus for this tactic
+     */
+    function getTacticPower(uint8 tacticId) internal view returns (uint256) {
+        // Define power bonuses for each tactic
+        if (tacticId == 1) return 50;  // Iron Strike: +50 power
+        if (tacticId == 2) return 60;  // Guardian Wall: +60 power
+        if (tacticId == 3) return 40;  // Battle Rage: +40 power
+        if (tacticId == 4) return 45;  // Cavalry Rush: +45 power
+        if (tacticId == 5) return 55;  // Defensive Circle: +55 power
+        if (tacticId == 6) return 35;  // Tactical Feint: +35 power
+        if (tacticId == 7) return 40;  // Swift Strike: +40 power
+        if (tacticId == 8) return 50;  // Shadow Guard: +50 power
+        if (tacticId == 9) return 30;  // Stealth Trap: +30 power
+        
+        return 0; // Unknown tactic
+    }
 
     /**
      * @dev Internal function to deploy troops to garrison
