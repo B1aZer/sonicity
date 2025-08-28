@@ -3,6 +3,7 @@ import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { AltarContract } from '../js/contracts/AltarContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
+import { WalletManager } from '../js/utils/wallet.js';
 import { ethers } from 'ethers';
 
 import('../styles/city-page.css');
@@ -55,40 +56,58 @@ export class RevenueHubPage extends BasePage {
 
     async loadGameData() {
         try {
-            const userAddress = await this.contracts.gameState.getAddress();
+            const userAddress = WalletManager.getCurrentWallet();
             
-            // Load comprehensive player data
-            const [playerState, playerGold, playerFood, playerRep, playerTier, treasury] = await Promise.all([
-                this.contracts.gameState.call('playerState', userAddress),
-                this.contracts.gameState.getPlayerGold(userAddress),
-                this.contracts.gameState.getPlayerFood(userAddress),
-                this.contracts.gameState.getPlayerRep(userAddress),
-                this.contracts.gameState.getPlayerTier(userAddress),
-                this.contracts.gameState.getPlayerTreasury(userAddress)
-            ]);
+            // Load player state data
+            const playerState = await this.contracts.gameState.playerState(userAddress);
             
-            // Load game status data
+            // Load additional data
             const [totalBuildings, activeBattles, totalTroops] = await Promise.all([
-                this.contracts.gridBuildings.getTotalBuildingCount(userAddress),
-                this.contracts.battleSystem.getActiveBattlesCount(userAddress),
+                this.getTotalBuildings(userAddress),
+                this.getActiveBattlesCount(userAddress),
                 this.getTotalTroops(userAddress)
             ]);
             
             this.setState({
-                playerGold: Number(playerGold),
-                playerFood: Number(playerFood),
-                playerRep: Number(playerRep),
-                playerTier: Number(playerTier),
-                treasury: Number(treasury),
+                playerGold: Number(playerState.gold),
+                playerFood: Number(playerState.food),
+                playerRep: Number(playerState.rep),
+                playerTier: Number(playerState.tier),
+                treasury: Number(playerState.treasury),
                 buildingSlots: Number(playerState.buildingSlots),
                 totalBuildings: Number(totalBuildings),
                 activeBattles: Number(activeBattles),
                 totalTroops: Number(totalTroops)
             });
             
+            // Update the display with the new data
+            this.updateStatusDisplay();
+            
             Logger.info('Game data loaded:', this.state);
         } catch (error) {
             Logger.error('Error loading game data:', error);
+        }
+    }
+
+    async getTotalBuildings(userAddress) {
+        try {
+            // Try to get building count from grid buildings contract
+            const buildingCount = await this.contracts.gridBuildings.getTotalBuildingCount(userAddress);
+            return Number(buildingCount);
+        } catch (error) {
+            Logger.error('Error getting total buildings:', error);
+            return 0;
+        }
+    }
+
+    async getActiveBattlesCount(userAddress) {
+        try {
+            // Check if player has an active battle
+            const activeBattle = await this.contracts.battleSystem.activeBattles(userAddress);
+            return activeBattle.startTime > 0n ? 1 : 0;
+        } catch (error) {
+            Logger.error('Error getting active battles count:', error);
+            return 0;
         }
     }
 
@@ -104,6 +123,17 @@ export class RevenueHubPage extends BasePage {
             Logger.error('Error getting total troops:', error);
             return 0;
         }
+    }
+
+    updateStatusDisplay() {
+        // Update all status values with current state data
+        const statusElements = this.element.querySelectorAll('[data-state]');
+        statusElements.forEach(element => {
+            const stateKey = element.getAttribute('data-state');
+            if (this.state[stateKey] !== undefined) {
+                element.textContent = this.state[stateKey].toLocaleString();
+            }
+        });
     }
 
 
