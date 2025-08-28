@@ -97,7 +97,7 @@ export class CommandCenterPage extends BasePage {
             await this.loadBattleHistory();
 
             // Render Battle Progress Bar
-            this.renderBattleProgressBar(activeBattle, address);
+            await this.renderBattleProgressBar(activeBattle, address);
 
             // Load and update tactics deployment section if in battle
             if (activeBattle.startTime > 0n) {
@@ -232,7 +232,7 @@ export class CommandCenterPage extends BasePage {
         deploymentSection.querySelector('#max-siege').textContent = siegeCount.toString();
     }
 
-    renderBattleProgressBar(activeBattle, playerAddress) {
+    async renderBattleProgressBar(activeBattle, playerAddress) {
         const container = this.element.querySelector('#battle-progress-container');
         if (!container) return;
 
@@ -247,7 +247,7 @@ export class CommandCenterPage extends BasePage {
         }
 
         // Render the battle progress bar
-        const progressBarElement = this.battleProgressBar.render(activeBattle, playerRole, this.contracts);
+        const progressBarElement = await this.battleProgressBar.render(activeBattle, playerRole, this.contracts);
         
         // Clear container and append progress bar
         container.innerHTML = '';
@@ -476,10 +476,15 @@ export class CommandCenterPage extends BasePage {
             // Sort battles by timestamp in descending order (newest first)
             battleHistory.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
 
-            battleHistory.forEach(battle => {
+            // Process battles sequentially to handle async power calculations
+            for (const battle of battleHistory) {
                 const battleDate = new Date(Number(battle.timestamp) * 1000);
                 const isAttacker = battle.attacker.toLowerCase() === address.toLowerCase();
                 const won = isAttacker ? battle.attackerWon : !battle.attackerWon;
+                
+                // Calculate current power using the new getter functions
+                const attackerPower = await this.contracts.battleSystem.getAttackerPowerWithTactics(battle.attacker);
+                const defenderPower = await this.contracts.battleSystem.getDefenderPowerWithTactics(battle.attacker);
                 
                 const battleItem = document.createElement('div');
                 battleItem.className = `battle-history-item ${won ? 'victory' : 'defeat'}`;
@@ -489,7 +494,7 @@ export class CommandCenterPage extends BasePage {
                         ${won ? 'Victory' : 'Defeat'} against ${isAttacker ? battle.defender : battle.attacker}
                     </div>
                     <div class="battle-details">
-                        <div>Power: ${battle.attackerPower} vs ${battle.defenderPower}</div>
+                        <div>Power: ${attackerPower} vs ${defenderPower}</div>
                         ${battle.treasuryBurned > 0 ? `<div>Gold Stolen: ${battle.treasuryBurned}</div>` : ''}
                         ${battle.repPoints > 0 ? `<div>REP Earned: ${battle.repPoints}</div>` : ''}
                         ${battle.gridBuildingsDamaged > 0 ? `<div>Grid Buildings Damaged: ${battle.gridBuildingsDamaged}</div>` : ''}
@@ -497,7 +502,7 @@ export class CommandCenterPage extends BasePage {
                     </div>
                 `;
                 historyList.appendChild(battleItem);
-            });
+            }
         } catch (error) {
             Logger.error('Error loading battle history:', error);
         }
