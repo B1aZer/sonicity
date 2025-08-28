@@ -381,7 +381,7 @@ export class StakePage extends BasePage {
             
             <div class="buildings-grid">
                 ${!items || items.length === 0 ? 
-                    `<div class="empty-state"><div class="empty-icon">🏗️</div><h3>No Buildings or NFTs in this tier</h3></div>` :
+                    `<div class="empty-state"><h3>No Buildings in this tier</h3></div>` :
                     items.map(item => this.renderCard(item)).join('')
                 }
             </div>
