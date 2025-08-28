@@ -482,9 +482,9 @@ export class CommandCenterPage extends BasePage {
                 const isAttacker = battle.attacker.toLowerCase() === address.toLowerCase();
                 const won = isAttacker ? battle.attackerWon : !battle.attackerWon;
                 
-                // Calculate current power using the new getter functions
-                const attackerPower = await this.contracts.battleSystem.getAttackerPowerWithTactics(battle.attacker);
-                const defenderPower = await this.contracts.battleSystem.getDefenderPowerWithTactics(battle.attacker);
+                // Use stored power values from battle history (these were calculated when battle was resolved)
+                const attackerPower = Number(battle.attackerPower || 0);
+                const defenderPower = Number(battle.defenderPower || 0);
                 
                 const battleItem = document.createElement('div');
                 battleItem.className = `battle-history-item ${won ? 'victory' : 'defeat'}`;
