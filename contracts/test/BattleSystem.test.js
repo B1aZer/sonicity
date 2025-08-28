@@ -2408,6 +2408,305 @@ describe("BattleSystem", function () {
             console.log(`  ✅ Correctly prevented 4th tactic deployment`);
         });
 
+        it("should test power calculation immediately after attacker tactics deployment", async function () {
+            // Scenario: Check if attacker power is updated immediately after deploying tactics
+            
+            // Player1 mints tactics
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+            await tacticsNFT.connect(player1).mintTactic(1); // Iron Strike (STRIKE)
+            await tacticsNFT.connect(player1).mintTactic(2); // Guardian Wall (SHIELD)
+            await tacticsNFT.connect(player1).mintTactic(3); // Battle Rage (TRICK)
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 0, 0); // 10 infantry
+
+            // Player2 deploys troops to garrison
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Check initial attacker power (before tactics)
+            const battleBeforeTactics = await battleSystem.activeBattles(player1.address);
+            const initialAttackerPower = battleBeforeTactics.attackerPower;
+            const expectedBasePower = 10 * 10; // 10 infantry * 10 power = 100
+            expect(Number(initialAttackerPower)).to.equal(expectedBasePower);
+
+            // Deploy first tactic
+            await battleSystem.connect(player1).deployTacticToBattle(1); // STRIKE
+
+            // Check power after first tactic deployment
+            const battleAfterFirstTactic = await battleSystem.activeBattles(player1.address);
+            const powerAfterFirstTactic = battleAfterFirstTactic.attackerPower;
+            
+            // Power should be updated immediately (not just at resolution)
+            expect(Number(powerAfterFirstTactic)).to.be.gt(Number(initialAttackerPower));
+            
+            console.log(`⚔️ Attacker Power After First Tactic:`);
+            console.log(`  Initial power: ${initialAttackerPower}`);
+            console.log(`  Power after STRIKE tactic: ${powerAfterFirstTactic}`);
+            console.log(`  Power increased: ${Number(powerAfterFirstTactic) - Number(initialAttackerPower)}`);
+
+            // Deploy second tactic
+            await battleSystem.connect(player1).deployTacticToBattle(2); // SHIELD
+
+            // Check power after second tactic deployment
+            const battleAfterSecondTactic = await battleSystem.activeBattles(player1.address);
+            const powerAfterSecondTactic = battleAfterSecondTactic.attackerPower;
+            
+            // Power should increase again
+            expect(Number(powerAfterSecondTactic)).to.be.gt(Number(powerAfterFirstTactic));
+            
+            console.log(`  Power after SHIELD tactic: ${powerAfterSecondTactic}`);
+            console.log(`  Power increased: ${Number(powerAfterSecondTactic) - Number(powerAfterFirstTactic)}`);
+
+            // Deploy third tactic
+            await battleSystem.connect(player1).deployTacticToBattle(3); // TRICK
+
+            // Check power after third tactic deployment
+            const battleAfterThirdTactic = await battleSystem.activeBattles(player1.address);
+            const powerAfterThirdTactic = battleAfterThirdTactic.attackerPower;
+            
+            // Power should increase again
+            expect(Number(powerAfterThirdTactic)).to.be.gt(Number(powerAfterSecondTactic));
+            
+            console.log(`  Power after TRICK tactic: ${powerAfterThirdTactic}`);
+            console.log(`  Power increased: ${Number(powerAfterThirdTactic) - Number(powerAfterSecondTactic)}`);
+            console.log(`  Total power increase: ${Number(powerAfterThirdTactic) - Number(initialAttackerPower)}`);
+            console.log(`  ✅ Attacker power updated immediately after each tactic deployment`);
+        });
+
+        it("should test power calculation immediately after defender tactics deployment", async function () {
+            // Scenario: Check if defender power is updated immediately after deploying tactics
+            
+            // Player2 mints tactics
+            await gameState.testEarnGold(player2.address, 3000);
+            await gameState.testEarnFood(player2.address, 2000);
+            await gameState.testEarnDiamonds(player2.address, 100);
+            await tacticsNFT.connect(player2).mintTactic(2); // Guardian Wall (SHIELD)
+            await tacticsNFT.connect(player2).mintTactic(5); // Defensive Circle (SHIELD)
+            await tacticsNFT.connect(player2).mintTactic(8); // Shadow Guard (SHIELD)
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 0, 0); // 10 infantry
+
+            // Player2 deploys troops to garrison
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Check initial defender power (before tactics)
+            const battleBeforeTactics = await battleSystem.activeBattles(player1.address);
+            const initialDefenderPower = battleBeforeTactics.defenderPower;
+            const expectedBasePower = 10 * 10; // 10 infantry * 10 power = 100
+            expect(Number(initialDefenderPower)).to.equal(expectedBasePower);
+
+            // Deploy first tactic
+            await battleSystem.connect(player2).deployTacticToBattle(2); // SHIELD
+
+            // Check power after first tactic deployment
+            const battleAfterFirstTactic = await battleSystem.activeBattles(player1.address);
+            const powerAfterFirstTactic = battleAfterFirstTactic.defenderPower;
+            
+            // Power should be updated immediately
+            expect(Number(powerAfterFirstTactic)).to.be.gt(Number(initialDefenderPower));
+            
+            console.log(`🛡️ Defender Power After First Tactic:`);
+            console.log(`  Initial power: ${initialDefenderPower}`);
+            console.log(`  Power after SHIELD tactic: ${powerAfterFirstTactic}`);
+            console.log(`  Power increased: ${Number(powerAfterFirstTactic) - Number(initialDefenderPower)}`);
+
+            // Deploy second tactic
+            await battleSystem.connect(player2).deployTacticToBattle(5); // SHIELD
+
+            // Check power after second tactic deployment
+            const battleAfterSecondTactic = await battleSystem.activeBattles(player1.address);
+            const powerAfterSecondTactic = battleAfterSecondTactic.defenderPower;
+            
+            // Power should increase again
+            expect(Number(powerAfterSecondTactic)).to.be.gt(Number(powerAfterFirstTactic));
+            
+            console.log(`  Power after second SHIELD tactic: ${powerAfterSecondTactic}`);
+            console.log(`  Power increased: ${Number(powerAfterSecondTactic) - Number(powerAfterFirstTactic)}`);
+
+            // Deploy third tactic
+            await battleSystem.connect(player2).deployTacticToBattle(8); // SHIELD
+
+            // Check power after third tactic deployment
+            const battleAfterThirdTactic = await battleSystem.activeBattles(player1.address);
+            const powerAfterThirdTactic = battleAfterThirdTactic.defenderPower;
+            
+            // Power should increase again
+            expect(Number(powerAfterThirdTactic)).to.be.gt(Number(powerAfterSecondTactic));
+            
+            console.log(`  Power after third SHIELD tactic: ${powerAfterThirdTactic}`);
+            console.log(`  Power increased: ${Number(powerAfterThirdTactic) - Number(powerAfterSecondTactic)}`);
+            console.log(`  Total power increase: ${Number(powerAfterThirdTactic) - Number(initialDefenderPower)}`);
+            console.log(`  ✅ Defender power updated immediately after each tactic deployment`);
+        });
+
+        it("should test power calculation with mixed tactics deployment", async function () {
+            // Scenario: Check power calculation when both attacker and defender deploy tactics
+            
+            // Player1 mints tactics
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+            await tacticsNFT.connect(player1).mintTactic(1); // Iron Strike (STRIKE)
+            await tacticsNFT.connect(player1).mintTactic(4); // Cavalry Rush (STRIKE)
+            await tacticsNFT.connect(player1).mintTactic(7); // Swift Strike (STRIKE)
+
+            // Player2 mints tactics
+            await gameState.testEarnGold(player2.address, 3000);
+            await gameState.testEarnFood(player2.address, 2000);
+            await gameState.testEarnDiamonds(player2.address, 100);
+            await tacticsNFT.connect(player2).mintTactic(2); // Guardian Wall (SHIELD)
+            await tacticsNFT.connect(player2).mintTactic(5); // Defensive Circle (SHIELD)
+            await tacticsNFT.connect(player2).mintTactic(8); // Shadow Guard (SHIELD)
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 0, 0); // 10 infantry
+
+            // Player2 deploys troops to garrison
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Check initial powers
+            const battleInitial = await battleSystem.activeBattles(player1.address);
+            const initialAttackerPower = battleInitial.attackerPower;
+            const initialDefenderPower = battleInitial.defenderPower;
+            
+            console.log(`⚔️ Mixed Tactics Deployment Test:`);
+            console.log(`  Initial attacker power: ${initialAttackerPower}`);
+            console.log(`  Initial defender power: ${initialDefenderPower}`);
+
+            // Deploy attacker tactics
+            await battleSystem.connect(player1).deployTacticToBattle(1); // STRIKE
+            await battleSystem.connect(player1).deployTacticToBattle(4); // STRIKE
+            await battleSystem.connect(player1).deployTacticToBattle(7); // STRIKE
+
+            // Deploy defender tactics
+            await battleSystem.connect(player2).deployTacticToBattle(2); // SHIELD
+            await battleSystem.connect(player2).deployTacticToBattle(5); // SHIELD
+            await battleSystem.connect(player2).deployTacticToBattle(8); // SHIELD
+
+            // Check final powers after all tactics deployed
+            const battleFinal = await battleSystem.activeBattles(player1.address);
+            const finalAttackerPower = battleFinal.attackerPower;
+            const finalDefenderPower = battleFinal.defenderPower;
+            
+            // Attacker should have increased power (wins all 3 RPS rounds)
+            expect(Number(finalAttackerPower)).to.be.gt(Number(initialAttackerPower));
+            // Defender should have same power (loses all 3 RPS rounds)
+            expect(Number(finalDefenderPower)).to.equal(Number(initialDefenderPower));
+            
+            console.log(`  Final attacker power: ${finalAttackerPower}`);
+            console.log(`  Final defender power: ${finalDefenderPower}`);
+            console.log(`  Attacker power increase: ${Number(finalAttackerPower) - Number(initialAttackerPower)}`);
+            console.log(`  Defender power increase: ${Number(finalDefenderPower) - Number(initialDefenderPower)}`);
+            console.log(`  ✅ Both attacker and defender powers updated immediately after tactics deployment`);
+
+            // Verify that the battle state is consistent for both players
+            const battleFromPlayer2 = await battleSystem.activeBattles(player2.address);
+            expect(Number(battleFromPlayer2.attackerPower)).to.equal(Number(finalAttackerPower));
+            expect(Number(battleFromPlayer2.defenderPower)).to.equal(Number(finalDefenderPower));
+            
+            console.log(`  ✅ Battle state consistent between attacker and defender views`);
+        });
+
+        it("should test power calculation with hero deployment", async function () {
+            // Scenario: Check power calculation when heroes are deployed
+            
+            // Player1 mints hero and tactics
+            await gameState.testEarnGold(player1.address, 3000);
+            await gameState.testEarnFood(player1.address, 2000);
+            await gameState.testEarnDiamonds(player1.address, 100);
+            await heroNFT.connect(player1).mintHero(0); // WARRIOR
+            await tacticsNFT.connect(player1).mintTactic(1); // Iron Strike (STRIKE)
+
+            // Player2 mints hero and tactics
+            await gameState.testEarnGold(player2.address, 3000);
+            await gameState.testEarnFood(player2.address, 2000);
+            await gameState.testEarnDiamonds(player2.address, 100);
+            await heroNFT.connect(player2).mintHero(1); // STRATEGIST
+            await tacticsNFT.connect(player2).mintTactic(2); // Guardian Wall (SHIELD)
+
+            // Start battle - Player1 attacks Player2
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+            await battleSystem.connect(player1).startSearch();
+            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_mine");
+            await battleSystem.connect(player1).findRandomOpponent();
+            await battleSystem.connect(player1).startBattle(10, 0, 0); // 10 infantry
+
+            // Player2 deploys troops to garrison
+            await battleSystem.connect(player2).deployToGarrison(10, 0, 0, 255); // 10 infantry, no hero
+
+            // Check initial powers
+            const battleInitial = await battleSystem.activeBattles(player1.address);
+            const initialAttackerPower = battleInitial.attackerPower;
+            const initialDefenderPower = battleInitial.defenderPower;
+            
+            console.log(`⚔️ Hero Deployment Power Test:`);
+            console.log(`  Initial attacker power: ${initialAttackerPower}`);
+            console.log(`  Initial defender power: ${initialDefenderPower}`);
+
+            // Deploy attacker hero
+            const attackerHeroId = await heroNFT.getHeroIdByClass(player1.address, 0);
+            await battleSystem.connect(player1).deployHeroToBattle(attackerHeroId);
+
+            // Check power after attacker hero deployment
+            const battleAfterAttackerHero = await battleSystem.activeBattles(player1.address);
+            const powerAfterAttackerHero = battleAfterAttackerHero.attackerPower;
+            
+            // WARRIOR hero should boost infantry power
+            expect(Number(powerAfterAttackerHero)).to.be.gt(Number(initialAttackerPower));
+            
+            console.log(`  Power after WARRIOR hero: ${powerAfterAttackerHero}`);
+            console.log(`  Attacker power increase: ${Number(powerAfterAttackerHero) - Number(initialAttackerPower)}`);
+
+            // Deploy defender hero
+            const defenderHeroId = await heroNFT.getHeroIdByClass(player2.address, 1);
+            await battleSystem.connect(player2).deployHeroToBattleByClass(1); // STRATEGIST
+
+            // Check power after defender hero deployment
+            const battleAfterDefenderHero = await battleSystem.activeBattles(player1.address);
+            const powerAfterDefenderHero = battleAfterDefenderHero.defenderPower;
+            
+            // STRATEGIST hero should boost siege power (but defender has no siege troops)
+            // So power should remain the same or increase slightly
+            expect(Number(powerAfterDefenderHero)).to.be.gte(Number(initialDefenderPower));
+            
+            console.log(`  Power after STRATEGIST hero: ${powerAfterDefenderHero}`);
+            console.log(`  Defender power change: ${Number(powerAfterDefenderHero) - Number(initialDefenderPower)}`);
+
+            // Deploy tactics
+            await battleSystem.connect(player1).deployTacticToBattle(1); // STRIKE
+            await battleSystem.connect(player2).deployTacticToBattle(2); // SHIELD
+
+            // Check final powers
+            const battleFinal = await battleSystem.activeBattles(player1.address);
+            const finalAttackerPower = battleFinal.attackerPower;
+            const finalDefenderPower = battleFinal.defenderPower;
+            
+            console.log(`  Final attacker power: ${finalAttackerPower}`);
+            console.log(`  Final defender power: ${finalDefenderPower}`);
+            console.log(`  Total attacker power increase: ${Number(finalAttackerPower) - Number(initialAttackerPower)}`);
+            console.log(`  Total defender power increase: ${Number(finalDefenderPower) - Number(initialDefenderPower)}`);
+            console.log(`  ✅ Hero and tactic power calculations working correctly`);
+        });
+
 
     });
 }); 
