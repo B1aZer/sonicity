@@ -17,11 +17,12 @@ async function main() {
     const [owner] = await ethers.getSigners();
     console.log(`Using owner address: ${owner.address}`);
 
-    const address = "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc";
-    const goldAmount = 1000; // 1000 gold
-    const foodAmount = 30; // 500 food
+    const address = "0x71be63f3384f5fb98995898a86b02fb2426c5788";
+    const goldAmount = 10000; // 10000 gold
+    const foodAmount = 1000; // 300 food
+    const diamondAmount = 100; // 100 diamonds
 
-    console.log(`Adding ${goldAmount} gold and ${foodAmount} food to address ${address}...`);
+    console.log(`Adding ${goldAmount} gold, ${foodAmount} food, and ${diamondAmount} diamonds to address ${address}...`);
     
     // Connect gameState with owner's signer
     const gameStateWithOwner = gameState.connect(owner);
@@ -35,12 +36,19 @@ async function main() {
     const foodTx = await gameStateWithOwner.testEarnFood(address, foodAmount);
     await foodTx.wait();
     console.log("Food added successfully!");
+
+    // Add diamonds
+    const diamondTx = await gameStateWithOwner.testEarnDiamonds(address, diamondAmount);
+    await diamondTx.wait();
+    console.log("Diamonds added successfully!");
     
     // Verify the new balances
     const newGoldBalance = await gameState.getPlayerGold(address);
     const newFoodBalance = await gameState.getPlayerFood(address);
+    const newDiamondBalance = await gameState.getPlayerDiamonds(address);
     console.log(`New gold balance: ${newGoldBalance}`);
     console.log(`New food balance: ${newFoodBalance}`);
+    console.log(`New diamond balance: ${newDiamondBalance}`);
 }
 
 main()

@@ -1,5 +1,31 @@
 ## todo
 
+- move mint to district buidling, add tier by rarirty
+- right bullding should completely for help and resource/rev status, optining by tiers. Guidance building
+- we completely disable unstake for now, meaning destory completely destroys with nft. For tier 4 yield stations we remove house actions for now. And allow stake directly, unstake removes nft.
+- players should noe care about nft for now
+- what happens whaen attacke goes to garrison and vie versa
++ cmd center rm resource, make similar
+- grid updates  - diamonds
+- barrack/district updates - diamonds
+- shop flag (single item)
+
+## todo
+
+- remove house nft left
++ connected address white
+- troop survival, add description garris, center
+- restricut url by pages
+
+## models
+
+- https://www.fab.com/listings/a4b43ae5-e442-4d51-93f2-fea8d77e9f37
+- https://www.fab.com/listings/c5c87fef-db62-48d8-9e15-08a4412a9bb0
+- https://www.fab.com/listings/c780298c-8201-4d23-945d-8f7837c3fe9b
+- (https://www.fab.com/listings/4482015f-306e-471c-a8d0-55c1c433bc52)
+
+## todo
+
 UI/UX polish - Make the prototype look good
 Gameplay balance - Ensure the core loop is fun
 
