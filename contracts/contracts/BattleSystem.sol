@@ -457,9 +457,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(!battle.resolved, "Battle already resolved");
         require(block.timestamp >= battle.startTime + BATTLE_DURATION, "Battle duration not elapsed");
 
-        // Use the stored power values (RPS multipliers already applied during deployment)
-        uint256 finalAttackerPower = battle.attackerPower;
-        uint256 finalDefenderPower = battle.defenderPower;
+        // Calculate final powers on-the-fly (RPS multipliers applied during calculation)
+        uint256 finalAttackerPower = getAttackerPowerWithTactics(battleId);
+        uint256 finalDefenderPower = getDefenderPowerWithTactics(battleId);
 
         bool attackerWon = finalAttackerPower > finalDefenderPower;
         
@@ -468,12 +468,12 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             applyBattleEffects(
                 battle.attacker,
                 battle.defender,
-                battle.attackerPower,
-                battle.defenderPower
+                finalAttackerPower,
+                finalDefenderPower
             );
 
             // Update battle state
-            battle.repPoints = calculateRepPoints(battle.attackerPower, battle.defenderPower);
+            battle.repPoints = calculateRepPoints(finalAttackerPower, finalDefenderPower);
         }
 
         // Record battle history
@@ -1386,8 +1386,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             }
         }
         
-        // Recalculate power immediately after tactic deployment
-        _recalculateBattlePowerWithTactics(msg.sender);
+        // Power is now calculated on-the-fly, no need to recalculate
     }
 
 
@@ -1663,71 +1662,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         BATTLE_DURATION = newDuration;
     }
 
-    /**
-     * @dev Internal function to recalculate battle power with tactics
-     * @param player The player whose power should be recalculated
-     */
-    function _recalculateBattlePowerWithTactics(address player) internal {
-        Battle storage battle = activeBattles[player];
-        HeroTacticsDeployment storage attackerDeployment = battleHeroTactics[battle.attacker];
-        HeroTacticsDeployment storage defenderDeployment = battleHeroTactics[battle.defender];
-        
-        // Calculate attacker base power
-        uint256 attackerBasePower = calculateTroopPower(
-            battle.attackerTroops.infantry,
-            battle.attackerTroops.cavalry,
-            battle.attackerTroops.siege
-        );
-        
-        // Add attacker hero bonus if deployed
-        if (attackerDeployment.attackerHeroId > 0) {
-            attackerBasePower = calculateTotalBattlePower(
-                attackerBasePower,
-                attackerDeployment.attackerHeroId,
-                battle.attackerTroops.infantry,
-                battle.attackerTroops.cavalry,
-                battle.attackerTroops.siege
-            );
-        }
-        
-        // Calculate defender base power
-        uint256 defenderBasePower = calculateTroopPower(
-            battle.defenderTroops.infantry,
-            battle.defenderTroops.cavalry,
-            battle.defenderTroops.siege
-        );
-        
-        // Add defender hero bonus if deployed
-        if (defenderDeployment.defenderHeroId > 0) {
-            defenderBasePower = calculateTotalBattlePower(
-                defenderBasePower,
-                defenderDeployment.defenderHeroId,
-                battle.defenderTroops.infantry,
-                battle.defenderTroops.cavalry,
-                battle.defenderTroops.siege
-            );
-        }
-        
-        // Get tactics arrays for RPS calculation
-        uint8[3] memory attackerTactics = [attackerDeployment.attackerTactic1, attackerDeployment.attackerTactic2, attackerDeployment.attackerTactic3];
-        uint8[3] memory defenderTactics = [defenderDeployment.defenderTactic1, defenderDeployment.defenderTactic2, defenderDeployment.defenderTactic3];
-        
-        // Calculate RPS multipliers for both players
-        (uint256 attackerRPSMultiplier, uint256 defenderRPSMultiplier) = calculateRPSMultipliers(attackerTactics, defenderTactics);
-        
-        // Apply RPS multipliers to base powers
-        uint256 finalAttackerPower = (attackerBasePower * attackerRPSMultiplier) / 100;
-        uint256 finalDefenderPower = (defenderBasePower * defenderRPSMultiplier) / 100;
-        
-        // Update both battle records with the correct powers
-        battle.attackerPower = finalAttackerPower;
-        battle.defenderPower = finalDefenderPower;
-        
-        // Also update the opponent's battle record to keep state consistent
-        Battle storage opponentBattle = activeBattles[battle.defender];
-        opponentBattle.attackerPower = finalAttackerPower;
-        opponentBattle.defenderPower = finalDefenderPower;
-    }
+
 
     /**
      * @dev Calculate power with tactics applied immediately (RPS multipliers)
@@ -1759,5 +1694,91 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         return (basePower * playerMultiplier) / 100;
     }
 
+
+
+
+
+    /**
+     * @dev Get battle power calculated on-the-fly with current tactics and RPS
+     * @param battleId The battle ID (attacker address)
+     * @param isAttacker Whether to calculate attacker power (true) or defender power (false)
+     * @return uint256 Current power
+     */
+    function getBattlePower(address battleId, bool isAttacker) public view returns (uint256) {
+        Battle storage battle = activeBattles[battleId];
+        require(battle.startTime > 0, "Battle does not exist");
+        
+        HeroTacticsDeployment storage attackerDeployment = battleHeroTactics[battle.attacker];
+        HeroTacticsDeployment storage defenderDeployment = battleHeroTactics[battle.defender];
+        
+        // Calculate base power based on role
+        uint256 basePower;
+        uint256 heroId;
+        uint256 infantryCount, cavalryCount, siegeCount;
+        
+        if (isAttacker) {
+            basePower = calculateTroopPower(
+                battle.attackerTroops.infantry,
+                battle.attackerTroops.cavalry,
+                battle.attackerTroops.siege
+            );
+            heroId = attackerDeployment.attackerHeroId;
+            infantryCount = battle.attackerTroops.infantry;
+            cavalryCount = battle.attackerTroops.cavalry;
+            siegeCount = battle.attackerTroops.siege;
+        } else {
+            basePower = calculateTroopPower(
+                battle.defenderTroops.infantry,
+                battle.defenderTroops.cavalry,
+                battle.defenderTroops.siege
+            );
+            heroId = defenderDeployment.defenderHeroId;
+            infantryCount = battle.defenderTroops.infantry;
+            cavalryCount = battle.defenderTroops.cavalry;
+            siegeCount = battle.defenderTroops.siege;
+        }
+        
+        // Add hero bonus if deployed
+        if (heroId > 0) {
+            basePower = calculateTotalBattlePower(
+                basePower,
+                heroId,
+                infantryCount,
+                cavalryCount,
+                siegeCount
+            );
+        }
+        
+        // Get tactics arrays for RPS calculation (same for both players)
+        uint8[3] memory attackerTactics = [attackerDeployment.attackerTactic1, attackerDeployment.attackerTactic2, attackerDeployment.attackerTactic3];
+        uint8[3] memory defenderTactics = [defenderDeployment.defenderTactic1, defenderDeployment.defenderTactic2, defenderDeployment.defenderTactic3];
+        
+        // Calculate RPS multipliers (same calculation for both players)
+        (uint256 attackerRPSMultiplier, uint256 defenderRPSMultiplier) = calculateRPSMultipliers(attackerTactics, defenderTactics);
+        
+        // Apply appropriate RPS multiplier based on role
+        uint256 rpsMultiplier = isAttacker ? attackerRPSMultiplier : defenderRPSMultiplier;
+        
+        // Apply RPS multiplier to base power
+        return (basePower * rpsMultiplier) / 100;
+    }
+
+    /**
+     * @dev Get attacker power calculated on-the-fly with current tactics and RPS
+     * @param battleId The battle ID (attacker address)
+     * @return uint256 Current attacker power
+     */
+    function getAttackerPowerWithTactics(address battleId) public view returns (uint256) {
+        return getBattlePower(battleId, true);
+    }
+
+    /**
+     * @dev Get defender power calculated on-the-fly with current tactics and RPS
+     * @param battleId The battle ID (attacker address)
+     * @return uint256 Current defender power
+     */
+    function getDefenderPowerWithTactics(address battleId) public view returns (uint256) {
+        return getBattlePower(battleId, false);
+    }
 
 } 
