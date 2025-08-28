@@ -2040,12 +2040,14 @@ describe("BattleSystem", function () {
             const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 100 * 190 / 100 = 190
             
             console.log(`⚔️ Defender Wins 3/3 RPS (TRICK vs SHIELD):`);
-            console.log(`  Player1 base power: ${player1BasePower}`);
-            console.log(`  Player1 RPS multiplier: ${player1RPSMultiplier} (no bonus)`);
-            console.log(`  Player1 final power: ${player1FinalPower}`);
-            console.log(`  Player2 base power: ${player2BasePower}`);
-            console.log(`  Player2 RPS multiplier: ${player2RPSMultiplier} (90% bonus)`);
-            console.log(`  Player2 final power: ${player2FinalPower}`);
+            console.log(`  Player1 expected base power: ${player1BasePower}`);
+            console.log(`  Player1 expected RPS multiplier: ${player1RPSMultiplier} (no bonus)`);
+            console.log(`  Player1 expected final power: ${player1FinalPower}`);
+            console.log(`  Player1 actual final power: ${battleRecord.attackerPower}`);
+            console.log(`  Player2 expected base power: ${player2BasePower}`);
+            console.log(`  Player2 expected RPS multiplier: ${player2RPSMultiplier} (90% bonus)`);
+            console.log(`  Player2 expected final power: ${player2FinalPower}`);
+            console.log(`  Player2 actual final power: ${battleRecord.defenderPower}`);
             console.log(`  Winner: ${battleRecord.attackerWon ? 'Player1' : 'Player2'}`);
             console.log(`  ✅ Defender RPS multiplier system working correctly`);
 
