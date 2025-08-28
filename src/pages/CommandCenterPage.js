@@ -603,11 +603,32 @@ export class CommandCenterPage extends BasePage {
                 const isAttacker = lastBattle.attacker.toLowerCase() === address.toLowerCase();
                 const won = isAttacker ? lastBattle.attackerWon : !lastBattle.attackerWon;
                 
-                // Show appropriate message
+                // Show detailed battle results
+                const opponent = isAttacker ? lastBattle.defender : lastBattle.attacker;
+                const shortOpponent = opponent.substring(0, 6) + '...' + opponent.substring(opponent.length - 4);
+                
+                let message = `${won ? '🏆 VICTORY!' : '💀 DEFEAT!'}\n\n`;
+                message += `Opponent: ${shortOpponent}\n`;
+                message += `Your Power: ${isAttacker ? lastBattle.attackerPower : lastBattle.defenderPower}\n`;
+                message += `Opponent Power: ${isAttacker ? lastBattle.defenderPower : lastBattle.attackerPower}\n\n`;
+                
+                if (lastBattle.treasuryBurned > 0) {
+                    message += `💰 Treasury Burned: ${lastBattle.treasuryBurned}\n`;
+                }
+                if (lastBattle.gridBuildingsDamaged > 0) {
+                    message += `🏠 Grid Buildings Damaged: ${lastBattle.gridBuildingsDamaged}\n`;
+                }
+                if (lastBattle.districtBuildingsDamaged > 0) {
+                    message += `🏛️ District Buildings Damaged: ${lastBattle.districtBuildingsDamaged}\n`;
+                }
+                if (lastBattle.repPoints > 0) {
+                    message += `⭐ REP Earned: ${lastBattle.repPoints}\n`;
+                }
+                
                 if (won) {
-                    this.modal.success(`Victory! You won the battle against ${isAttacker ? lastBattle.defender : lastBattle.attacker}!\n\nGold Stolen: ${lastBattle.treasuryBurned}\nREP Earned: ${lastBattle.repPoints}`);
+                    this.modal.success(message);
                 } else {
-                    this.modal.info(`Defeat! You lost the battle against ${isAttacker ? lastBattle.defender : lastBattle.attacker}.`);
+                    this.modal.info(message);
                 }
                 
                 await this.loadCommandCenterData();
