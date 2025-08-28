@@ -285,7 +285,7 @@ export class GarrisonPage extends BasePage {
             } else {
                 // No troops deployed yet - enable deployment
                 deployButton.disabled = false;
-                deployButton.textContent = 'Deploy to Garrison';
+                deployButton.textContent = 'Start Deployment';
                 deployButton.title = '';
                 
                 // Enable inputs

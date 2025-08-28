@@ -208,7 +208,7 @@ export class CommandCenterPage extends BasePage {
             // Search completed with opponent found - enable deployment
             deploymentSection.style.display = 'block';
             deployButton.disabled = false;
-            deployButton.textContent = 'Deploy to Battle';
+            deployButton.textContent = 'Start Battle';
             deployButton.title = '';
             
             // Enable inputs
@@ -409,7 +409,7 @@ export class CommandCenterPage extends BasePage {
                 </div>
 
                 <div class="page-section troop-deployment-section" style="display: none;">
-                    <h2>Start Battle</h2>
+                    <h2>Deploy to Battle</h2>
                     <div class="deployment-form">
                         <div class="troop-input-group">
                             <label for="deploy-infantry">Infantry:</label>
