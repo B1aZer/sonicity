@@ -8,12 +8,12 @@ import { ethers } from 'ethers';
 import('../styles/city-page.css');
 import('../styles/stake-hub-page.css');
 
-export class RevenueHubPage extends BasePage {
+export class ArcanumPage extends BasePage {
     constructor() {
         super();
-        Logger.info('RevenueHubPage constructor called');
+        Logger.info('ArcanumPage constructor called');
         
-        this.element.className = 'base-page revenue-hub-page';
+        this.element.className = 'base-page arcanum-page';
         
         // Initialize state with real data structure
         this.setState({
@@ -40,22 +40,22 @@ export class RevenueHubPage extends BasePage {
     }
 
     async onInitialized(walletResult) {
-        Logger.info('RevenueHubPage onInitialized called with wallet:', walletResult);
+        Logger.info('ArcanumPage onInitialized called with wallet:', walletResult);
         if (!walletResult || !walletResult.address) {
             Logger.error('No wallet address provided in onInitialized');
             return;
         }
         try {
-            await this.loadRevenueData();
+            await this.loadArcanumData();
             this.setupEventListeners();
             this.updateTierTabs();
-            Logger.info('Revenue hub page initialized successfully');
+            Logger.info('Arcanum page initialized successfully');
         } catch (error) {
-            Logger.error('Error initializing revenue hub page:', error);
+            Logger.error('Error initializing Arcanum page:', error);
         }
     }
 
-    async loadRevenueData() {
+    async loadArcanumData() {
         try {
             const userAddress = await this.contracts.gameState.getAddress();
             
@@ -80,9 +80,9 @@ export class RevenueHubPage extends BasePage {
                 yieldNFTsByRarity
             });
             
-            Logger.info('Revenue data loaded:', this.state);
+            Logger.info('Arcanum data loaded:', this.state);
         } catch (error) {
-            Logger.error('Error loading revenue data:', error);
+            Logger.error('Error loading Arcanum data:', error);
         }
     }
 
@@ -200,7 +200,7 @@ export class RevenueHubPage extends BasePage {
             repInput.value = '';
             
             // Reload the page data to show the new NFT
-            await this.loadRevenueData();
+            await this.loadArcanumData();
             this.updateTierTabs();
             this.renderTierContent(this.state.selectedTier);
             
@@ -254,7 +254,7 @@ export class RevenueHubPage extends BasePage {
         return `
             <div class="buildings-grid">
                 <div class="building-card">
-                    <h3>Welcome to Revenue Hub</h3>
+                    <h3>Welcome to Arcanum of Names</h3>
                     <p>Learn about the yield NFT system and revenue distribution</p>
                     <div class="building-details">
                         <div class="detail-item">
@@ -402,15 +402,15 @@ export class RevenueHubPage extends BasePage {
     render() {
         this.element.innerHTML = `
             <div class="page-container">
-                <h1>Guidance Altar</h1>
+                <h1>Arcanum of Names</h1>
                 <p class="page-description">
-                    <strong>Manage your yield-generating NFTs and claim revenue from the treasury.</strong> 
-                    <em>Stake REP points to mint yield NFTs and participate in revenue distribution.</em>
+                    <strong>Transform your REP Points into powerful dynamic NFTs.</strong> 
+                    <em>Mint yield NFTs and participate in revenue distribution from the treasury.</em>
                 </p>
                 
                 <!-- Status Section -->
                 <div class="page-section">
-                    <h2>Revenue Status</h2>
+                    <h2>Arcanum Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Revenue Pool:</span>
