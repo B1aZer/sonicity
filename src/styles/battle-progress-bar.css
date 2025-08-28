@@ -1,5 +1,5 @@
 /* Battle Progress Bar Styles */
-.battle-progress-container {
+.battle-progress-bar .battle-progress-container {
     margin-bottom: var(--spacing-xl);
     border-radius: var(--radius-lg);
     overflow: hidden;
@@ -8,13 +8,13 @@
     border: var(--border-secondary);
 }
 
-.battle-progress-banner {
+.battle-progress-bar .battle-progress-banner {
     padding: var(--spacing-xl);
     color: var(--text-primary);
 }
 
 /* Battle Status Section */
-.battle-status {
+.battle-progress-bar .battle-status {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -25,7 +25,7 @@
     border: var(--border-tertiary);
 }
 
-.battle-indicator {
+.battle-progress-bar .battle-indicator {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
@@ -33,15 +33,15 @@
     font-size: var(--font-size-base);
 }
 
-.battle-indicator i {
+.battle-progress-bar .battle-indicator i {
     animation: pulse 2s infinite;
 }
 
-.battle-text {
+.battle-progress-bar .battle-text {
     color: var(--color-danger);
 }
 
-.battle-timer {
+.battle-progress-bar .battle-timer {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
@@ -49,17 +49,17 @@
     color: var(--text-primary);
 }
 
-.time-remaining {
+.battle-progress-bar .time-remaining {
     font-weight: bold;
     color: var(--color-accent);
 }
 
 /* Progress Bar Section */
-.battle-progress-section {
+.battle-progress-bar .battle-progress-section {
     margin-bottom: var(--spacing-lg);
 }
 
-.progress-bar-container {
+.battle-progress-bar .progress-bar-container {
     position: relative;
     height: 24px;
     background: var(--bg-darker);
@@ -68,7 +68,7 @@
     border: var(--border-header);
 }
 
-.progress-bar {
+.battle-progress-bar .progress-bar {
     height: 100%;
     background: linear-gradient(90deg, rgba(0,0,0,0) 0%, var(--color-danger) 100%);
     border-radius: var(--radius-lg);
@@ -77,7 +77,7 @@
     overflow: hidden;
 }
 
-.progress-bar::after {
+.battle-progress-bar .progress-bar::after {
     content: '';
     position: absolute;
     top: 0;
@@ -88,7 +88,7 @@
     animation: shimmer 2s infinite;
 }
 
-.progress-label {
+.battle-progress-bar .progress-label {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -100,18 +100,18 @@
 }
 
 /* Power Comparison Section */
-.power-comparison-section {
+.battle-progress-bar .power-comparison-section {
     background: var(--card-bg);
     border-radius: var(--radius-md);
     padding: var(--spacing-lg);
     border: var(--border-tertiary);
 }
 
-.power-indicator {
+.battle-progress-bar .power-indicator {
     text-align: center;
 }
 
-.power-label {
+.battle-progress-bar .power-label {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
     margin-bottom: var(--spacing-md);
@@ -119,7 +119,7 @@
     letter-spacing: 1px;
 }
 
-.power-visual {
+.battle-progress-bar .power-visual {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -127,8 +127,8 @@
     margin-bottom: var(--spacing-md);
 }
 
-.attacker-side,
-.defender-side {
+.battle-progress-bar .attacker-side,
+.battle-progress-bar .defender-side {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -138,28 +138,28 @@
     transition: all var(--transition-normal);
 }
 
-.attacker-side {
+.battle-progress-bar .attacker-side {
     background: var(--bg-dark-secondary);
     border: var(--border-tertiary);
 }
 
-.defender-side {
+.battle-progress-bar .defender-side {
     background: var(--bg-dark-secondary);
     border: var(--border-tertiary);
 }
 
-.player-side {
+.battle-progress-bar .player-side {
     background: var(--bg-dark);
     border: var(--border-tertiary);
     box-shadow: 0 0 10px var(--color-accent);
 }
 
-.power-bars {
+.battle-progress-bar .power-bars {
     display: flex;
     gap: var(--spacing-xs);
 }
 
-.power-bar {
+.battle-progress-bar .power-bar {
     width: 8px;
     height: 20px;
     border-radius: var(--radius-sm);
@@ -167,44 +167,44 @@
     transition: all var(--transition-normal);
 }
 
-.power-bar.active {
+.battle-progress-bar .power-bar.active {
     transform: scaleY(1.2);
     box-shadow: 0 0 8px currentColor;
 }
 
-.power-bar.attacker-color.active {
+.battle-progress-bar .power-bar.attacker-color.active {
     background: var(--color-danger);
     box-shadow: 0 0 8px var(--color-danger);
 }
 
-.power-bar.defender-color.active {
+.battle-progress-bar .power-bar.defender-color.active {
     background: var(--color-accent);
     box-shadow: 0 0 8px var(--color-accent);
 }
 
-.side-label {
+.battle-progress-bar .side-label {
     font-size: var(--font-size-xs);
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.attacker-side .side-label {
+.battle-progress-bar .attacker-side .side-label {
     color: var(--color-danger);
 }
 
-.defender-side.player-side .side-label {
+.battle-progress-bar .defender-side.player-side .side-label {
     color: var(--color-accent);
 }
 
-.vs-indicator {
+.battle-progress-bar .vs-indicator {
     font-size: var(--font-size-lg);
     font-weight: bold;
     color: var(--text-primary);
     animation: pulse 2s infinite;
 }
 
-.power-status {
+.battle-progress-bar .power-status {
     font-size: var(--font-size-sm);
     font-weight: bold;
     color: var(--text-primary);
@@ -238,29 +238,28 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .battle-status {
+    .battle-progress-bar .battle-status {
         flex-direction: column;
         gap: var(--spacing-sm);
         text-align: center;
     }
     
-    .power-visual {
+    .battle-progress-bar .power-visual {
         gap: var(--spacing-md);
     }
     
-    .power-bar {
+    .battle-progress-bar .power-bar {
         width: 6px;
         height: 16px;
     }
     
-    .battle-progress-banner {
+    .battle-progress-bar .battle-progress-banner {
         padding: var(--spacing-lg);
     }
 }
 
 /* Hover Effects */
-
-.power-bar.active:hover {
+.battle-progress-bar .power-bar.active:hover {
     transform: scaleY(1.4);
     transition: transform var(--transition-fast);
 } 

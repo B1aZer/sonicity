@@ -3,7 +3,7 @@ import Logger from '../js/utils/logger.js';
 export class BattleProgressBar {
     constructor() {
         this.element = document.createElement('div');
-        this.element.className = 'battle-progress-container';
+        this.element.className = 'battle-progress-bar battle-progress-container';
         this.battleTimerInterval = null;
         this.battleSystemContract = null;
     }
