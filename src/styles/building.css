@@ -29,20 +29,23 @@
 /* Detail item styles for building information */
 .detail-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     padding: var(--spacing-sm);
+    gap: var(--spacing-md);
 }
 
 .detail-label {
     color: var(--text-muted);
     font-size: var(--font-size-sm);
+    min-width: 120px;
+    flex-shrink: 0;
 }
 
 .detail-value {
     color: var(--text-primary);
     font-weight: 500;
     font-size: var(--font-size-sm);
+    flex: 1;
 }
 
 .build-cost, .unlock-cost, .upgrade-cost {
