@@ -241,6 +241,11 @@ export class GridBuildingsContract extends BaseContract {
         return await this.call('calculateProductionProgress', address, buildingId);
     }
 
+    // Format upgrade cost for display
+    formatUpgradeCost(cost) {
+        return cost.toString();
+    }
+
     // Building Upgrade Information
     async getBuildingUpgradeInfo(buildingId) {
         try {
@@ -258,9 +263,9 @@ export class GridBuildingsContract extends BaseContract {
             // Calculate upgrade cost
             const upgradeCost = canUpgrade ? config.upgradeCost * BigInt(currentLevel + 1) : 0n;
             
-            // Check if player has enough gold
-            const playerGold = await gameState.getPlayerGold();
-            const hasEnoughGold = playerGold >= upgradeCost;
+            // Check if player has enough diamonds
+            const playerDiamonds = await gameState.getPlayerDiamonds();
+            const hasEnoughDiamonds = playerDiamonds >= upgradeCost;
             
             // Determine error message
             let errorMessage = '';
@@ -272,12 +277,12 @@ export class GridBuildingsContract extends BaseContract {
                 } else if (building.damaged) {
                     errorMessage = 'Building is damaged';
                 }
-            } else if (!hasEnoughGold) {
-                errorMessage = 'Insufficient SONIC balance';
+            } else if (!hasEnoughDiamonds) {
+                errorMessage = 'Insufficient diamond balance';
             }
             
             return {
-                canUpgrade: canUpgrade && hasEnoughGold,
+                canUpgrade: canUpgrade && hasEnoughDiamonds,
                 currentLevel,
                 maxLevel,
                 upgradeCost,

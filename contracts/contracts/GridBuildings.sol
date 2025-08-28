@@ -133,7 +133,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         buildingConfigs[GridBuildingType.HOUSE] = GridBuildingConfig({
             name: "House",
             baseProductionRate: 10,  // 10 gold per hour
-            upgradeCost: 100,        // 100 gold to upgrade
+            upgradeCost: 10,         // 10 diamonds to upgrade
             description: "Produces gold",
             tier: 0,
             productionDuration: 24 hours, // 24 hours for houses
@@ -143,7 +143,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         buildingConfigs[GridBuildingType.FARM] = GridBuildingConfig({
             name: "Farm",
             baseProductionRate: 5,   // 5 food per hour
-            upgradeCost: 150,        // 150 gold to upgrade
+            upgradeCost: 15,         // 15 diamonds to upgrade
             description: "Produces food",
             tier: 1,
             productionDuration: 24 hours, // 24 hours for farms
@@ -153,7 +153,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         buildingConfigs[GridBuildingType.DIAMOND_STATION] = GridBuildingConfig({
             name: "Diamond Station",
             baseProductionRate: 1,   // Not used - special calculation in _calculateClaimable
-            upgradeCost: 500,        // 500 gold to upgrade (example)
+            upgradeCost: 50,         // 50 diamonds to upgrade
             description: "Produces diamonds",
             tier: 2,
             productionDuration: 72 hours, // 72 hours for diamond stations
@@ -163,7 +163,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         buildingConfigs[GridBuildingType.REP_FORGE] = GridBuildingConfig({
             name: "REP Forge",
             baseProductionRate: 1,   // Not used - special calculation in _calculateClaimable
-            upgradeCost: 200,        // 200 gold to upgrade
+            upgradeCost: 100,         // 100 diamonds to upgrade
             description: "Forge dynamic NFTs from REP",
             tier: 3,
             productionDuration: 168 hours, // 168 hours (7 days) for rep forge
@@ -413,9 +413,10 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Calculate upgrade cost
         uint256 upgradeCost = config.upgradeCost * building.level;
         
-        // Deduct gold from player
+        // Deduct diamonds from player
         (success, returnData) = gameStateAddress.call(
-            abi.encodeWithSignature("deductGold(address,uint256)", msg.sender, upgradeCost)
+            abi.encodeWithSignature("deductResources(address,uint256,uint256,uint256,uint256)", 
+                msg.sender, 0, 0, 0, upgradeCost)
         );
         if (!success) {
             // If the call failed, decode and propagate the error message
@@ -424,7 +425,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                     revert(add(returnData, 32), mload(returnData))
                 }
             }
-            revert("Failed to deduct gold");
+            revert("Failed to deduct diamonds");
         }
         
         // Upgrade building

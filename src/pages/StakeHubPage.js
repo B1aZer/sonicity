@@ -357,7 +357,7 @@ export class StakePage extends BasePage {
                         <i class="fas fa-bolt"></i> Charge
                     </button>
                 </div>
-                <div class="upgrade-info" style="margin-top: 16px;">
+                <div class="upgrade-info" style="display: none; margin-top: 16px;">
                     ${formattedProgress.isMaxLevel ? `
                         <div class="upgrade-status">${upgradeStatusText}</div>
                     ` : `
@@ -963,8 +963,8 @@ export class StakePage extends BasePage {
             // Show loading modal with upgrade cost if available
             let loadingMessage = 'Upgrading building...';
             if (upgradeInfo && upgradeInfo.upgradeCost) {
-                const costInSonic = this.contracts.gridBuildings.formatUpgradeCost(upgradeInfo.upgradeCost);
-                loadingMessage = `Upgrading building (${costInSonic} SONIC)...`;
+                const costInDiamonds = this.contracts.gridBuildings.formatUpgradeCost(upgradeInfo.upgradeCost);
+                loadingMessage = `Upgrading building (${costInDiamonds} diamonds)...`;
             }
             
             const loadingModal = this.modal.loading(loadingMessage);

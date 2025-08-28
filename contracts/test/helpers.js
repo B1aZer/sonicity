@@ -282,6 +282,20 @@ async function ensurePlayerFood(player, gameState, gridBuildings, altar, sonicit
     });
 }
 
+async function ensurePlayerDiamonds(player, gameState, gridBuildings, altar, sonicityDiamond, amount) {
+    return ensurePlayerResource({
+        player,
+        gameState,
+        gridBuildings,
+        altar,
+        nftContract: sonicityDiamond,
+        buildingType: GridBuildingType.DIAMOND_STATION,
+        getResource: async (gameState, playerAddress) => await gameState.getPlayerDiamonds(playerAddress),
+        resourceName: 'diamonds',
+        amount
+    });
+}
+
 /**
  * Find the first building of a specific type for a player
  * @param {Contract} gridBuildings - GridBuildings contract instance
@@ -309,5 +323,6 @@ module.exports = {
     donateGoldForTier,
     ensurePlayerGold,
     ensurePlayerFood,
+    ensurePlayerDiamonds,
     findBuildingOfType
 }; 

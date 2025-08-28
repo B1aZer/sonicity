@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers, upgrades } = require("hardhat");
-const { GridBuildingType, mintAndStakeNFT, donateGoldForTier } = require("./helpers");
+const { GridBuildingType, mintAndStakeNFT, donateGoldForTier, ensurePlayerDiamonds } = require("./helpers");
 
 describe("Altar", function () {
   let sonicityNFT;
@@ -254,14 +254,17 @@ describe("Altar", function () {
         await ethers.provider.send("evm_mine");
       }
 
+      // Ensure player has enough diamonds for upgrades
+      await gameState.testEarnDiamonds(player1Address, 30);
+
       // Get building config to check upgrade cost
       const config = await gridBuildings.buildingConfigs(GridBuildingType.HOUSE);
-      const upgradeCost1 = config.upgradeCost; // Level 1 -> 2: 100 gold
-      const upgradeCost2 = config.upgradeCost * 2n; // Level 2 -> 3: 200 gold
+      const upgradeCost1 = config.upgradeCost; // Level 1 -> 2: 10 diamonds
+      const upgradeCost2 = config.upgradeCost * 2n; // Level 2 -> 3: 20 diamonds
 
-      // Verify player has enough gold for first upgrade
-      const playerGold1 = await gameState.getPlayerGold(player1Address);
-      expect(playerGold1).to.be.gte(upgradeCost1);
+      // Verify player has enough diamonds for first upgrade
+      const playerDiamonds1 = await gameState.getPlayerDiamonds(player1Address);
+      expect(playerDiamonds1).to.be.gte(upgradeCost1);
 
       // Upgrade the building to level 2
       await gridBuildings.connect(player1).upgradeBuilding(buildingId);
@@ -273,14 +276,12 @@ describe("Altar", function () {
         await ethers.provider.send("evm_mine");
       }
 
-      // Collect more resources for second upgrade
-      await ethers.provider.send("evm_increaseTime", [24 * 3600]); // Another 24 hours
-      await ethers.provider.send("evm_mine");
-      await gridBuildings.connect(player1).collectResources(buildingId);
+      // Ensure player has enough diamonds for second upgrade
+      await gameState.testEarnDiamonds(player1Address, 30);
 
-      // Verify player has enough gold for second upgrade
-      const playerGold2 = await gameState.getPlayerGold(player1Address);
-      expect(playerGold2).to.be.gte(upgradeCost2);
+      // Verify player has enough diamonds for second upgrade
+      const playerDiamonds2 = await gameState.getPlayerDiamonds(player1Address);
+      expect(playerDiamonds2).to.be.gte(upgradeCost2);
 
       // Upgrade the building to level 3
       await gridBuildings.connect(player1).upgradeBuilding(buildingId);
@@ -371,6 +372,9 @@ describe("Altar", function () {
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
       }
+      
+      // Ensure player has enough diamonds for upgrade
+      await gameState.testEarnDiamonds(player1Address, 20);
       
       await gridBuildings.connect(player1).upgradeBuilding(buildingId);
 
