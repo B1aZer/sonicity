@@ -81,22 +81,22 @@ export class BattleProgressBar {
                 });
             }
             
-            if (attackerPercentage > 60) {
+            if (attackerPercentage > 75) {
                 powerComparison = 'Attacker Dominating';
                 attackerAdvantage = 3;
-            } else if (attackerPercentage > 55) {
+            } else if (attackerPercentage > 60) {
                 powerComparison = 'Attacker Advantaged';
                 attackerAdvantage = 2;
-            } else if (attackerPercentage > 52) {
+            } else if (attackerPercentage > 50) {
                 powerComparison = 'Attacker Slightly Ahead';
                 attackerAdvantage = 1;
-            } else if (defenderPercentage > 60) {
+            } else if (defenderPercentage > 75) {
                 powerComparison = 'Defender Dominating';
                 defenderAdvantage = 3;
-            } else if (defenderPercentage > 55) {
+            } else if (defenderPercentage > 60) {
                 powerComparison = 'Defender Advantaged';
                 defenderAdvantage = 2;
-            } else if (defenderPercentage > 52) {
+            } else if (defenderPercentage > 50) {
                 powerComparison = 'Defender Slightly Ahead';
                 defenderAdvantage = 1;
             }
