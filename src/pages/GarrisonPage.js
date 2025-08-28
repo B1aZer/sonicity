@@ -475,7 +475,7 @@ export class GarrisonPage extends BasePage {
 
     async loadBattleHistory() {
         try {
-            const address = await this.contracts.battleSystem.getAddress();
+            const address = WalletManager.getCurrentWallet();
             const battleHistory = await this.contracts.battleSystem.getPlayerBattleHistory(address);
             
             const historyList = this.element.querySelector('.battle-history-list');
