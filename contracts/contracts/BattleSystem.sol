@@ -327,8 +327,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 attackerPower = calculateTroopPower(infantryCount, cavalryCount, siegeCount);
 
         // Get defender's power (from defense tower)
-        (bool success, uint256 defenderPower) = getDefenderPower(defender);
-        require(success, "Failed to get defender power");
+        uint256 defenderPower = getDefenseTowerPower(defender);
 
         // Create battle
         Battle memory newBattle = Battle({
@@ -579,13 +578,12 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     // Internal helper functions
 
-    function getDefenderPower(address defender) internal view returns (bool, uint256) {
-        // Call DistrictBuildings to get defense tower level and calculate power
+    function getDefenseTowerPower(address player) internal view returns (uint256) {
         (bool success, bytes memory data) = districtBuildingsAddress.staticcall(
-            abi.encodeWithSignature("getDefenseTowerPower(address)", defender)
+            abi.encodeWithSignature("getDefenseTowerPower(address)", player)
         );
-        if (!success) return (false, 0);
-        return (true, abi.decode(data, (uint256)));
+        if (!success) return 0;
+        return abi.decode(data, (uint256));
     }
 
     function calculateTreasuryBurn(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
@@ -1729,11 +1727,17 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             cavalryCount = battle.attackerTroops.cavalry;
             siegeCount = battle.attackerTroops.siege;
         } else {
-            basePower = calculateTroopPower(
+            // Calculate defender base power (garrison troops + defense tower)
+            uint256 garrisonPower = calculateTroopPower(
                 battle.defenderTroops.infantry,
                 battle.defenderTroops.cavalry,
                 battle.defenderTroops.siege
             );
+            
+            // Get defense tower power
+            uint256 defenseTowerPower = getDefenseTowerPower(battle.defender);
+            
+            basePower = garrisonPower + defenseTowerPower;
             heroId = defenderDeployment.defenderHeroId;
             infantryCount = battle.defenderTroops.infantry;
             cavalryCount = battle.defenderTroops.cavalry;
