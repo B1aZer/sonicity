@@ -695,11 +695,17 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     /**
      * @dev Get the maximum upgrade level a player can reach for a specific building type
      * @param player The address of the player
-     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=DIAMOND_STATION, 3=REP_FORGE)
+     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=DIAMOND_STATION, 3=REP_FORGE, 4=YIELD_STATION)
      * @return uint8 The maximum upgrade level unlocked for this building type
      */
     function getMaxUpgradeLevel(address player, uint8 buildingType) external view returns (uint8) {
-        require(buildingType <= 3, "Invalid building type"); // 0=HOUSE, 1=FARM, 2=DIAMOND_STATION, 3=REP_FORGE
+        require(buildingType <= 4, "Invalid building type"); // 0=HOUSE, 1=FARM, 2=DIAMOND_STATION, 3=REP_FORGE, 4=YIELD_STATION
+        
+        // Yield stations can't be upgraded, always return level 1
+        if (buildingType == 4) {
+            return 1;
+        }
+        
         return playerState[player].maxUpgradeLevelByType[buildingType];
     }
 
@@ -717,7 +723,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     /**
      * @dev Get progress towards next upgrade level for a building type
      * @param player The address of the player
-     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=REP_STATION)
+     * @param buildingType The type of building (0=HOUSE, 1=FARM, 2=REP_STATION, 3=REP_FORGE, 4=YIELD_STATION)
      * @return currentAmount Current recharge amount
      * @return nextThreshold Amount needed for next level
      * @return progressPercent Progress percentage (0-100)
@@ -729,7 +735,12 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         uint8 progressPercent,
         uint8 currentLevel
     ) {
-        require(buildingType <= 3, "Invalid building type");
+        require(buildingType <= 4, "Invalid building type");
+        
+        // Yield stations can't be upgraded
+        if (buildingType == 4) {
+            return (0, 0, 100, 1); // Already at max level, no progress needed
+        }
         
         PlayerState storage state = playerState[player];
         currentAmount = state.totalRechargeAmountByType[buildingType];
