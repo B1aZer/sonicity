@@ -143,24 +143,226 @@ export class RevenueHubPage extends BasePage {
         const contentElement = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
         if (!contentElement) return;
 
-        // For now, show resources content for tier 0, and placeholder content for other tiers
-        if (tier === 0) {
-            contentElement.innerHTML = this.renderResourcesContent();
-        } else {
-            contentElement.innerHTML = this.renderTierPlaceholderContent(tier);
+        switch (tier) {
+            case 0:
+                contentElement.innerHTML = this.renderResourcesContent();
+                break;
+            case 1:
+                contentElement.innerHTML = this.renderTier1Content();
+                break;
+            case 2:
+                contentElement.innerHTML = this.renderTier2Content();
+                break;
+            case 3:
+                contentElement.innerHTML = this.renderTier3Content();
+                break;
+            case 4:
+                contentElement.innerHTML = this.renderTier4Content();
+                break;
         }
     }
 
-    renderTierPlaceholderContent(tier) {
+    renderTier1Content() {
         return `
             <div class="buildings-grid">
                 <div class="building-card">
-                    <h3>Tier ${tier} Content</h3>
-                    <p>Content for tier ${tier} will be implemented according to your plan.</p>
+                    <h3>⚔️ PvP Combat Unlocked</h3>
+                    <p>Battle system becomes available - you can now attack other players and be attacked</p>
                     <div class="building-details">
                         <div class="detail-item">
-                            <span class="detail-label">Status:</span>
-                            <span class="detail-value">Coming Soon</span>
+                            <span class="detail-label">Treasury Required:</span>
+                            <span class="detail-value">1,000 Gold</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Building Slots:</span>
+                            <span class="detail-value">6 (2x3 grid)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">New Grid Building:</span>
+                            <span class="detail-value">Farm (Food production)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">REP Earnings:</span>
+                            <span class="detail-value">Win battles to earn REP points</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="building-card">
+                    <h3>🎖️ Troop System</h3>
+                    <p>Train and deploy different types of military units</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Infantry:</span>
+                            <span class="detail-value">Basic ground troops, balanced stats</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Cavalry:</span>
+                            <span class="detail-value">Fast mounted units, high mobility</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Siege:</span>
+                            <span class="detail-value">Heavy units, building damage specialists</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Training:</span>
+                            <span class="detail-value">Use Food and Gold to train troops</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderTier2Content() {
+        return `
+            <div class="buildings-grid">
+                <div class="building-card">
+                    <h3>🏛️ Heroes & Tactics</h3>
+                    <p>Unlock advanced combat features with heroes and tactical cards</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Treasury Required:</span>
+                            <span class="detail-value">2,500 Gold</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Building Slots:</span>
+                            <span class="detail-value">9 (3x3 grid)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Hero Classes:</span>
+                            <span class="detail-value">Warrior, Strategist, Scout</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Hero Bonus:</span>
+                            <span class="detail-value">+20 power per specific troop type</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="building-card">
+                    <h3>📚 Tactics System</h3>
+                    <p>Deploy up to 3 tactics per battle using rock-paper-scissors mechanics</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Tactic Types:</span>
+                            <span class="detail-value">STRIKE, SHIELD, TRICK</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">RPS Rules:</span>
+                            <span class="detail-value">STRIKE > SHIELD > TRICK > STRIKE</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Power Bonus:</span>
+                            <span class="detail-value">+30% power for winning matchups</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total Tactics:</span>
+                            <span class="detail-value">9 different tactics available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderTier3Content() {
+        return `
+            <div class="buildings-grid">
+                <div class="building-card">
+                    <h3>📜 Yield NFTs</h3>
+                    <p>Convert your REP points into dynamic on-chain NFTs</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Treasury Required:</span>
+                            <span class="detail-value">5,000 Gold</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Building Slots:</span>
+                            <span class="detail-value">12 (3x4 grid)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">NFT Tiers:</span>
+                            <span class="detail-value">Bronze, Silver, Gold, Legendary</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Dynamic Images:</span>
+                            <span class="detail-value">SVG-based, stored on-chain</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="building-card">
+                    <h3>💎 NFT Features</h3>
+                    <p>Yield NFTs represent your reputation and achievements</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Minting Cost:</span>
+                            <span class="detail-value">REP points (varies by tier)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Staking:</span>
+                            <span class="detail-value">Not available yet (Tier 4 feature)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Governance:</span>
+                            <span class="detail-value">Future DAO voting rights</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Collection:</span>
+                            <span class="detail-value">Build your reputation portfolio</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderTier4Content() {
+        return `
+            <div class="buildings-grid">
+                <div class="building-card">
+                    <h3>💰 Yield Station</h3>
+                    <p>Stake your Yield NFTs to earn from the treasury pool</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Treasury Required:</span>
+                            <span class="detail-value">10,000 Gold</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Building Slots:</span>
+                            <span class="detail-value">16 (4x4 grid)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Staking:</span>
+                            <span class="detail-value">Stake Yield NFTs as grid buildings</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Revenue Source:</span>
+                            <span class="detail-value">Treasury pool from grid building charges</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="building-card">
+                    <h3>🏛️ Treasury Pool</h3>
+                    <p>Earn yield from all players' grid building operations</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Pool Source:</span>
+                            <span class="detail-value">Grid building upgrade fees</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Distribution:</span>
+                            <span class="detail-value">Proportional to staked NFT value</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Yield Rate:</span>
+                            <span class="detail-value">Based on NFT tier and pool size</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">End Game:</span>
+                            <span class="detail-value">Passive income from game economy</span>
                         </div>
                     </div>
                 </div>
