@@ -345,7 +345,7 @@ export class RevenueHubPage extends BasePage {
                 </div>
 
                 <div class="building-card">
-                    <h3>🏛️ Treasury Pool</h3>
+                    <h3>🏦 Treasury Pool</h3>
                     <p>Earn yield from all players' grid building operations</p>
                     <div class="building-details">
                         <div class="detail-item">
@@ -376,7 +376,7 @@ export class RevenueHubPage extends BasePage {
         return `
             <div class="buildings-grid">
                 <div class="building-card">
-                    <h3>Resources Guide</h3>
+                    <h3>⭐ Resources Guide</h3>
                     <p>Understanding the core resources</p>
                     <div class="building-details">
                         <div class="detail-item">
@@ -398,7 +398,7 @@ export class RevenueHubPage extends BasePage {
                     </div>
                 </div>
                 <div class="building-card">
-                    <h3>Resource Management</h3>
+                    <h3>⚙️ Resource Management</h3>
                     <p>Tips for efficient resource usage</p>
                     <div class="building-details">
                         <div class="detail-item">
