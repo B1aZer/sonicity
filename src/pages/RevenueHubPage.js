@@ -388,12 +388,12 @@ export class RevenueHubPage extends BasePage {
                             <span class="detail-value">Required for troop training, earned from Farms</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">REP Points:</span>
-                            <span class="detail-value">Earned from battles and donations, used for progression</span>
+                            <span class="detail-label">Diamonds:</span>
+                            <span class="detail-value">Required for building upgrades</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Treasury:</span>
-                            <span class="detail-value">Donated gold, affects city tier progression</span>
+                            <span class="detail-label">REP Points:</span>
+                            <span class="detail-value">Earned from battles and donations, used for minting NFTs</span>
                         </div>
                     </div>
                 </div>
