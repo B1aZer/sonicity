@@ -8,7 +8,7 @@ export class BattleProgressBar {
         this.battleSystemContract = null;
     }
 
-    render(battleData, playerRole, contracts = null) {
+    async render(battleData, playerRole, contracts = null) {
         if (!battleData || battleData.startTime === 0n) {
             this.element.style.display = 'none';
             return this.element;
@@ -25,9 +25,39 @@ export class BattleProgressBar {
         const remaining = Math.max(0, battleDuration - elapsed);
         const progress = Math.min(100, Math.max(0, (elapsed / battleDuration) * 100));
 
-        // Calculate power comparison without revealing exact numbers
-        const attackerPower = Number(battleData.attackerPower || 0);
-        const defenderPower = Number(battleData.defenderPower || 0);
+        // Calculate power comparison using the new getter functions
+        let attackerPower = 0;
+        let defenderPower = 0;
+        
+        try {
+            if (contracts && contracts.battleSystem) {
+                attackerPower = Number(await contracts.battleSystem.getAttackerPowerWithTactics(battleData.attacker));
+                defenderPower = Number(await contracts.battleSystem.getDefenderPowerWithTactics(battleData.attacker));
+                
+                // Log significant power changes
+                const storedAttackerPower = Number(battleData.attackerPower || 0);
+                const storedDefenderPower = Number(battleData.defenderPower || 0);
+                
+                if (Math.abs(attackerPower - storedAttackerPower) > 5 || 
+                    Math.abs(defenderPower - storedDefenderPower) > 5) {
+                    Logger.info('Power values updated:', {
+                        attacker: `${storedAttackerPower} → ${attackerPower}`,
+                        defender: `${storedDefenderPower} → ${defenderPower}`
+                    });
+                }
+                
+            } else {
+                // Fallback to stored values if contracts not available
+                attackerPower = Number(battleData.attackerPower || 0);
+                defenderPower = Number(battleData.defenderPower || 0);
+                Logger.info('Using stored power values (no contracts available)');
+            }
+        } catch (error) {
+            Logger.warn('BattleProgressBar - Error getting power from contracts, using stored values:', error);
+            attackerPower = Number(battleData.attackerPower || 0);
+            defenderPower = Number(battleData.defenderPower || 0);
+            Logger.warn('Error getting power values, using stored values as fallback');
+        }
         const totalPower = attackerPower + defenderPower;
         
         // Log power values for debugging (only when there's an issue)

@@ -215,4 +215,19 @@ export class BattleSystemContract extends BaseContract {
         const contract = await this.getContract();
         return contract.battleHeroTactics(player);
     }
+
+    async getAttackerPowerWithTactics(battleId) {
+        const contract = await this.getContract();
+        return contract.getAttackerPowerWithTactics(battleId);
+    }
+
+    async getDefenderPowerWithTactics(battleId) {
+        const contract = await this.getContract();
+        return contract.getDefenderPowerWithTactics(battleId);
+    }
+
+    async getBattlePower(battleId, isAttacker) {
+        const contract = await this.getContract();
+        return contract.getBattlePower(battleId, isAttacker);
+    }
 } 
