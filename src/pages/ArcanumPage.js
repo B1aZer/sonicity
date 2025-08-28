@@ -31,7 +31,7 @@ export class ArcanumPage extends BasePage {
             },
             
             // UI state
-            selectedTier: 0,
+            selectedTier: 1,
             isLoading: false,
             canMint: true
         });
@@ -218,12 +218,12 @@ export class ArcanumPage extends BasePage {
     }
 
     updateTierTabs() {
-        // Update tier tabs based on player's gold tier (similar to StakeHub)
-        for (let tier = 0; tier <= 4; tier++) {
+        // Update tier tabs based on player's gold tier
+        for (let tier = 1; tier <= 4; tier++) {
             const tab = this.element.querySelector(`.tier-tab[data-tier="${tier}"]`);
             if (!tab) continue;
             
-            const isUnlocked = tier === 0 || tier <= this.state.currentTier;
+            const isUnlocked = tier <= this.state.currentTier;
             
             // Enable/disable tab based on gold tier
             tab.disabled = !isUnlocked;
@@ -241,69 +241,11 @@ export class ArcanumPage extends BasePage {
         const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
         if (!tierContent) return;
 
-        if (tier === 0) {
-            // Tier 0 - Introduction content
-            tierContent.innerHTML = this.renderTier0Content();
-        } else {
-            // Tier 1-4 - NFT content filtered by rarity
-            tierContent.innerHTML = this.renderTierNFTContent(tier);
-        }
+        // All tiers now show NFT content filtered by rarity
+        tierContent.innerHTML = this.renderTierNFTContent(tier);
     }
 
-    renderTier0Content() {
-        return `
-            <div class="buildings-grid">
-                <div class="building-card">
-                    <h3>Welcome to Arcanum of Names</h3>
-                    <p>Learn about the yield NFT system and revenue distribution</p>
-                    <div class="building-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Unlock Requirement:</span>
-                            <span class="detail-value">Reach Gold Tier 1 to start minting</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">NFT Tiers:</span>
-                            <span class="detail-value">Bronze, Silver, Gold, Legendary</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Bronze Tier</span>
-                            <span class="detail-value">1-10 REP</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Silver Tier</span>
-                            <span class="detail-value">11-50 REP</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Gold Tier</span>
-                            <span class="detail-value">51-100 REP</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Legendary Tier</span>
-                            <span class="detail-value">101+ REP</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="building-card">
-                    <h3>How Yield NFTs Work</h3>
-                    <p>Understanding the revenue generation system</p>
-                    <div class="building-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Tradable:</span>
-                            <span class="detail-value">Can be sold on marketplaces</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">REP Source:</span>
-                            <span class="detail-value">Earned by progressing and in battles</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Yield:</span>
-                            <span class="detail-value">Future revenue distribution</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
+
 
     renderTierNFTContent(tier) {
         const tierNames = ['', 'Bronze', 'Silver', 'Gold', 'Legendary'];
@@ -448,44 +390,36 @@ export class ArcanumPage extends BasePage {
                 <!-- Tier Tabs -->
                 <div class="page-section tier-tabs-section">
                     <div class="tier-tabs">
-                        <button class="tier-tab active" data-tier="0">
-                            Tier 0
-                        </button>
-                        <button class="tier-tab" data-tier="1">
-                            Tier 1
+                        <button class="tier-tab active" data-tier="1">
+                            Bronze
                         </button>
                         <button class="tier-tab" data-tier="2">
-                            Tier 2
+                            Silver
                         </button>
                         <button class="tier-tab" data-tier="3">
-                            Tier 3
+                            Gold
                         </button>
                         <button class="tier-tab" data-tier="4">
-                            Tier 4
+                            Legendary
                         </button>
                     </div>
 
-                    <!-- Tier 0 Content - Introduction -->
-                    <div class="tier-content active" data-tier="0">
+                    <!-- Bronze Content -->
+                    <div class="tier-content active" data-tier="1">
                         <!-- Content will be rendered dynamically -->
                     </div>
 
-                    <!-- Tier 1 Content - Bronze NFTs -->
-                    <div class="tier-content" data-tier="1">
-                        <!-- Content will be rendered dynamically -->
-                    </div>
-
-                    <!-- Tier 2 Content - Silver NFTs -->
+                    <!-- Silver Content -->
                     <div class="tier-content" data-tier="2">
                         <!-- Content will be rendered dynamically -->
                     </div>
 
-                    <!-- Tier 3 Content - Gold NFTs -->
+                    <!-- Gold Content -->
                     <div class="tier-content" data-tier="3">
                         <!-- Content will be rendered dynamically -->
                     </div>
 
-                    <!-- Tier 4 Content - Legendary NFTs -->
+                    <!-- Legendary Content -->
                     <div class="tier-content" data-tier="4">
                         <!-- Content will be rendered dynamically -->
                     </div>
