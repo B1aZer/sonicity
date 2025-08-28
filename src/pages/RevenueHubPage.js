@@ -402,7 +402,7 @@ export class RevenueHubPage extends BasePage {
     render() {
         this.element.innerHTML = `
             <div class="page-container">
-                <h1>Revenue Hub</h1>
+                <h1>Guidance Altar</h1>
                 <p class="page-description">
                     <strong>Manage your yield-generating NFTs and claim revenue from the treasury.</strong> 
                     <em>Stake REP points to mint yield NFTs and participate in revenue distribution.</em>
