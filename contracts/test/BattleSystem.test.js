@@ -1984,7 +1984,7 @@ describe("BattleSystem", function () {
 
         it("should test defender wins 3/3 RPS rounds - all SHIELD vs all TRICK", async function () {
             // Scenario: Defender deploys all SHIELD tactics, attacker deploys all TRICK tactics
-            // RPS: TRICK > SHIELD → Defender wins all 3 rounds
+            // RPS: SHIELD > TRICK → Defender wins all 3 rounds
             
             // Player1 mints all TRICK tactics
             await gameState.testEarnGold(player1.address, 3000);
@@ -2039,10 +2039,6 @@ describe("BattleSystem", function () {
             const player2RPSMultiplier = 100 + (30 * 3); // 100 + 90 = 190 (90% bonus for 3 RPS wins)
             const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 100 * 190 / 100 = 190
             
-            expect(Number(battleRecord.attackerPower)).to.equal(player1FinalPower);
-            expect(Number(battleRecord.defenderPower)).to.equal(player2FinalPower);
-            expect(battleRecord.attackerWon).to.be.false; // 100 vs 190 power (defender wins)
-            
             console.log(`⚔️ Defender Wins 3/3 RPS (TRICK vs SHIELD):`);
             console.log(`  Player1 base power: ${player1BasePower}`);
             console.log(`  Player1 RPS multiplier: ${player1RPSMultiplier} (no bonus)`);
@@ -2052,6 +2048,10 @@ describe("BattleSystem", function () {
             console.log(`  Player2 final power: ${player2FinalPower}`);
             console.log(`  Winner: ${battleRecord.attackerWon ? 'Player1' : 'Player2'}`);
             console.log(`  ✅ Defender RPS multiplier system working correctly`);
+
+            expect("attackerPower", Number(battleRecord.attackerPower)).to.equal(player1FinalPower);
+            expect("defenderPower", Number(battleRecord.defenderPower)).to.equal(player2FinalPower);
+            expect("attackerWon", battleRecord.attackerWon).to.be.false; // 100 vs 190 power (defender wins)
         });
 
         it("should test attacker has 3 tactics, defender has 0 tactics", async function () {
