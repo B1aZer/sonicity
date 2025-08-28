@@ -1,338 +1,496 @@
 import { BasePage } from './BasePage.js';
-import { StatusComponent } from '../components/StatusComponent.js';
+import { GameStateContract } from '../js/contracts/GameStateContract.js';
+import { AltarContract } from '../js/contracts/AltarContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
+import { ethers } from 'ethers';
 
-export class ArcanumPage extends BasePage {
+import('../styles/city-page.css');
+import('../styles/stake-hub-page.css');
+
+export class RevenueHubPage extends BasePage {
     constructor() {
         super();
-        this.element.className = 'base-page arcanum-page';
-        this.statusComponent = new StatusComponent();
-        this.modal = new Modal();
+        Logger.info('RevenueHubPage constructor called');
         
-        // Initialize state
-        this.state = {
-            playerRep: 'Loading...',
-            arcanumStatus: 'Loading...',
-            nftCount: 0,
-            buildingLevel: '-',
-            canCreateNFT: false
-        };
+        this.element.className = 'base-page revenue-hub-page';
+        
+        // Initialize state with real data structure
+        this.setState({
+            // Player data
+            totalTreasury: 0,
+            yourRepPoints: 0,
+            currentTier: 0,
+            
+            // Yield NFT data organized by rarity tier
+            yieldNFTsByRarity: {
+                1: [], // Bronze (1-10 REP)
+                2: [], // Silver (11-50 REP)  
+                3: [], // Gold (51-100 REP)
+                4: []  // Legendary (101+ REP)
+            },
+            
+            // UI state
+            selectedTier: 0,
+            isLoading: false,
+            canMint: true
+        });
         
         this.render();
     }
 
     async onInitialized(walletResult) {
-        Logger.info('ArcanumPage onInitialized called with wallet:', walletResult);
+        Logger.info('RevenueHubPage onInitialized called with wallet:', walletResult);
         if (!walletResult || !walletResult.address) {
             Logger.error('No wallet address provided in onInitialized');
-            this.modal.error('Please connect your wallet first.');
             return;
         }
-        
         try {
-            await this.loadArcanumData();
+            await this.loadRevenueData();
             this.setupEventListeners();
-            this.startAutoRefresh();
-            Logger.info('Arcanum page initialized successfully');
+            this.updateTierTabs();
+            Logger.info('Revenue hub page initialized successfully');
         } catch (error) {
-            Logger.error('Error initializing ArcanumPage:', error);
-            this.modal.error('Failed to initialize Arcanum page. Please try refreshing the page.');
+            Logger.error('Error initializing revenue hub page:', error);
         }
     }
 
-    updateWalletStatus(address) {
-        Logger.info('Updating wallet status with address:', address);
-        // This method is called by WalletButton but we don't need to load data here
-        // Data loading is handled by onInitialized which is called once during page setup
-    }
-
-    async loadArcanumData() {
+    async loadRevenueData() {
         try {
-            Logger.info('Starting to load Arcanum data...');
-            
-            // Get the player's address
-            const playerAddress = await this.contracts.gameState.getAddress();
-            
-            // Check if player has built Arcanum of Names (district building)
-            // ARCANUM_OF_NAMES = 17 in DistrictBuildingType enum
-            const isArcanumBuilt = await this.contracts.districtBuildings.isDistrictBuildingBuilt(playerAddress, 17);
-            const isArcanumActive = isArcanumBuilt ? await this.contracts.districtBuildings.isDistrictBuildingActive(playerAddress, 17) : false;
-            
-            Logger.info('Arcanum status:', { isBuilt: isArcanumBuilt, isActive: isArcanumActive });
-            
-            if (!isArcanumBuilt) {
-                this.setState({
-                    arcanumStatus: 'Not Built',
-                    buildingLevel: 'Build Required',
-                    canCreateNFT: false
-                });
-                return;
-            }
-            
-            // Get building level if built
-            const buildingLevel = isArcanumBuilt ? 1 : 0; // Arcanum is maxLevel 1
-            
-            // Get player's current REP points
-            const repPoints = await this.contracts.gameState.getPlayerRep(playerAddress);
-            Logger.info('Player REP points:', repPoints.toString());
-            
-            // Load user's Yield NFTs
-            await this.loadUserYieldNFTs();
-            
-            // Update state
-            this.setState({
-                playerRep: repPoints.toString(),
-                arcanumStatus: isArcanumActive ? 'Active' : (isArcanumBuilt ? 'Built but Inactive' : 'Not Built'),
-                buildingLevel: buildingLevel.toString(),
-                canCreateNFT: isArcanumActive && repPoints > 0
-            });
-
-        } catch (error) {
-            Logger.error('Error loading Arcanum data:', error);
-            this.setState({
-                arcanumStatus: 'Error',
-                buildingLevel: 'Error loading'
-            });
-            this.modal.error('Failed to load Arcanum data. Please try refreshing the page.');
-        }
-    }
-
-    async loadUserYieldNFTs() {
-        try {
-            Logger.info('Starting to load user Yield NFTs...');
-            
-            const nftCollectionElement = document.getElementById('nft-collection');
             const userAddress = await this.contracts.gameState.getAddress();
             
-            // TODO: Load SonicityYieldNFTs from the contract
-            // For now, show placeholder with proper structure
-            nftCollectionElement.innerHTML = `
-                <h3>Your Yield NFT Collection</h3>
-                <p>Dynamic NFTs created from your REP Points with on-chain metadata and yield generation capabilities.</p>
-                
-                <div class="building-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Collection Status:</span>
-                        <span class="detail-value">Coming Soon - SonicityYieldNFT Integration</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">NFT Features:</span>
-                        <span class="detail-value">Dynamic SVG artwork, yield generation, tradeable</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Metadata:</span>
-                        <span class="detail-value">On-chain with timestamp and REP amount</span>
-                    </div>
-                </div>
-                
-                <div class="placeholder-info">
-                    <p><strong>NFT Benefits:</strong></p>
-                    <ul>
-                        <li>✨ Dynamic artwork based on REP amount staked</li>
-                        <li>📈 Future yield generation capabilities</li>
-                        <li>🔄 Fully tradeable on secondary markets</li>
-                        <li>⏰ Permanent record of REP commitment</li>
-                        <li>🎯 Potential Tier 4 grid building utility</li>
-                    </ul>
-                </div>
-            `;
+            // Load player data from GameState and revenue pool from GridBuildings
+            const [revenuePool, repPoints, playerTier] = await Promise.all([
+                this.contracts.gridBuildings.getRevenuePool(),
+                this.contracts.gameState.getPlayerRep(userAddress),
+                this.contracts.gameState.getPlayerTier(userAddress)
+            ]);
             
-            // Update NFT count in state (for now showing 0)
-            this.setState({ nftCount: 0 });
+            // Load yield NFTs
+            const yieldNFTs = await this.loadYieldNFTs(userAddress);
+            const yieldNFTsByRarity = this.organizeNFTsByRarity(yieldNFTs);
             
+            // Format revenue pool from wei to SONIC
+            const formattedRevenuePool = ethers.formatEther(revenuePool);
+            
+            this.setState({
+                totalTreasury: formattedRevenuePool,
+                yourRepPoints: Number(repPoints),
+                currentTier: Number(playerTier),
+                yieldNFTsByRarity
+            });
+            
+            Logger.info('Revenue data loaded:', this.state);
         } catch (error) {
-            Logger.error('Error loading Yield NFTs:', error);
-            document.getElementById('nft-collection').innerHTML = `
-                <div class="error-message">Failed to load Yield NFT collection. Please try refreshing the page.</div>
-            `;
+            Logger.error('Error loading revenue data:', error);
         }
     }
 
-    async createYieldNFT() {
+    async loadYieldNFTs(userAddress) {
         try {
-            const repAmountInput = document.getElementById('rep-amount');
-            const repAmount = parseInt(repAmountInput.value);
-            const currentRep = parseInt(this.state.playerRep);
+            const nfts = await this.contracts.yieldNft.getAllNFTsWithDetails(userAddress);
             
-            if (!repAmount || repAmount < 1) {
-                this.modal.error('Please enter a valid REP amount (minimum 1)');
-                return;
-            }
-
-            if (repAmount > currentRep) {
-                this.modal.error(`Insufficient REP Points. You have ${currentRep}, need ${repAmount}`);
-                return;
-            }
-
-            this.modal.loading('Creating Yield NFT...', 'Converting your REP Points into a dynamic NFT');
-            
-            // TODO: Implement the actual REP -> NFT conversion
-            // This will need to:
-            // 1. Call SonicityYieldNFT.mint(repAmount) 
-            // 2. Which should call GameState.deductResources(player, 0, 0, repAmount)
-            // 3. Mint NFT with stakeInfo containing repAmount and timestamp
-            
-            // For now, show what would happen
-            this.modal.success(
-                'Yield NFT Creation Ready!', 
-                `This feature will convert ${repAmount} REP Points into a SonicityYieldNFT with dynamic metadata and yield generation capabilities. The NFT will contain ${repAmount} staked REP and can be used for future Tier 4 grid building functionality.`
-            );
-            
-            // Clear the input
-            repAmountInput.value = '';
-            
-            // Refresh data
-            await this.loadArcanumData();
+            // Convert to the format expected by the UI
+            return nfts.map(nft => ({
+                tokenId: nft.tokenId,
+                repStaked: Number(nft.repStaked),
+                mintedAt: nft.mintedAt,
+                metadata: nft.metadata,
+                tier: this.calculateNFTTier(Number(nft.repStaked))
+            }));
             
         } catch (error) {
-            Logger.error('Error creating Yield NFT:', error);
-            this.modal.error(error.message || 'Failed to create Yield NFT', { title: 'Creation Failed' });
+            Logger.error('Error loading yield NFTs:', error);
+            return [];
         }
+    }
+
+    calculateNFTTier(repStaked) {
+        if (repStaked >= 101) return 4; // Legendary
+        if (repStaked >= 51) return 3;  // Gold
+        if (repStaked >= 11) return 2;  // Silver
+        return 1; // Bronze
+    }
+
+    organizeNFTsByRarity(nfts) {
+        const organized = { 1: [], 2: [], 3: [], 4: [] };
+        
+        nfts.forEach(nft => {
+            organized[nft.tier].push(nft);
+        });
+        
+        return organized;
     }
 
     setupEventListeners() {
-        Logger.info('Setting up event listeners');
-        
-        // Use the new event listener system like other pages
-        this.addEventListener('.create-nft-btn', 'click', () => {
-            this.createYieldNFT().catch(error => {
-                Logger.error('Error in createYieldNFT:', error);
-            });
-        });
-        
-        // Add input validation for REP amount
-        this.addEventListener('#rep-amount', 'input', (event) => {
-            const repAmount = parseInt(event.target.value);
-            const currentRep = parseInt(this.state.playerRep);
-            const isArcanumActive = this.state.arcanumStatus === 'Active';
-            const canCreate = repAmount > 0 && repAmount <= currentRep && !isNaN(currentRep) && isArcanumActive;
+        // Tab switching functionality
+        this.addEventListener('.tier-tab', 'click', (event) => {
+            const clickedTab = event.target;
+            const tier = parseInt(clickedTab.dataset.tier);
             
-            this.setState({ canCreateNFT: canCreate });
+            // Check if tier is unlocked
+            if (tier > 0 && tier > this.state.currentTier) {
+                this.modal.error(`You need to reach Gold Tier ${tier} to access this tab.`);
+                return;
+            }
+            
+            // Remove active class from all tabs and contents
+            const allTabs = this.element.querySelectorAll('.tier-tab');
+            const allContents = this.element.querySelectorAll('.tier-content');
+            
+            allTabs.forEach(tab => tab.classList.remove('active'));
+            allContents.forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            clickedTab.classList.add('active');
+            const targetContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
+            if (targetContent) {
+                targetContent.classList.add('active');
+                this.setState({ selectedTier: tier });
+                this.renderTierContent(tier);
+            }
+            
+            Logger.info('Switched to tier:', tier);
         });
+        
+        // Mint NFT functionality
+        this.addEventListener('.mint-nft-btn', 'click', async (event) => {
+            await this.handleMintNFT();
+        });
+        
+        // Render initial tier content
+        this.renderTierContent(this.state.selectedTier);
     }
 
-    render() {
-        this.element.innerHTML = `
-            <div class="page-container">
-                <h1>Arcanum of Names</h1>
-                <p class="page-description">
-                    <strong>Transform your REP Points into powerful dynamic NFTs.</strong> The Arcanum of Names allows you to convert earned reputation into tradeable SonicityYieldNFTs with on-chain metadata. 
-                    <em>These NFTs preserve your REP investment and unlock future Tier 4 grid building capabilities.</em>
-                </p>
-                
-                <!-- Status Section -->
-                <div class="page-section">
-                    <h2>Arcanum Status</h2>
-                    <div class="status-grid">
-                        <div class="status-item">
-                            <span class="status-label">Your REP Points:</span>
-                            <span class="status-value" data-state="playerRep">Loading...</span>
+    async handleMintNFT() {
+        try {
+            const repInput = this.element.querySelector('.rep-input');
+            const repAmount = parseInt(repInput.value);
+            
+            if (!repAmount || repAmount <= 0) {
+                this.modal.error('Please enter a valid REP amount.');
+                return;
+            }
+            
+            // Validate player has enough REP
+            if (repAmount > this.state.yourRepPoints) {
+                this.modal.error(`You don't have enough REP. You have ${this.state.yourRepPoints} REP.`);
+                return;
+            }
+            
+            // Validate gold tier restrictions
+            const nftTier = this.calculateNFTTier(repAmount);
+            if (this.state.currentTier < nftTier) {
+                const tierNames = ['', 'Bronze', 'Silver', 'Gold', 'Legendary'];
+                this.modal.error(`You need Gold Tier ${nftTier} to mint ${tierNames[nftTier]} yield NFTs. You are currently Gold Tier ${this.state.currentTier}.`);
+                return;
+            }
+            
+            this.setState({ isLoading: true, canMint: false });
+            
+            // Call the Altar contract to mint the yield NFT
+            Logger.info('Minting yield NFT with REP amount:', repAmount);
+            await this.contracts.altar.mintYieldNFT(repAmount);
+            Logger.info('Yield NFT minted successfully');
+            
+            // Show success message
+            this.modal.success(`Successfully minted ${this.getNFTTierName(nftTier)} yield NFT!`);
+            
+            // Clear the input
+            repInput.value = '';
+            
+            // Reload the page data to show the new NFT
+            await this.loadRevenueData();
+            this.updateTierTabs();
+            this.renderTierContent(this.state.selectedTier);
+            
+        } catch (error) {
+            Logger.error('Error minting NFT:', error);
+            this.modal.error('Failed to mint yield NFT. Please try again.');
+        } finally {
+            this.setState({ isLoading: false, canMint: true });
+        }
+    }
+
+    getNFTTierName(tier) {
+        const names = ['', 'Bronze', 'Silver', 'Gold', 'Legendary'];
+        return names[tier] || 'Unknown';
+    }
+
+    updateTierTabs() {
+        // Update tier tabs based on player's gold tier (similar to StakeHub)
+        for (let tier = 0; tier <= 4; tier++) {
+            const tab = this.element.querySelector(`.tier-tab[data-tier="${tier}"]`);
+            if (!tab) continue;
+            
+            const isUnlocked = tier === 0 || tier <= this.state.currentTier;
+            
+            // Enable/disable tab based on gold tier
+            tab.disabled = !isUnlocked;
+            if (!isUnlocked) {
+                tab.classList.add('locked');
+                tab.title = `Requires Gold Tier ${tier}`;
+            } else {
+                tab.classList.remove('locked');
+                tab.title = '';
+            }
+        }
+    }
+
+    renderTierContent(tier) {
+        const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
+        if (!tierContent) return;
+
+        if (tier === 0) {
+            // Tier 0 - Introduction content
+            tierContent.innerHTML = this.renderTier0Content();
+        } else {
+            // Tier 1-4 - NFT content filtered by rarity
+            tierContent.innerHTML = this.renderTierNFTContent(tier);
+        }
+    }
+
+    renderTier0Content() {
+        return `
+            <div class="buildings-grid">
+                <div class="building-card">
+                    <h3>Welcome to Revenue Hub</h3>
+                    <p>Learn about the yield NFT system and revenue distribution</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Unlock Requirement:</span>
+                            <span class="detail-value">Reach Gold Tier 1 to start minting</span>
                         </div>
-                        <div class="status-item">
-                            <span class="status-label">Building Status:</span>
-                            <span class="status-value" data-state="arcanumStatus">Loading...</span>
+                        <div class="detail-item">
+                            <span class="detail-label">NFT Tiers:</span>
+                            <span class="detail-value">Bronze, Silver, Gold, Legendary</span>
                         </div>
-                        <div class="status-item">
-                            <span class="status-label">Yield NFTs Owned:</span>
-                            <span class="status-value" data-state="nftCount">0</span>
+                        <div class="detail-item">
+                            <span class="detail-label">Bronze Tier</span>
+                            <span class="detail-value">1-10 REP</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Silver Tier</span>
+                            <span class="detail-value">11-50 REP</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Gold Tier</span>
+                            <span class="detail-value">51-100 REP</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Legendary Tier</span>
+                            <span class="detail-value">101+ REP</span>
                         </div>
                     </div>
                 </div>
-
-                <!-- Building Details Section -->
-                <div class="page-section">
-                    <h2>Building Details</h2>
-                    <div class="buildings-grid">
-                        <div class="building-card">
-                            <h3>Arcanum Info</h3>
-                            <p>Your Arcanum of Names building details</p>
-                            <div class="building-details">
-                                <div class="detail-item">
-                                    <span class="detail-label">Building Level:</span>
-                                    <span class="detail-value" data-state="buildingLevel">-</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Unlock Cost:</span>
-                                    <span class="detail-value">7,000 Gold</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Build Cost:</span>
-                                    <span class="detail-value">450 Gold</span>
-                                </div>
-                            </div>
+                <div class="building-card">
+                    <h3>How Yield NFTs Work</h3>
+                    <p>Understanding the revenue generation system</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Tradable:</span>
+                            <span class="detail-value">Can be sold on marketplaces</span>
                         </div>
-                        <div class="building-card">
-                            <h3>Conversion Rules</h3>
-                            <p>REP to NFT conversion details</p>
-                            <div class="building-details">
-                                <div class="detail-item">
-                                    <span class="detail-label">Conversion Rate:</span>
-                                    <span class="detail-value">1:1 REP to NFT</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Minimum REP:</span>
-                                    <span class="detail-value">1 REP Point</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Processing Time:</span>
-                                    <span class="detail-value">Instant</span>
-                                </div>
-                            </div>
+                        <div class="detail-item">
+                            <span class="detail-label">REP Source:</span>
+                            <span class="detail-value">Earned by progressing and in battles</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Conversion Section -->
-                <div class="page-section">
-                    <h2>Create Yield NFT</h2>
-                    <div class="building-card">
-                        <h3>REP to NFT Conversion</h3>
-                        <p>Convert your REP Points into dynamic SonicityYieldNFTs</p>
-                        <div class="building-details">
-                            <div class="detail-item">
-                                <span class="detail-label">REP Amount:</span>
-                                <input type="number" id="rep-amount" class="detail-input" min="1" placeholder="Enter REP amount..." />
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">NFT Benefits:</span>
-                                <span class="detail-value">Dynamic metadata, yield generation, tradeable, Tier 4 utility</span>
-                            </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Yield:</span>
+                            <span class="detail-value">Future revenue distribution</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Actions Section -->
-                <div class="page-section">
-                    <h2>Actions</h2>
-                    <div class="building-actions">
-                        <button class="create-nft-btn btn btn-primary btn-lg" data-state="canCreateNFT" disabled>
-                            <span class="button-text">Create Yield NFT</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- NFT Collection Section -->
-                <div class="page-section">
-                    <h2>Your Yield NFTs</h2>
-                    <div id="nft-collection" class="building-card">
-                        <div class="loading-message">Loading your Yield NFT collection...</div>
                     </div>
                 </div>
             </div>
         `;
     }
 
-    startAutoRefresh() {
-        // Refresh every 30 seconds
-        this.refreshInterval = setInterval(() => {
-            this.loadArcanumData();
-        }, 30000);
+    renderTierNFTContent(tier) {
+        const tierNames = ['', 'Bronze', 'Silver', 'Gold', 'Legendary'];
+        const repRanges = ['', '1-10 REP', '11-50 REP', '51-100 REP', '101+ REP'];
+        const nfts = this.state.yieldNFTsByRarity[tier] || [];
+
+        return `
+            <div class="buildings-grid">
+                ${nfts.length === 0 ? 
+                    `<div class="empty-state">
+                        <h3>No ${tierNames[tier]} NFTs yet</h3>
+                        <p>Mint your first ${tierNames[tier]} yield NFT by staking ${repRanges[tier]}!</p>
+                    </div>` :
+                    nfts.map(nft => this.renderYieldNFTCard(nft)).join('')
+                }
+            </div>
+        `;
     }
 
-    onUnmount() {
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
+    renderYieldNFTCard(nft) {
+        const mintDate = new Date(nft.mintedAt * 1000).toLocaleDateString();
+        const tierName = this.getNFTTierName(nft.tier);
+        const icon = this.getYieldNFTIcon(tierName);
+        
+        // Use metadata image if available, otherwise show placeholder
+        const image = nft.metadata?.image || '';
+        
+        return `
+            <div class="building-card yield-nft-card" data-token-id="${nft.tokenId}" style="
+                ${image ? `background-image: url('${image}'); background-size: cover; background-position: center; background-repeat: no-repeat;` : ''}
+                position: relative;
+                overflow: hidden;
+            ">
+                ${image ? `
+                <div class="nft-artwork-overlay" style="
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(
+                        135deg,
+                        rgba(0, 0, 0, 0.7) 0%,
+                        rgba(0, 0, 0, 0.5) 50%,
+                        rgba(0, 0, 0, 0.7) 100%
+                    );
+                    pointer-events: none;
+                    z-index: 1;
+                "></div>` : ''}
+                
+                <div class="building-header" style="position: relative; z-index: 2;">
+                    <div class="building-icon">
+                        ${icon}
+                    </div>
+                    <div class="building-info">
+                        <h3>${tierName} Yield NFT #${nft.tokenId}</h3>
+                        <p class="building-description">${tierName} Tier Yield NFT</p>
+                    </div>
+                    <div class="building-status tradeable">
+                        <span class="status-indicator"></span>
+                        <span class="status-text">Tradeable</span>
+                    </div>
+                </div>
+                <div class="building-details" style="position: relative; z-index: 2;">
+                    <div class="detail-item">
+                        <span class="detail-label">REP Staked:</span>
+                        <span class="detail-value">${nft.repStaked}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Tier:</span>
+                        <span class="detail-value">${tierName}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Minted:</span>
+                        <span class="detail-value">${mintDate}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Token ID:</span>
+                        <span class="detail-value">#${nft.tokenId}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    getYieldNFTIcon(tier) {
+        switch (tier.toUpperCase()) {
+            case 'BRONZE': return '🥉';
+            case 'SILVER': return '🥈';
+            case 'GOLD': return '🥇';
+            case 'LEGENDARY': return '👑';
+            default: return '💎';
         }
+    }
+
+    render() {
+        this.element.innerHTML = `
+            <div class="page-container">
+                <h1>Guidance Altar</h1>
+                <p class="page-description">
+                    <strong>Manage your yield-generating NFTs and claim revenue from the treasury.</strong> 
+                    <em>Stake REP points to mint yield NFTs and participate in revenue distribution.</em>
+                </p>
+                
+                <!-- Status Section -->
+                <div class="page-section">
+                    <h2>Revenue Status</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Revenue Pool:</span>
+                            <span class="status-value" data-state="totalTreasury">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Your Rep Points:</span>
+                            <span class="status-value" data-state="yourRepPoints">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Current Tier:</span>
+                            <span class="status-value" data-state="currentTier">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mint Section -->
+                <div class="page-section mint-section">
+                    <h2>Mint Yield NFT</h2>
+                    <div class="donation-form">
+                        <input 
+                            type="number" 
+                            id="rep-input"
+                            class="input input-lg rep-input" 
+                            placeholder="Enter REP amount"
+                            min="1"
+                            max="999999"
+                        />
+                        <button class="btn btn-primary btn-md mint-nft-btn" data-state="canMint">
+                            <span class="button-text">Mint Yield NFT</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tier Tabs -->
+                <div class="page-section tier-tabs-section">
+                    <div class="tier-tabs">
+                        <button class="tier-tab active" data-tier="0">
+                            Tier 0
+                        </button>
+                        <button class="tier-tab" data-tier="1">
+                            Tier 1
+                        </button>
+                        <button class="tier-tab" data-tier="2">
+                            Tier 2
+                        </button>
+                        <button class="tier-tab" data-tier="3">
+                            Tier 3
+                        </button>
+                        <button class="tier-tab" data-tier="4">
+                            Tier 4
+                        </button>
+                    </div>
+
+                    <!-- Tier 0 Content - Introduction -->
+                    <div class="tier-content active" data-tier="0">
+                        <!-- Content will be rendered dynamically -->
+                    </div>
+
+                    <!-- Tier 1 Content - Bronze NFTs -->
+                    <div class="tier-content" data-tier="1">
+                        <!-- Content will be rendered dynamically -->
+                    </div>
+
+                    <!-- Tier 2 Content - Silver NFTs -->
+                    <div class="tier-content" data-tier="2">
+                        <!-- Content will be rendered dynamically -->
+                    </div>
+
+                    <!-- Tier 3 Content - Gold NFTs -->
+                    <div class="tier-content" data-tier="3">
+                        <!-- Content will be rendered dynamically -->
+                    </div>
+
+                    <!-- Tier 4 Content - Legendary NFTs -->
+                    <div class="tier-content" data-tier="4">
+                        <!-- Content will be rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+        `;
     }
 } 
