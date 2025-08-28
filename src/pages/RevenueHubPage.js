@@ -15,25 +15,24 @@ export class RevenueHubPage extends BasePage {
         
         this.element.className = 'base-page revenue-hub-page';
         
-        // Initialize state with real data structure
+        // Initialize state with game data
         this.setState({
             // Player data
-            totalTreasury: 0,
-            yourRepPoints: 0,
-            currentTier: 0,
+            playerGold: 0,
+            playerFood: 0,
+            playerRep: 0,
+            playerTier: 0,
+            treasury: 0,
+            buildingSlots: 0,
             
-            // Yield NFT data organized by rarity tier
-            yieldNFTsByRarity: {
-                1: [], // Bronze (1-10 REP)
-                2: [], // Silver (11-50 REP)  
-                3: [], // Gold (51-100 REP)
-                4: []  // Legendary (101+ REP)
-            },
+            // Game status
+            totalBuildings: 0,
+            activeBattles: 0,
+            totalTroops: 0,
             
             // UI state
             selectedTier: 0,
-            isLoading: false,
-            canMint: true
+            isLoading: false
         });
         
         this.render();
@@ -46,93 +45,74 @@ export class RevenueHubPage extends BasePage {
             return;
         }
         try {
-            await this.loadRevenueData();
+            await this.loadGameData();
             this.setupEventListeners();
-            this.updateTierTabs();
             Logger.info('Revenue hub page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing revenue hub page:', error);
         }
     }
 
-    async loadRevenueData() {
+    async loadGameData() {
         try {
             const userAddress = await this.contracts.gameState.getAddress();
             
-            // Load player data from GameState and revenue pool from GridBuildings
-            const [revenuePool, repPoints, playerTier] = await Promise.all([
-                this.contracts.gridBuildings.getRevenuePool(),
+            // Load comprehensive player data
+            const [playerState, playerGold, playerFood, playerRep, playerTier, treasury] = await Promise.all([
+                this.contracts.gameState.call('playerState', userAddress),
+                this.contracts.gameState.getPlayerGold(userAddress),
+                this.contracts.gameState.getPlayerFood(userAddress),
                 this.contracts.gameState.getPlayerRep(userAddress),
-                this.contracts.gameState.getPlayerTier(userAddress)
+                this.contracts.gameState.getPlayerTier(userAddress),
+                this.contracts.gameState.getPlayerTreasury(userAddress)
             ]);
             
-            // Load yield NFTs
-            const yieldNFTs = await this.loadYieldNFTs(userAddress);
-            const yieldNFTsByRarity = this.organizeNFTsByRarity(yieldNFTs);
-            
-            // Format revenue pool from wei to SONIC
-            const formattedRevenuePool = ethers.formatEther(revenuePool);
+            // Load game status data
+            const [totalBuildings, activeBattles, totalTroops] = await Promise.all([
+                this.contracts.gridBuildings.getTotalBuildingCount(userAddress),
+                this.contracts.battleSystem.getActiveBattlesCount(userAddress),
+                this.getTotalTroops(userAddress)
+            ]);
             
             this.setState({
-                totalTreasury: formattedRevenuePool,
-                yourRepPoints: Number(repPoints),
-                currentTier: Number(playerTier),
-                yieldNFTsByRarity
+                playerGold: Number(playerGold),
+                playerFood: Number(playerFood),
+                playerRep: Number(playerRep),
+                playerTier: Number(playerTier),
+                treasury: Number(treasury),
+                buildingSlots: Number(playerState.buildingSlots),
+                totalBuildings: Number(totalBuildings),
+                activeBattles: Number(activeBattles),
+                totalTroops: Number(totalTroops)
             });
             
-            Logger.info('Revenue data loaded:', this.state);
+            Logger.info('Game data loaded:', this.state);
         } catch (error) {
-            Logger.error('Error loading revenue data:', error);
+            Logger.error('Error loading game data:', error);
         }
     }
 
-    async loadYieldNFTs(userAddress) {
+    async getTotalTroops(userAddress) {
         try {
-            const nfts = await this.contracts.yieldNft.getAllNFTsWithDetails(userAddress);
-            
-            // Convert to the format expected by the UI
-            return nfts.map(nft => ({
-                tokenId: nft.tokenId,
-                repStaked: Number(nft.repStaked),
-                mintedAt: nft.mintedAt,
-                metadata: nft.metadata,
-                tier: this.calculateNFTTier(Number(nft.repStaked))
-            }));
-            
+            const [infantry, cavalry, siege] = await Promise.all([
+                this.contracts.battleSystem.playerTroops(userAddress, 0),
+                this.contracts.battleSystem.playerTroops(userAddress, 1),
+                this.contracts.battleSystem.playerTroops(userAddress, 2)
+            ]);
+            return Number(infantry) + Number(cavalry) + Number(siege);
         } catch (error) {
-            Logger.error('Error loading yield NFTs:', error);
-            return [];
+            Logger.error('Error getting total troops:', error);
+            return 0;
         }
     }
 
-    calculateNFTTier(repStaked) {
-        if (repStaked >= 101) return 4; // Legendary
-        if (repStaked >= 51) return 3;  // Gold
-        if (repStaked >= 11) return 2;  // Silver
-        return 1; // Bronze
-    }
 
-    organizeNFTsByRarity(nfts) {
-        const organized = { 1: [], 2: [], 3: [], 4: [] };
-        
-        nfts.forEach(nft => {
-            organized[nft.tier].push(nft);
-        });
-        
-        return organized;
-    }
 
     setupEventListeners() {
         // Tab switching functionality
         this.addEventListener('.tier-tab', 'click', (event) => {
             const clickedTab = event.target;
             const tier = parseInt(clickedTab.dataset.tier);
-            
-            // Check if tier is unlocked
-            if (tier > 0 && tier > this.state.currentTier) {
-                this.modal.error(`You need to reach Gold Tier ${tier} to access this tab.`);
-                return;
-            }
             
             // Remove active class from all tabs and contents
             const allTabs = this.element.querySelectorAll('.tier-tab');
@@ -153,151 +133,87 @@ export class RevenueHubPage extends BasePage {
             Logger.info('Switched to tier:', tier);
         });
         
-        // Mint NFT functionality
-        this.addEventListener('.mint-nft-btn', 'click', async (event) => {
-            await this.handleMintNFT();
-        });
-        
         // Render initial tier content
         this.renderTierContent(this.state.selectedTier);
     }
 
-    async handleMintNFT() {
-        try {
-            const repInput = this.element.querySelector('.rep-input');
-            const repAmount = parseInt(repInput.value);
-            
-            if (!repAmount || repAmount <= 0) {
-                this.modal.error('Please enter a valid REP amount.');
-                return;
-            }
-            
-            // Validate player has enough REP
-            if (repAmount > this.state.yourRepPoints) {
-                this.modal.error(`You don't have enough REP. You have ${this.state.yourRepPoints} REP.`);
-                return;
-            }
-            
-            // Validate gold tier restrictions
-            const nftTier = this.calculateNFTTier(repAmount);
-            if (this.state.currentTier < nftTier) {
-                const tierNames = ['', 'Bronze', 'Silver', 'Gold', 'Legendary'];
-                this.modal.error(`You need Gold Tier ${nftTier} to mint ${tierNames[nftTier]} yield NFTs. You are currently Gold Tier ${this.state.currentTier}.`);
-                return;
-            }
-            
-            this.setState({ isLoading: true, canMint: false });
-            
-            // Call the Altar contract to mint the yield NFT
-            Logger.info('Minting yield NFT with REP amount:', repAmount);
-            await this.contracts.altar.mintYieldNFT(repAmount);
-            Logger.info('Yield NFT minted successfully');
-            
-            // Show success message
-            this.modal.success(`Successfully minted ${this.getNFTTierName(nftTier)} yield NFT!`);
-            
-            // Clear the input
-            repInput.value = '';
-            
-            // Reload the page data to show the new NFT
-            await this.loadRevenueData();
-            this.updateTierTabs();
-            this.renderTierContent(this.state.selectedTier);
-            
-        } catch (error) {
-            Logger.error('Error minting NFT:', error);
-            this.modal.error('Failed to mint yield NFT. Please try again.');
-        } finally {
-            this.setState({ isLoading: false, canMint: true });
-        }
-    }
 
-    getNFTTierName(tier) {
-        const names = ['', 'Bronze', 'Silver', 'Gold', 'Legendary'];
-        return names[tier] || 'Unknown';
-    }
-
-    updateTierTabs() {
-        // Update tier tabs based on player's gold tier (similar to StakeHub)
-        for (let tier = 0; tier <= 4; tier++) {
-            const tab = this.element.querySelector(`.tier-tab[data-tier="${tier}"]`);
-            if (!tab) continue;
-            
-            const isUnlocked = tier === 0 || tier <= this.state.currentTier;
-            
-            // Enable/disable tab based on gold tier
-            tab.disabled = !isUnlocked;
-            if (!isUnlocked) {
-                tab.classList.add('locked');
-                tab.title = `Requires Gold Tier ${tier}`;
-            } else {
-                tab.classList.remove('locked');
-                tab.title = '';
-            }
-        }
-    }
 
     renderTierContent(tier) {
-        const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
-        if (!tierContent) return;
+        const contentElement = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
+        if (!contentElement) return;
 
+        // For now, show resources content for tier 0, and placeholder content for other tiers
         if (tier === 0) {
-            // Tier 0 - Introduction content
-            tierContent.innerHTML = this.renderTier0Content();
+            contentElement.innerHTML = this.renderResourcesContent();
         } else {
-            // Tier 1-4 - NFT content filtered by rarity
-            tierContent.innerHTML = this.renderTierNFTContent(tier);
+            contentElement.innerHTML = this.renderTierPlaceholderContent(tier);
         }
     }
 
-    renderTier0Content() {
+    renderTierPlaceholderContent(tier) {
         return `
             <div class="buildings-grid">
                 <div class="building-card">
-                    <h3>Welcome to Revenue Hub</h3>
-                    <p>Learn about the yield NFT system and revenue distribution</p>
+                    <h3>Tier ${tier} Content</h3>
+                    <p>Content for tier ${tier} will be implemented according to your plan.</p>
                     <div class="building-details">
                         <div class="detail-item">
-                            <span class="detail-label">Unlock Requirement:</span>
-                            <span class="detail-value">Reach Gold Tier 1 to start minting</span>
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value">Coming Soon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+
+
+    renderResourcesContent() {
+        return `
+            <div class="buildings-grid">
+                <div class="building-card">
+                    <h3>Resources Guide</h3>
+                    <p>Understanding the core resources</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Gold:</span>
+                            <span class="detail-value">Primary currency, earned from Houses</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">NFT Tiers:</span>
-                            <span class="detail-value">Bronze, Silver, Gold, Legendary</span>
+                            <span class="detail-label">Food:</span>
+                            <span class="detail-value">Required for troop training, earned from Farms</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Bronze Tier</span>
-                            <span class="detail-value">1-10 REP</span>
+                            <span class="detail-label">REP Points:</span>
+                            <span class="detail-value">Earned from battles and donations, used for progression</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Silver Tier</span>
-                            <span class="detail-value">11-50 REP</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Gold Tier</span>
-                            <span class="detail-value">51-100 REP</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Legendary Tier</span>
-                            <span class="detail-value">101+ REP</span>
+                            <span class="detail-label">Treasury:</span>
+                            <span class="detail-value">Donated gold, affects city tier progression</span>
                         </div>
                     </div>
                 </div>
                 <div class="building-card">
-                    <h3>How Yield NFTs Work</h3>
-                    <p>Understanding the revenue generation system</p>
+                    <h3>Resource Management</h3>
+                    <p>Tips for efficient resource usage</p>
                     <div class="building-details">
                         <div class="detail-item">
-                            <span class="detail-label">Tradable:</span>
-                            <span class="detail-value">Can be sold on marketplaces</span>
+                            <span class="detail-label">Priority:</span>
+                            <span class="detail-value">Focus on Gold production first</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">REP Source:</span>
-                            <span class="detail-value">Earned by progressing and in battles</span>
+                            <span class="detail-label">Balance:</span>
+                            <span class="detail-value">Maintain Food for troop training</span>
                         </div>
                         <div class="detail-item">
-                            <span class="detail-label">Yield:</span>
-                            <span class="detail-value">Future revenue distribution</span>
+                            <span class="detail-label">Donations:</span>
+                            <span class="detail-value">Donate Gold to advance city tier</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Efficiency:</span>
+                            <span class="detail-value">Upgrade buildings for better production</span>
                         </div>
                     </div>
                 </div>
@@ -305,143 +221,45 @@ export class RevenueHubPage extends BasePage {
         `;
     }
 
-    renderTierNFTContent(tier) {
-        const tierNames = ['', 'Bronze', 'Silver', 'Gold', 'Legendary'];
-        const repRanges = ['', '1-10 REP', '11-50 REP', '51-100 REP', '101+ REP'];
-        const nfts = this.state.yieldNFTsByRarity[tier] || [];
 
-        return `
-            <div class="buildings-grid">
-                ${nfts.length === 0 ? 
-                    `<div class="empty-state">
-                        <h3>No ${tierNames[tier]} NFTs yet</h3>
-                        <p>Mint your first ${tierNames[tier]} yield NFT by staking ${repRanges[tier]}!</p>
-                    </div>` :
-                    nfts.map(nft => this.renderYieldNFTCard(nft)).join('')
-                }
-            </div>
-        `;
-    }
-
-    renderYieldNFTCard(nft) {
-        const mintDate = new Date(nft.mintedAt * 1000).toLocaleDateString();
-        const tierName = this.getNFTTierName(nft.tier);
-        const icon = this.getYieldNFTIcon(tierName);
-        
-        // Use metadata image if available, otherwise show placeholder
-        const image = nft.metadata?.image || '';
-        
-        return `
-            <div class="building-card yield-nft-card" data-token-id="${nft.tokenId}" style="
-                ${image ? `background-image: url('${image}'); background-size: cover; background-position: center; background-repeat: no-repeat;` : ''}
-                position: relative;
-                overflow: hidden;
-            ">
-                ${image ? `
-                <div class="nft-artwork-overlay" style="
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: linear-gradient(
-                        135deg,
-                        rgba(0, 0, 0, 0.7) 0%,
-                        rgba(0, 0, 0, 0.5) 50%,
-                        rgba(0, 0, 0, 0.7) 100%
-                    );
-                    pointer-events: none;
-                    z-index: 1;
-                "></div>` : ''}
-                
-                <div class="building-header" style="position: relative; z-index: 2;">
-                    <div class="building-icon">
-                        ${icon}
-                    </div>
-                    <div class="building-info">
-                        <h3>${tierName} Yield NFT #${nft.tokenId}</h3>
-                        <p class="building-description">${tierName} Tier Yield NFT</p>
-                    </div>
-                    <div class="building-status tradeable">
-                        <span class="status-indicator"></span>
-                        <span class="status-text">Tradeable</span>
-                    </div>
-                </div>
-                <div class="building-details" style="position: relative; z-index: 2;">
-                    <div class="detail-item">
-                        <span class="detail-label">REP Staked:</span>
-                        <span class="detail-value">${nft.repStaked}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Tier:</span>
-                        <span class="detail-value">${tierName}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Minted:</span>
-                        <span class="detail-value">${mintDate}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Token ID:</span>
-                        <span class="detail-value">#${nft.tokenId}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    getYieldNFTIcon(tier) {
-        switch (tier.toUpperCase()) {
-            case 'BRONZE': return '🥉';
-            case 'SILVER': return '🥈';
-            case 'GOLD': return '🥇';
-            case 'LEGENDARY': return '👑';
-            default: return '💎';
-        }
-    }
 
     render() {
         this.element.innerHTML = `
             <div class="page-container">
                 <h1>Guidance Altar</h1>
                 <p class="page-description">
-                    <strong>Manage your yield-generating NFTs and claim revenue from the treasury.</strong> 
-                    <em>Stake REP points to mint yield NFTs and participate in revenue distribution.</em>
+                    <strong>Your comprehensive guide to Sonicity game mechanics.</strong> 
+                    <em>Learn about resources, combat, buildings, and progression strategies.</em>
                 </p>
                 
                 <!-- Status Section -->
                 <div class="page-section">
-                    <h2>Revenue Status</h2>
+                    <h2>Game Status</h2>
                     <div class="status-grid">
                         <div class="status-item">
-                            <span class="status-label">Revenue Pool:</span>
-                            <span class="status-value" data-state="totalTreasury">0</span>
+                            <span class="status-label">Gold:</span>
+                            <span class="status-value" data-state="playerGold">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Your Rep Points:</span>
-                            <span class="status-value" data-state="yourRepPoints">0</span>
+                            <span class="status-label">Food:</span>
+                            <span class="status-value" data-state="playerFood">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Current Tier:</span>
-                            <span class="status-value" data-state="currentTier">0</span>
+                            <span class="status-label">REP Points:</span>
+                            <span class="status-value" data-state="playerRep">0</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Mint Section -->
-                <div class="page-section mint-section">
-                    <h2>Mint Yield NFT</h2>
-                    <div class="donation-form">
-                        <input 
-                            type="number" 
-                            id="rep-input"
-                            class="input input-lg rep-input" 
-                            placeholder="Enter REP amount"
-                            min="1"
-                            max="999999"
-                        />
-                        <button class="btn btn-primary btn-md mint-nft-btn" data-state="canMint">
-                            <span class="button-text">Mint Yield NFT</span>
-                        </button>
+                        <div class="status-item">
+                            <span class="status-label">City Tier:</span>
+                            <span class="status-value" data-state="playerTier">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Buildings:</span>
+                            <span class="status-value" data-state="totalBuildings">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Total Troops:</span>
+                            <span class="status-value" data-state="totalTroops">0</span>
+                        </div>
                     </div>
                 </div>
 
@@ -493,4 +311,4 @@ export class RevenueHubPage extends BasePage {
             </div>
         `;
     }
-} 
+}
