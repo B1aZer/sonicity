@@ -1,5 +1,5 @@
 /* Battle Progress Bar Styles */
-.battle-progress-bar .battle-progress-container {
+.battle-progress-container {
     margin-bottom: var(--spacing-xl);
     border-radius: var(--radius-lg);
     overflow: hidden;
