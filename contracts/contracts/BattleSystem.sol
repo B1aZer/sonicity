@@ -1714,7 +1714,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         // Calculate base power based on role
         uint256 basePower;
         uint256 heroId;
-        uint256 infantryCount, cavalryCount, siegeCount;
+        uint256 infantryCount;
+        uint256 cavalryCount;
+        uint256 siegeCount;
         
         if (isAttacker) {
             basePower = calculateTroopPower(

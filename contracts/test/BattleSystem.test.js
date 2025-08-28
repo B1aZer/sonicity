@@ -2051,9 +2051,9 @@ describe("BattleSystem", function () {
             console.log(`  Winner: ${battleRecord.attackerWon ? 'Player1' : 'Player2'}`);
             console.log(`  ✅ Defender RPS multiplier system working correctly`);
 
-            expect("attackerPower", Number(battleRecord.attackerPower)).to.equal(player1FinalPower);
-            expect("defenderPower", Number(battleRecord.defenderPower)).to.equal(player2FinalPower);
-            expect("attackerWon", battleRecord.attackerWon).to.be.false; // 100 vs 190 power (defender wins)
+            expect(Number(battleRecord.attackerPower)).to.equal(player1FinalPower);
+            expect(Number(battleRecord.defenderPower)).to.equal(player2FinalPower);
+            expect(battleRecord.attackerWon).to.be.false; // 100 vs 190 power (defender wins)
         });
 
         it("should test attacker has 3 tactics, defender has 0 tactics", async function () {
@@ -2441,9 +2441,8 @@ describe("BattleSystem", function () {
             // Deploy first tactic
             await battleSystem.connect(player1).deployTacticToBattle(1); // STRIKE
 
-            // Check power after first tactic deployment
-            const battleAfterFirstTactic = await battleSystem.activeBattles(player1.address);
-            const powerAfterFirstTactic = battleAfterFirstTactic.attackerPower;
+            // Check power after first tactic deployment (use getter function)
+            const powerAfterFirstTactic = await battleSystem.getAttackerPowerWithTactics(player1.address);
             
             // Power should be updated immediately (not just at resolution)
             expect(Number(powerAfterFirstTactic)).to.be.gt(Number(initialAttackerPower));
@@ -2456,9 +2455,8 @@ describe("BattleSystem", function () {
             // Deploy second tactic
             await battleSystem.connect(player1).deployTacticToBattle(2); // SHIELD
 
-            // Check power after second tactic deployment
-            const battleAfterSecondTactic = await battleSystem.activeBattles(player1.address);
-            const powerAfterSecondTactic = battleAfterSecondTactic.attackerPower;
+            // Check power after second tactic deployment (use getter function)
+            const powerAfterSecondTactic = await battleSystem.getAttackerPowerWithTactics(player1.address);
             
             // Power should increase again
             expect(Number(powerAfterSecondTactic)).to.be.gt(Number(powerAfterFirstTactic));
@@ -2469,9 +2467,8 @@ describe("BattleSystem", function () {
             // Deploy third tactic
             await battleSystem.connect(player1).deployTacticToBattle(3); // TRICK
 
-            // Check power after third tactic deployment
-            const battleAfterThirdTactic = await battleSystem.activeBattles(player1.address);
-            const powerAfterThirdTactic = battleAfterThirdTactic.attackerPower;
+            // Check power after third tactic deployment (use getter function)
+            const powerAfterThirdTactic = await battleSystem.getAttackerPowerWithTactics(player1.address);
             
             // Power should increase again
             expect(Number(powerAfterThirdTactic)).to.be.gt(Number(powerAfterSecondTactic));
@@ -2513,9 +2510,8 @@ describe("BattleSystem", function () {
             // Deploy first tactic
             await battleSystem.connect(player2).deployTacticToBattle(2); // SHIELD
 
-            // Check power after first tactic deployment
-            const battleAfterFirstTactic = await battleSystem.activeBattles(player1.address);
-            const powerAfterFirstTactic = battleAfterFirstTactic.defenderPower;
+            // Check power after first tactic deployment (use getter function)
+            const powerAfterFirstTactic = await battleSystem.getDefenderPowerWithTactics(player1.address);
             
             // Power should be updated immediately
             expect(Number(powerAfterFirstTactic)).to.be.gt(Number(initialDefenderPower));
@@ -2528,9 +2524,8 @@ describe("BattleSystem", function () {
             // Deploy second tactic
             await battleSystem.connect(player2).deployTacticToBattle(5); // SHIELD
 
-            // Check power after second tactic deployment
-            const battleAfterSecondTactic = await battleSystem.activeBattles(player1.address);
-            const powerAfterSecondTactic = battleAfterSecondTactic.defenderPower;
+            // Check power after second tactic deployment (use getter function)
+            const powerAfterSecondTactic = await battleSystem.getDefenderPowerWithTactics(player1.address);
             
             // Power should increase again
             expect(Number(powerAfterSecondTactic)).to.be.gt(Number(powerAfterFirstTactic));
@@ -2541,9 +2536,8 @@ describe("BattleSystem", function () {
             // Deploy third tactic
             await battleSystem.connect(player2).deployTacticToBattle(8); // SHIELD
 
-            // Check power after third tactic deployment
-            const battleAfterThirdTactic = await battleSystem.activeBattles(player1.address);
-            const powerAfterThirdTactic = battleAfterThirdTactic.defenderPower;
+            // Check power after third tactic deployment (use getter function)
+            const powerAfterThirdTactic = await battleSystem.getDefenderPowerWithTactics(player1.address);
             
             // Power should increase again
             expect(Number(powerAfterThirdTactic)).to.be.gt(Number(powerAfterSecondTactic));
@@ -2603,10 +2597,9 @@ describe("BattleSystem", function () {
             await battleSystem.connect(player2).deployTacticToBattle(5); // SHIELD
             await battleSystem.connect(player2).deployTacticToBattle(8); // SHIELD
 
-            // Check final powers after all tactics deployed
-            const battleFinal = await battleSystem.activeBattles(player1.address);
-            const finalAttackerPower = battleFinal.attackerPower;
-            const finalDefenderPower = battleFinal.defenderPower;
+            // Check final powers after all tactics deployed (use getter functions)
+            const finalAttackerPower = await battleSystem.getAttackerPowerWithTactics(player1.address);
+            const finalDefenderPower = await battleSystem.getDefenderPowerWithTactics(player1.address);
             
             // Attacker should have increased power (wins all 3 RPS rounds)
             expect(Number(finalAttackerPower)).to.be.gt(Number(initialAttackerPower));
@@ -2619,10 +2612,11 @@ describe("BattleSystem", function () {
             console.log(`  Defender power increase: ${Number(finalDefenderPower) - Number(initialDefenderPower)}`);
             console.log(`  ✅ Both attacker and defender powers updated immediately after tactics deployment`);
 
-            // Verify that the battle state is consistent for both players
-            const battleFromPlayer2 = await battleSystem.activeBattles(player2.address);
-            expect(Number(battleFromPlayer2.attackerPower)).to.equal(Number(finalAttackerPower));
-            expect(Number(battleFromPlayer2.defenderPower)).to.equal(Number(finalDefenderPower));
+            // Verify that the battle state is consistent for both players (use getter functions)
+            const finalAttackerPowerFromPlayer2 = await battleSystem.getAttackerPowerWithTactics(player2.address);
+            const finalDefenderPowerFromPlayer2 = await battleSystem.getDefenderPowerWithTactics(player2.address);
+            expect(Number(finalAttackerPowerFromPlayer2)).to.equal(Number(finalAttackerPower));
+            expect(Number(finalDefenderPowerFromPlayer2)).to.equal(Number(finalDefenderPower));
             
             console.log(`  ✅ Battle state consistent between attacker and defender views`);
         });
