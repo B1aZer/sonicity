@@ -159,7 +159,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
             description: "Buy items",
             tier: 0,
             isCoreBuilding: false,
-            disabled: true
+            disabled: false
         });
 
         districtBuildingConfigs[DistrictBuildingType.WORKSHOP] = DistrictBuildingConfig({
