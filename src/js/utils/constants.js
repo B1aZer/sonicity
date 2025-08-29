@@ -113,6 +113,7 @@ export const BUILDINGS = {
         position: { x: 0, y: 0, z: -40 }, // Top position
         rotation: Math.PI,
         tier: 0,
+        description: "The administrative center where district governance and important decisions are managed.",
         assets: {
             baseUrl: 'assets/cityhall',
             levels: {
@@ -127,6 +128,7 @@ export const BUILDINGS = {
         position: { x: -40, y: 0, z: 0 }, // Left position
         rotation: Math.PI / 2,
         tier: 0,
+        description: "A sacred place for performing rituals and ceremonies to unlock special abilities.",
         assets: {
             baseUrl: 'assets/altar',
             levels: {
@@ -141,6 +143,7 @@ export const BUILDINGS = {
         position: { x: 40, y: 0, z: 0 }, // Right position
         rotation: -Math.PI / 2,
         tier: 0,
+        description: "Extracts valuable minerals and resources from the earth for production and upgrades.",
         assets: {
             baseUrl: 'assets/mine',
             levels: {
@@ -155,6 +158,7 @@ export const BUILDINGS = {
         position: { x: -20, y: 5, z: -35 },
         rotation: 0,
         tier: 0,
+        description: "A bustling marketplace for trading goods and services to generate income.",
         assets: {
             baseUrl: 'assets/shop',
             levels: {
@@ -169,6 +173,7 @@ export const BUILDINGS = {
         position: { x: 20, y: 0, z: -35 },
         rotation: 0,
         tier: 0,
+        description: "Crafts tools and repairs buildings to maintain district infrastructure.",
         assets: {
             baseUrl: 'assets/workshop',
             levels: {
@@ -183,6 +188,7 @@ export const BUILDINGS = {
         position: { x: -50, y: 0, z: -55 },
         rotation: 0,
         tier: 0,
+        description: "Protects your district from enemy attacks with formidable defensive capabilities.",
         assets: {
             baseUrl: 'assets/defense_tower',
             levels: {
@@ -199,6 +205,7 @@ export const BUILDINGS = {
         position: { x: 35, y: 0, z: -35 },
         rotation: -Math.PI / 2,
         tier: 1,
+        description: "Trains and organizes military forces for district defense and battles.",
         assets: {
             baseUrl: 'assets/barracks',
             levels: {
@@ -215,6 +222,7 @@ export const BUILDINGS = {
         position: { x: 15, y: 0, z: -65 },
         rotation: 0,
         tier: 1,
+        description: "Specializes in reconnaissance to find PvP targets and gather intelligence.",
         assets: {
             baseUrl: 'assets/scout_guild',
             levels: {
@@ -229,6 +237,7 @@ export const BUILDINGS = {
         position: { x: 35, y: 0, z: -55 },
         rotation: 0,
         tier: 1,
+        description: "Provides secure quarters for defensive troops to protect the district.",
         assets: null,
     },
     OUTPOST: {
@@ -238,6 +247,7 @@ export const BUILDINGS = {
         position: { x: -15, y: 0, z: -65 },
         rotation: 0,
         tier: 0,
+        description: "A forward base for scouting territory and providing early warning of threats.",
         assets: null, // Model not yet implemented
     },
     COMMAND_CENTER: {
@@ -247,6 +257,7 @@ export const BUILDINGS = {
         position: { x: 50, y: 0, z: -45 },
         rotation: 0,
         tier: 1,
+        description: "Strategic headquarters for planning and executing military raids against other players.",
         assets: {
             baseUrl: 'assets/command_center',
             levels: {
@@ -261,6 +272,7 @@ export const BUILDINGS = {
         position: { x: -25, y: 0, z: -75 },
         rotation: 0,
         tier: 2,
+        description: "A gathering place where you can hire powerful heroes to lead your armies.",
         assets: {
             baseUrl: 'assets/tavern',
             levels: {
@@ -275,6 +287,7 @@ export const BUILDINGS = {
         position: { x: 25, y: 0, z: -75 },
         rotation: 0,
         tier: 2,
+        description: "Embark on exciting quests and adventures to earn unique rewards and resources.",
         assets: null, // Model not yet implemented
     },
     MAGE_TOWER: {
@@ -284,6 +297,7 @@ export const BUILDINGS = {
         position: { x: -35, y: 0, z: -85 },
         rotation: 0,
         tier: 2,
+        description: "A center for magical research and developing powerful spells for battle.",
         assets: null,
     },
     TACTICS_CENTER: {
@@ -293,6 +307,7 @@ export const BUILDINGS = {
         position: { x: 35, y: 0, z: -85 },
         rotation: 0,
         tier: 2,
+        description: "Study advanced military strategies and develop tactical cards for battle advantages.",
         assets: {
             baseUrl: 'assets/tactics-center',
             levels: {
@@ -307,6 +322,7 @@ export const BUILDINGS = {
         position: { x: -45, y: 0, z: -95 },
         rotation: 0,
         tier: 3,
+        description: "Crafts precious gems for upgrades, trading, and advanced crafting recipes.",
         assets: null, // Model not yet implemented
     },
     DIAMOND_VAULT: {
@@ -316,6 +332,7 @@ export const BUILDINGS = {
         position: { x: 45, y: 0, z: -95 },
         rotation: 0,
         tier: 3,
+        description: "Provides secure storage for your most valuable diamonds and precious resources.",
         assets: null, // Model not yet implemented
     },
     ARCANUM_OF_NAMES: {
@@ -325,6 +342,7 @@ export const BUILDINGS = {
         position: { x: 55, y: 0, z: -75 },
         rotation: 0,
         tier: 3,
+        description: "Converts REP points into dynamic on-chain yield NFTs for staking and passive income.",
         assets: {
             baseUrl: 'assets/arcanum',
             levels: {
@@ -339,6 +357,7 @@ export const BUILDINGS = {
         position: { x: -55, y: 0, z: -105 },
         rotation: 0,
         tier: 3,
+        description: "Processes raw materials into more valuable forms for advanced resource production.",
         assets: null // Model not yet implemented
     },
     COUNCIL_HALL: {
@@ -348,6 +367,7 @@ export const BUILDINGS = {
         position: { x: 55, y: 0, z: -105 },
         rotation: 0,
         tier: 4,
+        description: "The center of political power where district leaders meet for governance and diplomacy.",
         assets: null // Model not yet implemented
     },
     FORTRESS_WALLS: {
@@ -357,6 +377,7 @@ export const BUILDINGS = {
         position: { x: -65, y: 0, z: -115 },
         rotation: 0,
         tier: 4,
+        description: "Massive fortifications that provide ultimate defense against even the most determined attacks.",
         assets: null // Model not yet implemented
     },
     EMBASSY_HOME: {
@@ -366,6 +387,7 @@ export const BUILDINGS = {
         position: { x: 65, y: 0, z: -115 },
         rotation: 0,
         tier: 4,
+        description: "A diplomatic center for establishing alliances and peaceful trade agreements with other cities.",
         assets: null // Model not yet implemented
     },
     TREASURY_VAULT: {
@@ -375,6 +397,7 @@ export const BUILDINGS = {
         position: { x: 0, y: 0, z: -125 },
         rotation: 0,
         tier: 4,
+        description: "The most secure location for storing your district's wealth and valuable assets.",
         assets: null // Model not yet implemented
     },
 };
@@ -506,6 +529,8 @@ export const getHeroByClass = (heroClass) => HERO_TEMPLATES[heroClass];
 export const getTacticById = (tacticId) => TACTICS[tacticId];
 export const getTacticsByType = (tacticType) => Object.values(TACTICS).filter(tactic => tactic.type === tacticType);
 */
+
+
 
 // Helper to get district buildings only
 export const DISTRICT_BUILDINGS = Object.entries(BUILDINGS)

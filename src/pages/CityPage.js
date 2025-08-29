@@ -1,6 +1,7 @@
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
 import { BasePage } from './BasePage.js';
+import { BUILDINGS } from '../js/utils/constants.js';
 
 import('../styles/city-page.css');
 
@@ -29,6 +30,12 @@ export class CityPage extends BasePage {
 
     updateWalletStatus(address) {
         Logger.info('Updating wallet status with address:', address);
+    }
+
+    getBuildingDescription(buildingName) {
+        // Find the building in BUILDINGS by name
+        const building = Object.values(BUILDINGS).find(b => b.name === buildingName);
+        return building?.description || buildingName;
     }
 
     async loadCityData() {
@@ -211,7 +218,7 @@ export class CityPage extends BasePage {
                                 </div>
                             ` : ''}
                             <h3>${config.name}</h3>
-                            <p>${config.description}</p>
+                            <p>${this.getBuildingDescription(config.name)}</p>
                             <div class="building-details">
                                 ${isBuilt ? `
                                     <p class="build-cost">Current Level: ${currentLevel} / ${config.maxLevel}</p>
