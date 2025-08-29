@@ -402,4 +402,173 @@ describe("Altar", function () {
       expect(buildingDataRestoredEvent).to.not.be.undefined;
     });
   });
+
+  describe("NFT Burning", function () {
+    it("Should allow burning level 1 buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint and stake an NFT (creates level 1 building)
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine");
+
+      // Burn the NFT
+      const burnTx = await altar.connect(player1).burnNFT(nftAddress, tokenId);
+      const burnReceipt = await burnTx.wait();
+
+      // Check for NFTBurned event
+      const nftBurnedEvent = burnReceipt.logs.find(
+        log => log.topics[0] === altar.interface.getEvent("NFTBurned").topicHash
+      );
+      expect(nftBurnedEvent).to.not.be.undefined;
+
+      // Verify building was removed from GridBuildings
+      const removedBuilding = await gridBuildings.buildings(player1Address, buildingId);
+      expect(removedBuilding.buildingType).to.equal(BigInt(0));
+      expect(removedBuilding.level).to.equal(0);
+
+      // Verify stake data was cleared
+      const stakeData = await altar.getStakeDataWithCollection(nftAddress, tokenId);
+      expect(stakeData.isActive).to.be.false;
+      expect(stakeData.buildingLevel).to.equal(0);
+
+      // Verify NFT was burned (no longer exists)
+      await expect(sonicityNFT.ownerOf(tokenId)).to.be.revertedWithCustomError(sonicityNFT, "ERC721NonexistentToken");
+    });
+
+    it("Should not allow burning before staking period is completed", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Set minimum staking duration to 30 hours for this test
+      await altar.setMinStakingDuration(30 * 60 * 60); // 30 hours
+      
+      // Mint and stake an NFT
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+
+      // Try to burn before 30 hours (should fail)
+      await ethers.provider.send("evm_increaseTime", [29 * 60 * 60]); // 29 hours
+      await ethers.provider.send("evm_mine");
+      
+      await expect(
+        altar.connect(player1).burnNFT(nftAddress, tokenId)
+      ).to.be.revertedWith("Staking period not completed");
+
+      // Verify building still exists
+      const building = await gridBuildings.buildings(player1Address, buildingId);
+      expect(building.buildingType).to.equal(GridBuildingType.HOUSE);
+      expect(building.level).to.equal(1);
+      
+      // Reset minimum staking duration to 0 for other tests
+      await altar.setMinStakingDuration(0);
+    });
+
+    it("Should not allow burning someone else's NFT", async function () {
+      const player1Address = await player1.getAddress();
+      const player2Address = await player2.getAddress();
+      
+      // Player1 mints and stakes an NFT
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine");
+
+      // Player2 tries to burn Player1's NFT (should fail)
+      await expect(
+        altar.connect(player2).burnNFT(nftAddress, tokenId)
+      ).to.be.revertedWith("Not the staker");
+
+      // Verify building still exists
+      const building = await gridBuildings.buildings(player1Address, buildingId);
+      expect(building.buildingType).to.equal(GridBuildingType.HOUSE);
+      expect(building.level).to.equal(1);
+    });
+
+    it("Should not allow burning unstaked NFTs", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint an NFT but don't stake it
+      const mintTx = await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
+      const mintReceipt = await mintTx.wait();
+      
+      // Get tokenId from Transfer event
+      const transferEvent = mintReceipt.logs
+        .map(log => {
+          try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
+        })
+        .find(e => e && e.name === "Transfer");
+      const tokenId = transferEvent.args.tokenId;
+      const nftAddress = await sonicityNFT.getAddress();
+
+      // Try to burn unstaked NFT (should fail)
+      await expect(
+        altar.connect(player1).burnNFT(nftAddress, tokenId)
+      ).to.be.revertedWith("NFT not staked");
+    });
+
+    it("Should remove NFT from user's staked tokens list", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint and stake an NFT
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+
+      // Verify NFT is in user's staked tokens
+      const stakedTokensBefore = await altar.getUserStakesByCollection(player1Address, nftAddress);
+      expect(stakedTokensBefore).to.include(tokenId);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine");
+
+      // Burn the NFT
+      await altar.connect(player1).burnNFT(nftAddress, tokenId);
+
+      // Verify NFT is removed from user's staked tokens
+      const stakedTokensAfter = await altar.getUserStakesByCollection(player1Address, nftAddress);
+      expect(stakedTokensAfter).to.not.include(tokenId);
+    });
+
+    it("Should clear staked building mapping", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint and stake an NFT
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+
+      // Verify staked building mapping exists
+      const mappedBuildingId = await altar.stakedBuilding(nftAddress, tokenId);
+      expect(mappedBuildingId).to.equal(buildingId);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine");
+
+      // Burn the NFT
+      await altar.connect(player1).burnNFT(nftAddress, tokenId);
+
+      // Verify staked building mapping is cleared
+      const clearedBuildingId = await altar.stakedBuilding(nftAddress, tokenId);
+      expect(clearedBuildingId).to.equal(0);
+    });
+
+    it("Should prevent re-staking burned NFTs", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint and stake an NFT
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine");
+
+      // Burn the NFT
+      await altar.connect(player1).burnNFT(nftAddress, tokenId);
+
+      // Try to re-stake the burned NFT (should fail)
+      await expect(
+        altar.connect(player1).stake(tokenId, GridBuildingType.HOUSE, nftAddress)
+      ).to.be.revertedWithCustomError(sonicityNFT, "ERC721NonexistentToken"); // NFT no longer exists
+    });
+  });
 }); 

@@ -59,6 +59,17 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     }
 
     /**
+     * @dev Burn NFT - only callable by Altar contract
+     * @param tokenId The token ID to burn
+     */
+    function burnForAltar(uint256 tokenId) external {
+        require(msg.sender == altarContract, "Only Altar contract can call this function");
+        require(_ownerOf(tokenId) == altarContract, "Token not owned by Altar");
+        
+        _burn(tokenId);
+    }
+
+    /**
      * @dev Set the Altar contract address
      * @param _altarContract The address of the Altar contract
      */

@@ -123,4 +123,14 @@ export class AltarContract extends BaseContract {
     async stakeYieldNFT(tokenId) {
         return await this.transact('stakeYieldNFT', tokenId);
     }
+
+    /**
+     * Burn an NFT permanently (destroys building and NFT)
+     * @param {string} collection - The NFT collection address
+     * @param {number|string} tokenId - The token ID to burn
+     * @returns {Promise<Object>} - Transaction result
+     */
+    async burnNFT(collection, tokenId) {
+        return await this.transact('burnNFT', collection, tokenId);
+    }
 } 

@@ -57,15 +57,27 @@ contract SonicityRep is ERC721Enumerable, Ownable {
     }
 
     /**
-     * @dev Mint NFTs for the Altar contract
-     * @param to The address to mint to (should be the Altar contract)
+     * @dev Mint NFT for Altar contract - only callable by Altar contract
+     * @param to The address to mint the NFT to
      * @param tokenId The specific token ID to mint
      */
     function mintForAltar(address to, uint256 tokenId) external {
         require(msg.sender == altarContract, "Only Altar contract can call this function");
         require(tokenId > 0 && tokenId <= MAX_SUPPLY, "Invalid token ID");
         require(_ownerOf(tokenId) == address(0), "Token already exists");
+        
         _safeMint(to, tokenId);
+    }
+
+    /**
+     * @dev Burn NFT - only callable by Altar contract
+     * @param tokenId The token ID to burn
+     */
+    function burnForAltar(uint256 tokenId) external {
+        require(msg.sender == altarContract, "Only Altar contract can call this function");
+        require(_ownerOf(tokenId) == altarContract, "Token not owned by Altar");
+        
+        _burn(tokenId);
     }
 
     // DEPRECATED: Mint function - allows users to mint NFTs

@@ -13,6 +13,7 @@ import "./GridBuildings.sol";
 // Interface for NFT contracts that support mintForAltar
 interface IMintableNFT {
     function mintForAltar(address to, uint256 tokenId) external;
+    function burnForAltar(uint256 tokenId) external;
 }
 
 // Interface for Yield NFT contracts that support mintForAltar with REP amount
@@ -86,6 +87,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     event BuildingDataPreserved(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint8 level);
     event BuildingDataRestored(address indexed collection, uint256 indexed tokenId, GridBuildings.GridBuildingType buildingType, uint8 level);
     event YieldNFTStaked(address indexed user, uint256 indexed tokenId, uint256 buildingId, uint256 repAmount, uint256 nftTier);
+    event NFTBurned(address indexed user, uint256 indexed tokenId, uint256 timestamp, address indexed collection);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -316,6 +318,46 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         
         emit NFTUnstaked(msg.sender, tokenId, block.timestamp, stakeData.collection);
         emit BuildingDataPreserved(collection, tokenId, buildingData.buildingType, buildingData.level);
+    }
+
+    /**
+     * @dev Burn an NFT permanently (destroys building and NFT)
+     * @param collection The address of the NFT collection
+     * @param tokenId The ID of the NFT to burn
+     */
+    function burnNFT(address collection, uint256 tokenId) external nonReentrant {
+        Stake memory stakeData = stakes[collection][tokenId];
+        require(stakeData.isActive, "NFT not staked");
+        require(stakeData.owner == msg.sender, "Not the staker");
+        require(
+            block.timestamp >= stakeData.stakedAt + minStakingDuration,
+            "Staking period not completed"
+        );
+        
+        // Get building data before removal
+        uint256 buildingId = stakedBuilding[stakeData.collection][tokenId];
+        
+        // Remove from user's collection-specific staked tokens
+        uint256[] storage userCollectionTokens = userStakesByCollection[msg.sender][stakeData.collection];
+        for (uint256 i = 0; i < userCollectionTokens.length; i++) {
+            if (userCollectionTokens[i] == tokenId) {
+                userCollectionTokens[i] = userCollectionTokens[userCollectionTokens.length - 1];
+                userCollectionTokens.pop();
+                break;
+            }
+        }
+        
+        // Remove building from GridBuildings
+        gridBuildings.removeBuilding(msg.sender, buildingId);
+        delete stakedBuilding[stakeData.collection][tokenId];
+        
+        // Burn the NFT using the burnForAltar function
+        IMintableNFT(stakeData.collection).burnForAltar(tokenId);
+        
+        // Clear stake data
+        delete stakes[stakeData.collection][tokenId];
+        
+        emit NFTBurned(msg.sender, tokenId, block.timestamp, stakeData.collection);
     }
 
     /**
