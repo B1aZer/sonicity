@@ -1108,6 +1108,40 @@ export class StakePage extends BasePage {
             const nftInfo = await this.getNFTInfoForBuilding(item.id);
             
             if (nftInfo.isStaked && nftInfo.contractAddress && nftInfo.tokenId) {
+                // Add debugging information
+                Logger.info('NFT Info:', nftInfo);
+                Logger.info('Building level:', item.level);
+                Logger.info('Is burn action:', isBurn);
+                
+                // Check staking duration
+                const minStakingDuration = await this.contracts.altar.getMinStakingDuration();
+                Logger.info('Minimum staking duration:', minStakingDuration);
+                
+                // Get stake data to check staking time
+                const stakeData = await this.contracts.altar.getStakeDataWithCollection(nftInfo.contractAddress, nftInfo.tokenId);
+                Logger.info('Stake data:', stakeData);
+                
+                // Use blockchain time instead of browser time for testing compatibility
+                const currentBlock = await this.contracts.gameState.provider.getBlock('latest');
+                const currentTime = currentBlock.timestamp;
+                const stakedAt = Number(stakeData.stakedAt);
+                const timeStaked = currentTime - stakedAt;
+                Logger.info('Current blockchain time:', currentTime);
+                Logger.info('Staked at:', stakedAt);
+                Logger.info('Time staked:', timeStaked);
+                Logger.info('Time remaining:', Math.max(0, Number(minStakingDuration) - timeStaked));
+                
+                // Check if staking period is completed
+                if (timeStaked < 0) {
+                    throw new Error(`Invalid staking time detected. The NFT appears to have been staked in the future. This might be due to a time synchronization issue. Please try again later.`);
+                }
+                
+                if (timeStaked < Number(minStakingDuration)) {
+                    const remainingTime = Number(minStakingDuration) - timeStaked;
+                    const remainingHours = Math.ceil(remainingTime / 3600);
+                    throw new Error(`Staking period not completed. You must wait ${remainingHours} more hours before burning this NFT.`);
+                }
+                
                 if (isBurn) {
                     // Burn the NFT (permanent destruction)
                     await this.contracts.altar.burnNFT(nftInfo.contractAddress, nftInfo.tokenId);
