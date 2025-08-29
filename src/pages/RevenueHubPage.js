@@ -58,23 +58,26 @@ export class RevenueHubPage extends BasePage {
         try {
             const userAddress = WalletManager.getCurrentWallet();
             
-            // Load player state data
-            const playerState = await this.contracts.gameState.playerState(userAddress);
-            
-            // Load additional data
-            const [totalBuildings, activeBattles, totalTroops] = await Promise.all([
+            // Load player state data using individual getter functions
+            const [playerGold, playerFood, playerRep, playerTier, treasury, buildingSlots, totalBuildings, activeBattles, totalTroops] = await Promise.all([
+                this.contracts.gameState.getPlayerGold(userAddress),
+                this.contracts.gameState.getPlayerFood(userAddress),
+                this.contracts.gameState.getPlayerRep(userAddress),
+                this.contracts.gameState.getPlayerTier(userAddress),
+                this.contracts.gameState.getPlayerTreasury(userAddress),
+                this.contracts.gameState.getBuildingSlots(userAddress),
                 this.getTotalBuildings(userAddress),
                 this.getActiveBattlesCount(userAddress),
                 this.getTotalTroops(userAddress)
             ]);
             
             this.setState({
-                playerGold: Number(playerState.gold),
-                playerFood: Number(playerState.food),
-                playerRep: Number(playerState.rep),
-                playerTier: Number(playerState.tier),
-                treasury: Number(playerState.treasury),
-                buildingSlots: Number(playerState.buildingSlots),
+                playerGold: Number(playerGold),
+                playerFood: Number(playerFood),
+                playerRep: Number(playerRep),
+                playerTier: Number(playerTier),
+                treasury: Number(treasury),
+                buildingSlots: Number(buildingSlots),
                 totalBuildings: Number(totalBuildings),
                 activeBattles: Number(activeBattles),
                 totalTroops: Number(totalTroops)
@@ -91,9 +94,9 @@ export class RevenueHubPage extends BasePage {
 
     async getTotalBuildings(userAddress) {
         try {
-            // Try to get building count from grid buildings contract
-            const buildingCount = await this.contracts.gridBuildings.getTotalBuildingCount(userAddress);
-            return Number(buildingCount);
+            // Get active buildings array and return its length
+            const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings(userAddress);
+            return activeBuildings.length;
         } catch (error) {
             Logger.error('Error getting total buildings:', error);
             return 0;
