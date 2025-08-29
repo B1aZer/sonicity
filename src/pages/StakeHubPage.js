@@ -570,10 +570,18 @@ export class StakePage extends BasePage {
             // Format upgrade button text and determine if disabled
             let upgradeButtonText = 'Upgrade';
             let upgradeDisabled = item.damaged || !canUpgrade;
+            let upgradeTooltip = '';
             
             if (currentLevel >= maxLevel) {
                 upgradeButtonText = 'Max Level';
                 upgradeDisabled = true;
+                upgradeTooltip = 'Building has reached maximum level';
+            } else if (item.damaged) {
+                upgradeTooltip = 'Building is damaged and needs repair before upgrading';
+            } else if (!canUpgrade) {
+                upgradeTooltip = 'Upgrade level not unlocked. Recharge more buildings to unlock higher levels.';
+            } else {
+                upgradeTooltip = `Upgrade to level ${currentLevel + 1} for ${upgradeCost} diamonds`;
             }
             
             return `
@@ -612,7 +620,7 @@ export class StakePage extends BasePage {
                     <div class="building-actions">
                         <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Charge</button>
                         <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
-                        <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''}><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
+                        <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''} title="${upgradeTooltip}"><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
                         ${currentLevel === 1 ? 
                             `<button class="btn btn-full btn-danger destroy-btn"><i class="fas fa-fire"></i> Burn</button>` :
                             `<button class="btn btn-full btn-warning destroy-btn"><i class="fas fa-undo"></i> Unstake</button>`
