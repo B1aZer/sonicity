@@ -1090,10 +1090,11 @@ export class StakePage extends BasePage {
                     'Are you sure you want to burn this building?',
                     'This will permanently destroy the building and NFT. This action cannot be undone.',
                     {
-                        confirmText: 'Burn Building',
-                        cancelText: 'Cancel',
-                        confirmButtonClass: 'btn-danger',
-                        cancelButtonClass: 'btn-secondary'
+                        title: 'Confirm Burn',
+                        confirmButtonText: 'Burn Building',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d'
                     }
                 );
                 
