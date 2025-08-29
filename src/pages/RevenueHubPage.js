@@ -275,7 +275,7 @@ export class RevenueHubPage extends BasePage {
 
                 <div class="building-card">
                     <h3>📚 Tactics System</h3>
-                    <p>Deploy up to 3 tactics per battle using rock-paper-scissors mechanics</p>
+                    <p>Deploy up to 3 tactics per battle using RPS mechanics</p>
                     <div class="building-details">
                         <div class="detail-item">
                             <span class="detail-label">Tactic Types:</span>
@@ -331,11 +331,11 @@ export class RevenueHubPage extends BasePage {
                     <div class="building-details">
                         <div class="detail-item">
                             <span class="detail-label">Minting Cost:</span>
-                            <span class="detail-value">REP points (varies by tier)</span>
+                            <span class="detail-value">REP points (varies by rarity)</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Staking:</span>
-                            <span class="detail-value">Not available yet (Tier 4 feature)</span>
+                            <span class="detail-value">Available on Tier 4</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Governance:</span>
@@ -414,11 +414,11 @@ export class RevenueHubPage extends BasePage {
                     <div class="building-details">
                         <div class="detail-item">
                             <span class="detail-label">Gold:</span>
-                            <span class="detail-value">Primary currency, earned from Houses</span>
+                            <span class="detail-value">Primary currency for building progression</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Food:</span>
-                            <span class="detail-value">Required for troop training, earned from Farms</span>
+                            <span class="detail-value">Required for troop training</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Diamonds:</span>
@@ -426,7 +426,7 @@ export class RevenueHubPage extends BasePage {
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">REP Points:</span>
-                            <span class="detail-value">Earned from battles and donations, used for minting NFTs</span>
+                            <span class="detail-value">Required for Yield NFTs</span>
                         </div>
                     </div>
                 </div>
