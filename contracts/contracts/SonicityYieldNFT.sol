@@ -97,6 +97,21 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
         _safeMint(to, tokenId);
     }
 
+    /**
+     * @dev Burn NFT - only callable by Altar contract
+     * @param tokenId The token ID to burn
+     */
+    function burnForAltar(uint256 tokenId) external {
+        require(msg.sender == altarContract, "Only Altar contract can call this function");
+        require(_ownerOf(tokenId) == altarContract, "Token not owned by Altar");
+        
+        // Clear stake data before burning
+        delete stakeInfo[tokenId];
+        delete lockedForYield[tokenId];
+        
+        _burn(tokenId);
+    }
+
     // DEPRECATED: Mint function - allows users to mint NFTs
     // This method is deprecated and will be disabled on production
     // Use mintForAltar method instead which can only be called by the Altar contract

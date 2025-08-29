@@ -570,5 +570,52 @@ describe("Altar", function () {
         altar.connect(player1).stake(tokenId, GridBuildingType.HOUSE, nftAddress)
       ).to.be.revertedWithCustomError(sonicityNFT, "ERC721NonexistentToken"); // NFT no longer exists
     });
+
+    it("Should allow burning yield NFTs", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Give player some REP and upgrade to tier 4
+      await gameState.testEarnRep(player1Address, 50);
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
+      
+      // Mint a yield NFT
+      await altar.connect(player1).mintYieldNFT(50);
+      const tokenId = await sonicityYieldNFT.tokenOfOwnerByIndex(player1Address, 0);
+      const yieldNFTAddress = await sonicityYieldNFT.getAddress();
+      
+      // Stake the yield NFT
+      await sonicityYieldNFT.connect(player1).approve(await altar.getAddress(), tokenId);
+      await altar.connect(player1).stakeYieldNFT(tokenId);
+      
+      // Get the building ID
+      const buildingId = await altar.stakedBuilding(yieldNFTAddress, tokenId);
+      
+      // Fast forward time to complete staking period
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine");
+
+      // Burn the yield NFT
+      const burnTx = await altar.connect(player1).burnNFT(yieldNFTAddress, tokenId);
+      const burnReceipt = await burnTx.wait();
+
+      // Check for NFTBurned event
+      const nftBurnedEvent = burnReceipt.logs.find(
+        log => log.topics[0] === altar.interface.getEvent("NFTBurned").topicHash
+      );
+      expect(nftBurnedEvent).to.not.be.undefined;
+
+      // Verify building was removed from GridBuildings
+      const removedBuilding = await gridBuildings.buildings(player1Address, buildingId);
+      expect(removedBuilding.buildingType).to.equal(BigInt(0));
+      expect(removedBuilding.level).to.equal(0);
+
+      // Verify stake data was cleared
+      const stakeData = await altar.getStakeDataWithCollection(yieldNFTAddress, tokenId);
+      expect(stakeData.isActive).to.be.false;
+      expect(stakeData.buildingLevel).to.equal(0);
+
+      // Verify yield NFT was burned (no longer exists)
+      await expect(sonicityYieldNFT.ownerOf(tokenId)).to.be.revertedWithCustomError(sonicityYieldNFT, "ERC721NonexistentToken");
+    });
   });
 }); 

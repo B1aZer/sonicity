@@ -609,7 +609,10 @@ export class StakePage extends BasePage {
                         <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Charge</button>
                         <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
                         <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''}><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
-                        <button class="btn btn-full btn-danger destroy-btn"><i class="fas fa-trash"></i> Destroy</button>
+                        ${currentLevel === 1 ? 
+                            `<button class="btn btn-full btn-danger destroy-btn"><i class="fas fa-fire"></i> Burn</button>` :
+                            `<button class="btn btn-full btn-warning destroy-btn"><i class="fas fa-undo"></i> Unstake</button>`
+                        }
                     </div>
                 </div>
             `;
@@ -1075,27 +1078,56 @@ export class StakePage extends BasePage {
 
     async destroyBuilding(item) {
         try {
-            const loadingModal = this.modal.loading("Destroying building...");
+            // Determine action based on building level
+            const isBurn = item.level === 1;
+            const actionText = isBurn ? 'Burning' : 'Unstaking';
+            const confirmText = isBurn ? 'Burn' : 'Unstake';
+            const successText = isBurn ? 'Building burned successfully!' : 'Building unstaked successfully!';
+            
+            // Show confirmation for burn action
+            if (isBurn) {
+                const confirmed = await this.modal.confirm(
+                    'Are you sure you want to burn this building?',
+                    'This will permanently destroy the building and NFT. This action cannot be undone.',
+                    {
+                        confirmText: 'Burn Building',
+                        cancelText: 'Cancel',
+                        confirmButtonClass: 'btn-danger',
+                        cancelButtonClass: 'btn-secondary'
+                    }
+                );
+                
+                if (!confirmed) {
+                    return; // User cancelled
+                }
+            }
+            
+            const loadingModal = this.modal.loading(`${actionText} building...`);
             
             // Get NFT info for this building
             const nftInfo = await this.getNFTInfoForBuilding(item.id);
             
             if (nftInfo.isStaked && nftInfo.contractAddress && nftInfo.tokenId) {
-                // Unstake the NFT (this will destroy the building and preserve data)
-                await this.contracts.altar.unstake(nftInfo.contractAddress, nftInfo.tokenId);
+                if (isBurn) {
+                    // Burn the NFT (permanent destruction)
+                    await this.contracts.altar.burnNFT(nftInfo.contractAddress, nftInfo.tokenId);
+                } else {
+                    // Unstake the NFT (preserves building data)
+                    await this.contracts.altar.unstake(nftInfo.contractAddress, nftInfo.tokenId);
+                }
                 loadingModal.close();
-                this.modal.success("Building destroyed successfully!", { title: 'Building Destroyed!' });
+                this.modal.success(successText, { title: 'Success!' });
             } else {
                 // Fallback to direct destruction if no NFT found
                 await this.contracts.altar.destroyBuilding(item.id);
                 loadingModal.close();
-                this.modal.success("Building destroyed successfully!", { title: 'Building Destroyed!' });
+                this.modal.success(successText, { title: 'Success!' });
             }
             
             await this.loadUserData();
         } catch (error) {
             Logger.error('Error destroying building:', error);
-            this.modal.error(error.message || 'Failed to destroy building', { title: 'Destruction Failed' });
+            this.modal.error(error.message || 'Failed to destroy building', { title: 'Action Failed' });
         }
     }
 
