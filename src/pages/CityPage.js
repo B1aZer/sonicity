@@ -304,7 +304,7 @@ export class CityPage extends BasePage {
                         this.modal.success(
                             `Successfully donated ${amount} gold to city!<br><br>` +
                             `<strong>TIER UPGRADED!</strong><br><br>` +
-                            `You've reached <strong>${newTierName} (Tier ${tierAfter})</strong>!<br><br>` +
+                            `You've reached ${newTierName} (Tier ${tierAfter})!<br><br>` +
                             `New buildings and grid slots unlocked.<br><br>`
                         );
                     } else {
