@@ -53,7 +53,8 @@ export class StakePage extends BasePage {
             gold: 0,
             food: 0,
             diamonds: 0,
-            repPoints: 0
+            repPoints: 0,
+            buildingSlotsReached: false // New state variable
         };
         this.render();
     }
@@ -226,6 +227,10 @@ export class StakePage extends BasePage {
         availableNFTs.forEach(nft => {
             byTier[nft.tier]?.push(nft);
         });
+        
+        // Check if player has reached building slot limit
+        const buildingSlotsReached = usedSlots >= totalSlots;
+        
         this.state = {
             ...this.state,
             usedSlots,
@@ -239,7 +244,8 @@ export class StakePage extends BasePage {
             gold: Number(gold),
             food: Number(food),
             diamonds: Number(diamonds),
-            repPoints: Number(repPoints)
+            repPoints: Number(repPoints),
+            buildingSlotsReached
         };
         this.updateStatusSection();
         await this.updateTierTabs();
@@ -373,6 +379,10 @@ export class StakePage extends BasePage {
                 ${tier === 4 ? 
                     `<button class="btn btn-md btn-secondary" disabled title="Create Yield NFTs in Revenue Hub first">
                         Create ${tierNames[tier]} (Use Revenue Hub)
+                    </button>` :
+                    this.state.buildingSlotsReached ? 
+                    `<button class="btn btn-md btn-secondary" disabled title="Building slot limit reached for current tier. Upgrade your tier to get more slots.">
+                        Create ${tierNames[tier]}
                     </button>` :
                     `<button class="btn btn-md btn-primary create-building-btn">Create ${tierNames[tier]}</button>`
                 }
