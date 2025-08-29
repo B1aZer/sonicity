@@ -1087,8 +1087,7 @@ export class StakePage extends BasePage {
             // Show confirmation for burn action
             if (isBurn) {
                 const confirmed = await this.modal.confirm(
-                    'Are you sure you want to burn this building?',
-                    'This will permanently destroy the building and NFT. This action cannot be undone.',
+                    'Are you sure you want to burn this building?<br><br>This will permanently destroy the building and NFT. This action cannot be undone.',
                     {
                         title: 'Confirm Burn',
                         confirmButtonText: 'Burn Building',
