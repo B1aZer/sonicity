@@ -298,7 +298,7 @@ export class CityPage extends BasePage {
                     // Check if tier was upgraded
                     if (tierAfter > tierBefore) {
                         // Tier upgrade occurred
-                        const tierNames = ['Common', 'Merchant', 'Academic', 'Defensive', 'Royal'];
+                        const tierNames = ['Common', 'Defensive', 'Academic', 'Merchant', 'Royal'];
                         const newTierName = tierNames[tierAfter] || `Tier ${tierAfter}`;
                         
                         this.modal.success(
