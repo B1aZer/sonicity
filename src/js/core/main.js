@@ -28,6 +28,18 @@ class App {
             this.handleRoute();
         });
 
+        // Setup ESC key handler to navigate to overview
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const currentPath = window.location.pathname;
+                if (currentPath !== '/overview') {
+                    Logger.info('ESC pressed, navigating to overview');
+                    window.history.pushState({}, '', '/overview');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                }
+            }
+        });
+
         // Add global debug function
         window.setLogLevel = (level) => {
             Logger.setLogLevel(level);
