@@ -158,7 +158,7 @@ export const BUILDINGS = {
         position: { x: -20, y: 5, z: -35 },
         rotation: 0,
         tier: 0,
-        description: "A bustling marketplace for trading goods and services to generate income.",
+        description: "A bustling marketplace for trading goods.",
         assets: {
             baseUrl: 'assets/shop',
             levels: {
@@ -173,7 +173,7 @@ export const BUILDINGS = {
         position: { x: 20, y: 0, z: -35 },
         rotation: 0,
         tier: 0,
-        description: "Crafts tools and repairs buildings to maintain district infrastructure.",
+        description: "Repairs buildings to maintain district infrastructure.",
         assets: {
             baseUrl: 'assets/workshop',
             levels: {
@@ -205,7 +205,7 @@ export const BUILDINGS = {
         position: { x: 35, y: 0, z: -35 },
         rotation: -Math.PI / 2,
         tier: 1,
-        description: "Trains and organizes military forces for district defense and battles.",
+        description: "Trains and organizes military forces for district defense and attacks.",
         assets: {
             baseUrl: 'assets/barracks',
             levels: {
