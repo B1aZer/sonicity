@@ -264,6 +264,11 @@ export class CityPage extends BasePage {
             if (result.isConfirmed) {
                 Logger.info('User confirmed donation');
                 try {
+                    // Get current tier before donation
+                    const address = await this.contracts.gameState.getAddress();
+                    const playerStateBefore = await this.contracts.gameState.call('playerState', address);
+                    const tierBefore = Number(playerStateBefore.tier);
+                    
                     // Show transaction pending message
                     const loadingModal = this.modal.loading('Transaction submitted! Waiting for confirmation...');
                     
@@ -273,13 +278,32 @@ export class CityPage extends BasePage {
                     // Close loading modal
                     loadingModal.close();
                     
+                    // Get tier after donation
+                    const playerStateAfter = await this.contracts.gameState.call('playerState', address);
+                    const tierAfter = Number(playerStateAfter.tier);
+                    
                     // Reload city data
                     await this.loadCityData();
 
                     // re-setup event listeners
                     this.setupEventListeners();
                     
-                    this.modal.success(`Successfully donated ${amount} gold to city!`);
+                    // Check if tier was upgraded
+                    if (tierAfter > tierBefore) {
+                        // Tier upgrade occurred
+                        const tierNames = ['Common', 'Merchant', 'Academic', 'Defensive', 'Royal'];
+                        const newTierName = tierNames[tierAfter] || `Tier ${tierAfter}`;
+                        
+                        this.modal.success(
+                            `Successfully donated ${amount} gold to city!<br><br>` +
+                            `🎉 <strong>TIER UPGRADED!</strong><br>` +
+                            `You've reached <strong>${newTierName} (Tier ${tierAfter})</strong>!<br><br>` +
+                            `New buildings and grid slots unlocked.<br><br>`
+                        );
+                    } else {
+                        // No tier upgrade
+                        this.modal.success(`Successfully donated ${amount} gold to city!`);
+                    }
                 } catch (error) {
                     Logger.error('Error donating gold:', error);
                     this.modal.error(`Error donating gold: ${error.message}`);
@@ -491,6 +515,10 @@ export class CityPage extends BasePage {
         this.element.innerHTML = `
             <div class="page-container">
                 <h1>District Hall</h1>
+                <p class="page-description">
+                    <strong>Manage your district's development and unlock new buildings.</strong> 
+                    <em>Donate gold to advance your tier and gain access to powerful district buildings.</em>
+                </p>
                 
                 <!-- District Status Section -->
                 <div class="page-section status-section">

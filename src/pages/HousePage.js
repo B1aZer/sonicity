@@ -131,8 +131,7 @@ export class HousePage extends BasePage {
             <div class="page-container">
                 <h1>House Management</h1>
                 <p class="page-description">
-                    <strong>Gold is stored in your vault for 24 hours.</strong> After that, workers rest and production stops until you collect. 
-                    <em>Upgrade your houses to increase production rates and unlock new features.</em>
+                    <strong><em>Gold</em> is stored in your vault for 24 hours. After that, workers rest and production stops until you collect.
                 </p>
                 
                 <!-- Status Section -->
