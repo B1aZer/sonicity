@@ -569,7 +569,8 @@ export class StakePage extends BasePage {
             
             // Format upgrade button text and determine if disabled
             let upgradeButtonText = 'Upgrade';
-            let upgradeDisabled = item.damaged || !canUpgrade;
+            // Only disable if damaged or if upgrade level is not unlocked (not for diamond shortage)
+            let upgradeDisabled = item.damaged || currentLevel >= maxLevel;
             let upgradeTooltip = '';
             
             if (currentLevel >= maxLevel) {
@@ -578,8 +579,6 @@ export class StakePage extends BasePage {
                 upgradeTooltip = 'Building has reached maximum level';
             } else if (item.damaged) {
                 upgradeTooltip = 'Building is damaged and needs repair before upgrading';
-            } else if (!canUpgrade) {
-                upgradeTooltip = 'Upgrade level not unlocked. Recharge more buildings to unlock higher levels.';
             } else {
                 upgradeTooltip = `Upgrade to level ${currentLevel + 1} for ${upgradeCost} diamonds`;
             }
