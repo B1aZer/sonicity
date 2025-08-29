@@ -66,6 +66,10 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     
     // Maximum production time (24 hours in seconds)
     uint256 public constant MAX_PRODUCTION_TIME = 24 hours;
+    
+    // Player registration tracking
+    uint256 public totalPlayers;
+    mapping(address => bool) public isRegisteredPlayer;
 
     // Events
     event CityJoined(address indexed player, uint256 indexed cityId);
@@ -86,6 +90,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     event UpgradeLevelUnlocked(address indexed player, uint8 newLevel, uint256 totalRechargeAmount);
     event DiamondsEarned(address indexed player, uint256 amount);
     event GoldDeducted(address indexed player, uint256 amount);
+    event PlayerRegistered(address indexed player, uint256 totalPlayers);
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -117,6 +122,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function initializePlayer() external {
         require(playerState[msg.sender].buildingSlots == 0, "Player already initialized");
+        
+        // Register player on initialization
+        registerPlayer(msg.sender);
         
         PlayerState storage state = playerState[msg.sender];
         state.gold = 0;
@@ -269,6 +277,18 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         
         emit GoldDonated(msg.sender, amount);
         emit RepEarned(msg.sender, repPoints);
+    }
+
+    /**
+     * @dev Register a new player
+     * @param player The address of the player to register
+     */
+    function registerPlayer(address player) internal {
+        if (!isRegisteredPlayer[player]) {
+            isRegisteredPlayer[player] = true;
+            totalPlayers++;
+            emit PlayerRegistered(player, totalPlayers);
+        }
     }
 
     /**

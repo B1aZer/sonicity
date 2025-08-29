@@ -18,18 +18,13 @@ export class RevenueHubPage extends BasePage {
         
         // Initialize state with game data
         this.setState({
-            // Player data
-            playerGold: 0,
-            playerFood: 0,
-            playerRep: 0,
-            playerTier: 0,
-            treasury: 0,
-            buildingSlots: 0,
-            
-            // Game status
-            totalBuildings: 0,
-            activeBattles: 0,
-            totalTroops: 0,
+            // Global stats
+            totalHouses: 0,
+            totalFarms: 0,
+            totalDiamonds: 0,
+            totalYield: 0,
+            totalRep: 0,
+            revenuePool: 0,
             
             // UI state
             selectedTier: 0,
@@ -56,77 +51,35 @@ export class RevenueHubPage extends BasePage {
 
     async loadGameData() {
         try {
-            const userAddress = WalletManager.getCurrentWallet();
-            
-            // Load player state data using individual getter functions
-            const [playerGold, playerFood, playerRep, playerTier, treasury, buildingSlots, totalBuildings, activeBattles, totalTroops] = await Promise.all([
-                this.contracts.gameState.getPlayerGold(userAddress),
-                this.contracts.gameState.getPlayerFood(userAddress),
-                this.contracts.gameState.getPlayerRep(userAddress),
-                this.contracts.gameState.getPlayerTier(userAddress),
-                this.contracts.gameState.getPlayerTreasury(userAddress),
-                this.contracts.gameState.getBuildingSlots(userAddress),
-                this.getTotalBuildings(userAddress),
-                this.getActiveBattlesCount(userAddress),
-                this.getTotalTroops(userAddress)
+            // Load global stats from NFT contracts and GameState
+            const [totalHouses, totalFarms, totalDiamonds, totalYield, totalRep, revenuePool] = await Promise.all([
+                this.contracts.nft.totalSupply(),
+                this.contracts.farmNft.totalSupply(),
+                this.contracts.diamondNft.totalSupply(),
+                this.contracts.yieldNft.totalSupply(),
+                this.contracts.repNft.totalSupply(),
+                this.contracts.gridBuildings.getRevenuePool()
             ]);
             
             this.setState({
-                playerGold: Number(playerGold),
-                playerFood: Number(playerFood),
-                playerRep: Number(playerRep),
-                playerTier: Number(playerTier),
-                treasury: Number(treasury),
-                buildingSlots: Number(buildingSlots),
-                totalBuildings: Number(totalBuildings),
-                activeBattles: Number(activeBattles),
-                totalTroops: Number(totalTroops)
+                totalHouses: Number(totalHouses),
+                totalFarms: Number(totalFarms),
+                totalDiamonds: Number(totalDiamonds),
+                totalYield: Number(totalYield),
+                totalRep: Number(totalRep),
+                revenuePool: ethers.formatEther(revenuePool) // Convert from wei to SONIC
             });
             
             // Update the display with the new data
             this.updateStatusDisplay();
             
-            Logger.info('Game data loaded:', this.state);
+            Logger.info('Global game data loaded:', this.state);
         } catch (error) {
-            Logger.error('Error loading game data:', error);
+            Logger.error('Error loading global game data:', error);
         }
     }
 
-    async getTotalBuildings(userAddress) {
-        try {
-            // Get active buildings array and return its length
-            const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings(userAddress);
-            return activeBuildings.length;
-        } catch (error) {
-            Logger.error('Error getting total buildings:', error);
-            return 0;
-        }
-    }
 
-    async getActiveBattlesCount(userAddress) {
-        try {
-            // Check if player has an active battle
-            const activeBattle = await this.contracts.battleSystem.activeBattles(userAddress);
-            return activeBattle.startTime > 0n ? 1 : 0;
-        } catch (error) {
-            Logger.error('Error getting active battles count:', error);
-            return 0;
-        }
-    }
-
-    async getTotalTroops(userAddress) {
-        try {
-            const [infantry, cavalry, siege] = await Promise.all([
-                this.contracts.battleSystem.playerTroops(userAddress, 0),
-                this.contracts.battleSystem.playerTroops(userAddress, 1),
-                this.contracts.battleSystem.playerTroops(userAddress, 2)
-            ]);
-            return Number(infantry) + Number(cavalry) + Number(siege);
-        } catch (error) {
-            Logger.error('Error getting total troops:', error);
-            return 0;
-        }
-    }
 
     updateStatusDisplay() {
         // Update all status values with current state data
@@ -461,39 +414,39 @@ export class RevenueHubPage extends BasePage {
     render() {
         this.element.innerHTML = `
             <div class="page-container">
-                <h1>Guidance Altar</h1>
+                <h1>Global Game Statistics</h1>
                 <p class="page-description">
-                    <strong>Your comprehensive guide to Sonicity game mechanics.</strong> 
-                    <em>Learn about resources, combat, buildings, and progression strategies.</em>
+                    <strong>Real-time statistics for the entire Sonicity game economy.</strong> 
+                    <em>Track total buildings, players, and revenue across all players.</em>
                 </p>
                 
                 <!-- Status Section -->
                 <div class="page-section">
-                    <h2>Game Status</h2>
+                    <h2>Global Game Stats</h2>
                     <div class="status-grid">
                         <div class="status-item">
-                            <span class="status-label">Gold:</span>
-                            <span class="status-value" data-state="playerGold">0</span>
+                            <span class="status-label">Total Houses:</span>
+                            <span class="status-value" data-state="totalHouses">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Food:</span>
-                            <span class="status-value" data-state="playerFood">0</span>
+                            <span class="status-label">Total Farms:</span>
+                            <span class="status-value" data-state="totalFarms">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">REP Points:</span>
-                            <span class="status-value" data-state="playerRep">0</span>
+                            <span class="status-label">Total Diamond Stations:</span>
+                            <span class="status-value" data-state="totalDiamonds">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">City Tier:</span>
-                            <span class="status-value" data-state="playerTier">0</span>
+                            <span class="status-label">Total Yield NFTs:</span>
+                            <span class="status-value" data-state="totalYield">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Buildings:</span>
-                            <span class="status-value" data-state="totalBuildings">0</span>
+                            <span class="status-label">Total REP Forges:</span>
+                            <span class="status-value" data-state="totalRep">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Total Troops:</span>
-                            <span class="status-value" data-state="totalTroops">0</span>
+                            <span class="status-label">Revenue Pool:</span>
+                            <span class="status-value" data-state="revenuePool">0</span>
                         </div>
                     </div>
                 </div>
