@@ -97,12 +97,6 @@ export class StakePage extends BasePage {
                             <span class="status-label">Slots Available:</span>
                             <span class="status-value slots-available-value">0</span>
                         </div>
-                    </div>
-                </div>
-                <!-- Buildings Status Section -->
-                <div class="page-section buildings-status-section">
-                    <h2>Buildings Status</h2>
-                    <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Capped:</span>
                             <span class="status-value at-cap-value">0</span>
