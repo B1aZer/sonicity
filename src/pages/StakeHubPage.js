@@ -974,12 +974,8 @@ export class StakePage extends BasePage {
                 return;
             }
             
-            // Show loading modal with upgrade cost if available
+            // Show loading modal
             let loadingMessage = 'Upgrading building...';
-            if (upgradeInfo && upgradeInfo.upgradeCost) {
-                const costInDiamonds = this.contracts.gridBuildings.formatUpgradeCost(upgradeInfo.upgradeCost);
-                loadingMessage = `Upgrading building (${costInDiamonds} diamonds)...`;
-            }
             
             const loadingModal = this.modal.loading(loadingMessage);
             
