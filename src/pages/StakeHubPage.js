@@ -371,8 +371,8 @@ export class StakePage extends BasePage {
             <div class="page-section tier-actions-section">
                 <h3>${tierNames[tier]} Actions</h3>
                 ${tier === 4 ? 
-                    `<button class="btn btn-md btn-secondary" disabled title="Create Yield NFTs in Revenue Hub first">
-                        Create ${tierNames[tier]} (Use Revenue Hub)
+                    `<button class="btn btn-md btn-secondary" disabled title="Create Yield NFTs in Arcanum building first">
+                        Create ${tierNames[tier]}
                     </button>` :
                     this.state.buildingSlotsReached ? 
                     `<button class="btn btn-md btn-secondary" disabled title="Building slot limit reached for current tier. Upgrade your tier to get more slots.">
