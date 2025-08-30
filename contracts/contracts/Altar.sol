@@ -81,6 +81,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     // Events
     event NFTStaked(address indexed user, uint256 indexed tokenId, uint256 buildingId, address indexed collection);
     event NFTUnstaked(address indexed user, uint256 indexed tokenId, uint256 timestamp, address indexed collection);
+    event NFTMinted(address indexed user, uint256 indexed tokenId, address indexed collection, GridBuildings.GridBuildingType buildingType);
     event CollectionApproved(address indexed collection);
     event CollectionRemoved(address indexed collection);
     // New events for building data preservation
@@ -133,13 +134,83 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
      * @param tokenId The specific token ID to mint
      * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: DIAMOND_STATION, 3: REP_FORGE)
      */
-    function mintAndStake(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) external nonReentrant {
+    function mintAndStake(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) external payable nonReentrant {
         require(approvedCollections[collection], "Collection not approved");
         
-        // Mint the NFT directly to this contract using the mintForAltar function
+        // Step 1: Validate and collect payment
+        _validateAndCollectPayment(buildingType);
+        
+        // Step 2: Mint the NFT directly to this contract
         IMintableNFT(collection).mintForAltar(address(this), tokenId);
         
-        // Now stake the newly minted NFT
+        // Step 3: Stake the NFT (shared logic)
+        _stakeNFT(collection, tokenId, buildingType);
+    }
+
+    /**
+     * @dev Mint an NFT with payment validation
+     * @param collection The address of the NFT collection to mint from
+     * @param tokenId The specific token ID to mint
+     * @param buildingType The type of building to create
+     */
+    function mint(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) external payable {
+        require(approvedCollections[collection], "Collection not approved");
+        
+        // Validate and collect payment
+        _validateAndCollectPayment(buildingType);
+        
+        // Mint to player
+        IMintableNFT(collection).mintForAltar(msg.sender, tokenId);
+        
+        emit NFTMinted(msg.sender, tokenId, collection, buildingType);
+    }
+
+    /**
+     * @dev Shared payment validation function
+     * @param buildingType The type of building
+     */
+    function _validateAndCollectPayment(GridBuildings.GridBuildingType buildingType) internal {
+        (uint256 cost, uint8 resourceType) = gridBuildings.getBuildingCost(buildingType);
+        
+        // Debug logs
+        emit DebugPaymentValidation(buildingType, cost, resourceType, msg.value, msg.sender);
+        
+        if (resourceType == 4) { // SONIC
+            require(msg.value == cost, "Incorrect SONIC amount");
+            // Add to revenue pool
+            gridBuildings.addToRevenuePool(msg.value);
+        } else {
+            // Resource-based payment
+            require(msg.value == 0, "No SONIC required for resource-based buildings");
+            
+            // Get player resources and validate
+            uint256 gold = gameState.getPlayerGold(msg.sender);
+            uint256 food = gameState.getPlayerFood(msg.sender);
+            uint256 rep = gameState.getPlayerRep(msg.sender);
+            uint256 diamonds = gameState.getPlayerDiamonds(msg.sender);
+            
+            if (resourceType == 0 && gold < cost) revert("Insufficient Gold");
+            if (resourceType == 1 && food < cost) revert("Insufficient Food");
+            if (resourceType == 2 && rep < cost) revert("Insufficient REP");
+            if (resourceType == 3 && diamonds < cost) revert("Insufficient Diamonds");
+            
+            // Deduct resources using the existing deductResources function
+            gameState.deductResources(msg.sender, 
+                resourceType == 0 ? cost : 0,
+                resourceType == 1 ? cost : 0,
+                resourceType == 2 ? cost : 0,
+                resourceType == 3 ? cost : 0
+            );
+        }
+    }
+
+    /**
+     * @dev Shared staking logic function
+     * @param collection The address of the NFT collection
+     * @param tokenId The token ID to stake
+     * @param buildingType The type of building to create
+     */
+    function _stakeNFT(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) internal {
         // Check if this NFT was previously staked and has preserved building data
         Stake memory existingStake = stakes[collection][tokenId];
         
@@ -207,64 +278,11 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         require(approvedCollections[collection], "Collection not approved");
         require(IERC721(collection).ownerOf(tokenId) == msg.sender, "Not the NFT owner");
         
-        // Check if this NFT was previously staked and has preserved building data
-        Stake memory existingStake = stakes[collection][tokenId];
-        
-        if (existingStake.buildingLevel > 0 && !existingStake.isActive) {
-            // Restore building with preserved data
-            uint256 restoredBuildingId = gridBuildings.createBuilding(
-                msg.sender, 
-                existingStake.buildingType, 
-                existingStake.buildingLevel, 
-                existingStake.lastUpgradeTime
-            );
-            
-            // Update stake record to active state, clear preserved data
-            stakes[collection][tokenId] = Stake({
-                tokenId: tokenId,
-                stakedAt: block.timestamp,
-                owner: msg.sender,
-                isActive: true,
-                collection: collection,
-                buildingType: buildingType,  // Use requested building type
-                buildingLevel: 0,            // Clear preserved data
-                lastUpgradeTime: 0           // Clear preserved data
-            });
-            
-            // Update staked building mapping
-            stakedBuilding[collection][tokenId] = restoredBuildingId;
-            
-            emit BuildingDataRestored(collection, tokenId, existingStake.buildingType, existingStake.buildingLevel);
-        } else {
-            // Create new building
-            require(!existingStake.isActive, "NFT already staked");
-            
-            uint256 newBuildingId = gridBuildings.createBuilding(msg.sender, buildingType, 0, 0);
-            
-            // Create new stake record
-            stakes[collection][tokenId] = Stake({
-                tokenId: tokenId,
-                stakedAt: block.timestamp,
-                owner: msg.sender,
-                isActive: true,
-                collection: collection,
-                buildingType: buildingType,
-                buildingLevel: 1,
-                lastUpgradeTime: block.timestamp
-            });
-            
-            // Update staked building mapping
-            stakedBuilding[collection][tokenId] = newBuildingId;
-        }
-        
         // Transfer NFT to this contract
         IERC721(collection).transferFrom(msg.sender, address(this), tokenId);
         
-        // Add to user's collection-specific staked tokens
-        userStakesByCollection[msg.sender][collection].push(tokenId);
-        
-        uint256 buildingId = stakedBuilding[collection][tokenId];
-        emit NFTStaked(msg.sender, tokenId, buildingId, collection);
+        // Use shared staking logic
+        _stakeNFT(collection, tokenId, buildingType);
     }
 
     /**

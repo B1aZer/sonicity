@@ -52,6 +52,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint8 tier;                  // Required tier to build
         uint256 productionDuration;  // Custom production duration in seconds (0 = use global default)
         uint256 rechargeCost;        // Custom recharge cost in wei (0 = free recharge)
+        uint256 initialCost;         // Resource cost for initial building
+        uint8 resourceType;          // 0=Gold, 1=Food, 2=REP, 3=Diamonds, 4=SONIC
     }
 
     // Building state
@@ -108,6 +110,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     event ProductionCapDurationUpdated(uint256 newDuration);
     event BuildingProductionDurationUpdated(GridBuildingType buildingType, uint256 newDuration);
     event BuildingRechargeCostUpdated(GridBuildingType buildingType, uint256 newCost);
+    event BuildingCostUpdated(GridBuildingType buildingType, uint256 cost, uint8 resourceType);
     
     // Revenue Distribution Events
     event RevenueDistributed(uint256 totalAmount, uint256 timestamp);
@@ -129,7 +132,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Initialize yield station duration
         yieldStationDuration = 24 hours;
         
-        // Initialize building configurations
+        // Initialize building configurations with resource-based costs and uniform 1 SONIC recharge
         buildingConfigs[GridBuildingType.HOUSE] = GridBuildingConfig({
             name: "House",
             baseProductionRate: 10,  // 10 gold per hour
@@ -137,7 +140,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             description: "Produces gold",
             tier: 0,
             productionDuration: 24 hours, // 24 hours for houses
-            rechargeCost: 0.01 ether // 0.01 SONIC for houses
+            rechargeCost: 1.0 ether, // Uniform 1 SONIC recharge
+            initialCost: 10 ether,   // 10 SONIC to build
+            resourceType: 4          // SONIC
         });
 
         buildingConfigs[GridBuildingType.FARM] = GridBuildingConfig({
@@ -147,7 +152,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             description: "Produces food",
             tier: 1,
             productionDuration: 24 hours, // 24 hours for farms
-            rechargeCost: 0.01 ether // 0.01 SONIC for farms
+            rechargeCost: 1.0 ether, // Uniform 1 SONIC recharge
+            initialCost: 100,        // 100 Gold to build
+            resourceType: 0          // Gold
         });
 
         buildingConfigs[GridBuildingType.DIAMOND_STATION] = GridBuildingConfig({
@@ -157,7 +164,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             description: "Produces diamonds",
             tier: 2,
             productionDuration: 72 hours, // 72 hours for diamond stations
-            rechargeCost: 0.03 ether // 0.03 SONIC for diamond stations
+            rechargeCost: 1.0 ether, // Uniform 1 SONIC recharge
+            initialCost: 200,        // 200 Gold to build
+            resourceType: 0          // Gold
         });
 
         buildingConfigs[GridBuildingType.REP_FORGE] = GridBuildingConfig({
@@ -167,7 +176,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             description: "Forge dynamic NFTs from REP",
             tier: 3,
             productionDuration: 168 hours, // 168 hours (7 days) for rep forge
-            rechargeCost: 0.05 ether // 0.05 SONIC for rep forge (highest tier)
+            rechargeCost: 1.0 ether, // Uniform 1 SONIC recharge
+            initialCost: 500,        // 500 Gold to build
+            resourceType: 0          // Gold
         });
 
         buildingConfigs[GridBuildingType.YIELD_STATION] = GridBuildingConfig({
@@ -177,7 +188,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             description: "Generates SONIC revenue from staked yield NFTs",
             tier: 4,                 // Require tier 4+
             productionDuration: 24 hours, // 24 hours for yield stations
-            rechargeCost: 0          // Free recharge!
+            rechargeCost: 1.0 ether, // Uniform 1 SONIC recharge
+            initialCost: 1000,       // 1000 Gold to build
+            resourceType: 0          // Gold
         });
     }
 
@@ -277,6 +290,29 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function setBuildingRechargeCost(GridBuildingType buildingType, uint256 cost) external onlyOwner {
         buildingConfigs[buildingType].rechargeCost = cost;
         emit BuildingRechargeCostUpdated(buildingType, cost);
+    }
+
+    /**
+     * @dev Set building cost for a specific building type
+     * @param buildingType The type of building
+     * @param cost The new initial cost
+     * @param resourceType The resource type (0=Gold, 1=Food, 2=REP, 3=Diamonds, 4=SONIC)
+     */
+    function setBuildingCost(GridBuildingType buildingType, uint256 cost, uint8 resourceType) external onlyOwner {
+        require(resourceType <= 4, "Invalid resource type");
+        buildingConfigs[buildingType].initialCost = cost;
+        buildingConfigs[buildingType].resourceType = resourceType;
+        emit BuildingCostUpdated(buildingType, cost, resourceType);
+    }
+
+    /**
+     * @dev Get building cost for a specific building type
+     * @param buildingType The type of building
+     * @return cost The initial cost
+     * @return resourceType The resource type (0=Gold, 1=Food, 2=REP, 3=Diamonds, 4=SONIC)
+     */
+    function getBuildingCost(GridBuildingType buildingType) external view returns (uint256 cost, uint8 resourceType) {
+        return (buildingConfigs[buildingType].initialCost, buildingConfigs[buildingType].resourceType);
     }
 
     /**
@@ -1477,6 +1513,18 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         if (repAmount >= 51) return 3;  // Gold (51-100)
         if (repAmount >= 11) return 2;  // Silver (11-50)
         return 1; // Bronze (1-10)
+    }
+
+    /**
+     * @dev Add SONIC to revenue pool (only callable by Altar contract)
+     * @param amount The amount of SONIC to add
+     */
+    function addToRevenuePool(uint256 amount) external {
+        require(msg.sender == altarAddress, "Only Altar can add to revenue pool");
+        require(amount > 0, "Amount must be greater than 0");
+        
+        revenuePool += amount;
+        poolLastUpdateTime = block.timestamp;
     }
 
     /**
