@@ -21,8 +21,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Reference to the DistrictBuildings contract
     address public districtBuildingsAddress;
 
-    // Recharge fee in native tokens (0.01 SONIC)
-    uint256 public constant RECHARGE_FEE = 0.01 ether;
+    // Recharge fee in native tokens (1.0 SONIC)
+    uint256 public constant RECHARGE_FEE = 1.0 ether;
 
     // Production cap duration (default 24 hours)
     uint256 public productionCapDuration;

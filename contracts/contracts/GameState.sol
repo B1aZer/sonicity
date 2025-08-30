@@ -26,11 +26,11 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Reference to the TacticsNFT contract
     address public tacticsNFTAddress;
 
-    // Upgrade level thresholds (in SONIC wei)
-    uint256 public constant UPGRADE_LEVEL_2_THRESHOLD = 0.1 ether;    // 0.1 SONIC for level 2
-    uint256 public constant UPGRADE_LEVEL_3_THRESHOLD = 1 ether;      // 1 SONIC for level 3
-    uint256 public constant UPGRADE_LEVEL_4_THRESHOLD = 10 ether;     // 10 SONIC for level 4
-    uint256 public constant UPGRADE_LEVEL_5_THRESHOLD = 100 ether;    // 100 SONIC for level 5
+    // Upgrade level thresholds (in SONIC wei) - adjusted for 1.0 SONIC recharge cost
+    uint256 public constant UPGRADE_LEVEL_2_THRESHOLD = 5 ether;      // 5 SONIC for level 2 (5 recharges)
+    uint256 public constant UPGRADE_LEVEL_3_THRESHOLD = 10 ether;     // 10 SONIC for level 3 (10 recharges)
+    uint256 public constant UPGRADE_LEVEL_4_THRESHOLD = 50 ether;     // 50 SONIC for level 4 (50 recharges)
+    uint256 public constant UPGRADE_LEVEL_5_THRESHOLD = 100 ether;    // 100 SONIC for level 5 (100 recharges)
 
     // Standalone player state
     struct PlayerState {
@@ -698,9 +698,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         
         // Upgrade level thresholds (in SONIC wei) - now only 3 levels
         if (state.totalRechargeAmountByType[buildingType] >= UPGRADE_LEVEL_3_THRESHOLD) {
-            newMaxLevel = 3;  // 0.1 SONIC for level 3
+            newMaxLevel = 3;  // 10 SONIC for level 3
         } else if (state.totalRechargeAmountByType[buildingType] >= UPGRADE_LEVEL_2_THRESHOLD) {
-            newMaxLevel = 2;  // 0.01 SONIC for level 2
+            newMaxLevel = 2;  // 5 SONIC for level 2
         } else {
             newMaxLevel = 1;  // Default level 1
         }
