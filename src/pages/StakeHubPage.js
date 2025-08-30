@@ -838,7 +838,7 @@ export class StakePage extends BasePage {
     async getNFTInfoForBuilding(buildingId) {
         // console.log(`[DEBUG] Looking for NFT info for building ${buildingId}`);
         
-        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.repNft, this.contracts.yieldNft];
+        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.diamondNft, this.contracts.repNft, this.contracts.yieldNft];
         
         for (const contract of nftContracts) {
             try {
@@ -877,7 +877,7 @@ export class StakePage extends BasePage {
 
     async getAvailableNFTs(userAddress) {
         // Get unstaked NFTs from all contracts
-        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.repNft, this.contracts.yieldNft];
+        const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.diamondNft, this.contracts.repNft, this.contracts.yieldNft];
         const available = [];
         for (const contract of nftContracts) {
             const balance = await contract.balanceOf(userAddress);
@@ -902,6 +902,7 @@ export class StakePage extends BasePage {
                 // Determine tier from contract type
                 let tier = 0;
                 if (contract === this.contracts.farmNft) tier = 1;
+                else if (contract === this.contracts.diamondNft) tier = 2;
                 else if (contract === this.contracts.repNft) tier = 3;
                 else if (contract === this.contracts.yieldNft) tier = 4;
                 
@@ -926,6 +927,7 @@ export class StakePage extends BasePage {
             // Determine tier from UI or NFT
             let tier = 0;
             if (collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()) tier = 1;
+            else if (collection.toLowerCase() === (await this.contracts.diamondNft.getContractAddress()).toLowerCase()) tier = 2;
             else if (collection.toLowerCase() === (await this.contracts.repNft.getContractAddress()).toLowerCase()) tier = 3;
             else if (collection.toLowerCase() === (await this.contracts.yieldNft.getContractAddress()).toLowerCase()) tier = 4;
             
@@ -934,6 +936,8 @@ export class StakePage extends BasePage {
             let nftContract = this.contracts.nft; // default
             if (collection.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()) {
                 nftContract = this.contracts.farmNft;
+            } else if (collection.toLowerCase() === (await this.contracts.diamondNft.getContractAddress()).toLowerCase()) {
+                nftContract = this.contracts.diamondNft;
             } else if (collection.toLowerCase() === (await this.contracts.repNft.getContractAddress()).toLowerCase()) {
                 nftContract = this.contracts.repNft;
             } else if (collection.toLowerCase() === (await this.contracts.yieldNft.getContractAddress()).toLowerCase()) {
