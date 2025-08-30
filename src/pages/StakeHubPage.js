@@ -420,7 +420,7 @@ export class StakePage extends BasePage {
                     `<button class="btn btn-md btn-secondary" disabled title="Building slot limit reached for current tier. Upgrade your tier to get more slots.">
                         Mint ${tierNames[tier]}
                     </button>` :
-                    `<button class="btn btn-md btn-primary mint-building-btn" data-tier="${tier}" data-price="${mintPrice}" data-price-raw="${mintPriceRaw.toString()}" data-resource-type="${mintResourceType}" data-resource-name="${mintResourceName}">
+                    `<button class="btn btn-md btn-primary mint-building-btn" data-tier="${tier}" data-price="${mintPrice}" data-price-raw="${mintPriceRaw.toString()}" data-resource-type="${mintResourceType}" data-resource-name="${mintResourceName}" title="Mint ${tierNames[tier]} for ${mintPrice} ${mintResourceName}">
                         ${mintPrice} ${this.getResourceIcon(mintResourceType)} Mint ${tierNames[tier]}
                     </button>`
                 }
