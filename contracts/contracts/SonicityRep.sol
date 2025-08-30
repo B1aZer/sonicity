@@ -128,7 +128,7 @@ contract SonicityRep is ERC721Enumerable, Ownable {
      */
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
         require(_ownerOf(tokenId) != address(0), "Token does not exist");
-        return string(abi.encodePacked(_baseURI(), tokenId.toString()));
+        return string(abi.encodePacked(_baseURI(), tokenId.toString(), ".json"));
     }
 
     /**
