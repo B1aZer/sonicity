@@ -2689,7 +2689,8 @@ describe("GridBuildings", function () {
         }
         
         // Recharge the yield station to start accumulating revenue
-        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("1.0") }); // Yield stations cost 1.0 SONIC
+        const yieldRechargeFee = await getRechargeCost(gridBuildings, GridBuildingType.YIELD_STATION);
+        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: yieldRechargeFee }); // Yield stations cost 1.0 SONIC
         
         // Fast forward to near end of production
         await ethers.provider.send("evm_increaseTime", [23 * 3600]); // 23 hours
@@ -2742,7 +2743,8 @@ describe("GridBuildings", function () {
         }
         
         // Recharge the yield station to start accumulating revenue
-        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("1.0") }); // Yield stations cost 1.0 SONIC
+        const yieldRechargeFee = await getRechargeCost(gridBuildings, GridBuildingType.YIELD_STATION);
+        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: yieldRechargeFee }); // Yield stations cost 1.0 SONIC
         
         // Let production finish
         await ethers.provider.send("evm_increaseTime", [25 * 3600]); // 25 hours (past duration)
@@ -2835,7 +2837,8 @@ describe("GridBuildings", function () {
       await gridBuildings.connect(player1).rechargeBuilding(houseId, { value: rechargeCost });
       
       // Recharge the yield station to make it active
-      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("1.0") }); // Yield stations cost 1.0 SONIC
+      const yieldRechargeFee = await getRechargeCost(gridBuildings, GridBuildingType.YIELD_STATION);
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: yieldRechargeFee }); // Yield stations cost 1.0 SONIC
       
       // Wait some time for yield station to accumulate
       await ethers.provider.send("evm_increaseTime", [60 * 60]); // 1 hour
