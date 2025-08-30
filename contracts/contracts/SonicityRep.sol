@@ -34,7 +34,7 @@ contract SonicityRep is ERC721Enumerable, Ownable {
     event MintActiveSet(bool indexed mintActive);
 
     constructor() ERC721("Sonicity REP Forge", "SONICITY_REP") Ownable(msg.sender) {
-        _baseTokenURI = "https://api.sonicity.com/metadata/rep/";
+        _baseTokenURI = "http://localhost:3000/metadata/rep/";
     }
 
     /**
