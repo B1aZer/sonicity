@@ -50,6 +50,7 @@ how to achieve ? ride on whales - but the game is COMPLETELY Anti whales
 
 ## 3d rendering
 
+- build all buildings and check they all work
 - all models from unreal to glb
 - camera
 - terraian, patrly blender, partly unreal map
@@ -59,7 +60,7 @@ how to achieve ? ride on whales - but the game is COMPLETELY Anti whales
 ## todo
 
 - you know the driss like, rt for wl
-- build all buildings and check they all work
+
 - merge nft buidling
 - shop
 - damage system

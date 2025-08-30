@@ -274,8 +274,10 @@ export class MusicManager {
             }
             
             // Fade in next music
-            const nextVolume = this.musicVolume * progress;
-            this.nextMusic.setVolume(nextVolume);
+            if (this.nextMusic) {
+                const nextVolume = this.musicVolume * progress;
+                this.nextMusic.setVolume(nextVolume);
+            }
             
             // When crossfade is complete
             if (currentStep >= fadeSteps) {
@@ -310,7 +312,9 @@ export class MusicManager {
         this.isCrossfading = false;
         
         // Ensure volume is set correctly
-        this.currentMusic.setVolume(this.musicVolume);
+        if (this.currentMusic) {
+            this.currentMusic.setVolume(this.musicVolume);
+        }
         
         // Only set isPlaying if it's not already true (from toggleMusic)
         if (!this.isPlaying) {
