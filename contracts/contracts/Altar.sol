@@ -172,9 +172,6 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     function _validateAndCollectPayment(GridBuildings.GridBuildingType buildingType) internal {
         (uint256 cost, uint8 resourceType) = gridBuildings.getBuildingCost(buildingType);
         
-        // Debug logs
-        emit DebugPaymentValidation(buildingType, cost, resourceType, msg.value, msg.sender);
-        
         if (resourceType == 4) { // SONIC
             require(msg.value == cost, "Incorrect SONIC amount");
             // Add to revenue pool

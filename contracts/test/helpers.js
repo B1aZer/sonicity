@@ -1,5 +1,13 @@
 const { ethers } = require("hardhat");
 
+// ============================================================================
+// TEST HELPERS - CONTAINS TEMPORARY BACKWARD COMPATIBILITY CODE
+// ============================================================================
+// This file contains helper functions for testing, including temporary backward
+// compatibility functions that automatically provide resources for building costs.
+// These compatibility functions are marked for removal once tests are updated.
+// ============================================================================
+
 // Define building types enum to match the contract
 const GridBuildingType = {
     HOUSE: 0,
@@ -20,6 +28,8 @@ function log(message) {
 }
 
 // Helper to mint and stake an NFT, returning the building ID and tokenId
+// NOTE: This function currently includes automatic resource provisioning for backward compatibility
+// TODO: Remove the automatic resource provisioning - tests should provide resources before calling this
 async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
     const playerAddress = await player.getAddress();
     const altarAddress = await altar.getAddress();
@@ -31,12 +41,29 @@ async function mintAndStakeNFT(player, altar, nftContract, buildingType) {
     
     log(`mintAndStakeNFT: Creating building type ${buildingType} for player ${playerAddress.slice(-6)}, tokenId: ${tokenId}`);
     
-    // Use the new mintAndStake function
-    const mintAndStakeTx = await altar.connect(player).mintAndStake(nftAddress, tokenId, buildingType);
+    // Get building cost and resource type from GridBuildings
+    const gridBuildings = await ethers.getContractAt("GridBuildings", await altar.gridBuildings());
+    const { cost, resourceType } = await gridBuildings.getBuildingCost(buildingType);
+    
+    log(`mintAndStakeNFT: Building cost: ${cost}, resource type: ${resourceType} for player ${playerAddress.slice(-6)}`);
+    
+    // TEMPORARY BACKWARD COMPATIBILITY: Ensure player has required resources
+    // TODO: REMOVE THIS SECTION - Tests should be updated to provide resources before calling mintAndStake
+    await ensurePlayerHasResourcesForBuilding(player, gridBuildings, cost, resourceType);
+    
+    // Call mintAndStake with appropriate payment
+    let mintAndStakeTx;
+    if (resourceType === 4n) { // SONIC payment
+        log(`mintAndStakeNFT: Calling mintAndStake with ${ethers.formatEther(cost)} SONIC`);
+        mintAndStakeTx = await altar.connect(player).mintAndStake(nftAddress, tokenId, buildingType, { value: cost });
+    } else {
+        log(`mintAndStakeNFT: Calling mintAndStake with resource payment (type ${resourceType})`);
+        mintAndStakeTx = await altar.connect(player).mintAndStake(nftAddress, tokenId, buildingType);
+    }
+    
     const mintAndStakeReceipt = await mintAndStakeTx.wait();
     
     // Get the BuildingCreated event from the GridBuildings contract
-    const gridBuildings = await ethers.getContractAt("GridBuildings", await altar.gridBuildings());
     const buildingCreatedTopic = gridBuildings.interface.getEvent("BuildingCreated").topicHash;
     const gridBuildingsAddress = await gridBuildings.getAddress();
     const buildingCreatedLog = mintAndStakeReceipt.logs.find(
@@ -297,6 +324,84 @@ async function ensurePlayerDiamonds(player, gameState, gridBuildings, altar, son
 }
 
 /**
+ * TEMPORARY BACKWARD COMPATIBILITY: Ensure player has enough resources for building costs
+ * TODO: REMOVE THIS FUNCTION - Tests should be updated to provide resources before calling mintAndStake
+ * This function automatically gives players the required resources so existing tests don't break
+ * 
+ * MIGRATION PLAN:
+ * 1. Update all tests to call ensurePlayerGold/ensurePlayerFood/etc. before mintAndStake
+ * 2. Remove the automatic resource provision section from mintAndStakeNFT (keep the function)
+ * 3. Remove this function entirely
+ * 
+ * @param {Signer} player - Player signer
+ * @param {Contract} gridBuildings - GridBuildings contract instance
+ * @param {BigNumber} cost - Required cost
+ * @param {BigNumber} resourceType - Resource type (0=Gold, 1=Food, 2=REP, 3=Diamonds, 4=SONIC)
+ */
+async function ensurePlayerHasResourcesForBuilding(player, gridBuildings, cost, resourceType) {
+    const playerAddress = await player.getAddress();
+    
+    // Get GameState contract from GridBuildings
+    const gameStateAddress = await gridBuildings.gameStateAddress();
+    const gameState = await ethers.getContractAt("GameState", gameStateAddress);
+    
+    log(`ensurePlayerHasResourcesForBuilding: Checking resources for player ${playerAddress.slice(-6)}, need ${cost} of type ${resourceType}`);
+    
+    // Check current resources and add if needed
+    if (resourceType === 0n) { // Gold
+        const currentGold = await gameState.getPlayerGold(playerAddress);
+        if (currentGold < cost) {
+            const needed = cost - currentGold;
+            await gameState.testEarnGold(playerAddress, needed);
+            log(`ensurePlayerHasResourcesForBuilding: Added ${needed} Gold for player ${playerAddress.slice(-6)}`);
+        }
+    } else if (resourceType === 1n) { // Food
+        const currentFood = await gameState.getPlayerFood(playerAddress);
+        if (currentFood < cost) {
+            const needed = cost - currentFood;
+            await gameState.testEarnFood(playerAddress, needed);
+            log(`ensurePlayerHasResourcesForBuilding: Added ${needed} Food for player ${playerAddress.slice(-6)}`);
+        }
+    } else if (resourceType === 2n) { // REP
+        const currentRep = await gameState.getPlayerRep(playerAddress);
+        if (currentRep < cost) {
+            const needed = cost - currentRep;
+            await gameState.testEarnRep(playerAddress, needed);
+            log(`ensurePlayerHasResourcesForBuilding: Added ${needed} REP for player ${playerAddress.slice(-6)}`);
+        }
+    } else if (resourceType === 3n) { // Diamonds
+        const currentDiamonds = await gameState.getPlayerDiamonds(playerAddress);
+        if (currentDiamonds < cost) {
+            const needed = cost - currentDiamonds;
+            await gameState.testEarnDiamonds(playerAddress, needed);
+            log(`ensurePlayerHasResourcesForBuilding: Added ${needed} Diamonds for player ${playerAddress.slice(-6)}`);
+        }
+    } else if (resourceType === 4n) { // SONIC - check balance
+        const balance = await ethers.provider.getBalance(playerAddress);
+        if (balance < cost) {
+            log(`ensurePlayerHasResourcesForBuilding: Warning - player ${playerAddress.slice(-6)} has insufficient SONIC balance: ${ethers.formatEther(balance)} < ${ethers.formatEther(cost)}`);
+            // Note: We can't automatically add SONIC, so we'll let the transaction fail naturally
+        }
+    }
+    
+    log(`ensurePlayerHasResourcesForBuilding: Resource check complete for player ${playerAddress.slice(-6)}`);
+}
+
+// ============================================================================
+// TEMPORARY BACKWARD COMPATIBILITY FUNCTIONS - MARKED FOR REMOVAL
+// ============================================================================
+// These functions provide automatic resource provisioning to maintain test compatibility
+// while the contract now requires proper payment. They should be removed once all tests
+// are updated to handle resource requirements properly.
+//
+// MIGRATION CHECKLIST:
+// □ Update all tests to call ensurePlayerGold/ensurePlayerFood/etc. before mintAndStake
+// □ Remove automatic resource provision section from mintAndStakeNFT function (keep the function itself)
+// □ Remove ensurePlayerHasResourcesForBuilding function
+// □ mintAndStakeNFT should become a simple wrapper around altar.mintAndStake
+// ============================================================================
+
+/**
  * Find the first building of a specific type for a player
  * @param {Contract} gridBuildings - GridBuildings contract instance
  * @param {Signer} player - Player signer
@@ -317,12 +422,13 @@ async function findBuildingOfType(gridBuildings, player, buildingType) {
 }
 
 module.exports = {
+    // Core helper functions (permanent)
     GridBuildingType,
-    mintAndStakeNFT,
+    mintAndStakeNFT, // Core function - will be simplified after migration
     getDamagedBuildingId,
     donateGoldForTier,
     ensurePlayerGold,
     ensurePlayerFood,
     ensurePlayerDiamonds,
-    findBuildingOfType
+    findBuildingOfType,
 }; 
