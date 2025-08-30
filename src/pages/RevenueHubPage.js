@@ -573,7 +573,7 @@ export class RevenueHubPage extends BasePage {
     render() {
         this.element.innerHTML = `
             <div class="page-container">
-                <h1>Global Game Statistics</h1>
+                <h1>Guidance Portal</h1>
                 <p class="page-description">
                     <strong>Real-time statistics for the entire Sonicity game economy.</strong> 
                     <em>Track total buildings, players, and revenue across all players.</em>
