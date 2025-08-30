@@ -578,6 +578,9 @@ describe("YieldStation Revenue System", function () {
     });
 
     it("should handle damaged yield stations", async function () {
+      // Give player1 more ETH for gas fees
+      await ethers.provider.send("hardhat_setBalance", [player1.address, "0x56BC75E2D63100000"]); // 100 ETH
+      
       // Setup yield station and damage it
       await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000); // Give tier 4
       await gameState.testEarnRep(player1.address, 50); // Give REP for minting
@@ -604,6 +607,9 @@ describe("YieldStation Revenue System", function () {
     it("should handle collection with insufficient pool balance", async function () {
       // This tests the edge case where pool is smaller than calculated claimable
       // (Could happen due to rounding or multiple simultaneous claims)
+      
+      // Give player1 more ETH for gas fees
+      await ethers.provider.send("hardhat_setBalance", [player1.address, "0x56BC75E2D63100000"]); // 100 ETH
       
       // Setup minimal revenue pool
       await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000); // Give tier 4
