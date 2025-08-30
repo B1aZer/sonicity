@@ -38,6 +38,9 @@ export class BasePage {
         this.state = {};
         this.eventListeners = new Map();
         
+        // Building access control
+        this.requiredDistrictBuilding = null; // Child classes can set this
+        
         // Create the main element
         this.element = document.createElement('div');
         this.element.className = 'base-page';
@@ -59,6 +62,12 @@ export class BasePage {
             // Check if wallet is already connected using WalletManager
             if (WalletManager.isWalletConnected() && WalletManager.getCurrentWallet()) {
                 await this.initializeContracts();
+                
+                // Add building access check here
+                if (!(await this.checkDistrictBuildingAccess(WalletManager.getCurrentWallet()))) {
+                    return; // Stop initialization
+                }
+                
                 await this.onInitialized({ 
                     success: true, 
                     address: WalletManager.getCurrentWallet() 
@@ -151,6 +160,30 @@ export class BasePage {
     async onInitialized(walletResult) {
         // To be implemented by child classes
         // This is where child classes should load their data and setup event listeners
+    }
+
+    async checkDistrictBuildingAccess(address) {
+        if (!this.requiredDistrictBuilding) return true; // No building required
+        
+        try {
+            const isBuilt = await this.contracts.districtBuildings.isDistrictBuildingBuilt(this.requiredDistrictBuilding);
+            const isDamaged = await this.contracts.districtBuildings.isBuildingDamaged(this.requiredDistrictBuilding);
+            
+            if (!isBuilt) {
+                this.modal.error(`You need to build ${this.requiredDistrictBuilding} to access this page.`);
+                return false;
+            }
+            
+            if (isDamaged) {
+                this.modal.error(`${this.requiredDistrictBuilding} is damaged and needs repair.`);
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            Logger.error('Error checking district building access:', error);
+            return true; // Allow access if check fails
+        }
     }
 
     async onWalletConnected(walletResult) {

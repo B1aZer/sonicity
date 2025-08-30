@@ -11,6 +11,7 @@ import('../styles/stake-hub-page.css');
 export class ArcanumPage extends BasePage {
     constructor() {
         super();
+        this.requiredDistrictBuilding = 'Arcanum of Names';
         Logger.info('ArcanumPage constructor called');
         
         this.element.className = 'base-page arcanum-page';

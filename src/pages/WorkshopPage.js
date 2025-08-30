@@ -7,6 +7,7 @@ import Logger from '../js/utils/logger.js';
 export class WorkshopPage extends BasePage {
     constructor() {
         super();
+        this.requiredDistrictBuilding = 'Workshop';
         Logger.info('WorkshopPage constructor called');
         
         this.element.className = 'base-page';
