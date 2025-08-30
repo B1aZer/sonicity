@@ -1206,7 +1206,7 @@ export class StakePage extends BasePage {
     async burnNFT(tokenId, contractAddress) {
         try {
             // Show confirmation dialog
-            const confirmed = await this.modal.confirm(
+            const result = await this.modal.confirm(
                 'Are you sure you want to burn this NFT?<br><br>This will permanently destroy the NFT. This action cannot be undone.',
                 {
                     title: 'Confirm Burn',
@@ -1217,7 +1217,7 @@ export class StakePage extends BasePage {
                 }
             );
             
-            if (!confirmed) {
+            if (!result.isConfirmed) {
                 return; // User cancelled
             }
             
@@ -1266,7 +1266,7 @@ export class StakePage extends BasePage {
             
             // Show confirmation for burn action
             if (isBurn) {
-                const confirmed = await this.modal.confirm(
+                const result = await this.modal.confirm(
                     'Are you sure you want to burn this building?<br><br>This will permanently destroy the building and NFT. This action cannot be undone.',
                     {
                         title: 'Confirm Burn',
@@ -1277,7 +1277,7 @@ export class StakePage extends BasePage {
                     }
                 );
                 
-                if (!confirmed) {
+                if (!result.isConfirmed) {
                     return; // User cancelled
                 }
             }
