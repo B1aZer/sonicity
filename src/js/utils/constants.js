@@ -19,13 +19,11 @@ export const CONTRACT_ADDRESSES = {
 
 // Contract configuration
 export const CONTRACT_CONFIG = {
-    MINT_PRICE: "0.01", // ETH
     MAX_SUPPLY: 10000,
     MIN_STAKING_DURATION: 30 * 60 * 60, // 30 hours in seconds
     BUILDING_SLOTS_PER_SIZE: 5, // Static size for testing
     DEFAULT_CITY_ID: 1, // Default city ID for testing
-    FARM_MAX_SUPPLY: 5000,
-    FARM_MINT_PRICE: "0.015"
+    FARM_MAX_SUPPLY: 5000
 };
 
 // Performance monitoring

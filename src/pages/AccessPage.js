@@ -77,23 +77,9 @@ export class AccessPage extends BasePage {
         }, 1000);
     }
 
-    handleMintPageNavigation() {
-        window.history.pushState({}, '', '/mint');
-        window.dispatchEvent(new PopStateEvent('popstate'));
-    }
-
     setupEventListeners() {
         Logger.info('Setting up event listeners');
-        
-        // Use standard addEventListener for the mint link
-        const mintLink = this.element.querySelector('.mint-link');
-        
-        if (mintLink) {
-            mintLink.addEventListener('click', (e) => {
-                Logger.info('Navigating to mint page');
-                this.handleMintPageNavigation();
-            });
-        }
+        // No event listeners needed for access page
     }
 
     render() {
@@ -119,12 +105,8 @@ export class AccessPage extends BasePage {
                 </div>
                 
                 <div class="page-section">
-                    <h2>Actions</h2>
-                    <div class="building-actions">
-                        <button class="mint-link btn btn-primary btn-lg">
-                            <span class="button-text">Go to Mint Page</span>
-                        </button>
-                    </div>
+                    <h2>Getting Started</h2>
+                    <p>Once you connect your wallet and verify your NFT, you'll be able to access the game and start building your district!</p>
                 </div>
             </div>
         `;

@@ -1,7 +1,6 @@
 import { AccessControl } from '../utils/accessControl.js';
 import { StartPage } from '../../pages/StartPage.js';
 import { GamePage } from '../../pages/GamePage.js';
-import { MintPage } from '../../pages/MintPage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
 import { StakePage } from '../../pages/StakeHubPage.js';
 import { HousePage } from '../../pages/HousePage.js';
@@ -34,16 +33,15 @@ export class Router {
         this.game = null;
         
         // Pages that don't require wallet connection
-        this.publicPages = new Set(['mint', 'access']);
+        this.publicPages = new Set(['access']);
         
         // Pages that don't require player initialization
-        this.uninitializedPages = new Set(['', 'mint', 'access']);
+        this.uninitializedPages = new Set(['', 'access']);
         
         // Route to page class mapping
         this.routeMap = {
             '': StartPage,
             'overview': GamePage,
-            'mint': MintPage,
             'access': AccessPage,
             'stake': StakePage,
             'house': HousePage,
