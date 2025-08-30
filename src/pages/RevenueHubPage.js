@@ -576,7 +576,7 @@ export class RevenueHubPage extends BasePage {
                 <h1>Guidance Portal</h1>
                 <p class="page-description">
                     <strong>Real-time statistics for the entire Sonicity game economy.</strong> 
-                    <em>Track total buildings, players, and revenue across all players.</em>
+                    <em>Get guidance on buildings, resources, and game progression to optimize your strategy.</em>
                 </p>
                 
                 <!-- Status Section -->
