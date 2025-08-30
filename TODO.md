@@ -1,14 +1,99 @@
+## question goals
+
+- A: sell to whales
+- B: extract from users
+- C: perfection to create value and create sustainable revenue through that value. And value comes from emotions not greed. Music + visuals + strategy = Beutiful nft - governance + revenue + alliances
+
+## city
+
+- unique buildings to cities
+- lottery
+- erc20 token with LP donations in that token
+- possible marketplace
+- unique nft
+- specialization
+- Conquerency between other cities for pool ownage
+- pvp citeis ?
+- city life: chats, quests, researches
+
+## lacking features
+
+1. reinvest ? 
+2. LP with resources ?
+3. capped nfts ?
+4. icrease requests (sps) on nft marketplace ?
+5. end goal ? passive income - new job - 1m in revenue
+
+1000 * 100 = 100000 
+
+how to achieve ? ride on whales - but the game is COMPLETELY Anti whales
+
+## examples:
+
+1. petroleum : sold to whales and fucked economy, big extraction
+2. sonic rpg: not sold but no revenue/interest
+3. pokemon nft: not sold, and low interest, small buccks
+
+## balance
+
+- 90% to revenue6tfrtt676
+- buildling slots
+// Houses: 5 SONIC to build + 1.0 SONIC per 24h
+// Farms: 10 SONIC to build + 2.0 SONIC per 24h  
+// Diamond Stations: 15 SONIC to build + 3.0 SONIC per 72h
+// REP Forges: 20 SONIC to build + 4.0 SONIC per 168h
+// Yield Stations: 25 SONIC to build + 5.0 SONIC per 24h
+- also lets change diamonds, forges duration
+- increase 24 yields duration to runaway sensible
+- recharge levels (grid)
+- gold price for buidlings
+
+## 3d rendering
+
+- all models from unreal to glb
+- camera
+- terraian, patrly blender, partly unreal map
+- lightning
+- other props
+
 ## todo
 
-- move mint to district buidling, add tier by rarirty
-- right bullding should completely for help and resource/rev status, optining by tiers. Guidance building
-- we completely disable unstake for now, meaning destory completely destroys with nft. For tier 4 yield stations we remove house actions for now. And allow stake directly, unstake removes nft.
-- players should noe care about nft for now
-- what happens whaen attacke goes to garrison and vie versa
+- you know the driss like, rt for wl
+- build all buildings and check they all work
+- merge nft buidling
+- shop
+- damage system
+- responsive changes
+
+- build all buidlings and adjust 3d scene view
+
+- go through game ONLY using ffard
+
++ add detailed description to disctrict in js
+- add this check for buildling to all pages:
+if (!isArcanumBuilt) {
+                this.setState({
+                    arcanumStatus: 'Not Built',
+                    buildingLevel: 'Build Required',
+                    canCreateNFT: false
+                });
+                return;
+            }
+            
+            // Get building level if built
+            const buildingLevel = isArcanumBuilt ? 1 : 0; // Arcanum is maxLevel 1
+- nft images and so on, should we populate all tokens, limits on mint ?    
+
++ players should noe care about nft for now
++ grid updates  - simply diamonds, current system too complex
++ barrack/district updates - diamonds
+- cache buidlings
++ burn and unstake after upgrade
++ move mint to district buidling, add tier by rarirty
++ right bullding should completely for help and resource/rev status, optining by tiers. Guidance building
++ we completely disable unstake for now, meaning destory completely destroys with nft. For tier 4 yield stations we remove house actions for now. And allow stake directly, unstake removes nft.
++ what happens whaen attacke goes to garrison and vie versa
 + cmd center rm resource, make similar
-- grid updates  - diamonds
-- barrack/district updates - diamonds
-- shop flag (single item)
 
 ## todo
 
