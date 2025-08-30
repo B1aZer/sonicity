@@ -13,7 +13,7 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     using Strings for uint256;
 
     // Token config
-    uint256 public constant MAX_SUPPLY = 10000;
+    uint256 public constant MAX_SUPPLY = 5000;  // House NFTs - 5k limit
     uint256 public constant MAX_MINT_PER_TX = 10;
     uint256 public mintPrice = 0; // Free minting
     bool public mintIsActive = false;

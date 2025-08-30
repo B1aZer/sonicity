@@ -13,7 +13,7 @@ contract SonicityDiamond is ERC721Enumerable, Ownable {
     using Strings for uint256;
 
     // Token config
-    uint256 public constant MAX_SUPPLY = 2000;  // Lower supply than houses and farms (premium)
+    uint256 public constant MAX_SUPPLY = 3000;  // Diamond NFTs - 3k limit
     uint256 public constant MAX_MINT_PER_TX = 3;  // Lower mint limit (premium)
     uint256 public mintPrice = 0;  // Free minting
     bool public mintIsActive = false;

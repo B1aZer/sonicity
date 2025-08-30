@@ -15,7 +15,7 @@ contract SonicityRep is ERC721Enumerable, Ownable {
     using Strings for uint256;
 
     // Maximum supply of REP Forge NFTs
-    uint256 public constant MAX_SUPPLY = 1000;
+    uint256 public constant MAX_SUPPLY = 2000;  // REP Station NFTs - 2k limit
     
     // Mint price for REP Forge NFTs
     uint256 public constant MINT_PRICE = 0.025 ether;

@@ -13,7 +13,7 @@ contract SonicityFarm is ERC721Enumerable, Ownable {
     using Strings for uint256;
 
     // Token config
-    uint256 public constant MAX_SUPPLY = 5000;  // Lower supply than houses
+    uint256 public constant MAX_SUPPLY = 4000;  // Farm NFTs - 4k limit
     uint256 public constant MAX_MINT_PER_TX = 5;
     uint256 public mintPrice = 0;  // Free minting
     bool public mintIsActive = false;
