@@ -325,6 +325,48 @@ export class StakePage extends BasePage {
             rechargePrice = '0.01'; // fallback
         }
         
+        // Get mint pricing for this tier
+        let mintPrice = '0';
+        let mintPriceRaw = 0n; // Raw cost for transactions
+        let mintResourceType = '';
+        let mintResourceName = '';
+        try {
+            const [cost, resourceType] = await this.contracts.gridBuildings.getBuildingCost(tier);
+            console.log(`[DEBUG] getBuildingCost for tier ${tier}:`, { cost: cost.toString(), resourceType });
+            mintPriceRaw = cost;
+            mintResourceType = resourceType;
+            
+            // Format price based on resource type
+            if (resourceType === 4n) { // SONIC
+                mintPrice = this.contracts.gridBuildings.formatRechargeFee(cost);
+                mintResourceName = 'SONIC';
+            } else if (resourceType === 0n) { // Gold
+                mintPrice = cost.toString();
+                mintResourceName = 'Gold';
+            } else if (resourceType === 1n) { // Food
+                mintPrice = cost.toString();
+                mintResourceName = 'Food';
+            } else if (resourceType === 2n) { // REP
+                mintPrice = cost.toString();
+                mintResourceName = 'REP';
+            } else if (resourceType === 3n) { // Diamonds
+                mintPrice = cost.toString();
+                mintResourceName = 'Diamonds';
+            }
+            
+            console.log(`[DEBUG] Final price values for tier ${tier}:`, { 
+                mintPrice, 
+                mintPriceRaw: mintPriceRaw.toString(), 
+                mintResourceType, 
+                mintResourceName 
+            });
+        } catch (error) {
+            Logger.warn(`Failed to get mint cost for tier ${tier}:`, error);
+            mintPrice = '0';
+            mintPriceRaw = 0n;
+            mintResourceName = 'Unknown';
+        }
+        
         // Status section (like CityPage)
         const tierNames = ['House', 'Farm', 'Diamond Station', 'REP Forge', 'Yield Station'];
         const tierNamesPlural = ['Houses', 'Farms', 'Diamond Stations', 'REP Forges', 'Yield Stations'];
@@ -372,13 +414,15 @@ export class StakePage extends BasePage {
                 <h3>${tierNames[tier]} Actions</h3>
                 ${tier === 4 ? 
                     `<button class="btn btn-md btn-secondary" disabled title="Create Yield NFTs in Arcanum building first">
-                        Create ${tierNames[tier]}
+                        Mint ${tierNames[tier]}
                     </button>` :
                     this.state.buildingSlotsReached ? 
                     `<button class="btn btn-md btn-secondary" disabled title="Building slot limit reached for current tier. Upgrade your tier to get more slots.">
-                        Create ${tierNames[tier]}
+                        Mint ${tierNames[tier]}
                     </button>` :
-                    `<button class="btn btn-md btn-primary create-building-btn">Create ${tierNames[tier]}</button>`
+                    `<button class="btn btn-md btn-primary mint-building-btn" data-tier="${tier}" data-price="${mintPrice}" data-price-raw="${mintPriceRaw.toString()}" data-resource-type="${mintResourceType}" data-resource-name="${mintResourceName}">
+                        Mint ${tierNames[tier]} (${mintPrice} ${mintResourceName})
+                    </button>`
                 }
                 <button class="btn btn-md btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
             </div>
@@ -404,7 +448,15 @@ export class StakePage extends BasePage {
         
         // Attach per-tier action listeners
         tierContent.querySelector('.claim-all-btn')?.addEventListener('click', () => this.claimAllInTier(tier));
-        tierContent.querySelector('.create-building-btn')?.addEventListener('click', () => this.createBuilding(tier));
+        tierContent.querySelector('.mint-building-btn')?.addEventListener('click', (e) => {
+            const button = e.target.closest('.mint-building-btn') || e.target;
+            const tier = Number(button.dataset.tier);
+            const price = button.dataset.price;
+            const priceRaw = button.dataset.priceRaw;
+            const resourceType = BigInt(button.dataset.resourceType);
+            const resourceName = button.dataset.resourceName;
+            this.mintBuilding(tier, price, priceRaw, resourceType, resourceName);
+        });
         tierContent.querySelector('.recharge-tier-btn')?.addEventListener('click', () => {
             const input = tierContent.querySelector('.recharge-amount');
             const n = Math.max(1, Math.min(Number(input.value), buildingCount));
@@ -1029,13 +1081,52 @@ export class StakePage extends BasePage {
         }
     }
 
-    async createBuilding(tier) {
+    async mintBuilding(tier, price, priceRaw, resourceType, resourceName) {
+        console.log(`[DEBUG] mintBuilding called with:`, { tier, price, priceRaw, resourceType, resourceName });
         const tierNames = ['House', 'Farm', 'Diamond Station', 'Rep Station', 'Yield Station'];
         
         try {
             const tierName = tierNames[tier];
             
-            const loadingModal = this.modal.loading(`Creating ${tierName.toLowerCase()}...`);
+            // Check if user has enough resources
+            if (resourceType === 4n) { // SONIC
+                // Check SONIC balance (native token balance)
+                const userAddress = await this.contracts.nft.getAddress();
+                const provider = this.contracts.nft.provider;
+                const balance = await provider.getBalance(userAddress);
+                console.log(`[DEBUG] SONIC balance check:`, {
+                    userAddress,
+                    balance: balance.toString(),
+                    requiredAmount: priceRaw,
+                    hasEnough: balance >= BigInt(priceRaw)
+                });
+                
+                if (balance < BigInt(priceRaw)) {
+                    this.modal.error(`Insufficient SONIC balance. You have ${ethers.formatEther(balance)} SONIC, but need ${ethers.formatEther(BigInt(priceRaw))} SONIC.`, { title: 'Insufficient Resources' });
+                    return;
+                }
+            } else {
+                // Check resource balance
+                const userAddress = await this.contracts.nft.getAddress();
+                let userBalance = 0;
+                
+                if (resourceType === 0n) { // Gold
+                    userBalance = Number(await this.contracts.gameState.getPlayerGold(userAddress));
+                } else if (resourceType === 1n) { // Food
+                    userBalance = Number(await this.contracts.gameState.getPlayerFood(userAddress));
+                } else if (resourceType === 2n) { // REP
+                    userBalance = Number(await this.contracts.gameState.getPlayerRep(userAddress));
+                } else if (resourceType === 3n) { // Diamonds
+                    userBalance = Number(await this.contracts.gameState.getPlayerDiamonds(userAddress));
+                }
+                
+                if (userBalance < Number(price)) {
+                    this.modal.error(`Insufficient ${resourceName} balance. You have ${userBalance.toLocaleString()} ${resourceName}, but need ${Number(price).toLocaleString()} ${resourceName}.`, { title: 'Insufficient Resources' });
+                    return;
+                }
+            }
+            
+            const loadingModal = this.modal.loading(`Minting ${tierName.toLowerCase()}...`);
             
             // Determine which NFT contract to use based on tier
             let nftContract, contractAddress;
@@ -1067,8 +1158,30 @@ export class StakePage extends BasePage {
             const totalSupply = await nftContract.totalSupply();
             const tokenId = totalSupply + 1n;
             
-            // Use the new mintAndStake function for atomic mint + stake
-            await this.contracts.altar.mintAndStake(contractAddress, tokenId, tier);
+            // Use the mint function instead of mintAndStake
+            if (resourceType === 4n) { // SONIC payment
+                const sonicAmount = BigInt(priceRaw);
+                console.log(`[DEBUG] Minting House with SONIC payment:`, {
+                    contractAddress,
+                    tokenId: tokenId.toString(),
+                    tier,
+                    sonicAmount: sonicAmount.toString(),
+                    priceRaw,
+                    price
+                });
+                await this.contracts.altar.mint(contractAddress, tokenId, tier, { value: sonicAmount });
+            } else {
+                // Resource-based payment
+                console.log(`[DEBUG] Minting building with resource payment:`, {
+                    contractAddress,
+                    tokenId: tokenId.toString(),
+                    tier,
+                    resourceType,
+                    resourceName,
+                    price
+                });
+                await this.contracts.altar.mint(contractAddress, tokenId, tier);
+            }
             
             // Close loading modal
             loadingModal.close();
@@ -1077,10 +1190,15 @@ export class StakePage extends BasePage {
             await this.loadUserData();
             
             // Show success modal
-            this.modal.success(`${tierName} created successfully!`, { title: 'Building Created!' });
+            this.modal.success(`${tierName} minted successfully!`, { title: 'Building Minted!' });
         } catch (error) {
-            this.modal.error(error.message || `Failed to create ${tierNames[tier].toLowerCase()}`, { title: 'Creation Failed' });
+            this.modal.error(error.message || `Failed to mint ${tierNames[tier].toLowerCase()}`, { title: 'Minting Failed' });
         }
+    }
+
+    async createBuilding(tier) {
+        // This function is now deprecated - use mintBuilding instead
+        await this.mintBuilding(tier, '0', '0', 0, 'Unknown');
     }
 
     async destroyBuilding(item) {

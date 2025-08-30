@@ -354,4 +354,9 @@ export class GridBuildingsContract extends BaseContract {
             };
         }
     }
+
+    // Get building cost for minting
+    async getBuildingCost(buildingType) {
+        return await this.call('getBuildingCost', buildingType);
+    }
 } 

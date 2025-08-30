@@ -107,6 +107,24 @@ export class AltarContract extends BaseContract {
     }
 
     /**
+     * Mint an NFT with payment validation (without staking)
+     * @param {string} collection - The NFT collection address
+     * @param {number|string} tokenId - The specific token ID to mint
+     * @param {number} buildingType - The type of building to create (0: HOUSE, 1: FARM, 2: DIAMOND_STATION, 3: REP_STATION)
+     * @param {Object} options - Transaction options (e.g., { value: ethers.parseEther("10") } for SONIC payment)
+     * @returns {Promise<Object>} - Transaction result
+     */
+    async mint(collection, tokenId, buildingType, options = {}) {
+        if (options.value) {
+            // Use transactWithValue for SONIC payments
+            return await this.transactWithValue('mint', [collection, tokenId, buildingType], options.value);
+        } else {
+            // Use regular transact for resource-based payments
+            return await this.transact('mint', collection, tokenId, buildingType);
+        }
+    }
+
+    /**
      * Mint a yield NFT by staking REP points
      * @param {number|string} repAmount - The amount of REP to stake for the NFT
      * @returns {Promise<Object>} - Transaction result containing the new token ID
