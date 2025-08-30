@@ -67,6 +67,13 @@
     gap: var(--spacing-lg);
 }
 
+/* Buildings Grid - Specific to revenue hub page */
+.revenue-hub-page .buildings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+}
+
 /* Building Card with Stone Texture Overlay */
 .stake-hub-page .building-card {
     position: relative;

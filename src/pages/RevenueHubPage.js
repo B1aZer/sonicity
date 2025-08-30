@@ -145,6 +145,9 @@ export class RevenueHubPage extends BasePage {
             case 4:
                 contentElement.innerHTML = this.renderTier4Content();
                 break;
+            case 5:
+                contentElement.innerHTML = this.renderTier5Content();
+                break;
         }
     }
 
@@ -356,6 +359,162 @@ export class RevenueHubPage extends BasePage {
         `;
     }
 
+    renderTier5Content() {
+        return `
+            <div class="page-section">
+                <h2>Tier 5+ Roadmap</h2>
+                <p class="page-description">
+                    <strong>Where the real game begins - Game-changing features coming soon!</strong> 
+                    <em>This is where Sonicity transforms from a resource management game into a complex, multi-faction strategy game.</em>
+                </p>
+            </div>
+
+            <div class="buildings-grid revenue-hub-page-grid">
+                <div class="building-card">
+                    <h3>Faction System</h3>
+                    <p>Choose your faction and unlock unique gameplay paths</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Economicus:</span>
+                            <span class="detail-value">Masters of wealth and resource generation</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Militaris:</span>
+                            <span class="detail-value">Warriors and conquerors</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Technologica:</span>
+                            <span class="detail-value">Innovators and researchers</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Socialis:</span>
+                            <span class="detail-value">Community builders and diplomats</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Mysticus:</span>
+                            <span class="detail-value">Masters of rare and mystical abilities</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="building-card">
+                    <h3>City Life & Social Features</h3>
+                    <p>Rich social interactions and community building</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">City Chats:</span>
+                            <span class="detail-value">Real-time communication within cities</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Quests:</span>
+                            <span class="detail-value">Dynamic quests and challenges</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Research:</span>
+                            <span class="detail-value">Technology trees and advancement</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Alliances:</span>
+                            <span class="detail-value">Deep alliance mechanics and governance</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="building-card">
+                    <h3>Advanced PvP & Conquest</h3>
+                    <p>Epic battles and territory control</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">PvP Cities:</span>
+                            <span class="detail-value">Direct city vs city battles</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Territory Control:</span>
+                            <span class="detail-value">Conquer and control regions</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Pool Ownership:</span>
+                            <span class="detail-value">Compete for revenue pool control</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Faction Wars:</span>
+                            <span class="detail-value">Epic faction vs faction conflicts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="building-card">
+                    <h3>Marketplace & Economy</h3>
+                    <p>Advanced trading and economic systems</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">NFT Marketplace:</span>
+                            <span class="detail-value">Trade buildings, NFTs, and resources</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">ERC20 Token:</span>
+                            <span class="detail-value">Game token with LP donations</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Resource Trading:</span>
+                            <span class="detail-value">Player-driven economy</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Unique NFTs:</span>
+                            <span class="detail-value">Rare and special collectibles</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="building-card">
+                    <h3>Lottery & Special Events</h3>
+                    <p>Exciting rewards and community events</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Lottery System:</span>
+                            <span class="detail-value">Win rare rewards and NFTs</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Seasonal Events:</span>
+                            <span class="detail-value">Limited-time special content</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Tournaments:</span>
+                            <span class="detail-value">Competitive events with prizes</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Challenges:</span>
+                            <span class="detail-value">Collective goals and rewards</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="building-card">
+                    <h3>Unique Buildings & Specialization</h3>
+                    <p>Advanced building system with unique structures</p>
+                    <div class="building-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Unique Buildings:</span>
+                            <span class="detail-value">Faction-specific and rare structures</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Specialization:</span>
+                            <span class="detail-value">Deep skill trees and progression</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Building Evolution:</span>
+                            <span class="detail-value">Buildings that grow and change</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">City Customization:</span>
+                            <span class="detail-value">Personalize your city layout</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
 
 
     renderResourcesContent() {
@@ -469,6 +628,9 @@ export class RevenueHubPage extends BasePage {
                         <button class="tier-tab" data-tier="4">
                             Tier 4
                         </button>
+                        <button class="tier-tab" data-tier="5">
+                            Tier 5+
+                        </button>
                     </div>
 
                     <!-- Tier 0 Content - Introduction -->
@@ -493,6 +655,11 @@ export class RevenueHubPage extends BasePage {
 
                     <!-- Tier 4 Content - Legendary NFTs -->
                     <div class="tier-content" data-tier="4">
+                        <!-- Content will be rendered dynamically -->
+                    </div>
+
+                    <!-- Tier 5+ Content - Roadmap Preview -->
+                    <div class="tier-content" data-tier="5">
                         <!-- Content will be rendered dynamically -->
                     </div>
                 </div>
