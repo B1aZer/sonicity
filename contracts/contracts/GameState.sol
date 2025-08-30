@@ -29,8 +29,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Upgrade level thresholds (in SONIC wei) - adjusted for 1.0 SONIC recharge cost
     uint256 public constant UPGRADE_LEVEL_2_THRESHOLD = 10 ether;     // 10 SONIC for level 2 (10 recharges)
     uint256 public constant UPGRADE_LEVEL_3_THRESHOLD = 100 ether;    // 100 SONIC for level 3 (100 recharges)
-    uint256 public constant UPGRADE_LEVEL_4_THRESHOLD = 1000 ether;   // 1000 SONIC for level 4 (1000 recharges)
-    uint256 public constant UPGRADE_LEVEL_5_THRESHOLD = 10000 ether;  // 10000 SONIC for level 5 (10000 recharges)
+    // Future expansion - currently not implemented
+    // uint256 public constant UPGRADE_LEVEL_4_THRESHOLD = 1000 ether;   // 1000 SONIC for level 4 (1000 recharges)
+    // uint256 public constant UPGRADE_LEVEL_5_THRESHOLD = 10000 ether;  // 10000 SONIC for level 5 (10000 recharges)
 
     // Standalone player state
     struct PlayerState {
