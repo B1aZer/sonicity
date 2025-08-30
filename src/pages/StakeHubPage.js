@@ -712,6 +712,7 @@ export class StakePage extends BasePage {
                     </div>
                     <div class="building-actions">
                         <button class="btn btn-full btn-primary stake-btn">Stake</button>
+                        <button class="btn btn-full btn-danger burn-btn"><i class="fas fa-fire"></i> Burn</button>
                     </div>
                 </div>
             `;
@@ -728,6 +729,7 @@ export class StakePage extends BasePage {
             });
         } else {
             card.querySelector('.stake-btn')?.addEventListener('click', () => this.stakeNFT(item.tokenId, item.contractAddress));
+            card.querySelector('.burn-btn')?.addEventListener('click', () => this.burnNFT(item.tokenId, item.contractAddress));
         }
     }
 
@@ -1199,6 +1201,59 @@ export class StakePage extends BasePage {
     async createBuilding(tier) {
         // This function is now deprecated - use mintBuilding instead
         await this.mintBuilding(tier, '0', '0', 0, 'Unknown');
+    }
+
+    async burnNFT(tokenId, contractAddress) {
+        try {
+            // Show confirmation dialog
+            const confirmed = await this.modal.confirm(
+                'Are you sure you want to burn this NFT?<br><br>This will permanently destroy the NFT. This action cannot be undone.',
+                {
+                    title: 'Confirm Burn',
+                    confirmButtonText: 'Burn NFT',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d'
+                }
+            );
+            
+            if (!confirmed) {
+                return; // User cancelled
+            }
+            
+            const loadingModal = this.modal.loading('Burning NFT...');
+            
+            // Determine which NFT contract to use based on contract address
+            let nftContract;
+            if (contractAddress.toLowerCase() === (await this.contracts.nft.getContractAddress()).toLowerCase()) {
+                nftContract = this.contracts.nft;
+            } else if (contractAddress.toLowerCase() === (await this.contracts.farmNft.getContractAddress()).toLowerCase()) {
+                nftContract = this.contracts.farmNft;
+            } else if (contractAddress.toLowerCase() === (await this.contracts.diamondNft.getContractAddress()).toLowerCase()) {
+                nftContract = this.contracts.diamondNft;
+            } else if (contractAddress.toLowerCase() === (await this.contracts.repNft.getContractAddress()).toLowerCase()) {
+                nftContract = this.contracts.repNft;
+            } else if (contractAddress.toLowerCase() === (await this.contracts.yieldNft.getContractAddress()).toLowerCase()) {
+                nftContract = this.contracts.yieldNft;
+            } else {
+                throw new Error('Unknown NFT contract address');
+            }
+            
+            // Burn the NFT directly using the contract's burn function
+            await nftContract.burn(tokenId);
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data
+            await this.loadUserData();
+            
+            // Show success modal
+            this.modal.success('NFT burned successfully!', { title: 'NFT Burned!' });
+        } catch (error) {
+            Logger.error('Error burning NFT:', error);
+            this.modal.error(error.message || 'Failed to burn NFT', { title: 'Burn Failed' });
+        }
     }
 
     async destroyBuilding(item) {
