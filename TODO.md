@@ -60,7 +60,7 @@ how to achieve ? ride on whales - but the game is COMPLETELY Anti whales
 ## todo
 
 - you know the driss like, rt for wl
-
+- update _baseTokenURI on nft contracts
 - merge nft buidling
 - shop
 - damage system
