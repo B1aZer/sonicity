@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 // Configuration
 const SOURCE_DIR = path.join(__dirname, '../public/metadata/diamonds');
-const MAX_TOKENS = 1000; // Maximum number of tokens for diamond stations
+const MAX_TOKENS = 3000; // Maximum number of tokens for diamond stations
 const BASE_FILES = 6; // Number of base metadata files
 
 // Ensure the diamonds directory exists

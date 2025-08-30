@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 // Configuration
 const SOURCE_DIR = path.join(__dirname, '../public/metadata/rep');
-const MAX_TOKENS = 1000; // Maximum number of tokens for rep stations
+const MAX_TOKENS = 2000; // Maximum number of tokens for rep stations
 const BASE_FILES = 6; // Number of base metadata files
 
 // Ensure the rep directory exists

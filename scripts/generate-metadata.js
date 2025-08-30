@@ -7,8 +7,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Configuration
-const SOURCE_DIR = path.join(__dirname, '../public/metadata');
-const MAX_TOKENS = 1000; // Maximum number of tokens
+const SOURCE_DIR = path.join(__dirname, '../public/metadata/houses');
+const MAX_TOKENS = 5000; // Maximum number of tokens for houses
 const BASE_FILES = 6; // Number of base metadata files
 
 // Read the base metadata files
