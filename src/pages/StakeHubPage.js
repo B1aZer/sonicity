@@ -672,7 +672,7 @@ export class StakePage extends BasePage {
                         <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''} title="Charge building for ${item.formattedRechargeCost || '0'} SONIC"><i class="fas fa-bolt"></i> Charge</button>
                         <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''} title="Claim ${item.claimable || 0} resources"><i class="fas fa-coins"></i> Claim</button>
                         <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''} title="${upgradeTooltip}"><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
-                        <button class="btn btn-full btn-warning destroy-btn"><i class="fas fa-undo"></i> Unstake</button>
+                        <button class="btn btn-full btn-warning destroy-btn" title="Unstake building (unclaimed resources will be lost)"><i class="fas fa-undo"></i> Unstake</button>
                     </div>
                 </div>
             `;
@@ -708,7 +708,7 @@ export class StakePage extends BasePage {
                         <div class="detail-item"><span class="detail-label">Tier:</span><span class="detail-value">${tierName}</span></div>
                     </div>
                     <div class="building-actions">
-                        <button class="btn btn-full btn-primary stake-btn">Stake</button>
+                        <button class="btn btn-full btn-primary stake-btn" title="Stake NFT to create building">Stake</button>
                         <button class="btn btn-full btn-danger burn-btn"><i class="fas fa-fire"></i> Burn</button>
                     </div>
                 </div>
