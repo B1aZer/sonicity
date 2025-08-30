@@ -1,0 +1,201 @@
+const { expect } = require("chai");
+const { ethers } = require("hardhat");
+
+describe("NFT Supply Limits", function () {
+    let sonicNFT, farmNFT, diamondNFT, repNFT, yieldNFT;
+    let owner, user1, user2;
+
+    beforeEach(async function () {
+        [owner, user1, user2] = await ethers.getSigners();
+
+        // Deploy all NFT contracts
+        const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
+        const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
+        const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
+        const SonicityRep = await ethers.getContractFactory("SonicityRep");
+        const SonicityYieldNFT = await ethers.getContractFactory("SonicityYieldNFT");
+
+        sonicNFT = await SonicityNFT.deploy();
+        farmNFT = await SonicityFarm.deploy();
+        diamondNFT = await SonicityDiamond.deploy();
+        repNFT = await SonicityRep.deploy();
+        yieldNFT = await SonicityYieldNFT.deploy();
+    });
+
+    describe("House NFTs (SonicityNFT)", function () {
+        it("should have correct MAX_SUPPLY of 5000", async function () {
+            expect(await sonicNFT.MAX_SUPPLY()).to.equal(5000);
+        });
+
+        it("should allow minting up to MAX_SUPPLY", async function () {
+            // Mint 5000 NFTs (the limit)
+            for (let i = 0; i < 5000; i++) {
+                await sonicNFT.mint(1);
+            }
+            
+            expect(await sonicNFT.totalSupply()).to.equal(5000);
+        });
+
+        it("should reject minting beyond MAX_SUPPLY", async function () {
+            // Mint 5000 NFTs first
+            for (let i = 0; i < 5000; i++) {
+                await sonicNFT.mint(1);
+            }
+            
+            // Try to mint one more - should fail
+            await expect(sonicNFT.mint(1)).to.be.revertedWith("Exceeds max supply");
+        });
+
+        it("should reject minting that would exceed MAX_SUPPLY", async function () {
+            // Mint 4999 NFTs first
+            for (let i = 0; i < 4999; i++) {
+                await sonicNFT.mint(1);
+            }
+            
+            // Try to mint 2 more - should fail
+            await expect(sonicNFT.mint(2)).to.be.revertedWith("Exceeds max supply");
+        });
+    });
+
+    describe("Farm NFTs (SonicityFarm)", function () {
+        it("should have correct MAX_SUPPLY of 4000", async function () {
+            expect(await farmNFT.MAX_SUPPLY()).to.equal(4000);
+        });
+
+        it("should allow minting up to MAX_SUPPLY", async function () {
+            // Mint 4000 NFTs (the limit)
+            for (let i = 0; i < 4000; i++) {
+                await farmNFT.mint(1);
+            }
+            
+            expect(await farmNFT.totalSupply()).to.equal(4000);
+        });
+
+        it("should reject minting beyond MAX_SUPPLY", async function () {
+            // Mint 4000 NFTs first
+            for (let i = 0; i < 4000; i++) {
+                await farmNFT.mint(1);
+            }
+            
+            // Try to mint one more - should fail
+            await expect(farmNFT.mint(1)).to.be.revertedWith("Exceeds max supply");
+        });
+    });
+
+    describe("Diamond NFTs (SonicityDiamond)", function () {
+        it("should have correct MAX_SUPPLY of 3000", async function () {
+            expect(await diamondNFT.MAX_SUPPLY()).to.equal(3000);
+        });
+
+        it("should allow minting up to MAX_SUPPLY", async function () {
+            // Mint 3000 NFTs (the limit)
+            for (let i = 0; i < 3000; i++) {
+                await diamondNFT.mint(1);
+            }
+            
+            expect(await diamondNFT.totalSupply()).to.equal(3000);
+        });
+
+        it("should reject minting beyond MAX_SUPPLY", async function () {
+            // Mint 3000 NFTs first
+            for (let i = 0; i < 3000; i++) {
+                await diamondNFT.mint(1);
+            }
+            
+            // Try to mint one more - should fail
+            await expect(diamondNFT.mint(1)).to.be.revertedWith("Exceeds max supply");
+        });
+    });
+
+    describe("REP NFTs (SonicityRep)", function () {
+        it("should have correct MAX_SUPPLY of 2000", async function () {
+            expect(await repNFT.MAX_SUPPLY()).to.equal(2000);
+        });
+
+        it("should allow minting up to MAX_SUPPLY", async function () {
+            // Mint 2000 NFTs (the limit) - need to pay mint price
+            const mintPrice = await repNFT.MINT_PRICE();
+            for (let i = 0; i < 2000; i++) {
+                await repNFT.mint(1, { value: mintPrice });
+            }
+            
+            expect(await repNFT.totalSupply()).to.equal(2000);
+        });
+
+        it("should reject minting beyond MAX_SUPPLY", async function () {
+            // Mint 2000 NFTs first
+            const mintPrice = await repNFT.MINT_PRICE();
+            for (let i = 0; i < 2000; i++) {
+                await repNFT.mint(1, { value: mintPrice });
+            }
+            
+            // Try to mint one more - should fail
+            await expect(repNFT.mint(1, { value: mintPrice })).to.be.revertedWith("Exceeds maximum supply");
+        });
+    });
+
+    describe("Yield NFTs (SonicityYieldNFT)", function () {
+        it("should have correct MAX_SUPPLY of 1000", async function () {
+            expect(await yieldNFT.MAX_SUPPLY()).to.equal(1000);
+        });
+
+        it("should allow minting up to MAX_SUPPLY", async function () {
+            // Mint 1000 NFTs (the limit)
+            for (let i = 0; i < 1000; i++) {
+                await yieldNFT.mint(1);
+            }
+            
+            expect(await yieldNFT.totalSupply()).to.equal(1000);
+        });
+
+        it("should reject minting beyond MAX_SUPPLY", async function () {
+            // Mint 1000 NFTs first
+            for (let i = 0; i < 1000; i++) {
+                await yieldNFT.mint(1);
+            }
+            
+            // Try to mint one more - should fail
+            await expect(yieldNFT.mint(1)).to.be.revertedWith("Exceeds max supply");
+        });
+    });
+
+    describe("mintForAltar function limits", function () {
+        it("should reject mintForAltar with tokenId beyond MAX_SUPPLY", async function () {
+            // Set altar contract address (owner can do this)
+            await sonicNFT.setAltarContract(user1.address);
+            
+            // Try to mint token ID 5001 (beyond limit of 5000)
+            await expect(
+                sonicNFT.connect(user1).mintForAltar(user2.address, 5001)
+            ).to.be.revertedWith("Invalid token ID");
+        });
+
+        it("should allow mintForAltar with valid tokenId within MAX_SUPPLY", async function () {
+            // Set altar contract address
+            await sonicNFT.setAltarContract(user1.address);
+            
+            // Mint token ID 5000 (at the limit)
+            await sonicNFT.connect(user1).mintForAltar(user2.address, 5000);
+            
+            expect(await sonicNFT.ownerOf(5000)).to.equal(user2.address);
+        });
+    });
+
+    describe("Supply verification across all contracts", function () {
+        it("should verify all contracts have correct supply limits", async function () {
+            expect(await sonicNFT.MAX_SUPPLY()).to.equal(5000);   // House
+            expect(await farmNFT.MAX_SUPPLY()).to.equal(4000);    // Farm
+            expect(await diamondNFT.MAX_SUPPLY()).to.equal(3000); // Diamond
+            expect(await repNFT.MAX_SUPPLY()).to.equal(2000);     // REP
+            expect(await yieldNFT.MAX_SUPPLY()).to.equal(1000);   // Yield
+        });
+
+        it("should start with zero total supply", async function () {
+            expect(await sonicNFT.totalSupply()).to.equal(0);
+            expect(await farmNFT.totalSupply()).to.equal(0);
+            expect(await diamondNFT.totalSupply()).to.equal(0);
+            expect(await repNFT.totalSupply()).to.equal(0);
+            expect(await yieldNFT.totalSupply()).to.equal(0);
+        });
+    });
+}); 
