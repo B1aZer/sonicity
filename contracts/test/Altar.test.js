@@ -242,14 +242,17 @@ describe("Altar", function () {
       // Collect resources to get gold for upgrade
       await gridBuildings.connect(player1).collectResources(buildingId);
 
+      // Get the correct recharge cost for this building type
+      const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.HOUSE);
+      
       // Recharge building to unlock level 2
-      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
       await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
       await ethers.provider.send("evm_mine");
       
-      // Recharge 9 more times to reach 0.1 SONIC total and unlock level 2
+      // Recharge 9 more times to reach total required and unlock level 2
       for (let i = 0; i < 9; i++) {
-        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
       }
@@ -269,9 +272,9 @@ describe("Altar", function () {
       // Upgrade the building to level 2
       await gridBuildings.connect(player1).upgradeBuilding(buildingId);
 
-      // Recharge 90 more times to reach 1 SONIC total and unlock level 3
+      // Recharge 90 more times to reach total required and unlock level 3
       for (let i = 0; i < 90; i++) {
-        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
       }
@@ -361,14 +364,17 @@ describe("Altar", function () {
       await ethers.provider.send("evm_mine");
       await gridBuildings.connect(player1).collectResources(buildingId);
       
+      // Get the correct recharge cost for this building type
+      const rechargeCost2 = await gridBuildings.getBuildingRechargeCost(GridBuildingType.HOUSE);
+      
       // Recharge building to unlock level 2
-      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost2 });
       await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
       await ethers.provider.send("evm_mine");
       
-      // Recharge 9 more times to reach 0.1 SONIC total and unlock level 2
+      // Recharge 9 more times to reach total required and unlock level 2
       for (let i = 0; i < 9; i++) {
-        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("0.01") });
+        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost2 });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
       }
