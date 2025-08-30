@@ -153,7 +153,7 @@ export const BUILDINGS = {
         name: 'Shop',
         size: new THREE.Vector3(15, 15, 15),
         color: 0xFFD700, // Gold color
-        position: { x: -20, y: 5, z: -35 },
+        position: { x: -20, y: 0, z: -35 },
         rotation: 0,
         tier: 0,
         description: "A bustling marketplace for trading goods.",
