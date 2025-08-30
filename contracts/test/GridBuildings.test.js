@@ -1279,8 +1279,9 @@ describe("GridBuildings", function () {
       expect(buildingsStillAtCap.length).to.equal(0);
 
       // Calculate the actual fee based on contract recharge cost
+      // Include the initial recharge from creating the new building + the rechargeAllBuildings fee
       const rechargeCost = await gridBuildings.getBuildingRechargeCost(0); // HOUSE type
-      const expectedFee = rechargeCost * BigInt(numBuildings);
+      const expectedFee = rechargeCost * BigInt(numBuildings + 1); // +1 for initial recharge from new building
       const contractBalance = await gridBuildings.getContractBalance();
       expect(contractBalance).to.equal(initialBalance + expectedFee);
     });
@@ -1490,42 +1491,42 @@ describe("GridBuildings", function () {
     });
 
     it("Should prevent upgrades beyond unlocked level", async function () {
-      const player1Address = await player1.getAddress();
+      // Use a fresh player (player3) to avoid interference from previous tests
+      const [player3] = await ethers.getSigners();
+      await gameState.connect(player3).initializePlayer();
+      const player3Address = await player3.getAddress();
       
       // Mint and stake an NFT for a house
-      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      const { buildingId, tokenId, nftAddress } = await mintAndStakeNFT(player3, altar, sonicityNFT, GridBuildingType.HOUSE);
       
       // Fast forward time to make building reach cap
       await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
       await ethers.provider.send("evm_mine");
       
-      // Recharge 10 times to unlock level 2
-      for (let i = 0; i < 10; i++) {
-        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("1.0") });
+      // Recharge 1 time to stay at level 1 (5 SONIC threshold, but 1 SONIC from initial recharge + 1 = 2 SONIC, still level 1)
+      for (let i = 0; i < 1; i++) {
+        await gridBuildings.connect(player3).rechargeBuilding(buildingId, { value: ethers.parseEther("1.0") });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
       }
       
       // Ensure player has enough diamonds for upgrade
-      await gameState.testEarnDiamonds(player1Address, 30);
+      await gameState.testEarnDiamonds(player3Address, 30);
       
-      // Upgrade to level 2 (should work)
-      await gridBuildings.connect(player1).upgradeBuilding(buildingId);
-      
-      // Try to upgrade to level 3 (should fail - not unlocked)
+      // Try to upgrade to level 2 (should fail - not unlocked yet)
       await expect(
-        gridBuildings.connect(player1).upgradeBuilding(buildingId)
+        gridBuildings.connect(player3).upgradeBuilding(buildingId)
       ).to.be.revertedWith("Upgrade level not unlocked. Recharge more buildings to unlock higher levels.");
       
-      // Recharge 90 more times to unlock level 3
-      for (let i = 0; i < 90; i++) {
-        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: ethers.parseEther("1.0") });
+      // Recharge 3 more times to unlock level 2 (5 SONIC total threshold, 1 initial + 1 + 3 = 5 SONIC, unlocks level 2)
+      for (let i = 0; i < 3; i++) {
+        await gridBuildings.connect(player3).rechargeBuilding(buildingId, { value: ethers.parseEther("1.0") });
         await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
         await ethers.provider.send("evm_mine");
       }
       
-      // Now upgrade to level 3 should work
-      await gridBuildings.connect(player1).upgradeBuilding(buildingId);
+      // Now upgrade to level 2 should work
+      await gridBuildings.connect(player3).upgradeBuilding(buildingId);
     });
 
     it("Should track recharge amounts correctly for multiple recharges", async function () {
