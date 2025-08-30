@@ -421,7 +421,7 @@ export class StakePage extends BasePage {
                         Mint ${tierNames[tier]}
                     </button>` :
                     `<button class="btn btn-md btn-primary mint-building-btn" data-tier="${tier}" data-price="${mintPrice}" data-price-raw="${mintPriceRaw.toString()}" data-resource-type="${mintResourceType}" data-resource-name="${mintResourceName}" title="Mint ${tierNames[tier]} for ${mintPrice} ${mintResourceName}">
-                        ${mintPrice} ${this.getResourceIcon(mintResourceType)} Mint ${tierNames[tier]}
+                        <span class="mint-price">${mintPrice}<span class="mint-resource-icon">${this.getResourceIcon(mintResourceType)}</span></span> Mint ${tierNames[tier]}
                     </button>`
                 }
                 <button class="btn btn-md btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>

@@ -240,6 +240,10 @@
     animation: none;
 }
 
+.stake-hub-page .mint-resource-icon {
+    margin-left: 2px;
+}
+
 .progress-bar-normal {
     background: linear-gradient(90deg, var(--color-success), #4ade80);
 }
