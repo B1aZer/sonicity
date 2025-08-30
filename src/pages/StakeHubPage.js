@@ -421,7 +421,7 @@ export class StakePage extends BasePage {
                         Mint ${tierNames[tier]}
                     </button>` :
                     `<button class="btn btn-md btn-primary mint-building-btn" data-tier="${tier}" data-price="${mintPrice}" data-price-raw="${mintPriceRaw.toString()}" data-resource-type="${mintResourceType}" data-resource-name="${mintResourceName}">
-                        Mint ${tierNames[tier]} (${mintPrice} ${mintResourceName})
+                        ${mintPrice} ${this.getResourceIcon(mintResourceType)} Mint ${tierNames[tier]}
                     </button>`
                 }
                 <button class="btn btn-md btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
@@ -750,6 +750,17 @@ export class StakePage extends BasePage {
             case 3: return 'REP Forge';
             case 4: return 'Yield Station';
             default: return 'Unknown';
+        }
+    }
+
+    getResourceIcon(resourceType) {
+        switch (Number(resourceType)) {
+            case 0: return '<i class="fas fa-coins"></i>'; // Gold
+            case 1: return '<i class="fas fa-wheat-awn"></i>'; // Food
+            case 2: return '<i class="fas fa-star"></i>'; // REP
+            case 3: return '<i class="fas fa-gem"></i>'; // Diamonds
+            case 4: return '<i class="fas fa-dollar-sign"></i>'; // SONIC
+            default: return '<i class="fas fa-question"></i>';
         }
     }
 
