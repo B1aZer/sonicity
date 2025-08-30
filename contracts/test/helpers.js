@@ -345,37 +345,21 @@ async function ensurePlayerHasResourcesForBuilding(player, gridBuildings, cost, 
     const gameStateAddress = await gridBuildings.gameStateAddress();
     const gameState = await ethers.getContractAt("GameState", gameStateAddress);
     
-    log(`ensurePlayerHasResourcesForBuilding: Checking resources for player ${playerAddress.slice(-6)}, need ${cost} of type ${resourceType}`);
+    log(`ensurePlayerHasResourcesForBuilding: Adding ${cost} of type ${resourceType} for player ${playerAddress.slice(-6)}`);
     
-    // Check current resources and add if needed
+    // Simply add the required resources for the building
     if (resourceType === 0n) { // Gold
-        const currentGold = await gameState.getPlayerGold(playerAddress);
-        if (currentGold < cost) {
-            const needed = cost - currentGold;
-            await gameState.testEarnGold(playerAddress, needed);
-            log(`ensurePlayerHasResourcesForBuilding: Added ${needed} Gold for player ${playerAddress.slice(-6)}`);
-        }
+        await gameState.testEarnGold(playerAddress, cost);
+        log(`ensurePlayerHasResourcesForBuilding: Added ${cost} Gold for player ${playerAddress.slice(-6)}`);
     } else if (resourceType === 1n) { // Food
-        const currentFood = await gameState.getPlayerFood(playerAddress);
-        if (currentFood < cost) {
-            const needed = cost - currentFood;
-            await gameState.testEarnFood(playerAddress, needed);
-            log(`ensurePlayerHasResourcesForBuilding: Added ${needed} Food for player ${playerAddress.slice(-6)}`);
-        }
+        await gameState.testEarnFood(playerAddress, cost);
+        log(`ensurePlayerHasResourcesForBuilding: Added ${cost} Food for player ${playerAddress.slice(-6)}`);
     } else if (resourceType === 2n) { // REP
-        const currentRep = await gameState.getPlayerRep(playerAddress);
-        if (currentRep < cost) {
-            const needed = cost - currentRep;
-            await gameState.testEarnRep(playerAddress, needed);
-            log(`ensurePlayerHasResourcesForBuilding: Added ${needed} REP for player ${playerAddress.slice(-6)}`);
-        }
+        await gameState.testEarnRep(playerAddress, cost);
+        log(`ensurePlayerHasResourcesForBuilding: Added ${cost} REP for player ${playerAddress.slice(-6)}`);
     } else if (resourceType === 3n) { // Diamonds
-        const currentDiamonds = await gameState.getPlayerDiamonds(playerAddress);
-        if (currentDiamonds < cost) {
-            const needed = cost - currentDiamonds;
-            await gameState.testEarnDiamonds(playerAddress, needed);
-            log(`ensurePlayerHasResourcesForBuilding: Added ${needed} Diamonds for player ${playerAddress.slice(-6)}`);
-        }
+        await gameState.testEarnDiamonds(playerAddress, cost);
+        log(`ensurePlayerHasResourcesForBuilding: Added ${cost} Diamonds for player ${playerAddress.slice(-6)}`);
     } else if (resourceType === 4n) { // SONIC - check balance
         const balance = await ethers.provider.getBalance(playerAddress);
         if (balance < cost) {
@@ -384,7 +368,7 @@ async function ensurePlayerHasResourcesForBuilding(player, gridBuildings, cost, 
         }
     }
     
-    log(`ensurePlayerHasResourcesForBuilding: Resource check complete for player ${playerAddress.slice(-6)}`);
+    log(`ensurePlayerHasResourcesForBuilding: Resource addition complete for player ${playerAddress.slice(-6)}`);
 }
 
 // ============================================================================
