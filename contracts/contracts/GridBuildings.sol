@@ -162,7 +162,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             upgradeCost: 50,         // 50 diamonds to upgrade
             description: "Produces diamonds",
             tier: 2,
-            productionDuration: 72 hours, // 72 hours for diamond stations
+            productionDuration: 24 hours, // 24 hours for diamond stations
             rechargeCost: 1.0 ether, // Uniform 1 SONIC recharge
             initialCost: 200,        // 200 Gold to build
             resourceType: 0          // Gold
@@ -174,10 +174,10 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             upgradeCost: 100,         // 100 diamonds to upgrade
             description: "Forge dynamic NFTs from REP",
             tier: 3,
-            productionDuration: 168 hours, // 168 hours (7 days) for rep forge
+            productionDuration: 48 hours, // 48 hours (2 days) for rep forge - more rare than diamonds
             rechargeCost: 1.0 ether, // Uniform 1 SONIC recharge
-            initialCost: 500,        // 500 Gold to build
-            resourceType: 0          // Gold
+            initialCost: 75,         // 75 Diamonds to build (prestigious cost)
+            resourceType: 3          // Diamonds
         });
 
         buildingConfigs[GridBuildingType.YIELD_STATION] = GridBuildingConfig({
@@ -711,13 +711,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         // Special handling for DIAMOND_STATION and REP_FORGE
         if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
-            // 1 diamond per 72 hours at level 1
-            // Formula: (productionTime * level) / (72 hours)
-            return (productionTime * building.level) / (72 hours);
+            // 6 diamonds per 24 hours at level 1 (increased from 3)
+            // Formula: (productionTime * level * 6) / (24 hours)
+            return (productionTime * building.level * 6) / (24 hours);
         } else if (building.buildingType == GridBuildingType.REP_FORGE) {
-            // 1 rep NFT per 168 hours at level 1
-            // Formula: (productionTime * level) / (168 hours)
-            return (productionTime * building.level) / (168 hours);
+            // 1 rep NFT per 48 hours (2 days) at level 1 - more rare than diamonds
+            // Formula: (productionTime * level) / (48 hours)
+            return (productionTime * building.level) / (48 hours);
         } else {
             // Standard calculation for other buildings
             return (config.baseProductionRate * productionTime * building.level) / 1 hours;
