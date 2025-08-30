@@ -672,10 +672,7 @@ export class StakePage extends BasePage {
                         <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''}><i class="fas fa-bolt"></i> Charge</button>
                         <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
                         <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''} title="${upgradeTooltip}"><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
-                        ${currentLevel === 1 ? 
-                            `<button class="btn btn-full btn-danger destroy-btn"><i class="fas fa-fire"></i> Burn</button>` :
-                            `<button class="btn btn-full btn-warning destroy-btn"><i class="fas fa-undo"></i> Unstake</button>`
-                        }
+                        <button class="btn btn-full btn-warning destroy-btn"><i class="fas fa-undo"></i> Unstake</button>
                     </div>
                 </div>
             `;
@@ -1258,31 +1255,23 @@ export class StakePage extends BasePage {
 
     async destroyBuilding(item) {
         try {
-            // Determine action based on building level
-            const isBurn = item.level === 1;
-            const actionText = isBurn ? 'Burning' : 'Unstaking';
-            const confirmText = isBurn ? 'Burn' : 'Unstake';
-            const successText = isBurn ? 'Building burned successfully!' : 'Building unstaked successfully!';
-            
-            // Show confirmation for burn action
-            if (isBurn) {
-                const result = await this.modal.confirm(
-                    'Are you sure you want to burn this building?<br><br>This will permanently destroy the building and NFT. This action cannot be undone.',
-                    {
-                        title: 'Confirm Burn',
-                        confirmButtonText: 'Burn Building',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#dc3545',
-                        cancelButtonColor: '#6c757d'
-                    }
-                );
-                
-                if (!result.isConfirmed) {
-                    return; // User cancelled
+            // Show confirmation dialog for unstaking
+            const result = await this.modal.confirm(
+                'Are you sure you want to unstake this building?<br><br>This will unstake the NFT and preserve the building data.<br><br><strong>WARNING: Any unclaimed resources will be lost!</strong>',
+                {
+                    title: 'Confirm Unstake',
+                    confirmButtonText: 'Unstake Building',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#ffc107',
+                    cancelButtonColor: '#6c757d'
                 }
+            );
+            
+            if (!result.isConfirmed) {
+                return; // User cancelled
             }
             
-            const loadingModal = this.modal.loading(`${actionText} building...`);
+            const loadingModal = this.modal.loading('Unstaking building...');
             
             // Get NFT info for this building
             const nftInfo = await this.getNFTInfoForBuilding(item.id);
@@ -1291,9 +1280,8 @@ export class StakePage extends BasePage {
                 // Add debugging information
                 Logger.info('NFT Info:', nftInfo);
                 Logger.info('Building level:', item.level);
-                Logger.info('Is burn action:', isBurn);
                 
-                // Check staking duration
+                // Check staking duration for unstaking (if required)
                 const minStakingDuration = await this.contracts.altar.getMinStakingDuration();
                 Logger.info('Minimum staking duration:', minStakingDuration);
                 
@@ -1311,7 +1299,7 @@ export class StakePage extends BasePage {
                 Logger.info('Time staked:', timeStaked);
                 Logger.info('Time remaining:', Math.max(0, Number(minStakingDuration) - timeStaked));
                 
-                // Check if staking period is completed
+                // Check if staking period is completed (for unstaking)
                 if (timeStaked < 0) {
                     throw new Error(`Invalid staking time detected. The NFT appears to have been staked in the future. This might be due to a time synchronization issue. Please try again later.`);
                 }
@@ -1319,29 +1307,24 @@ export class StakePage extends BasePage {
                 if (timeStaked < Number(minStakingDuration)) {
                     const remainingTime = Number(minStakingDuration) - timeStaked;
                     const remainingHours = Math.ceil(remainingTime / 3600);
-                    throw new Error(`Staking period not completed. You must wait ${remainingHours} more hours before burning this NFT.`);
+                    throw new Error(`Staking period not completed. You must wait ${remainingHours} more hours before unstaking this NFT.`);
                 }
                 
-                if (isBurn) {
-                    // Burn the NFT (permanent destruction)
-                    await this.contracts.altar.burnNFT(nftInfo.contractAddress, nftInfo.tokenId);
-                } else {
-                    // Unstake the NFT (preserves building data)
-                    await this.contracts.altar.unstake(nftInfo.contractAddress, nftInfo.tokenId);
-                }
+                // Unstake the NFT (preserves building data)
+                await this.contracts.altar.unstake(nftInfo.contractAddress, nftInfo.tokenId);
                 loadingModal.close();
-                this.modal.success(successText, { title: 'Success!' });
+                this.modal.success('Building unstaked successfully!', { title: 'Success!' });
             } else {
                 // Fallback to direct destruction if no NFT found
                 await this.contracts.altar.destroyBuilding(item.id);
                 loadingModal.close();
-                this.modal.success(successText, { title: 'Success!' });
+                this.modal.success('Building destroyed successfully!', { title: 'Success!' });
             }
             
             await this.loadUserData();
         } catch (error) {
-            Logger.error('Error destroying building:', error);
-            this.modal.error(error.message || 'Failed to destroy building', { title: 'Action Failed' });
+            Logger.error('Error unstaking building:', error);
+            this.modal.error(error.message || 'Failed to unstake building', { title: 'Action Failed' });
         }
     }
 
