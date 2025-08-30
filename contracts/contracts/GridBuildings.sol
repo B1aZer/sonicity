@@ -176,7 +176,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             tier: 3,
             productionDuration: 48 hours, // 48 hours (2 days) for rep forge - more rare than diamonds
             rechargeCost: 1.0 ether, // Uniform 1 SONIC recharge
-            initialCost: 75,         // 75 Diamonds to build (prestigious cost)
+            initialCost: 50,         // 50 Diamonds to build (reduced from 75)
             resourceType: 3          // Diamonds
         });
 
@@ -711,9 +711,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         // Special handling for DIAMOND_STATION and REP_FORGE
         if (building.buildingType == GridBuildingType.DIAMOND_STATION) {
-            // 6 diamonds per 24 hours at level 1 (increased from 3)
-            // Formula: (productionTime * level * 6) / (24 hours)
-            return (productionTime * building.level * 6) / (24 hours);
+            // 8 diamonds per 24 hours at level 1 (increased from 6)
+            // Formula: (productionTime * level * 8) / (24 hours)
+            return (productionTime * building.level * 8) / (24 hours);
         } else if (building.buildingType == GridBuildingType.REP_FORGE) {
             // 1 rep NFT per 48 hours (2 days) at level 1 - more rare than diamonds
             // Formula: (productionTime * level) / (48 hours)
