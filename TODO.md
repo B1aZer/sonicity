@@ -1,3 +1,11 @@
+
+## todo
+
++ new production 24 stadnard, diamonds, gold 250 ?
+- change charge label
++ change maybe price for rep stations to diamonds ?
++ update help page later
+
 ## question goals
 
 - A: sell to whales
