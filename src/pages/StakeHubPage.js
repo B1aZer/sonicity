@@ -424,7 +424,7 @@ export class StakePage extends BasePage {
                         <span class="mint-price">${mintPrice}<span class="mint-resource-icon">${this.getResourceIcon(mintResourceType)}</span></span> Mint ${tierNames[tier]}
                     </button>`
                 }
-                <button class="btn btn-md btn-primary claim-all-btn"><i class="fas fa-coins"></i> Claim All</button>
+                <button class="btn btn-md btn-primary claim-all-btn" title="Claim from all ${tierNamesPlural[tier]}"><i class="fas fa-coins"></i> Claim All</button>
             </div>
             
             <div class="buildings-grid">
@@ -670,7 +670,7 @@ export class StakePage extends BasePage {
                     </div>
                     <div class="building-actions">
                         <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''} title="Charge building for ${item.formattedRechargeCost || '0'} SONIC"><i class="fas fa-bolt"></i> Charge</button>
-                        <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''}><i class="fas fa-coins"></i> Claim</button>
+                        <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''} title="Claim ${item.claimable || 0} resources"><i class="fas fa-coins"></i> Claim</button>
                         <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''} title="${upgradeTooltip}"><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
                         <button class="btn btn-full btn-warning destroy-btn"><i class="fas fa-undo"></i> Unstake</button>
                     </div>
