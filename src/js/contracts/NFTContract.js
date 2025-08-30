@@ -35,6 +35,10 @@ export class NFTContract extends BaseContract {
         return await this.call('ownerOf', tokenId);
     }
 
+    async burn(tokenId) {
+        return await this.transact('burn', tokenId);
+    }
+
     async getOwnedNFTs(userAddress) {
         const balance = await this.balanceOf(userAddress);
         const ownedNFTs = [];

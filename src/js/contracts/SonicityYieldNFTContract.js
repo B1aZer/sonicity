@@ -253,4 +253,18 @@ export class SonicityYieldNFTContract extends BaseContract {
             throw error;
         }
     }
+
+    /**
+     * Burn a token (callable by token owner)
+     * @param {number} tokenId - The token ID
+     * @returns {Promise<Object>} Transaction result
+     */
+    async burn(tokenId) {
+        try {
+            return await this.transact('burn', tokenId);
+        } catch (error) {
+            Logger.error(`Error burning token ${tokenId}:`, error);
+            throw error;
+        }
+    }
 } 

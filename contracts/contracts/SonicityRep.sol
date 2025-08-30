@@ -80,6 +80,16 @@ contract SonicityRep is ERC721Enumerable, Ownable {
         _burn(tokenId);
     }
 
+    /**
+     * @dev Burn NFT - callable by token owner
+     * @param tokenId The token ID to burn
+     */
+    function burn(uint256 tokenId) external {
+        require(_ownerOf(tokenId) == msg.sender, "Not the token owner");
+        
+        _burn(tokenId);
+    }
+
     // DEPRECATED: Mint function - allows users to mint NFTs
     // This method is deprecated and will be disabled on production
     // Use mintForAltar method instead which can only be called by the Altar contract

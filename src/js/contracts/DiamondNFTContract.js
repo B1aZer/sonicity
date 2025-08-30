@@ -39,6 +39,10 @@ export class DiamondNFTContract extends BaseContract {
         return await this.transact('approve', to, tokenId);
     }
 
+    async burn(tokenId) {
+        return await this.transact('burn', tokenId);
+    }
+
     async setAltarContract(altarContract) {
         return await this.transact('setAltarContract', altarContract);
     }

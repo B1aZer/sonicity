@@ -70,6 +70,16 @@ contract SonicityFarm is ERC721Enumerable, Ownable {
     }
 
     /**
+     * @dev Burn NFT - callable by token owner
+     * @param tokenId The token ID to burn
+     */
+    function burn(uint256 tokenId) external {
+        require(_ownerOf(tokenId) == msg.sender, "Not the token owner");
+        
+        _burn(tokenId);
+    }
+
+    /**
      * @dev Set the Altar contract address
      * @param _altarContract The address of the Altar contract
      */
