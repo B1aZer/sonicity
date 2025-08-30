@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 
 // Configuration
 const SOURCE_DIR = path.join(__dirname, '../public/metadata/farms');
-const MAX_TOKENS = 5000; // Maximum number of tokens for farms
+const MAX_TOKENS = 4000; // Maximum number of tokens for farms
 const BASE_FILES = 6; // Number of base metadata files
 
 // Ensure the farms directory exists
