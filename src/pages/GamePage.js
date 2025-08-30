@@ -243,6 +243,8 @@ export class GamePage extends BasePage {
                     buildingType = 'DIAMOND_STATION';
                 } else if (building.buildingType === GridBuildingsContract.BuildingType.REP_FORGE) {
                     buildingType = 'REP_FORGE';
+                } else if (building.buildingType === GridBuildingsContract.BuildingType.YIELD_STATION) {
+                    buildingType = 'YIELD_STATION';
                 } else {
                     Logger.info('Skipping building - unknown type:', {
                         buildingType: building.buildingType
@@ -378,6 +380,10 @@ export class GamePage extends BasePage {
                 } else if (clickedObject.userData.isRepforge) {
                     Logger.info('REP Forge clicked');
                     window.history.pushState({}, '', '/rep-forge');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                } else if (clickedObject.userData.isYieldstation) {
+                    Logger.info('Yield Station clicked');
+                    window.history.pushState({}, '', '/stake');
                     window.dispatchEvent(new PopStateEvent('popstate'));
                 } else if (clickedObject.userData.isArcanumofnames) {
                     Logger.info('Arcanum of Names clicked');
