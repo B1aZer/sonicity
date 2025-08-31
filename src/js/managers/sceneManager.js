@@ -324,8 +324,8 @@ export class SceneManager {
         );
         
         // Set camera to exact Blender scene position
-        camera.position.set(0, -27.85, 5.75); // Blender camera position
-        camera.rotation.set(1.501, 0, 0); // Blender camera rotation (radians)
+        camera.position.set(0, 0, 5.75); // Blender camera position
+        //camera.rotation.set(12.701, 0, 0); // Blender camera rotation (radians)
         
         Logger.info('Camera set to Blender scene position with 35mm lens:', {
             position: camera.position,
