@@ -120,10 +120,12 @@ export class BuildingManager {
                 });
                 this.animationActions.set(buildingObj.id, actions);
                 
-                // Start the first animation
+                // Start all animations
                 if (actions.length > 0) {
-                    actions[0].play();
-                    Logger.debug(`Started animation for ${type}: ${animations[0].name}`);
+                    actions.forEach((action, index) => {
+                        action.play();
+                        Logger.debug(`Started animation ${index} for ${type}: ${animations[index].name}`);
+                    });
                 }
             }
             

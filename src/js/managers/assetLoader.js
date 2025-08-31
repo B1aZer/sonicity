@@ -296,10 +296,12 @@ export class AssetLoader {
                 Logger.debug(`Created animation action: ${anim.name}`);
             });
 
-            // Start the first animation if autoPlay is enabled
+            // Start all animations if autoPlay is enabled
             if (actions.length > 0 && options.autoPlay !== false) {
-                actions[0].play();
-                Logger.debug(`Started animation: ${animations[0].name}`);
+                actions.forEach((action, index) => {
+                    action.play();
+                    Logger.debug(`Started animation ${index}: ${animations[index].name}`);
+                });
             }
 
             Logger.debug('✅ Building spawned successfully with SkeletonUtils.clone');
