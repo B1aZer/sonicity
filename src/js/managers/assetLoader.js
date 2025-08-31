@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { TextureLoader } from 'three/src/loaders/TextureLoader.js';
+import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { BUILDINGS } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
 
@@ -16,7 +17,8 @@ export class AssetLoader {
     constructor() {
         this.gltfLoader = new GLTFLoader();
         this.textureLoader = new TextureLoader();
-        this.loadedModels = {};
+        this.loadedTemplates = {}; // Store original templates
+        this.loadedAnimations = {}; // Store animations
         this.isLoadingComplete = false;
         this.loadingPromises = {};
         this.textures = {};
@@ -33,7 +35,8 @@ export class AssetLoader {
         this.loadPromise = (async () => {
             Logger.info("AssetLoader: Starting asset loading...");
             this.isLoadingComplete = false;
-            this.loadedModels = {};
+            this.loadedTemplates = {};
+            this.loadedAnimations = {};
             this.loadingPromises = {};
 
             // Load textures first
@@ -62,18 +65,21 @@ export class AssetLoader {
                 for (const [level, levelInfo] of Object.entries(assetInfo.levels)) {
                     const modelKey = `${type}_LVL${level}`;
                     const loadPromise = this.loadGLTFModel(modelKey, levelInfo.url)
-                        .then(model => {
-                            if (model) {
-                                this.loadedModels[modelKey] = model;
-                                Logger.debug(`AssetLoader: Successfully loaded and stored model for ${modelKey}`);
+                        .then(result => {
+                            if (result && result.template) {
+                                this.loadedTemplates[modelKey] = result.template;
+                                this.loadedAnimations[modelKey] = result.animations;
+                                Logger.debug(`AssetLoader: Successfully loaded and stored template for ${modelKey}`);
                             } else {
-                                this.loadedModels[modelKey] = null;
+                                this.loadedTemplates[modelKey] = null;
+                                this.loadedAnimations[modelKey] = [];
                                 Logger.warn(`AssetLoader: Failed to load model for ${modelKey}, storing null.`);
                             }
                         })
                         .catch(error => {
                             Logger.error(`AssetLoader: Error in loadAssets for ${modelKey}:`, error);
-                            this.loadedModels[modelKey] = null;
+                            this.loadedTemplates[modelKey] = null;
+                            this.loadedAnimations[modelKey] = [];
                         });
 
                     this.loadingPromises[modelKey] = loadPromise;
@@ -143,10 +149,18 @@ export class AssetLoader {
                 return null;
             }
 
-            const model = gltf.scene;
+            const template = gltf.scene;
+            const animations = gltf.animations || [];
+            
+            Logger.debug(`AssetLoader [${typeKey}]: Found ${animations.length} animations`);
+            if (animations.length > 0) {
+                animations.forEach((anim, index) => {
+                    Logger.debug(`AssetLoader [${typeKey}]: Animation ${index}: ${anim.name}`);
+                });
+            }
             
             // Apply textures and material properties
-            model.traverse((child) => {
+            template.traverse((child) => {
                 if (child.isMesh) {
                     // Enable shadows
                     child.castShadow = true;
@@ -198,10 +212,27 @@ export class AssetLoader {
                         roughnessMapColorSpace: child.material.roughnessMap?.colorSpace
                     });
                 }
+                
+                // Handle skinned meshes
+                if (child.isSkinnedMesh) {
+                    Logger.debug(`AssetLoader [${typeKey}]: Found skinned mesh: ${child.name}`);
+                    
+                    // Ensure skinned mesh is properly configured
+                    child.frustumCulled = false;
+                    child.material.transparent = false;
+                    child.material.opacity = 1.0;
+                    child.material.needsUpdate = true;
+                    
+                    // Update the skeleton
+                    if (child.skeleton) {
+                        child.skeleton.update();
+                        Logger.debug(`AssetLoader [${typeKey}]: Updated skeleton for ${child.name} with ${child.skeleton.bones.length} bones`);
+                    }
+                }
             });
 
             Logger.debug(`AssetLoader [${typeKey}]: Model loading complete.`);
-            return model;
+            return { template, animations };
 
         } catch (error) {
             Logger.error(`AssetLoader: Error loading ${typeKey} from ${modelUrl}:`, error);
@@ -209,13 +240,85 @@ export class AssetLoader {
         }
     }
 
-    getModel(typeKey) {
-        if (!this.loadedModels[typeKey]) {
-            Logger.warn(`AssetLoader: Model for ${typeKey} not found or failed to load.`);
+    getTemplate(typeKey) {
+        return this.loadedTemplates[typeKey] || null;
+    }
+
+    getAnimations(typeKey) {
+        return this.loadedAnimations[typeKey] || [];
+    }
+
+    // Production-ready building spawning with SkeletonUtils.clone
+    spawnBuilding(typeKey, position, options = {}) {
+        const template = this.getTemplate(typeKey);
+        const animations = this.getAnimations(typeKey);
+        
+        if (!template) {
+            Logger.error('No template found:', typeKey);
             return null;
         }
-        // Clone the model to allow multiple instances
-        return this.loadedModels[typeKey].clone();
+
+        Logger.debug('🔍 Spawning building with SkeletonUtils.clone:', typeKey);
+        
+        try {
+            // Use SkeletonUtils.clone for proper deep-cloning of skeleton/bones
+            const building = SkeletonUtils.clone(template);
+            building.name = `${typeKey}_${Date.now()}`;
+            building.position.copy(position);
+            building.castShadow = true;
+            building.receiveShadow = true;
+
+            // Apply options
+            if (options.scale) {
+                building.scale.setScalar(options.scale);
+            }
+            if (options.rotation) {
+                building.rotation.copy(options.rotation);
+            }
+
+            // Configure skinned meshes
+            building.traverse((o) => {
+                if (o.isSkinnedMesh) {
+                    o.frustumCulled = false;  // avoids bounding-box pop on animated poses
+                    o.castShadow = o.receiveShadow = true;
+                    Logger.debug('✅ Configured skinned mesh:', o.name);
+                }
+            });
+
+            // Create animation mixer for this instance
+            const mixer = new THREE.AnimationMixer(building);
+            
+            // Set up animation actions
+            const actions = [];
+            animations.forEach((anim, index) => {
+                const action = mixer.clipAction(anim);
+                actions.push(action);
+                Logger.debug(`Created animation action: ${anim.name}`);
+            });
+
+            // Start the first animation if autoPlay is enabled
+            if (actions.length > 0 && options.autoPlay !== false) {
+                actions[0].play();
+                Logger.debug(`Started animation: ${animations[0].name}`);
+            }
+
+            Logger.debug('✅ Building spawned successfully with SkeletonUtils.clone');
+            return { building, mixer, actions };
+        } catch (error) {
+            Logger.error('Error spawning building:', error);
+            return null;
+        }
+    }
+
+    // Legacy method for backward compatibility
+    getModel(typeKey) {
+        const template = this.getTemplate(typeKey);
+        if (!template) {
+            Logger.warn(`AssetLoader: Template for ${typeKey} not found or failed to load.`);
+            return null;
+        }
+        // Use SkeletonUtils.clone for proper skinned mesh handling
+        return SkeletonUtils.clone(template);
     }
 
     async waitForLoad() {
@@ -230,5 +333,14 @@ export class AssetLoader {
             Logger.error("AssetLoader: Error waiting for assets to load:", error);
             throw error; // Re-throw to handle it in the calling code
         }
+    }
+
+    // Get loading status
+    getLoadingStatus() {
+        return {
+            loaded: Object.keys(this.loadedTemplates),
+            loading: Object.keys(this.loadingPromises),
+            total: Object.keys(this.loadedTemplates).length + Object.keys(this.loadingPromises).length
+        };
     }
 }
