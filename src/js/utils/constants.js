@@ -31,7 +31,8 @@ export const SHOW_PERFORMANCE_MONITOR = true;
 
 // Building definitions combining visual and game properties
 // NOTE: These building types must match the DistrictBuildingType enum in DistrictBuildings.sol
-// Contract enum order: CITY_HALL, ALTAR, MINE, SHOP, WORKSHOP, OUTPOST, DEFENSE_TOWER, BARRACKS, 
+// Contract enum order (23 buildings):
+// CITY_HALL, ALTAR, MINE, SHOP, WORKSHOP, OUTPOST, DEFENSE_TOWER, BARRACKS, 
 // SCOUT_GUILD, GARRISON, COMMAND_CENTER, TAVERN, ADVENTURE_CAMP, MAGE_TOWER, TACTICS_CENTER, 
 // GEM_WORKSHOP, DIAMOND_VAULT, ARCANUM_OF_NAMES, REFINERY, COUNCIL_HALL, FORTRESS_WALLS, 
 // EMBASSY_HOME, TREASURY_VAULT
@@ -179,6 +180,16 @@ export const BUILDINGS = {
             }
         }
     },
+    OUTPOST: {
+        name: 'Outpost',
+        size: new THREE.Vector3(15, 15, 15),
+        color: 0x8B4513, // Saddle Brown
+        position: { x: -15, y: 0, z: -65 },
+        rotation: 0,
+        tier: 0,
+        description: "A forward base for scouting territory and providing early warning of threats.",
+        assets: null, // Model not yet implemented
+    },
     DEFENSE_TOWER: {
         name: 'Defense Tower',
         size: new THREE.Vector3(15, 15, 15),
@@ -237,16 +248,6 @@ export const BUILDINGS = {
         tier: 1,
         description: "Provides secure quarters for defensive troops to protect the district.",
         assets: null,
-    },
-    OUTPOST: {
-        name: 'Outpost',
-        size: new THREE.Vector3(15, 15, 15),
-        color: 0x8B4513, // Saddle Brown
-        position: { x: -15, y: 0, z: -65 },
-        rotation: 0,
-        tier: 0,
-        description: "A forward base for scouting territory and providing early warning of threats.",
-        assets: null, // Model not yet implemented
     },
     COMMAND_CENTER: {
         name: 'Command Center',
