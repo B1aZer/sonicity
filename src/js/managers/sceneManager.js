@@ -314,9 +314,11 @@ export class SceneManager {
      * @returns {number} The FOV in degrees
      */
     calculateFOV(screenWidth) {
-        if (screenWidth < 768) { // Mobile/tablet
-            return 65; // Very wide for mobile
-        } else if (screenWidth < 1200) { // Small desktop
+        if (screenWidth < 480) { // Mobile phones
+            return 105; // Very wide FOV for mobile devices
+        } else if (screenWidth < 768) { // Small desktop/tablet
+            return 65; // Wider for small screens
+        } else if (screenWidth < 1200) { // Medium desktop
             return 60; // Wider for small screens
         }
         return 54; // Default 35mm FOV for large screens
