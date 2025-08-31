@@ -235,6 +235,25 @@ export class BuildingManager {
             // Add to scene
             this.scene.add(building);
             
+            // Set up animations if available (same as grid buildings)
+            const modelKey = `${type}_LVL${level}`;
+            const animations = this.assetLoader.getAnimations(modelKey);
+            if (animations && animations.length > 0) {
+                Logger.debug('Setting up animations for fixed building', { type, level, animationCount: animations.length });
+                
+                // Generate a unique ID for the fixed building
+                const buildingId = `fixed_${type}_${Date.now()}`;
+                
+                // Use AnimationManager to handle all animation setup
+                this.animationManager.setupBuildingAnimations(
+                    buildingId, 
+                    building, 
+                    modelKey, 
+                    animations, 
+                    { autoPlay: true }
+                );
+            }
+            
             Logger.info('Fixed building placed successfully', {
                 type,
                 position,
