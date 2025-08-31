@@ -309,15 +309,31 @@ export class SceneManager {
     }
 
     /**
+     * Calculates the appropriate FOV based on screen width
+     * @param {number} screenWidth - The screen width in pixels
+     * @returns {number} The FOV in degrees
+     */
+    calculateFOV(screenWidth) {
+        if (screenWidth < 768) { // Mobile/tablet
+            return 65; // Very wide for mobile
+        } else if (screenWidth < 1200) { // Small desktop
+            return 60; // Wider for small screens
+        }
+        return 54; // Default 35mm FOV for large screens
+    }
+
+    /**
      * Sets up the camera
      * @param {HTMLElement} renderDiv - The container element
      * @returns {THREE.PerspectiveCamera} The camera
      */
     setupCamera(renderDiv) {
-        // Create camera with exact Blender settings: 35mm lens, perspective
-        // 35mm FOV is approximately 54 degrees
+        // Create camera with dynamic FOV based on screen size
+        const screenWidth = window.innerWidth;
+        const fov = this.calculateFOV(screenWidth);
+        
         const camera = new THREE.PerspectiveCamera(
-            54, // 35mm equivalent FOV
+            fov, // Dynamic FOV based on screen size
             renderDiv.clientWidth / renderDiv.clientHeight,
             0.1,
             1000
@@ -331,7 +347,8 @@ export class SceneManager {
             position: camera.position,
             rotation: camera.rotation,
             fov: camera.fov,
-            lens: '35mm'
+            aspect: camera.aspect,
+            lens: '35mm (54° FOV) - moved back for visibility'
         });
         
         return camera;
@@ -436,6 +453,33 @@ export class SceneManager {
         
         // Setup key bindings
         this.setupKeyBindings();
+
+        // Add resize handler for responsive camera
+        window.addEventListener('resize', () => {
+            if (this.camera && this.renderer) {
+                const oldAspect = this.camera.aspect;
+                const oldFov = this.camera.fov;
+                
+                // Calculate new FOV based on screen width
+                const screenWidth = window.innerWidth;
+                const newFov = this.calculateFOV(screenWidth);
+                
+                this.camera.fov = newFov;
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                
+                Logger.info('Camera resized with dynamic FOV:', {
+                    windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                    oldAspect: oldAspect.toFixed(3),
+                    newAspect: this.camera.aspect.toFixed(3),
+                    oldFov: oldFov,
+                    newFov: this.camera.fov
+                });
+            } else {
+                Logger.warn('Camera or renderer not available for resize');
+            }
+        });
 
         return renderer;
     }
