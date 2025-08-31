@@ -188,7 +188,12 @@ export const BUILDINGS = {
         rotation: 0,
         tier: 0,
         description: "A forward base for scouting territory and providing early warning of threats.",
-        assets: null, // Model not yet implemented
+        assets: {
+            baseUrl: 'assets/outpost',
+            levels: {
+                1: { url: 'assets/outpost.glb' }
+            }
+        }
     },
     DEFENSE_TOWER: {
         name: 'Defense Tower',
