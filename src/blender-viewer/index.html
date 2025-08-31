@@ -34,6 +34,17 @@
       border-radius: 8px;
     }
     
+    #debug {
+      position: fixed;
+      right: 10px;
+      top: 120px;
+      color: #eaeaea;
+      font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: rgba(0,0,0,0.35);
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+    
     button {
       background: #4a4a4a;
       color: #eaeaea;
@@ -47,6 +58,14 @@
     button:hover {
       background: #6a6a6a;
     }
+    
+    .debug-btn {
+      background: #8B4513;
+    }
+    
+    .debug-btn:hover {
+      background: #A0522D;
+    }
   </style>
 </head>
 <body>
@@ -55,6 +74,13 @@
     <button onclick="toggleWireframe()">Wireframe</button>
     <button onclick="toggleGrid()">Grid</button>
     <button onclick="resetCamera()">Reset Camera</button>
+    <button onclick="toggleFixedCamera()">Toggle Fixed Camera</button>
+  </div>
+  <div id="debug">
+    <div style="margin-bottom: 5px; font-weight: bold;">Debug:</div>
+    <button class="debug-btn" onclick="debugMask()">Show Mask</button>
+    <button class="debug-btn" onclick="debugGrass()">Show Grass</button>
+    <button class="debug-btn" onclick="normalMode()">Normal</button>
   </div>
   <script type="module" src="./main.js"></script>
 </body>
