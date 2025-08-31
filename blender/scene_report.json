@@ -1,0 +1,6132 @@
+{
+  "blender_version": "4.4.3",
+  "units": {
+    "system": "METRIC",
+    "scale_length": 1.0,
+    "fps": 24
+  },
+  "collections": [
+    {
+      "name": "Flowers",
+      "objects": [
+        "Fern_01",
+        "Fern_02",
+        "Leafy_Plant_02",
+        "White_Flower_01"
+      ]
+    },
+    {
+      "name": "Houses",
+      "objects": [
+        "house_Lv2",
+        "Indoor1.003",
+        "house_Lv0",
+        "Indoor1.001",
+        "house_Lv1",
+        "Indoor1",
+        "house_Lv3",
+        "Indoor1.002",
+        "Indoor1.004",
+        "house_Lv0.001",
+        "Indoor1.005",
+        "house_Lv0.002",
+        "Indoor1.006",
+        "house_Lv0.003",
+        "Indoor1.007",
+        "house_Lv0.004",
+        "Indoor1.008",
+        "house_Lv2.001",
+        "Indoor1.009",
+        "house_Lv2.002",
+        "Indoor1.010",
+        "house_Lv2.003",
+        "Indoor1.011",
+        "house_Lv2.004",
+        "Indoor1.012",
+        "house_Lv1.001",
+        "Indoor1.013",
+        "house_Lv1.002",
+        "Indoor1.014",
+        "house_Lv1.003",
+        "Indoor1.015",
+        "house_Lv1.004",
+        "Indoor1.016",
+        "house_Lv3.001",
+        "Indoor1.017",
+        "house_Lv3.002",
+        "Indoor1.018",
+        "house_Lv3.003",
+        "Indoor1.019",
+        "house_Lv3.004"
+      ]
+    },
+    {
+      "name": "Images",
+      "objects": [
+        "Ref",
+        "Back",
+        "Forst_foreground",
+        "back"
+      ]
+    },
+    {
+      "name": "Lights",
+      "objects": [
+        "SubLike",
+        "Sun",
+        "Area",
+        "SunBeam"
+      ]
+    },
+    {
+      "name": "Meshes",
+      "objects": [
+        "MountainTest",
+        "MountainPeak",
+        "FP_Blooming_Shrubbery_007",
+        "FP_Grass_015",
+        "Shop",
+        "Townhall",
+        "Tower",
+        "GroundPlan",
+        "smithy_Lv2",
+        "house_Lv2",
+        "Indoor1.003",
+        "house_Lv0",
+        "Indoor1.001",
+        "house_Lv1",
+        "Indoor1",
+        "house_Lv3",
+        "Indoor1.002",
+        "Indoor1.004",
+        "house_Lv0.001",
+        "Indoor1.005",
+        "house_Lv0.002",
+        "Indoor1.006",
+        "house_Lv0.003",
+        "Indoor1.007",
+        "house_Lv0.004",
+        "Indoor1.008",
+        "house_Lv2.001",
+        "Indoor1.009",
+        "house_Lv2.002",
+        "Indoor1.010",
+        "house_Lv2.003",
+        "Indoor1.011",
+        "house_Lv2.004",
+        "Indoor1.012",
+        "house_Lv1.001",
+        "Indoor1.013",
+        "house_Lv1.002",
+        "Indoor1.014",
+        "house_Lv1.003",
+        "Indoor1.015",
+        "house_Lv1.004",
+        "Indoor1.016",
+        "house_Lv3.001",
+        "Indoor1.017",
+        "house_Lv3.002",
+        "Indoor1.018",
+        "house_Lv3.003",
+        "Indoor1.019",
+        "house_Lv3.004",
+        "Pine-Leaves_02",
+        "Pine_Leaves_03",
+        "Pine_Leaves_01",
+        "Pine_Leaves_04",
+        "Pine-Leaves_02.001",
+        "Pine_Leaves_03.001",
+        "Pine-Leaves_02.002",
+        "Pine-Leaves_02.003",
+        "Pine_Leaves_03.002",
+        "Pine_Leaves_04.001",
+        "Pine-Leaves_02.004",
+        "Pine_Leaves_01.001",
+        "Pine_Leaves_01.002",
+        "Pine-Leaves_02.005",
+        "Pine_Leaves_03.003",
+        "Pine_Leaves_04.002",
+        "Pine-Leaves_02.006",
+        "Pine-Leaves_02.007",
+        "Pine_Leaves_01.003",
+        "Pine_Leaves_01.004",
+        "Pine-Leaves_02.008",
+        "Pine_Leaves_01.005",
+        "Pine-Leaves_02.009",
+        "Pine-Leaves_02.010",
+        "Pine-Leaves_02.011",
+        "Pine_Leaves_01.006",
+        "Pine-Leaves_02.012",
+        "Pine-Leaves_02.013",
+        "Pine-Leaves_02.014",
+        "Pine-Leaves_02.015",
+        "Pine_Leaves_04.003",
+        "Pine-Leaves_02.016",
+        "Pine-Leaves_02.017",
+        "Pine_Leaves_01.007",
+        "Pine-Leaves_02.018",
+        "Rock_Cliff",
+        "Rock_01",
+        "Rock_06",
+        "Fern_01",
+        "Fern_02",
+        "Leafy_Plant_02",
+        "White_Flower_01"
+      ]
+    },
+    {
+      "name": "Rocks",
+      "objects": [
+        "Rock_Cliff",
+        "Rock_01",
+        "Rock_06"
+      ]
+    },
+    {
+      "name": "Trees",
+      "objects": [
+        "Pine-Leaves_02",
+        "Pine_Leaves_03",
+        "Pine_Leaves_01",
+        "Pine_Leaves_04",
+        "Pine-Leaves_02.001",
+        "Pine_Leaves_03.001",
+        "Pine-Leaves_02.002",
+        "Pine-Leaves_02.003",
+        "Pine_Leaves_03.002",
+        "Pine_Leaves_04.001",
+        "Pine-Leaves_02.004",
+        "Pine_Leaves_01.001",
+        "Pine_Leaves_01.002",
+        "Pine-Leaves_02.005",
+        "Pine_Leaves_03.003",
+        "Pine_Leaves_04.002",
+        "Pine-Leaves_02.006",
+        "Pine-Leaves_02.007",
+        "Pine_Leaves_01.003",
+        "Pine_Leaves_01.004",
+        "Pine-Leaves_02.008",
+        "Pine_Leaves_01.005",
+        "Pine-Leaves_02.009",
+        "Pine-Leaves_02.010",
+        "Pine-Leaves_02.011",
+        "Pine_Leaves_01.006",
+        "Pine-Leaves_02.012",
+        "Pine-Leaves_02.013",
+        "Pine-Leaves_02.014",
+        "Pine-Leaves_02.015",
+        "Pine_Leaves_04.003",
+        "Pine-Leaves_02.016",
+        "Pine-Leaves_02.017",
+        "Pine_Leaves_01.007",
+        "Pine-Leaves_02.018"
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "name": "Area",
+      "type": "LIGHT",
+      "parent": null,
+      "loc": [
+        0.0,
+        6.0,
+        20.0
+      ],
+      "rot": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        62.852378845214844,
+        62.852378845214844,
+        62.852378845214844
+      ],
+      "children": 0
+    },
+    {
+      "name": "Back",
+      "type": "EMPTY",
+      "parent": null,
+      "loc": [
+        2.0,
+        102.0,
+        0.0
+      ],
+      "rot": [
+        1.4949496984481812,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        140.00033569335938,
+        140.00035095214844,
+        140.00035095214844
+      ],
+      "children": 0
+    },
+    {
+      "name": "back",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        0.0,
+        110.61244201660156,
+        0.729735255241394
+      ],
+      "rot": [
+        1.5176163911819458,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        94.57298278808594,
+        94.57298278808594,
+        94.57298278808594
+      ],
+      "children": 0,
+      "verts": 4,
+      "tris": 2,
+      "materials": [
+        "back"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Camera",
+      "type": "CAMERA",
+      "parent": null,
+      "loc": [
+        0.0,
+        -27.852283477783203,
+        5.7505388259887695
+      ],
+      "rot": [
+        1.5009832382202148,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Cube",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        0.0,
+        0.0,
+        14.20850944519043
+      ],
+      "rot": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0,
+      "verts": 8,
+      "tris": 12,
+      "materials": [
+        "Mud"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Fern_01",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -5.216770648956299,
+        2.5628442764282227,
+        -0.8930118083953857
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.5829447507858276,
+        0.5829447507858276,
+        0.5829447507858276
+      ],
+      "children": 0,
+      "verts": 120,
+      "tris": 128,
+      "materials": [
+        "Pine_Forest_Foliage.004"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Fern_02",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        12.657781600952148,
+        -2.5349597930908203,
+        -2.2634117603302
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.8232772350311279,
+        0.8232772350311279,
+        0.8232772350311279
+      ],
+      "children": 0,
+      "verts": 120,
+      "tris": 128,
+      "materials": [
+        "Pine_Forest_Foliage.006"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Fog",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        -133.0218048095703,
+        -133.0218048095703,
+        -133.0218048095703
+      ],
+      "children": 0,
+      "verts": 8,
+      "tris": 12,
+      "materials": [
+        "Material.003"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "ForestFog",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        0.0,
+        55.04279327392578,
+        -1.507130742073059
+      ],
+      "rot": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        52.19027328491211,
+        -18.827089309692383,
+        -10.957008361816406
+      ],
+      "children": 0,
+      "verts": 12,
+      "tris": 20,
+      "materials": [
+        "Volumetrics"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": [
+        "SIMPLE_DEFORM"
+      ]
+    },
+    {
+      "name": "Forst_foreground",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -2.061142921447754,
+        124.88038635253906,
+        23.865856170654297
+      ],
+      "rot": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        90.27217864990234,
+        90.27217864990234,
+        90.27217864990234
+      ],
+      "children": 0,
+      "verts": 4,
+      "tris": 2,
+      "materials": [
+        "texture_mountain_1"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "FP_Blooming_Shrubbery_007",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        3.62300443649292,
+        24.986865997314453,
+        0.17138218879699707
+      ],
+      "rot": [
+        0.0,
+        -0.0,
+        -2.612870693206787
+      ],
+      "scale": [
+        3.53682017326355,
+        3.53682017326355,
+        3.53682017326355
+      ],
+      "children": 0,
+      "verts": 388,
+      "tris": 194,
+      "materials": [
+        "Shrubbery",
+        "Grass",
+        "Flower_0_RANDOM"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "FP_Grass_015",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        1.613297939300537,
+        21.780345916748047,
+        0.2368316650390625
+      ],
+      "rot": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        2.5684869289398193,
+        2.5684869289398193,
+        2.5684869289398193
+      ],
+      "children": 0,
+      "verts": 76,
+      "tris": 38,
+      "materials": [
+        "Grass.003"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "GroundPlan",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rot": [
+        0.0433853380382061,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        49.00396728515625,
+        49.00396728515625,
+        49.00396728515625
+      ],
+      "children": 0,
+      "verts": 16641,
+      "tris": 32768,
+      "materials": [
+        "Stylized Grass With Yellow Flowers"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv0",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        4.306605815887451,
+        0.7361717224121094,
+        -1.6941953897476196
+      ],
+      "rot": [
+        1.5279463529586792,
+        0.08472010493278503,
+        -0.8980688452720642
+      ],
+      "scale": [
+        0.40323078632354736,
+        0.40323078632354736,
+        0.40323078632354736
+      ],
+      "children": 1,
+      "verts": 2751,
+      "tris": 5070,
+      "materials": [
+        "proto_human_rts.002"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv0.001",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        4.674455165863037,
+        4.432190895080566,
+        -1.0692238807678223
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445784552517e-16,
+        -1.3567839860916138
+      ],
+      "scale": [
+        0.403230756521225,
+        0.40323078632354736,
+        0.403230756521225
+      ],
+      "children": 1,
+      "verts": 2751,
+      "tris": 5070,
+      "materials": [
+        "proto_human_rts.006"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv0.002",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        5.2394938468933105,
+        7.657315254211426,
+        -0.8293580412864685
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445784552517e-16,
+        -1.3567839860916138
+      ],
+      "scale": [
+        0.403230756521225,
+        0.40323078632354736,
+        0.403230756521225
+      ],
+      "children": 1,
+      "verts": 2751,
+      "tris": 5070,
+      "materials": [
+        "proto_human_rts.006"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv0.003",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        5.2394938468933105,
+        11.603462219238281,
+        -0.7245323657989502
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445784552517e-16,
+        -1.3567839860916138
+      ],
+      "scale": [
+        0.403230756521225,
+        0.40323078632354736,
+        0.403230756521225
+      ],
+      "children": 1,
+      "verts": 2751,
+      "tris": 5070,
+      "materials": [
+        "proto_human_rts.006"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv0.004",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        3.6840758323669434,
+        16.126728057861328,
+        -0.5266145467758179
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445784552517e-16,
+        -0.6537495851516724
+      ],
+      "scale": [
+        0.40323078632354736,
+        0.40323078632354736,
+        0.40323078632354736
+      ],
+      "children": 1,
+      "verts": 2751,
+      "tris": 5070,
+      "materials": [
+        "proto_human_rts.006"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv1",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -3.2384495735168457,
+        0.057692527770996094,
+        -1.6917979717254639
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220446049250313e-16,
+        0.9053859114646912
+      ],
+      "scale": [
+        0.3697371482849121,
+        0.3697371482849121,
+        0.3697371482849121
+      ],
+      "children": 1,
+      "verts": 4500,
+      "tris": 8298,
+      "materials": [
+        "proto_human_rts.001"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv1.001",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -2.3648037910461426,
+        2.9498109817504883,
+        -1.4394323825836182
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220446049250313e-16,
+        1.1124128103256226
+      ],
+      "scale": [
+        0.3697371482849121,
+        0.3697371482849121,
+        0.3697371482849121
+      ],
+      "children": 1,
+      "verts": 4500,
+      "tris": 8298,
+      "materials": [
+        "proto_human_rts.008"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv1.002",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -2.3713936805725098,
+        6.101539611816406,
+        -0.6470403671264648
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445784552517e-16,
+        1.4795911312103271
+      ],
+      "scale": [
+        0.3697371482849121,
+        0.3697371482849121,
+        0.3697371482849121
+      ],
+      "children": 1,
+      "verts": 4500,
+      "tris": 8298,
+      "materials": [
+        "proto_human_rts.008"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv1.003",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -2.3713936805725098,
+        9.434207916259766,
+        -0.6470403671264648
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445784552517e-16,
+        2.308729887008667
+      ],
+      "scale": [
+        0.3697371482849121,
+        0.3697371482849121,
+        0.3697371482849121
+      ],
+      "children": 1,
+      "verts": 4500,
+      "tris": 8298,
+      "materials": [
+        "proto_human_rts.009"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv1.004",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -3.324911594390869,
+        13.112268447875977,
+        -0.4913231134414673
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445784552517e-16,
+        1.4795911312103271
+      ],
+      "scale": [
+        0.3697371482849121,
+        0.3697371482849121,
+        0.3697371482849121
+      ],
+      "children": 1,
+      "verts": 4500,
+      "tris": 8298,
+      "materials": [
+        "proto_human_rts.010"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv2",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -7.002811908721924,
+        0.12346172332763672,
+        -1.2299872636795044
+      ],
+      "rot": [
+        1.5763261318206787,
+        0.043322425335645676,
+        -0.4898342490196228
+      ],
+      "scale": [
+        0.0037280325777828693,
+        0.0029538157396018505,
+        0.0033769477158784866
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.005"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv2.001",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -7.002811908721924,
+        3.249396324157715,
+        -0.7642214298248291
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445652203619e-16,
+        0.18183492124080658
+      ],
+      "scale": [
+        0.0037280325777828693,
+        0.0029538157396018505,
+        0.0033769477158784866
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.007"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv2.002",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -7.75602388381958,
+        6.440920829772949,
+        -0.5612374544143677
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445916901415e-16,
+        -0.49040427803993225
+      ],
+      "scale": [
+        0.0037280325777828693,
+        0.0029538157396018505,
+        0.0033769477158784866
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.007"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv2.003",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -6.4575886726379395,
+        9.340644836425781,
+        -0.6645622253417969
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445916901415e-16,
+        6.5717692375183105
+      ],
+      "scale": [
+        0.0037280325777828693,
+        0.0029538157396018505,
+        0.0033769477158784866
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.007"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv2.004",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -7.668964862823486,
+        12.665763854980469,
+        -0.4784703254699707
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445916901415e-16,
+        -0.49040427803993225
+      ],
+      "scale": [
+        0.0037280325777828693,
+        0.0029538157396018505,
+        0.0033769477158784866
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.007"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv3",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        8.613018035888672,
+        1.854623794555664,
+        -1.7803361415863037
+      ],
+      "rot": [
+        1.5266406536102295,
+        0.046868398785591125,
+        3.956279754638672
+      ],
+      "scale": [
+        0.004435764160007238,
+        0.003514569951221347,
+        0.004018029198050499
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.003"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv3.001",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        10.435420989990234,
+        5.2029266357421875,
+        -1.1527652740478516
+      ],
+      "rot": [
+        1.577386736869812,
+        0.08438009023666382,
+        3.953808546066284
+      ],
+      "scale": [
+        0.004435764625668526,
+        0.003514569718390703,
+        0.004018029198050499
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.011"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv3.002",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        9.00969123840332,
+        8.28869915008545,
+        -0.6690710783004761
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445916901415e-16,
+        3.9573147296905518
+      ],
+      "scale": [
+        0.004435764625668526,
+        0.003514569718390703,
+        0.004018029198050499
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.012"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv3.003",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        9.361774444580078,
+        11.862979888916016,
+        -0.23748767375946045
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445784552517e-16,
+        3.5785722732543945
+      ],
+      "scale": [
+        0.004435764625668526,
+        0.003514569718390703,
+        0.004018029198050499
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.013"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "house_Lv3.004",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        7.4945902824401855,
+        15.783113479614258,
+        -0.3462725877761841
+      ],
+      "rot": [
+        1.659472107887268,
+        0.030818989500403404,
+        4.3787641525268555
+      ],
+      "scale": [
+        0.004435764625668526,
+        0.003514569718390703,
+        0.004018029198050499
+      ],
+      "children": 1,
+      "verts": 7845,
+      "tris": 14361,
+      "materials": [
+        "proto_human_rts.014"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Indoor1",
+      "type": "LIGHT",
+      "parent": "house_Lv1",
+      "loc": [
+        -2.8167355060577393,
+        -0.411237895488739,
+        -0.16484278440475464
+      ],
+      "rot": [
+        -0.19756050407886505,
+        -0.4424859583377838,
+        -0.40692487359046936
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.001",
+      "type": "LIGHT",
+      "parent": "house_Lv0",
+      "loc": [
+        3.812260627746582,
+        0.1993170529603958,
+        -0.6113176345825195
+      ],
+      "rot": [
+        -0.19756045937538147,
+        -0.44248589873313904,
+        3.8026950359344482
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.002",
+      "type": "LIGHT",
+      "parent": "house_Lv3",
+      "loc": [
+        8.514896392822266,
+        4.573781967163086,
+        0.04594622179865837
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.44248589873313904,
+        8.935861587524414
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.003",
+      "type": "LIGHT",
+      "parent": "house_Lv2",
+      "loc": [
+        -8.341104507446289,
+        -0.4477558135986328,
+        0.04594581946730614
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.44248586893081665,
+        10.821745872497559
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.004",
+      "type": "LIGHT",
+      "parent": "house_Lv0.001",
+      "loc": [
+        3.8122594356536865,
+        0.19931674003601074,
+        -0.6113174557685852
+      ],
+      "rot": [
+        -0.19756048917770386,
+        -0.44248613715171814,
+        3.8026950359344482
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.005",
+      "type": "LIGHT",
+      "parent": "house_Lv0.002",
+      "loc": [
+        3.81225848197937,
+        0.19931626319885254,
+        -0.6113175749778748
+      ],
+      "rot": [
+        -0.19756048917770386,
+        -0.44248613715171814,
+        3.8026950359344482
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.006",
+      "type": "LIGHT",
+      "parent": "house_Lv0.003",
+      "loc": [
+        3.9277305603027344,
+        0.25684863328933716,
+        -0.61131751537323
+      ],
+      "rot": [
+        -0.19756048917770386,
+        -0.44248613715171814,
+        3.8026950359344482
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.007",
+      "type": "LIGHT",
+      "parent": "house_Lv0.004",
+      "loc": [
+        3.8122596740722656,
+        0.19931595027446747,
+        -0.6113177537918091
+      ],
+      "rot": [
+        -0.1975604146718979,
+        -0.44248586893081665,
+        3.8026950359344482
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.008",
+      "type": "LIGHT",
+      "parent": "house_Lv2.001",
+      "loc": [
+        -7.74758768081665,
+        -0.7314715385437012,
+        0.013539260253310204
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.442486047744751,
+        10.821745872497559
+      ],
+      "scale": [
+        0.9093955755233765,
+        0.9093955755233765,
+        0.9093956351280212
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.009",
+      "type": "LIGHT",
+      "parent": "house_Lv2.002",
+      "loc": [
+        -8.341102600097656,
+        -0.4477560818195343,
+        0.04594583436846733
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.44248589873313904,
+        10.821745872497559
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.010",
+      "type": "LIGHT",
+      "parent": "house_Lv2.003",
+      "loc": [
+        -8.34110164642334,
+        -0.447756826877594,
+        0.04594610258936882
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.44248589873313904,
+        10.821745872497559
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.011",
+      "type": "LIGHT",
+      "parent": "house_Lv2.004",
+      "loc": [
+        -8.341102600097656,
+        -0.4477560818195343,
+        0.045945968478918076
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.44248589873313904,
+        10.821745872497559
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.012",
+      "type": "LIGHT",
+      "parent": "house_Lv1.001",
+      "loc": [
+        -2.816734790802002,
+        -0.41123688220977783,
+        -0.16484278440475464
+      ],
+      "rot": [
+        -0.19756050407886505,
+        -0.4424859583377838,
+        -0.40692487359046936
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.013",
+      "type": "LIGHT",
+      "parent": "house_Lv1.002",
+      "loc": [
+        -2.8167335987091064,
+        -0.41123706102371216,
+        -0.1648428589105606
+      ],
+      "rot": [
+        -0.19756059348583221,
+        -0.4424859881401062,
+        -0.4069247841835022
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.014",
+      "type": "LIGHT",
+      "parent": "house_Lv1.003",
+      "loc": [
+        -2.816735029220581,
+        -0.4112367033958435,
+        -0.1648428589105606
+      ],
+      "rot": [
+        -0.1975603699684143,
+        -0.44248586893081665,
+        -0.406924843788147
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.015",
+      "type": "LIGHT",
+      "parent": "house_Lv1.004",
+      "loc": [
+        -2.8167343139648438,
+        -0.41123780608177185,
+        -0.16484279930591583
+      ],
+      "rot": [
+        -0.19756059348583221,
+        -0.4424859881401062,
+        -0.4069247841835022
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.016",
+      "type": "LIGHT",
+      "parent": "house_Lv3.001",
+      "loc": [
+        8.514897346496582,
+        4.573783874511719,
+        0.04594546556472778
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.44248589873313904,
+        8.935861587524414
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.017",
+      "type": "LIGHT",
+      "parent": "house_Lv3.002",
+      "loc": [
+        8.514896392822266,
+        4.573782444000244,
+        0.04594583809375763
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.4424859285354614,
+        8.935861587524414
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.018",
+      "type": "LIGHT",
+      "parent": "house_Lv3.003",
+      "loc": [
+        8.51489543914795,
+        4.573782444000244,
+        0.04594649374485016
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.44248589873313904,
+        8.935861587524414
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Indoor1.019",
+      "type": "LIGHT",
+      "parent": "house_Lv3.004",
+      "loc": [
+        8.51489543914795,
+        4.573782444000244,
+        0.04594624787569046
+      ],
+      "rot": [
+        6.085625171661377,
+        -0.44248589873313904,
+        8.935861587524414
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Leafy_Plant_02",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        13.081308364868164,
+        -2.2220401763916016,
+        -2.317615032196045
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.8232772350311279,
+        0.8232772350311279,
+        0.8232772350311279
+      ],
+      "children": 0,
+      "verts": 388,
+      "tris": 514,
+      "materials": [
+        "Pine_Forest_Foliage.007"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "MountainPeak",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -6.729828834533691,
+        122.3681869506836,
+        -0.35853490233421326
+      ],
+      "rot": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        7.902568340301514,
+        7.902568340301514,
+        7.902568340301514
+      ],
+      "children": 0,
+      "verts": 4,
+      "tris": 2,
+      "materials": [
+        "peak"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "MountainTest",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -6.441992282867432,
+        93.8712158203125,
+        0.0
+      ],
+      "rot": [
+        1.5707963705062866,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        5.077028274536133,
+        5.077028274536133,
+        5.077028274536133
+      ],
+      "children": 0,
+      "verts": 4,
+      "tris": 2,
+      "materials": [
+        "Material.001"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Object_2",
+      "type": "MESH",
+      "parent": "WTF_Town_hall.obj.cleaner.materialmerger.gles",
+      "loc": [
+        0.0,
+        -35.78296661376953,
+        -4.8077581595862284e-06
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0,
+      "verts": 2300,
+      "tris": 1380,
+      "materials": [
+        "lambert4SG"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Object_3.001",
+      "type": "MESH",
+      "parent": "Town_hall.obj.cleaner.materialmerger.gles.001",
+      "loc": [
+        -938.3147583007812,
+        94.5010757446289,
+        -4517.30078125
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0,
+      "verts": 435,
+      "tris": 702,
+      "materials": [
+        "lambert5SG.001"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Object_5",
+      "type": "MESH",
+      "parent": "WTF_Town_hall.obj.cleaner.materialmerger.gles",
+      "loc": [
+        -41.68682098388672,
+        -35.90129470825195,
+        113.94945526123047
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.3088568449020386,
+        1.3088569641113281,
+        1.3088572025299072
+      ],
+      "children": 0,
+      "verts": 8558,
+      "tris": 4884,
+      "materials": [
+        "lambert2SG"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        40.8721809387207,
+        64.87361145019531,
+        -0.9046387672424316
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.7631542682647705,
+        2.7631542682647705,
+        2.7631545066833496
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.001",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        36.561466217041016,
+        50.794898986816406,
+        -0.6555154323577881
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.7664905786514282,
+        1.7664905786514282,
+        1.7664905786514282
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.002",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        22.80344009399414,
+        53.177085876464844,
+        0.4735660254955292
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.126826286315918,
+        1.126826286315918,
+        1.126826286315918
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.003",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        30.334930419921875,
+        52.854408264160156,
+        -0.22150874137878418
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.6363551616668701,
+        1.6363551616668701,
+        1.6363551616668701
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.004",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        24.349470138549805,
+        55.895668029785156,
+        -0.6555154323577881
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.7664905786514282,
+        1.7664905786514282,
+        1.7664905786514282
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.005",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        28.245193481445312,
+        55.895668029785156,
+        -0.6555154323577881
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.2638344764709473,
+        2.2638344764709473,
+        2.2638344764709473
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.006",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -6.583034992218018,
+        55.895668029785156,
+        -1.4077200889587402
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.7664905786514282,
+        1.7664905786514282,
+        1.7664905786514282
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.007",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        14.91225814819336,
+        55.895668029785156,
+        -0.6555154323577881
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.7664905786514282,
+        1.7664905786514282,
+        1.7664905786514282
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.008",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -28.653182983398438,
+        55.94269561767578,
+        0.017014026641845703
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.3953256607055664,
+        2.3953256607055664,
+        2.3953256607055664
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.009",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -25.31036376953125,
+        55.895668029785156,
+        -0.6555154323577881
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.7664905786514282,
+        1.7664905786514282,
+        1.7664905786514282
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.010",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -36.54322814941406,
+        55.895668029785156,
+        -0.6555154323577881
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.7664905786514282,
+        1.7664905786514282,
+        1.7664905786514282
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.011",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -31.894088745117188,
+        38.34369659423828,
+        1.90286386013031
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.2218220233917236,
+        2.2218220233917236,
+        2.2218217849731445
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.012",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -28.263927459716797,
+        34.98099136352539,
+        2.002871036529541
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.8177764415740967,
+        1.8177764415740967,
+        1.8177764415740967
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.013",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        10.047491073608398,
+        104.29277038574219,
+        -5.060379981994629
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.8626489639282227,
+        2.8626489639282227,
+        2.8626489639282227
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.014",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -10.398021697998047,
+        55.895668029785156,
+        -3.189517021179199
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.630873203277588,
+        2.630873203277588,
+        2.630873203277588
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.015",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        12.51650619506836,
+        89.62086486816406,
+        -4.167364597320557
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.735023260116577,
+        2.735023260116577,
+        2.7350237369537354
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.016",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -4.810719013214111,
+        93.03048706054688,
+        -4.262253761291504
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.7631542682647705,
+        2.7631542682647705,
+        2.7631545066833496
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.017",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -10.534046173095703,
+        -3.794729232788086,
+        -2.434513568878174
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.974773645401001,
+        0.974773645401001,
+        0.9747737646102905
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine-Leaves_02.018",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -9.069183349609375,
+        -3.28564453125,
+        -2.1220381259918213
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.5192586183547974,
+        0.5192586183547974,
+        0.5192585587501526
+      ],
+      "children": 0,
+      "verts": 664,
+      "tris": 796,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_01",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        38.32528305053711,
+        49.243194580078125,
+        -1.6628289222717285
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        3.598433494567871,
+        3.598433494567871,
+        3.598433494567871
+      ],
+      "children": 0,
+      "verts": 516,
+      "tris": 550,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_01.001",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        5.432158946990967,
+        83.55259704589844,
+        -3.394247055053711
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.328463554382324,
+        2.328463554382324,
+        2.328463554382324
+      ],
+      "children": 0,
+      "verts": 516,
+      "tris": 550,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_01.002",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -28.68376922607422,
+        47.059547424316406,
+        0.4325345754623413
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.54166579246521,
+        1.54166579246521,
+        1.54166579246521
+      ],
+      "children": 0,
+      "verts": 516,
+      "tris": 550,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_01.003",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        2.4488024711608887,
+        99.12409973144531,
+        -4.736509323120117
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.9830217361450195,
+        2.9830217361450195,
+        2.9830217361450195
+      ],
+      "children": 0,
+      "verts": 516,
+      "tris": 550,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_01.004",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -25.763038635253906,
+        37.70410919189453,
+        0.8807748556137085
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.0644187927246094,
+        2.0644187927246094,
+        2.0644187927246094
+      ],
+      "children": 0,
+      "verts": 516,
+      "tris": 550,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_01.005",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -30.020240783691406,
+        42.9830322265625,
+        1.2615221738815308
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.2782142162323,
+        2.2782142162323,
+        2.278214693069458
+      ],
+      "children": 0,
+      "verts": 516,
+      "tris": 550,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_01.006",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -28.68376922607422,
+        38.19340515136719,
+        0.4325345754623413
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.2797729969024658,
+        1.2797729969024658,
+        1.2797728776931763
+      ],
+      "children": 0,
+      "verts": 516,
+      "tris": 550,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_01.007",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -10.276226043701172,
+        -2.2797718048095703,
+        -2.364002227783203
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.060296893119812,
+        1.060296893119812,
+        1.060296893119812
+      ],
+      "children": 0,
+      "verts": 516,
+      "tris": 550,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_03",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        45.83174133300781,
+        72.44102478027344,
+        -0.12411856651306152
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.643961191177368,
+        2.643961191177368,
+        2.643961191177368
+      ],
+      "children": 0,
+      "verts": 436,
+      "tris": 464,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_03.001",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        47.41616439819336,
+        89.69874572753906,
+        -2.5667829513549805
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.5789616107940674,
+        2.5789616107940674,
+        2.5789616107940674
+      ],
+      "children": 0,
+      "verts": 436,
+      "tris": 464,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_03.002",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        29.102466583251953,
+        97.70320129394531,
+        -2.6361923217773438
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.5789616107940674,
+        2.5789616107940674,
+        2.5789616107940674
+      ],
+      "children": 0,
+      "verts": 436,
+      "tris": 464,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_03.003",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -16.715789794921875,
+        72.26580810546875,
+        -4.51917839050293
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.5789616107940674,
+        2.5789616107940674,
+        2.5789616107940674
+      ],
+      "children": 0,
+      "verts": 436,
+      "tris": 464,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_04",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        20.5605525970459,
+        50.84546661376953,
+        -3.280517578125
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.0368478298187256,
+        2.0368478298187256,
+        2.0368478298187256
+      ],
+      "children": 0,
+      "verts": 395,
+      "tris": 418,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_04.001",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -11.287971496582031,
+        85.39497375488281,
+        -8.495176315307617
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        3.666273355484009,
+        3.666273355484009,
+        3.666273355484009
+      ],
+      "children": 0,
+      "verts": 395,
+      "tris": 418,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_04.002",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -25.68975830078125,
+        102.35221862792969,
+        -7.93270206451416
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        3.1642212867736816,
+        3.1642212867736816,
+        3.1642212867736816
+      ],
+      "children": 0,
+      "verts": 395,
+      "tris": 418,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Pine_Leaves_04.003",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        11.171070098876953,
+        50.84546661376953,
+        -2.0027122497558594
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.0368478298187256,
+        2.0368478298187256,
+        2.0368478298187256
+      ],
+      "children": 0,
+      "verts": 395,
+      "tris": 418,
+      "materials": [
+        "Pine_Branches"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Ref",
+      "type": "EMPTY",
+      "parent": null,
+      "loc": [
+        0.24715368449687958,
+        -11.723211288452148,
+        5.254497528076172
+      ],
+      "rot": [
+        1.5158264636993408,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        3.2962167263031006,
+        3.2962167263031006,
+        3.2962167263031006
+      ],
+      "children": 0
+    },
+    {
+      "name": "REPLACE_Townhall.001",
+      "type": "EMPTY",
+      "parent": null,
+      "loc": [
+        0.0,
+        25.764739990234375,
+        0.0
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.007893292233347893,
+        0.007893292233347893,
+        0.007893292233347893
+      ],
+      "children": 1
+    },
+    {
+      "name": "Rock_01",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -13.745231628417969,
+        4.21829891204834,
+        -0.19423341751098633
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.8341003656387329,
+        0.8341003656387329,
+        0.8341003656387329
+      ],
+      "children": 0,
+      "verts": 263,
+      "tris": 472,
+      "materials": [
+        "Pine_Rocks_01"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Rock_06",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -13.643970489501953,
+        5.083245277404785,
+        -0.19423341751098633
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.8341003656387329,
+        0.8341003656387329,
+        0.8341003656387329
+      ],
+      "children": 0,
+      "verts": 570,
+      "tris": 1046,
+      "materials": [
+        "Pine_Rocks_02"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Rock_Cliff",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        12.836013793945312,
+        -1.2253799438476562,
+        -2.423226833343506
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.46866661310195923,
+        0.46866661310195923,
+        0.46866658329963684
+      ],
+      "children": 0,
+      "verts": 4326,
+      "tris": 8266,
+      "materials": [
+        "Cliff"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Shop",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -18.400470733642578,
+        21.31790542602539,
+        2.521401882171631
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.939494013786316,
+        1.939494013786316,
+        1.939494013786316
+      ],
+      "children": 0,
+      "verts": 136906,
+      "tris": 187941,
+      "materials": [
+        "Material_0"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "smithy_Lv2",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        17.376911163330078,
+        18.196945190429688,
+        1.9116655588150024
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445784552517e-16,
+        -0.9317194819450378
+      ],
+      "scale": [
+        0.5624646544456482,
+        0.562464714050293,
+        0.5624646544456482
+      ],
+      "children": 0,
+      "verts": 6526,
+      "tris": 12028,
+      "materials": [
+        "proto_human_rts"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "SubLike",
+      "type": "LIGHT",
+      "parent": null,
+      "loc": [
+        7.992554187774658,
+        20.210556030273438,
+        11.93404769897461
+      ],
+      "rot": [
+        0.0,
+        -0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Sun",
+      "type": "LIGHT",
+      "parent": null,
+      "loc": [
+        21.197162628173828,
+        76.56227111816406,
+        61.786617279052734
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "SunBeam",
+      "type": "LIGHT",
+      "parent": null,
+      "loc": [
+        20.4968204498291,
+        104.43206787109375,
+        22.028013229370117
+      ],
+      "rot": [
+        4.995182991027832,
+        -0.07818576693534851,
+        -0.2633737623691559
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 0
+    },
+    {
+      "name": "Tower",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        -13.263988494873047,
+        24.527812957763672,
+        0.20217466354370117
+      ],
+      "rot": [
+        1.570796251296997,
+        2.220445916901415e-16,
+        -2.3378746509552
+      ],
+      "scale": [
+        1.0,
+        1.2375669479370117,
+        1.0
+      ],
+      "children": 0,
+      "verts": 2955,
+      "tris": 5532,
+      "materials": [
+        "proto_human_rts.004"
+      ],
+      "uv_layers": 2,
+      "has_uv2": true,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "Town_hall.obj.cleaner.materialmerger.gles.001",
+      "type": "EMPTY",
+      "parent": "REPLACE_Townhall.001",
+      "loc": [
+        -431.54412841796875,
+        0.0,
+        0.0
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 1
+    },
+    {
+      "name": "Townhall",
+      "type": "EMPTY",
+      "parent": null,
+      "loc": [
+        0.0,
+        25.764739990234375,
+        0.0
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.007893292233347893,
+        0.007893292233347893,
+        0.007893292233347893
+      ],
+      "children": 1
+    },
+    {
+      "name": "White_Flower_01",
+      "type": "MESH",
+      "parent": null,
+      "loc": [
+        12.787216186523438,
+        -2.5100841522216797,
+        -2.2081809043884277
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        0.8232772350311279,
+        0.8232772350311279,
+        0.8232772350311279
+      ],
+      "children": 0,
+      "verts": 435,
+      "tris": 556,
+      "materials": [
+        "Pine_Forest_Foliage"
+      ],
+      "uv_layers": 1,
+      "has_uv2": false,
+      "shape_keys": [],
+      "vertex_groups": 0,
+      "modifiers": []
+    },
+    {
+      "name": "WTF_Town_hall.obj.cleaner.materialmerger.gles",
+      "type": "EMPTY",
+      "parent": "Townhall",
+      "loc": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rot": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "children": 2
+    }
+  ],
+  "armatures": [],
+  "materials": {
+    "back": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Image Texture": {
+          "image": "back.png",
+          "size": [
+            1536,
+            1024
+          ],
+          "filepath": "//../sonicity/docs/refs/back.png",
+          "packed": false
+        }
+      }
+    },
+    "Cliff": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Pine_Cliff_BaseColor",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "METALLIC ROUGHNESS": {
+          "image": "Pine_Cliff_Roughness",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "NORMAL MAP": {
+          "image": "Pine_Cliff_Normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "Dirt Ground": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Displacement": {
+          "image": "dirt_ground_04_height.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/dirt-ground_e754a6e2-a015-4aca-b91e-469931dc4a7b/textures_2k/dirt_ground_04_height.jpg",
+          "packed": true
+        },
+        "Base Color": {
+          "image": "dirt_ground_04_color.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/dirt-ground_e754a6e2-a015-4aca-b91e-469931dc4a7b/textures_2k/dirt_ground_04_color.jpg",
+          "packed": true
+        },
+        "Roughness": {
+          "image": "dirt_ground_04_roughness.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/dirt-ground_e754a6e2-a015-4aca-b91e-469931dc4a7b/textures_2k/dirt_ground_04_roughness.jpg",
+          "packed": true
+        },
+        "Normal": {
+          "image": "dirt_ground_04_normal.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/dirt-ground_e754a6e2-a015-4aca-b91e-469931dc4a7b/textures_2k/dirt_ground_04_normal.jpg",
+          "packed": true
+        }
+      }
+    },
+    "Flower_0_RANDOM": {
+      "uses_principled": false,
+      "metallic": null,
+      "roughness": null,
+      "textures": {
+        "Texture_g489er6": {
+          "image": "Gradient_0.png.006",
+          "size": [
+            817,
+            817
+          ],
+          "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/Gradient_0.png",
+          "packed": false
+        },
+        "Image Texture.005": {
+          "image": "flower_0.png",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/flower_0.png",
+          "packed": false
+        }
+      }
+    },
+    "Grass": {
+      "uses_principled": false,
+      "metallic": null,
+      "roughness": null,
+      "textures": {
+        "Image Texture.005": {
+          "image": "grass_0.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/grass_0.png",
+          "packed": false
+        },
+        "Texture_g489er6": {
+          "image": "Gradient_0.png.002",
+          "size": [
+            817,
+            817
+          ],
+          "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/Gradient_0.png",
+          "packed": false
+        }
+      }
+    },
+    "Grass Rock Ground": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Displacement": {
+          "image": "Rock and Grass Ground_Displacement.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Rock and Grass Ground_Displacement.jpg",
+          "packed": false
+        },
+        "Base Color": {
+          "image": "Rock and Grass Ground_Albedo.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Rock and Grass Ground_Albedo.jpg",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "Rock and Grass Ground_Roughness.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Rock and Grass Ground_Roughness.jpg",
+          "packed": false
+        },
+        "Normal": {
+          "image": "Rock and Grass Ground_Normal.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Rock and Grass Ground_Normal.jpg",
+          "packed": false
+        }
+      }
+    },
+    "Grass.003": {
+      "uses_principled": false,
+      "metallic": null,
+      "roughness": null,
+      "textures": {
+        "Texture_g489er6": {
+          "image": "Gradient_0.png.017",
+          "size": [
+            817,
+            817
+          ],
+          "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/Gradient_0.png",
+          "packed": false
+        },
+        "Image Texture.005": {
+          "image": "grass_0.png.003",
+          "size": [
+            4096,
+            4096
+          ],
+          "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/grass_0.png",
+          "packed": false
+        }
+      }
+    },
+    "lambert2SG": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.6000000238418579,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Image_0",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "lambert4SG": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.6000000238418579,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Image_2",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "NORMAL MAP": {
+          "image": "Image_3",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "lambert5SG": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.6000000238418579,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Image_4",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "lambert5SG.001": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.6000000238418579,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Image_4.001",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "Material.001": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Image Texture": {
+          "image": "peak.png",
+          "size": [
+            1024,
+            1536
+          ],
+          "filepath": "//Mountains/peak.png",
+          "packed": false
+        }
+      }
+    },
+    "Material.003": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {}
+    },
+    "Material_0": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.800000011920929,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Image_0.002",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "Mud": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Normal": {
+          "image": "Stylized_33_Mud_normal.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_normal.jpg",
+          "packed": true
+        },
+        "Base Color": {
+          "image": "Stylized_33_Mud_basecolor.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_basecolor.jpg",
+          "packed": true
+        },
+        "AO": {
+          "image": "Stylized_33_Mud_AO.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_AO.jpg",
+          "packed": true
+        },
+        "Displacement": {
+          "image": "Stylized_33_Mud_height.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_height.jpg",
+          "packed": true
+        },
+        "Roughness": {
+          "image": "Stylized_33_Mud_roughness.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_roughness.jpg",
+          "packed": true
+        },
+        "Metallic": {
+          "image": "Stylized_33_Mud_metallic.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_metallic.jpg",
+          "packed": true
+        },
+        "Opacity": {
+          "image": "Stylized_33_Mud_AO.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_AO.jpg",
+          "packed": true
+        }
+      }
+    },
+    "peak": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Image Texture": {
+          "image": "peak.png",
+          "size": [
+            1024,
+            1536
+          ],
+          "filepath": "//Mountains/peak.png",
+          "packed": false
+        }
+      }
+    },
+    "Pine_Branches": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Pine_Branches_BaseColor",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "METALLIC ROUGHNESS": {
+          "image": "Pine_Branches_Roughness.002",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "NORMAL MAP": {
+          "image": "Pine_Branches_Normal.002",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "Pine_Forest_Foliage": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Pine_Forest_Foliage_BaseColor",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "METALLIC ROUGHNESS": {
+          "image": "Pine_Forest_Foliage_Roughness",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "NORMAL MAP": {
+          "image": "Pine_Forest_Foliage_Normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "Pine_Forest_Foliage.004": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Pine_Forest_Foliage_BaseColor.004",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "METALLIC ROUGHNESS": {
+          "image": "Pine_Forest_Foliage_Roughness.004",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "NORMAL MAP": {
+          "image": "Pine_Forest_Foliage_Normal.004",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "Pine_Forest_Foliage.006": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Pine_Forest_Foliage_BaseColor.006",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "METALLIC ROUGHNESS": {
+          "image": "Pine_Forest_Foliage_Roughness.006",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "NORMAL MAP": {
+          "image": "Pine_Forest_Foliage_Normal.006",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "Pine_Forest_Foliage.007": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Pine_Forest_Foliage_BaseColor.007",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "METALLIC ROUGHNESS": {
+          "image": "Pine_Forest_Foliage_Roughness.007",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "NORMAL MAP": {
+          "image": "Pine_Forest_Foliage_Normal.007",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "Pine_Rocks_01": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Pine_Rocks_01_BaseColor",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "METALLIC ROUGHNESS": {
+          "image": "Pine_Rocks_01_Roughness",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "NORMAL MAP": {
+          "image": "Pine_Rocks_01_Normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "Pine_Rocks_02": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "BASE COLOR": {
+          "image": "Pine_Rocks_02_BaseColor",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "METALLIC ROUGHNESS": {
+          "image": "Pine_Rocks_02_Roughness",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        },
+        "NORMAL MAP": {
+          "image": "Pine_Rocks_02_Normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "",
+          "packed": true
+        }
+      }
+    },
+    "proto_human_rts": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.001": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.003",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.002": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.003",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.003": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.003",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.004": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.003",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.005": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.003",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.006": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.001",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.001",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.001",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.001",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.007": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.002",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.002",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.002",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.002",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.008": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.004",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.003",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.003",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.003",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.009": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.005",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.005",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.005",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.005",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.010": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.006",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.006",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.006",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.006",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.011": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.007",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.007",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.007",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.007",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.012": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.008",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.008",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.008",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.008",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.013": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.009",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.009",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.009",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.009",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "proto_human_rts.014": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "proto_human_RTS_color.tga.010",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+          "packed": false
+        },
+        "Metallic": {
+          "image": "proto_human_RTS_metal.tga.010",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "proto_human_RTS_rough.tga.010",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+          "packed": false
+        },
+        "Emission Color": {
+          "image": "proto_human_RTS_emission.tga.010",
+          "size": [
+            1024,
+            1024
+          ],
+          "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+          "packed": false
+        }
+      }
+    },
+    "Shrubbery": {
+      "uses_principled": false,
+      "metallic": null,
+      "roughness": null,
+      "textures": {
+        "Texture_g489er6": {
+          "image": "Gradient_0.png.002",
+          "size": [
+            817,
+            817
+          ],
+          "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/Gradient_0.png",
+          "packed": false
+        },
+        "Image Texture.005": {
+          "image": "shrubbery_0.png",
+          "size": [
+            4096,
+            4096
+          ],
+          "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/shrubbery_0.png",
+          "packed": false
+        }
+      }
+    },
+    "Stylized Clover Ground": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Base Color": {
+          "image": "Stylized_Clover_Ground_basecolor.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Stylized_Clover_Ground_basecolor.jpg",
+          "packed": false
+        },
+        "Roughness": {
+          "image": "Stylized_Clover_Ground_roughness.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Stylized_Clover_Ground_roughness.jpg",
+          "packed": false
+        },
+        "Normal": {
+          "image": "Stylized_Clover_Ground_normalogl.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Stylized_Clover_Ground_normalogl.jpg",
+          "packed": false
+        },
+        "Displacement": {
+          "image": "Stylized_Clover_Ground_height.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Stylized_Clover_Ground_height.jpg",
+          "packed": false
+        }
+      }
+    },
+    "Stylized Grass": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Image Texture.001": {
+          "image": "Stylized_Grass_normal.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Stylized_Grass_normal.jpg",
+          "packed": false
+        },
+        "Image Texture.002": {
+          "image": "Stylized_Grass_roughness.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Stylized_Grass_roughness.jpg",
+          "packed": false
+        },
+        "Image Texture.004": {
+          "image": "Stylized_Grass_basecolor.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Stylized_Grass_basecolor.jpg",
+          "packed": false
+        },
+        "Image Texture.003": {
+          "image": "Stylized_Grass_ambientocclusion.jpg",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/Stylized_Grass_ambientocclusion.jpg",
+          "packed": false
+        }
+      }
+    },
+    "Stylized Grass With Yellow Flowers": {
+      "uses_principled": false,
+      "metallic": null,
+      "roughness": null,
+      "textures": {
+        "Image Texture": {
+          "image": "PathMask",
+          "size": [
+            2048,
+            2048
+          ],
+          "filepath": "//textures/PathMask.png",
+          "packed": false
+        }
+      }
+    },
+    "texture_mountain_1": {
+      "uses_principled": true,
+      "metallic": 0.0,
+      "roughness": 0.5,
+      "textures": {
+        "Image Texture": {
+          "image": "texture_mountain_1.png",
+          "size": [
+            1536,
+            1024
+          ],
+          "filepath": "//Mountains/texture_mountain_1.png",
+          "packed": false
+        }
+      }
+    },
+    "Volumetrics": {
+      "uses_principled": false,
+      "metallic": null,
+      "roughness": null,
+      "textures": {}
+    }
+  },
+  "images": [
+    {
+      "name": "1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "filepath": "//../sonicity/docs/refs/1.png",
+      "packed": false
+    },
+    {
+      "name": "3.png",
+      "size": [
+        1920,
+        1080
+      ],
+      "filepath": "//Renders/ps/3.png",
+      "packed": false
+    },
+    {
+      "name": "back.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "filepath": "//../sonicity/docs/refs/back.png",
+      "packed": false
+    },
+    {
+      "name": "dirt_ground_04_color.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/dirt-ground_e754a6e2-a015-4aca-b91e-469931dc4a7b/textures_2k/dirt_ground_04_color.jpg",
+      "packed": true
+    },
+    {
+      "name": "dirt_ground_04_height.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/dirt-ground_e754a6e2-a015-4aca-b91e-469931dc4a7b/textures_2k/dirt_ground_04_height.jpg",
+      "packed": true
+    },
+    {
+      "name": "dirt_ground_04_normal.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/dirt-ground_e754a6e2-a015-4aca-b91e-469931dc4a7b/textures_2k/dirt_ground_04_normal.jpg",
+      "packed": true
+    },
+    {
+      "name": "dirt_ground_04_roughness.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/dirt-ground_e754a6e2-a015-4aca-b91e-469931dc4a7b/textures_2k/dirt_ground_04_roughness.jpg",
+      "packed": true
+    },
+    {
+      "name": "fireplace_1k.exr",
+      "size": [
+        1024,
+        512
+      ],
+      "filepath": "//../../../../Downloads/fireplace_1k.exr",
+      "packed": false
+    },
+    {
+      "name": "flower_0.png",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/flower_0.png",
+      "packed": false
+    },
+    {
+      "name": "FogMask",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": false
+    },
+    {
+      "name": "Gradient_0.png.002",
+      "size": [
+        817,
+        817
+      ],
+      "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/Gradient_0.png",
+      "packed": false
+    },
+    {
+      "name": "Gradient_0.png.006",
+      "size": [
+        817,
+        817
+      ],
+      "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/Gradient_0.png",
+      "packed": false
+    },
+    {
+      "name": "Gradient_0.png.017",
+      "size": [
+        817,
+        817
+      ],
+      "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/Gradient_0.png",
+      "packed": false
+    },
+    {
+      "name": "grass_0.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/grass_0.png",
+      "packed": false
+    },
+    {
+      "name": "grass_0.png.003",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/grass_0.png",
+      "packed": false
+    },
+    {
+      "name": "Image_0",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Image_0.002",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Image_2",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Image_3",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Image_4",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Image_4.001",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "PathMask",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/PathMask.png",
+      "packed": false
+    },
+    {
+      "name": "peak.png",
+      "size": [
+        1024,
+        1536
+      ],
+      "filepath": "//Mountains/peak.png",
+      "packed": false
+    },
+    {
+      "name": "Pine_Branches_BaseColor",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Branches_Normal.002",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Branches_Roughness.002",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Cliff_BaseColor",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Cliff_Normal",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Cliff_Roughness",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_BaseColor",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_BaseColor.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_BaseColor.002",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_BaseColor.003",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_BaseColor.004",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_BaseColor.005",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_BaseColor.006",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_BaseColor.007",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_BaseColor.008",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Normal",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Normal.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Normal.002",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Normal.003",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Normal.004",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Normal.005",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Normal.006",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Normal.007",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Normal.008",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Roughness",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Roughness.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Roughness.002",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Roughness.003",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Roughness.004",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Roughness.005",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Roughness.006",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Roughness.007",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Forest_Foliage_Roughness.008",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Rocks_01_BaseColor",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Rocks_01_Normal",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Rocks_01_Roughness",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Rocks_02_BaseColor",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Rocks_02_Normal",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "Pine_Rocks_02_Roughness",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "",
+      "packed": true
+    },
+    {
+      "name": "proto_human_RTS_color.tga",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.001",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.002",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.003",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.004",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.005",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.006",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.007",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.008",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.009",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_color.tga.010",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_color.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.001",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.002",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.003",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.004",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.005",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.006",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.007",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.008",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.009",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_emission.tga.010",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_emission.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.001",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.002",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.003",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.004",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.005",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.006",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.007",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.008",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.009",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_metal.tga.010",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_metal.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.001",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.002",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.003",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.004",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.005",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.006",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.007",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.008",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.009",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "proto_human_RTS_rough.tga.010",
+      "size": [
+        1024,
+        1024
+      ],
+      "filepath": "//RTS_human buildings_proto_series/texture/proto_human_RTS_rough.tga",
+      "packed": false
+    },
+    {
+      "name": "Render Result",
+      "size": [
+        0,
+        0
+      ],
+      "filepath": "",
+      "packed": false
+    },
+    {
+      "name": "Rock and Grass Ground_Albedo.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Rock and Grass Ground_Albedo.jpg",
+      "packed": false
+    },
+    {
+      "name": "Rock and Grass Ground_Albedo.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Rock and Grass Ground_Albedo.jpg",
+      "packed": false
+    },
+    {
+      "name": "Rock and Grass Ground_Displacement.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Rock and Grass Ground_Displacement.jpg",
+      "packed": false
+    },
+    {
+      "name": "Rock and Grass Ground_Displacement.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Rock and Grass Ground_Displacement.jpg",
+      "packed": false
+    },
+    {
+      "name": "Rock and Grass Ground_Normal.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Rock and Grass Ground_Normal.jpg",
+      "packed": false
+    },
+    {
+      "name": "Rock and Grass Ground_Normal.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Rock and Grass Ground_Normal.jpg",
+      "packed": false
+    },
+    {
+      "name": "Rock and Grass Ground_Roughness.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Rock and Grass Ground_Roughness.jpg",
+      "packed": false
+    },
+    {
+      "name": "Rock and Grass Ground_Roughness.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Rock and Grass Ground_Roughness.jpg",
+      "packed": false
+    },
+    {
+      "name": "shrubbery_0.png",
+      "size": [
+        4096,
+        4096
+      ],
+      "filepath": "//Flora_Paint_Assets_Library_v1_0_TRIAL/Main_Library/textures/shrubbery_0.png",
+      "packed": false
+    },
+    {
+      "name": "Stylized_33_Mud_AO.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_AO.jpg",
+      "packed": true
+    },
+    {
+      "name": "Stylized_33_Mud_basecolor.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_basecolor.jpg",
+      "packed": true
+    },
+    {
+      "name": "Stylized_33_Mud_height.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_height.jpg",
+      "packed": true
+    },
+    {
+      "name": "Stylized_33_Mud_metallic.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_metallic.jpg",
+      "packed": true
+    },
+    {
+      "name": "Stylized_33_Mud_normal.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_normal.jpg",
+      "packed": true
+    },
+    {
+      "name": "Stylized_33_Mud_roughness.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//assets/materials/mud_db84fee8-d926-48a3-b52e-61eb79fdd89e/textures_2k/Stylized_33_Mud_roughness.jpg",
+      "packed": true
+    },
+    {
+      "name": "Stylized_Clover_Ground_basecolor.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Clover_Ground_basecolor.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Clover_Ground_height.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Clover_Ground_height.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Clover_Ground_normalogl.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Clover_Ground_normalogl.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Clover_Ground_roughness.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Clover_Ground_roughness.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_ambientocclusion.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_ambientocclusion.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_basecolor.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_basecolor.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_basecolor.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_basecolor.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_normal.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_normal.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_normal.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_normal.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_roughness.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_roughness.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_roughness.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_roughness.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_With_Yellow_Flowers_basecolor.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_With_Yellow_Flowers_basecolor.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_With_Yellow_Flowers_displacement.png.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_With_Yellow_Flowers_displacement.png",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_With_Yellow_Flowers_normal.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_With_Yellow_Flowers_normal.jpg",
+      "packed": false
+    },
+    {
+      "name": "Stylized_Grass_With_Yellow_Flowers_roughness.jpg.001",
+      "size": [
+        2048,
+        2048
+      ],
+      "filepath": "//textures/Stylized_Grass_With_Yellow_Flowers_roughness.jpg",
+      "packed": false
+    },
+    {
+      "name": "texture_mountain_1.png",
+      "size": [
+        1536,
+        1024
+      ],
+      "filepath": "//Mountains/texture_mountain_1.png",
+      "packed": false
+    },
+    {
+      "name": "Viewer Node",
+      "size": [
+        256,
+        256
+      ],
+      "filepath": "",
+      "packed": false
+    }
+  ],
+  "actions": [
+    {
+      "name": "house_Lv1_door|Take 001|BaseLayer",
+      "frame_range": [
+        2.25,
+        51.0
+      ],
+      "seconds": 2.03125
+    },
+    {
+      "name": "house_Lv1_handler|Take 001|BaseLayer",
+      "frame_range": [
+        2.25,
+        51.0
+      ],
+      "seconds": 2.03125
+    },
+    {
+      "name": "house_Lv2_door_handler|Scene",
+      "frame_range": [
+        2.0,
+        41.0
+      ],
+      "seconds": 1.625
+    },
+    {
+      "name": "house_Lv2_door|Scene",
+      "frame_range": [
+        2.0,
+        41.0
+      ],
+      "seconds": 1.625
+    },
+    {
+      "name": "house_Lv3_door|Scene",
+      "frame_range": [
+        2.0,
+        41.0
+      ],
+      "seconds": 1.625
+    },
+    {
+      "name": "house_Lv3_door|Scene.001",
+      "frame_range": [
+        2.0,
+        41.0
+      ],
+      "seconds": 1.625
+    },
+    {
+      "name": "house_Lv3_handler|Scene",
+      "frame_range": [
+        2.0,
+        41.0
+      ],
+      "seconds": 1.625
+    },
+    {
+      "name": "house_Lv3_handler|Scene.001",
+      "frame_range": [
+        2.0,
+        41.0
+      ],
+      "seconds": 1.625
+    },
+    {
+      "name": "smithy_Lv2_Armature_bellow|Scene",
+      "frame_range": [
+        2.0,
+        91.0
+      ],
+      "seconds": 3.7083333333333335
+    },
+    {
+      "name": "smithy_Lv2_door_handler_left|Scene",
+      "frame_range": [
+        2.0,
+        91.0
+      ],
+      "seconds": 3.7083333333333335
+    },
+    {
+      "name": "smithy_Lv2_door_handler_right|Scene",
+      "frame_range": [
+        2.0,
+        91.0
+      ],
+      "seconds": 3.7083333333333335
+    },
+    {
+      "name": "smithy_Lv2_door_left|Scene",
+      "frame_range": [
+        2.0,
+        91.0
+      ],
+      "seconds": 3.7083333333333335
+    },
+    {
+      "name": "smithy_Lv2_door_right|Scene",
+      "frame_range": [
+        2.0,
+        91.0
+      ],
+      "seconds": 3.7083333333333335
+    },
+    {
+      "name": "tower_Lv1_door_handler|Scene",
+      "frame_range": [
+        2.0,
+        41.0
+      ],
+      "seconds": 1.625
+    },
+    {
+      "name": "tower_Lv1_door|Scene",
+      "frame_range": [
+        2.0,
+        41.0
+      ],
+      "seconds": 1.625
+    }
+  ],
+  "export_sanity": {
+    "negative_scales": [
+      "Fog"
+    ],
+    "non_principled_materials": [
+      "Flower_0_RANDOM",
+      "Grass",
+      "Grass.003",
+      "Shrubbery",
+      "Stylized Grass With Yellow Flowers",
+      "Volumetrics"
+    ]
+  }
+}

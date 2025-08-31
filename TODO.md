@@ -1,5 +1,25 @@
 
+##
+
+1. camera set fixed
+2. lanscape how 
+3. grass from unreal demo sm map?
+
+## todo
+
+- add heros building spawn sound
+- add raycaster building lights overview
+
+Atmospheric Effects
+Fog: Add depth and atmosphere
+Particle System: Dust particles, smoke from chimneys
+Post-processing: Bloom for lights, color grading
+Weather System: Rain, snow effects
+
+
 ## models
+
+
 
  oracle -> yield statuin
  banner -> in shop
@@ -7,6 +27,28 @@
  factory - diamond
  woodc - farm
  house - home
+
+ left:
+
+ barrak - barraks
+ throne - stake hub
+ tower - tower
+
+## disctrict 
+
+guaiadance ?? smithy
+workshop ? blacksmith
+SCOUT_GUILD ? sm watch tower
+GARRISON ? sm barracks
+OUTPOST ? sm outpost
+COMMAND_CENTER ? sm fortress
+TAVERN ? sm church
+TACTICS_CENTER ?  sm archery ?
+ARCANUME ? mine ?
+
+## fab
+
+https://www.fab.com/listings/4b44a80b-b57a-4e79-9d56-73db9defa8c0
 
 ## todo
 
