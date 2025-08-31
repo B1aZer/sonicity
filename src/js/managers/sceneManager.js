@@ -309,19 +309,34 @@ export class SceneManager {
     }
 
     /**
-     * Calculates the appropriate FOV based on screen width
+     * Calculates the appropriate FOV and camera position based on screen width
      * @param {number} screenWidth - The screen width in pixels
-     * @returns {number} The FOV in degrees
+     * @returns {Object} {fov: number, position: {x, y, z}}
      */
     calculateFOV(screenWidth) {
+        const baseY = 2; // Default Blender camera Y position
+        const baseZ = 5.75;   // Default Blender camera Z position
+        
         if (screenWidth < 480) { // Mobile phones
-            return 105; // Very wide FOV for mobile devices
+            return {
+                fov: 95, // Very wide FOV for mobile devices
+                position: { x: 0, y: baseY * 1.8, z: baseZ * 1.2 } // Further back and higher
+            };
         } else if (screenWidth < 768) { // Small desktop/tablet
-            return 65; // Wider for small screens
+            return {
+                fov: 65, // Wider for small screens
+                position: { x: 0, y: baseY * 1.3, z: baseZ * 1.1 } // Slightly further back
+            };
         } else if (screenWidth < 1200) { // Medium desktop
-            return 60; // Wider for small screens
+            return {
+                fov: 60, // Wider for small screens
+                position: { x: 0, y: baseY, z: baseZ } // Default position
+            };
         }
-        return 54; // Default 35mm FOV for large screens
+        return {
+            fov: 54, // Default 35mm FOV for large screens
+            position: { x: 0, y: baseY, z: baseZ } // Default Blender position
+        };
     }
 
     /**
@@ -332,7 +347,7 @@ export class SceneManager {
     setupCamera(renderDiv) {
         // Create camera with dynamic FOV based on screen size
         const screenWidth = window.innerWidth;
-        const fov = this.calculateFOV(screenWidth);
+        const { fov, position } = this.calculateFOV(screenWidth);
         
         const camera = new THREE.PerspectiveCamera(
             fov, // Dynamic FOV based on screen size
@@ -342,7 +357,7 @@ export class SceneManager {
         );
         
         // Set camera to exact Blender scene position
-        camera.position.set(0, 0, 5.75); // Blender camera position
+        camera.position.set(position.x, position.y, position.z);
         //camera.rotation.set(12.701, 0, 0); // Blender camera rotation (radians)
         
         Logger.info('Camera set to Blender scene position with 35mm lens:', {
@@ -470,7 +485,15 @@ export class SceneManager {
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.screenSpacePanning = false;
-        controls.maxPolarAngle = Math.PI / 2 - 0.05;
+        
+        // Restrict vertical rotation (up/down)
+        controls.maxPolarAngle = Math.PI / 2; // Limit looking down (was Math.PI / 2 - 0.05)
+        controls.minPolarAngle = Math.PI / 2; // Limit looking up (new restriction)
+        
+        // Restrict horizontal rotation (left/right)
+        controls.maxAzimuthAngle = Math.PI / 16; // Limit right rotation (45 degrees)
+        controls.minAzimuthAngle = -Math.PI / 16; // Limit left rotation (-45 degrees)
+        
         controls.minDistance = 5;
         controls.maxDistance = 100;
         controls.enableZoom = true;
@@ -478,8 +501,8 @@ export class SceneManager {
         controls.enablePan = true;
         controls.panSpeed = 1.0;
         controls.enableRotate = true;
-        controls.rotateSpeed = 1.0;
-        controls.target.set(0, 0, 0); // Look at City Hall position
+        controls.rotateSpeed = 0.5; // Reduced rotation speed for more control
+        controls.target.set(0, 0, 0); // Look at center
         controls.update();
         return controls;
     }
@@ -513,20 +536,24 @@ export class SceneManager {
             resizeTimeout = setTimeout(() => {
                 const oldAspect = this.camera.aspect;
                 const oldFov = this.camera.fov;
+                const oldPosition = this.camera.position.clone();
                 
-                // Calculate new FOV based on screen width
+                // Calculate new FOV and position based on screen width
                 const screenWidth = window.innerWidth;
-                const newFov = this.calculateFOV(screenWidth);
+                const { fov, position } = this.calculateFOV(screenWidth);
                 
                 // Only update FOV if it actually changed
-                if (Math.abs(newFov - oldFov) > 1) {
-                    this.camera.fov = newFov;
+                if (Math.abs(fov - oldFov) > 1) {
+                    this.camera.fov = fov;
                     Logger.info('Camera FOV updated:', {
                         windowSize: `${window.innerWidth}x${window.innerHeight}`,
                         oldFov: oldFov,
                         newFov: this.camera.fov
                     });
                 }
+                
+                // Update camera position
+                this.camera.position.set(position.x, position.y, position.z);
                 
                 this.camera.aspect = window.innerWidth / window.innerHeight;
                 this.camera.updateProjectionMatrix();
@@ -536,7 +563,8 @@ export class SceneManager {
                     windowSize: `${window.innerWidth}x${window.innerHeight}`,
                     oldAspect: oldAspect.toFixed(3),
                     newAspect: this.camera.aspect.toFixed(3),
-                    fov: this.camera.fov
+                    fov: this.camera.fov,
+                    position: `(${position.x}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`
                 });
             }, 150); // 150ms delay to prevent jarring changes
         };
