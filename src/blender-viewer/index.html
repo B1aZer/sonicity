@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Blender Scene Viewer</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+  <style>
+    html, body, canvas {
+      margin: 0;
+      height: 100%;
+      background: #0e1012;
+    }
+    
+    #overlay {
+      position: fixed;
+      left: 10px;
+      top: 10px;
+      color: #eaeaea;
+      font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: rgba(0,0,0,0.35);
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+    
+    #controls {
+      position: fixed;
+      right: 10px;
+      top: 10px;
+      color: #eaeaea;
+      font: 12px/1.2 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: rgba(0,0,0,0.35);
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+    
+    button {
+      background: #4a4a4a;
+      color: #eaeaea;
+      border: none;
+      padding: 4px 8px;
+      margin: 2px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    button:hover {
+      background: #6a6a6a;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">Loading… <span id="status">Initializing...</span></div>
+  <div id="controls">
+    <button onclick="toggleWireframe()">Wireframe</button>
+    <button onclick="toggleGrid()">Grid</button>
+    <button onclick="resetCamera()">Reset Camera</button>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
