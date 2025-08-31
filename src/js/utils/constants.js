@@ -137,7 +137,7 @@ export const BUILDINGS = {
     },
     MINE: {
         name: 'Mine',
-        size: new THREE.Vector3(12, 12, 12),
+        size: new THREE.Vector3(15, 15, 15),
         color: 0xFFFFE0, // Light Yellow
         position: { x: 40, y: 0, z: 0 }, // Right position
         rotation: -Math.PI / 2,
@@ -146,7 +146,7 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/mine',
             levels: {
-                1: { url: 'assets/rep_forge.glb' }
+                1: { url: 'assets/mine.glb' }
             }
         }
     },
