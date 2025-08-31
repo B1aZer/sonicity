@@ -131,24 +131,24 @@ export class StakePage extends BasePage {
                 </div>
                 <!-- Tier Tabs -->
                 <div class="page-section tier-tabs-section">
-                    <div class="tabs">
-                        <button class="tab active" data-tier="0">
+                    <div class="tier-tabs">
+                        <button class="tier-tab active" data-tier="0">
                             <span class="tab-label">Tier 0 (Houses)</span>
                             <span class="tab-count">0</span>
                         </button>
-                        <button class="tab" data-tier="1">
+                        <button class="tier-tab" data-tier="1">
                             <span class="tab-label">Tier 1 (Farms)</span>
                             <span class="tab-count">0</span>
                         </button>
-                        <button class="tab" data-tier="2">
+                        <button class="tier-tab" data-tier="2">
                             <span class="tab-label">Tier 2 (Diamond Stations)</span>
                             <span class="tab-count">0</span>
                         </button>
-                        <button class="tab" data-tier="3">
+                        <button class="tier-tab" data-tier="3">
                             <span class="tab-label">Tier 3 (REP Forges)</span>
                             <span class="tab-count">0</span>
                         </button>
-                        <button class="tab" data-tier="4">
+                        <button class="tier-tab" data-tier="4">
                             <span class="tab-label">Tier 4 (Yield Stations)</span>
                             <span class="tab-count">0</span>
                         </button>
@@ -166,10 +166,10 @@ export class StakePage extends BasePage {
 
     setupEventListeners() {
         // Tier tab switching
-        const tierTabs = this.element.querySelectorAll('.tab');
+        const tierTabs = this.element.querySelectorAll('.tier-tab');
         tierTabs.forEach(tab => {
             tab.addEventListener('click', async () => {
-                this.element.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.element.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
                 this.element.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
                 tab.classList.add('active');
                 const tier = tab.dataset.tier;
@@ -273,7 +273,7 @@ export class StakePage extends BasePage {
         }
         
         for (let tier = 0; tier <= 4; tier++) {
-            const tab = this.element.querySelector(`.tab[data-tier="${tier}"]`);
+            const tab = this.element.querySelector(`.tier-tab[data-tier="${tier}"]`);
             const count = this.state.byTier[tier].length;
             tab.querySelector('.tab-count').textContent = count;
             
