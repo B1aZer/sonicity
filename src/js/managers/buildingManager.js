@@ -164,11 +164,16 @@ export class BuildingManager {
     calculateTerrainRotation(terrainNormal) {
         Logger.debug('🔄 Calculating terrain rotation for normal:', terrainNormal);
         
+        // Calculate slope angle for debugging
+        const slopeAngle = Math.acos(Math.abs(terrainNormal.y)) * (180 / Math.PI);
+        Logger.debug('📐 Terrain slope angle:', slopeAngle.toFixed(2) + '°');
+        
         // Default up vector
         const upVector = new THREE.Vector3(0, 1, 0);
         
         // If terrain is flat (normal is mostly up), no rotation needed
-        if (Math.abs(terrainNormal.y) > 0.95) {
+        // Lower threshold to detect gentler slopes
+        if (Math.abs(terrainNormal.y) > 0.98) {
             Logger.debug('🏞️ Terrain is flat, no rotation needed');
             return new THREE.Euler(0, 0, 0);
         }
