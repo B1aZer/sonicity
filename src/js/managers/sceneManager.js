@@ -499,26 +499,44 @@ export class SceneManager {
      * Sets up the window resize handler
      */
     setupWindowResizeHandler() {
+        let resizeTimeout;
+        
         this.boundOnWindowResize = () => {
-            const oldAspect = this.camera.aspect;
-            const oldFov = this.camera.fov;
+            // Clear the previous timeout
+            if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+            }
             
-            // Calculate new FOV based on screen width
-            const screenWidth = window.innerWidth;
-            const newFov = this.calculateFOV(screenWidth);
-            
-            this.camera.fov = newFov;
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-            
-            Logger.info('Camera resized with dynamic FOV:', {
-                windowSize: `${window.innerWidth}x${window.innerHeight}`,
-                oldAspect: oldAspect.toFixed(3),
-                newAspect: this.camera.aspect.toFixed(3),
-                oldFov: oldFov,
-                newFov: this.camera.fov
-            });
+            // Set a new timeout to delay the FOV update
+            resizeTimeout = setTimeout(() => {
+                const oldAspect = this.camera.aspect;
+                const oldFov = this.camera.fov;
+                
+                // Calculate new FOV based on screen width
+                const screenWidth = window.innerWidth;
+                const newFov = this.calculateFOV(screenWidth);
+                
+                // Only update FOV if it actually changed
+                if (Math.abs(newFov - oldFov) > 1) {
+                    this.camera.fov = newFov;
+                    Logger.info('Camera FOV updated:', {
+                        windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                        oldFov: oldFov,
+                        newFov: this.camera.fov
+                    });
+                }
+                
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                
+                Logger.info('Camera resized:', {
+                    windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                    oldAspect: oldAspect.toFixed(3),
+                    newAspect: this.camera.aspect.toFixed(3),
+                    fov: this.camera.fov
+                });
+            }, 150); // 150ms delay to prevent jarring changes
         };
         window.addEventListener('resize', this.boundOnWindowResize);
     }
