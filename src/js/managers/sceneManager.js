@@ -136,6 +136,11 @@ export class SceneManager {
             if (groundPlan) {
                 Logger.info('SceneManager: Successfully loaded GroundPlan geometry from Blender');
                 
+                // Apply exact Blender scene positioning
+                groundPlan.position.set(0, 0, 0); // Blender GroundPlan position
+                groundPlan.rotation.set(0.0433853380382061, 0, 0); // Blender GroundPlan rotation
+                groundPlan.scale.set(49.00396728515625, 49.00396728515625, 49.00396728515625); // Blender GroundPlan scale
+                
                 // Apply proper properties for the game
                 groundPlan.receiveShadow = true;
                 groundPlan.name = "groundPlane";
@@ -152,6 +157,12 @@ export class SceneManager {
                 groundPlan.material = groundMaterial;
                 groundPlan.updateMatrix();
                 groundPlan.updateMatrixWorld();
+                
+                Logger.info('SceneManager: Terrain positioned to match Blender scene:', {
+                    position: groundPlan.position,
+                    rotation: groundPlan.rotation,
+                    scale: groundPlan.scale
+                });
                 
                 return groundPlan;
             } else {
@@ -303,14 +314,8 @@ export class SceneManager {
      * @returns {THREE.PerspectiveCamera} The camera
      */
     setupCamera(renderDiv) {
-        // Calculate grid dimensions
-        const gridSize = this.gridManager.getGridSize();
-        const cellSize = this.gridManager.getCellSize();
-        const totalSize = gridSize * cellSize;
-        const radius = totalSize / 2;
-
-        // Create camera with 35mm field of view
-        // 35mm FOV is approximately 54 degrees (more cinematic than default 75)
+        // Create camera with exact Blender settings: 35mm lens, perspective
+        // 35mm FOV is approximately 54 degrees
         const camera = new THREE.PerspectiveCamera(
             54, // 35mm equivalent FOV
             renderDiv.clientWidth / renderDiv.clientHeight,
@@ -318,10 +323,16 @@ export class SceneManager {
             1000
         );
         
-        // Position camera to look at City Hall
-        const height = 20; // Height for overview
-        const distance = 40; // Distance from center
-        camera.position.set(0, height, distance); // Position camera behind City Hall
+        // Set camera to exact Blender scene position
+        camera.position.set(0, -27.85, 5.75); // Blender camera position
+        camera.rotation.set(1.501, 0, 0); // Blender camera rotation (radians)
+        
+        Logger.info('Camera set to Blender scene position with 35mm lens:', {
+            position: camera.position,
+            rotation: camera.rotation,
+            fov: camera.fov,
+            lens: '35mm'
+        });
         
         return camera;
     }

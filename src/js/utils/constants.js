@@ -40,7 +40,7 @@ export const BUILDINGS = {
     // Grid-based buildings (dynamic placement)
     HOUSE: {
         name: 'House',
-        size: new THREE.Vector3(2, 2, 2), // Scaled down to fit 2-unit grid cells
+        size: new THREE.Vector3(0.8, 0.8, 0.8), // Scaled to match Blender house proportions
         color: 0xADD8E6, // Light Blue
         isGridBuilding: true,
         tier: 0,
@@ -107,7 +107,7 @@ export const BUILDINGS = {
     // Fixed district buildings
     CITY_HALL: {
         name: 'City Hall',
-        size: new THREE.Vector3(24, 24, 24),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0xB0C4DE, // Light Steel Blue
         position: { x: 0, y: 0, z: -40 }, // Top position
         rotation: Math.PI,
@@ -137,7 +137,7 @@ export const BUILDINGS = {
     },
     MINE: {
         name: 'Mine',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0xFFFFE0, // Light Yellow
         position: { x: 40, y: 0, z: 0 }, // Right position
         rotation: -Math.PI / 2,
@@ -152,7 +152,7 @@ export const BUILDINGS = {
     },
     SHOP: {
         name: 'Shop',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0xFFD700, // Gold color
         position: { x: -20, y: 0, z: -35 },
         rotation: 0,
@@ -167,7 +167,7 @@ export const BUILDINGS = {
     },
     WORKSHOP: {
         name: 'Workshop',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0xFFD700, // Gold color
         position: { x: 20, y: 0, z: -35 },
         rotation: 0,
@@ -182,7 +182,7 @@ export const BUILDINGS = {
     },
     OUTPOST: {
         name: 'Outpost',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x8B4513, // Saddle Brown
         position: { x: -15, y: 0, z: -65 },
         rotation: 0,
@@ -197,7 +197,7 @@ export const BUILDINGS = {
     },
     DEFENSE_TOWER: {
         name: 'Defense Tower',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0xCD5C5C, // Indian Red
         position: { x: -50, y: 0, z: -55 },
         rotation: 0,
@@ -214,7 +214,7 @@ export const BUILDINGS = {
     },
     BARRACKS: {
         name: 'Barracks',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x8B4513, // Saddle Brown
         position: { x: 35, y: 0, z: -35 },
         rotation: -Math.PI / 2,
@@ -231,7 +231,7 @@ export const BUILDINGS = {
     },
     SCOUT_GUILD: {
         name: 'Scout Guild',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x4682B4, // Steel Blue
         position: { x: 15, y: 0, z: -65 },
         rotation: 0,
@@ -246,7 +246,7 @@ export const BUILDINGS = {
     },
     GARRISON: {
         name: 'Garrison',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x696969, // Dim Gray
         position: { x: 35, y: 0, z: -55 },
         rotation: 0,
@@ -271,7 +271,7 @@ export const BUILDINGS = {
     },
     TAVERN: {
         name: 'Tavern',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0xD2691E, // Chocolate
         position: { x: -25, y: 0, z: -75 },
         rotation: 0,
@@ -286,7 +286,7 @@ export const BUILDINGS = {
     },
     ADVENTURE_CAMP: {
         name: 'Adventure Camp',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x228B22, // Forest Green
         position: { x: 25, y: 0, z: -75 },
         rotation: 0,
@@ -296,7 +296,7 @@ export const BUILDINGS = {
     },
     MAGE_TOWER: {
         name: 'Mage Tower',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x9932CC, // Dark Orchid
         position: { x: -35, y: 0, z: -85 },
         rotation: 0,
@@ -306,7 +306,7 @@ export const BUILDINGS = {
     },
     TACTICS_CENTER: {
         name: 'Tactics Center',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x4169E1, // Royal Blue
         position: { x: 35, y: 0, z: -85 },
         rotation: 0,
@@ -321,7 +321,7 @@ export const BUILDINGS = {
     },
     GEM_WORKSHOP: {
         name: 'Gem Workshop',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0xFF1493, // Deep Pink
         position: { x: -45, y: 0, z: -95 },
         rotation: 0,
@@ -331,7 +331,7 @@ export const BUILDINGS = {
     },
     DIAMOND_VAULT: {
         name: 'Diamond Vault',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x00CED1, // Dark Turquoise
         position: { x: 45, y: 0, z: -95 },
         rotation: 0,
@@ -341,7 +341,7 @@ export const BUILDINGS = {
     },
     ARCANUM_OF_NAMES: {
         name: 'Arcanum of Names',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0xFFD700, // Gold
         position: { x: 55, y: 0, z: -75 },
         rotation: 0,
@@ -356,7 +356,7 @@ export const BUILDINGS = {
     },
     REFINERY: {
         name: 'Refinery',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x32CD32, // Lime Green
         position: { x: -55, y: 0, z: -105 },
         rotation: 0,
@@ -366,7 +366,7 @@ export const BUILDINGS = {
     },
     COUNCIL_HALL: {
         name: 'Council Hall',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x8B0000, // Dark Red
         position: { x: 55, y: 0, z: -105 },
         rotation: 0,
@@ -376,7 +376,7 @@ export const BUILDINGS = {
     },
     FORTRESS_WALLS: {
         name: 'Fortress Walls',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x808080, // Gray
         position: { x: -65, y: 0, z: -115 },
         rotation: 0,
@@ -386,7 +386,7 @@ export const BUILDINGS = {
     },
     EMBASSY_HOME: {
         name: 'Embassy Home',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x4B0082, // Indigo
         position: { x: 65, y: 0, z: -115 },
         rotation: 0,
@@ -396,7 +396,7 @@ export const BUILDINGS = {
     },
     TREASURY_VAULT: {
         name: 'Treasury Vault',
-        size: new THREE.Vector3(15, 15, 15),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0xFFD700, // Gold
         position: { x: 0, y: 0, z: -125 },
         rotation: 0,
