@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Logger from '../utils/logger.js';
 import { GrassBlades } from '../objects/GrassBlades.js';
 import { River } from '../objects/River.js';
@@ -105,23 +106,76 @@ export class SceneManager {
     }
 
     /**
-     * Creates the ground plane with grass texture
+     * Creates the ground plane using actual GroundPlan geometry from Blender
      * @returns {Promise<THREE.Mesh>} The ground plane mesh
      */
     async createGroundPlane() {
-        const groundGeometry = new THREE.PlaneGeometry(200, 200);
-        const textureLoader = new THREE.TextureLoader();
+        const gltfLoader = new GLTFLoader();
         
         try {
-            const grassTexture = await new Promise((resolve, reject) => {
-                textureLoader.load(
-                    'assets/textures/grasslight-big.jpg',
+            Logger.info('SceneManager: Loading GroundPlan geometry from Blender...');
+            
+            // Load the GroundPlan GLB file
+            const gltf = await new Promise((resolve, reject) => {
+                gltfLoader.load(
+                    '/assets/terrain.glb',
                     resolve,
                     undefined,
                     reject
                 );
             });
 
+            // Find the GroundPlan mesh in the loaded scene
+            let groundPlan = null;
+            gltf.scene.traverse((child) => {
+                if (child.name === 'GroundPlan' && child.isMesh) {
+                    groundPlan = child;
+                }
+            });
+
+            if (groundPlan) {
+                Logger.info('SceneManager: Successfully loaded GroundPlan geometry from Blender');
+                
+                // Apply proper properties for the game
+                groundPlan.receiveShadow = true;
+                groundPlan.name = "groundPlane";
+                groundPlan.userData.isGround = true;
+                
+                // Create a simple material for now (no complex textures)
+                const groundMaterial = new THREE.MeshStandardMaterial({ 
+                    color: new THREE.Color(0x7dae8a),
+                    side: THREE.DoubleSide,
+                    roughness: 0.9,
+                    metalness: 0.1
+                });
+                
+                groundPlan.material = groundMaterial;
+                groundPlan.updateMatrix();
+                groundPlan.updateMatrixWorld();
+                
+                return groundPlan;
+            } else {
+                Logger.warn('SceneManager: GroundPlan not found in GLB file, falling back to simple plane');
+                return this.createFallbackGroundPlane();
+            }
+            
+        } catch (error) {
+            Logger.error('SceneManager: Error loading GroundPlan geometry:', error);
+            Logger.info('SceneManager: Falling back to simple ground plane');
+            return this.createFallbackGroundPlane();
+        }
+    }
+
+    /**
+     * Creates a fallback ground plane when GroundPlan geometry fails to load
+     * @returns {THREE.Mesh} The fallback ground plane
+     */
+    createFallbackGroundPlane() {
+        const groundGeometry = new THREE.PlaneGeometry(200, 200);
+        const textureLoader = new THREE.TextureLoader();
+        
+        try {
+            const grassTexture = textureLoader.load('assets/textures/grasslight-big.jpg');
             grassTexture.wrapS = THREE.RepeatWrapping;
             grassTexture.wrapT = THREE.RepeatWrapping;
             grassTexture.repeat.set(15, 15);
@@ -146,8 +200,8 @@ export class SceneManager {
 
             return groundPlane;
         } catch (error) {
-            Logger.error('Error loading ground texture:', error);
-            // Fallback to basic material if texture fails to load
+            Logger.error('SceneManager: Error loading fallback ground texture:', error);
+            // Final fallback to basic material
             const groundMaterial = new THREE.MeshStandardMaterial({ 
                 color: new THREE.Color(0x7dae8a).convertSRGBToLinear(),
                 side: THREE.DoubleSide,
@@ -162,7 +216,7 @@ export class SceneManager {
     }
 
     /**
-     * Creates the grid helper
+     * Creates the grid helper that follows terrain height
      * @returns {THREE.Group} The grid helper group
      */
     createGridHelper() {
@@ -176,24 +230,70 @@ export class SceneManager {
         const color = 0x000000;
         const material = new THREE.LineBasicMaterial({ color });
 
-        // Draw vertical lines
+        // Function to get terrain height at a given position
+        const getTerrainHeight = (x, z) => {
+            // Find the ground plane in the scene
+            let groundPlane = null;
+            this.scene.traverse((child) => {
+                if (child.name === "groundPlane" && child.isMesh) {
+                    groundPlane = child;
+                }
+            });
+
+            if (!groundPlane || !groundPlane.geometry) {
+                return 0.01; // Fallback height
+            }
+
+            // Create a raycaster to find terrain height
+            const raycaster = new THREE.Raycaster();
+            const rayStart = new THREE.Vector3(x, 100, z); // Start high above
+            const rayEnd = new THREE.Vector3(x, -100, z);  // End below terrain
+            raycaster.set(rayStart, rayEnd.sub(rayStart).normalize());
+
+            const intersects = raycaster.intersectObject(groundPlane);
+            if (intersects.length > 0) {
+                return intersects[0].point.y + 0.02; // Slightly above terrain
+            }
+
+            return 0.01; // Fallback height
+        };
+
+        // Level 2: Create curved grid lines that follow terrain
+        const createCurvedLine = (startX, startZ, endX, endZ, samples = 20) => {
+            const points = [];
+            
+            for (let i = 0; i <= samples; i++) {
+                const t = i / samples;
+                const x = startX + (endX - startX) * t;
+                const z = startZ + (endZ - startZ) * t;
+                const y = getTerrainHeight(x, z);
+                points.push(new THREE.Vector3(x, y, z));
+            }
+            
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            return new THREE.Line(geometry, material);
+        };
+
+        // Draw vertical lines with terrain following curves
         for (let x = 0; x <= width; x++) {
-            const geometry = new THREE.BufferGeometry().setFromPoints([
-                new THREE.Vector3(x * cellSize - totalWidth / 2, 0.01, -totalHeight / 2),
-                new THREE.Vector3(x * cellSize - totalWidth / 2, 0.01, totalHeight / 2)
-            ]);
-            const line = new THREE.Line(geometry, material);
+            const xPos = x * cellSize - totalWidth / 2;
+            const line = createCurvedLine(
+                xPos, -totalHeight / 2,  // Start point
+                xPos, totalHeight / 2    // End point
+            );
             group.add(line);
         }
-        // Draw horizontal lines
+
+        // Draw horizontal lines with terrain following curves
         for (let z = 0; z <= height; z++) {
-            const geometry = new THREE.BufferGeometry().setFromPoints([
-                new THREE.Vector3(-totalWidth / 2, 0.01, z * cellSize - totalHeight / 2),
-                new THREE.Vector3(totalWidth / 2, 0.01, z * cellSize - totalHeight / 2)
-            ]);
-            const line = new THREE.Line(geometry, material);
+            const zPos = z * cellSize - totalHeight / 2;
+            const line = createCurvedLine(
+                -totalWidth / 2, zPos,  // Start point
+                totalWidth / 2, zPos    // End point
+            );
             group.add(line);
         }
+
         return group;
     }
 
@@ -209,9 +309,10 @@ export class SceneManager {
         const totalSize = gridSize * cellSize;
         const radius = totalSize / 2;
 
-        // Create camera
+        // Create camera with 35mm field of view
+        // 35mm FOV is approximately 54 degrees (more cinematic than default 75)
         const camera = new THREE.PerspectiveCamera(
-            75,
+            54, // 35mm equivalent FOV
             renderDiv.clientWidth / renderDiv.clientHeight,
             0.1,
             1000
@@ -603,23 +704,18 @@ export class SceneManager {
             this.scene.add(this.gridHelper);
             
             // Create animated grass
-            this.grassBlades = new GrassBlades(this.scene, {
-                width: this.gridManager.getTotalSize(),
-                instances: 200000,  // Reduced from 300000 for more subtle density
-                width: 200,
-                bladeWidth: 0.08,   // Reduced from 0.15 for thinner blades
-                bladeHeight: 0.8,   // Reduced from 1.0 for shorter grass
-                joints: 4,          // Reduced from 6 for simpler bending
-                density: 0.8        // Reduced from 1.2 for more sparse distribution
-            });
+            // this.grassBlades = new GrassBlades(this.scene, {
+            //     width: this.gridManager.getTotalSize(),
+            //     instances: 200000,  // Reduced from 300000 for more subtle density
+            //     width: 200,
+            //     bladeWidth: 0.08,   // Reduced from 0.15 for thinner blades
+            //     bladeHeight: 0.8,   // Reduced from 1.0 for shorter grass
+            //     joints: 4,          // Reduced from 6 for simpler bending
+            //     density: 0.8        // Reduced from 1.2 for more sparse distribution
+            // });
 
             // Create trees
-            this.trees = new Trees(this.scene, {
-                count: 30,
-                minDistance: 30,
-                maxDistance: 90,
-                scale: 1.2
-            });
+            // this.trees = new Trees(this.scene, this.gridManager);
 
             // Create river
             /*
@@ -674,13 +770,15 @@ export class SceneManager {
             this.controls.update();
         }
         
-        if (this.grassBlades) {
-            this.grassBlades.update(this.clock.getElapsedTime());
-        }
+        // Update grass animation
+        // if (this.grassBlades) {
+        //     this.grassBlades.update(this.clock.getElapsedTime());
+        // }
 
-        if (this.trees) {
-            this.trees.update(this.clock.getElapsedTime());
-        }
+        // Update trees
+        // if (this.trees) {
+        //     this.trees.update();
+        // }
 
         if (SHOW_PERFORMANCE_MONITOR) {
             this.updatePerformanceMonitor();

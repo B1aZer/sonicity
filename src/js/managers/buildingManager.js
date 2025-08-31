@@ -27,6 +27,39 @@ export class BuildingManager {
         Logger.debug('BuildingManager scene set', { cellSize });
     }
 
+    /**
+     * Gets the terrain height at a given world position
+     * @param {number} x - World X coordinate
+     * @param {number} z - World Z coordinate
+     * @returns {number} Terrain height at the position
+     */
+    getTerrainHeightAt(x, z) {
+        // Find the ground plane in the scene
+        let groundPlane = null;
+        this.scene.traverse((child) => {
+            if (child.name === "groundPlane" && child.isMesh) {
+                groundPlane = child;
+            }
+        });
+
+        if (!groundPlane || !groundPlane.geometry) {
+            return 0; // Fallback height
+        }
+
+        // Create a raycaster to find terrain height
+        const raycaster = new THREE.Raycaster();
+        const rayStart = new THREE.Vector3(x, 100, z); // Start high above
+        const rayEnd = new THREE.Vector3(x, -100, z);  // End below terrain
+        raycaster.set(rayStart, rayEnd.sub(rayStart).normalize());
+
+        const intersects = raycaster.intersectObject(groundPlane);
+        if (intersects.length > 0) {
+            return intersects[0].point.y; // Return exact terrain height
+        }
+
+        return 0; // Fallback height
+    }
+
     async placeBuilding(type, position) {
         try {
             Logger.debug('Attempting to place building', { type, position });
@@ -72,9 +105,10 @@ export class BuildingManager {
                 return null;
             }
 
-            // Position building
+            // Position the building at the world position with terrain height
             const worldPos = this.gridManager.getWorldPosition(gridPos.x, gridPos.z);
-            building.position.set(worldPos.x, 0, worldPos.z);
+            const terrainHeight = this.getTerrainHeightAt(worldPos.x, worldPos.z);
+            building.position.set(worldPos.x, terrainHeight, worldPos.z);
             
             // Add subtle random rotation for houses to make them look more natural
             if (type === 'HOUSE') {
