@@ -314,7 +314,7 @@ export class SceneManager {
      * @returns {Object} {fov: number, position: {x, y, z}}
      */
     calculateFOV(screenWidth) {
-        const baseY = 2; // Default Blender camera Y position
+        const baseY = 1; // Default Blender camera Y position
         const baseZ = 5.75;   // Default Blender camera Z position
         
         if (screenWidth < 480) { // Mobile phones
