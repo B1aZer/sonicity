@@ -30,7 +30,7 @@ export class GridManager {
 
             const dimensions = this.gridDimensions[this.tier];
             this.totalSize = Math.max(dimensions.width, dimensions.height);
-            this.cellSize = 10; // Standard cell size
+            this.cellSize = 2; // Smaller cell size to fit terrain better (was 10)
             
             // Initialize grid with null values
             this.grid = Array(dimensions.width).fill(null).map(() => Array(dimensions.height).fill(null));

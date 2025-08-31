@@ -40,7 +40,7 @@ export const BUILDINGS = {
     // Grid-based buildings (dynamic placement)
     HOUSE: {
         name: 'House',
-        size: new THREE.Vector3(8, 8, 8),
+        size: new THREE.Vector3(2, 2, 2), // Scaled down to fit 2-unit grid cells
         color: 0xADD8E6, // Light Blue
         isGridBuilding: true,
         tier: 0,
@@ -53,7 +53,7 @@ export const BUILDINGS = {
     },
     FARM: {
         name: 'Farm',
-        size: new THREE.Vector3(8, 8, 8),
+        size: new THREE.Vector3(2, 2, 2), // Scaled down to fit 2-unit grid cells
         color: 0x90EE90, // Light Green
         isGridBuilding: true,
         tier: 0,
@@ -66,7 +66,7 @@ export const BUILDINGS = {
     },
     DIAMOND_STATION: {
         name: 'Diamond Station',
-        size: new THREE.Vector3(8, 8, 8),
+        size: new THREE.Vector3(2, 2, 2), // Scaled down to fit 2-unit grid cells
         color: 0xB9F2FF, // Diamond Blue
         isGridBuilding: true,
         tier: 2,
@@ -79,7 +79,7 @@ export const BUILDINGS = {
     },
     REP_FORGE: {
         name: 'REP Forge',
-        size: new THREE.Vector3(8, 8, 8),
+        size: new THREE.Vector3(2, 2, 2), // Scaled down to fit 2-unit grid cells
         color: 0xFF6B35, // Orange-Red
         isGridBuilding: true,
         tier: 3,
@@ -92,7 +92,7 @@ export const BUILDINGS = {
     },
     YIELD_STATION: {
         name: 'Yield Station',
-        size: new THREE.Vector3(8, 8, 8),
+        size: new THREE.Vector3(2, 2, 2), // Scaled down to fit 2-unit grid cells
         color: 0xFFD700, // Gold
         isGridBuilding: true,
         tier: 4,
