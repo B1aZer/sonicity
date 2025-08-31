@@ -1,10 +1,22 @@
 
+## models
+
+ oracle -> yield statuin
+ banner -> in shop
+ cauldron - rep st
+ factory - diamond
+ woodc - farm
+ house - home
+
 ## todo
 
 + new production 24 stadnard, diamonds, gold 250 ?
-- change charge label
++ change charge label
 + change maybe price for rep stations to diamonds ?
 + update help page later
+- shop
+- add this.requiredDistrictBuilding = 'Arcanum of Names';
+- damage system
 
 ## question goals
 
@@ -67,11 +79,10 @@ how to achieve ? ride on whales - but the game is COMPLETELY Anti whales
 
 ## todo
 
+- metrics / sentry
 - you know the driss like, rt for wl
 - update _baseTokenURI on nft contracts
 - merge nft buidling
-- shop
-- damage system
 - responsive changes
 
 - build all buidlings and adjust 3d scene view

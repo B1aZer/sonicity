@@ -59,7 +59,7 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/farm',
             levels: {
-                1: { url: 'assets/farm2.glb' }
+                1: { url: 'assets/farm.glb' }
             }
         }
     },
