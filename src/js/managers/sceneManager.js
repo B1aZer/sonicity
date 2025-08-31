@@ -454,33 +454,6 @@ export class SceneManager {
         // Setup key bindings
         this.setupKeyBindings();
 
-        // Add resize handler for responsive camera
-        window.addEventListener('resize', () => {
-            if (this.camera && this.renderer) {
-                const oldAspect = this.camera.aspect;
-                const oldFov = this.camera.fov;
-                
-                // Calculate new FOV based on screen width
-                const screenWidth = window.innerWidth;
-                const newFov = this.calculateFOV(screenWidth);
-                
-                this.camera.fov = newFov;
-                this.camera.aspect = window.innerWidth / window.innerHeight;
-                this.camera.updateProjectionMatrix();
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                
-                Logger.info('Camera resized with dynamic FOV:', {
-                    windowSize: `${window.innerWidth}x${window.innerHeight}`,
-                    oldAspect: oldAspect.toFixed(3),
-                    newAspect: this.camera.aspect.toFixed(3),
-                    oldFov: oldFov,
-                    newFov: this.camera.fov
-                });
-            } else {
-                Logger.warn('Camera or renderer not available for resize');
-            }
-        });
-
         return renderer;
     }
 
@@ -527,9 +500,25 @@ export class SceneManager {
      */
     setupWindowResizeHandler() {
         this.boundOnWindowResize = () => {
+            const oldAspect = this.camera.aspect;
+            const oldFov = this.camera.fov;
+            
+            // Calculate new FOV based on screen width
+            const screenWidth = window.innerWidth;
+            const newFov = this.calculateFOV(screenWidth);
+            
+            this.camera.fov = newFov;
             this.camera.aspect = window.innerWidth / window.innerHeight;
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            Logger.info('Camera resized with dynamic FOV:', {
+                windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                oldAspect: oldAspect.toFixed(3),
+                newAspect: this.camera.aspect.toFixed(3),
+                oldFov: oldFov,
+                newFov: this.camera.fov
+            });
         };
         window.addEventListener('resize', this.boundOnWindowResize);
     }
