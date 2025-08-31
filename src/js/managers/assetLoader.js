@@ -251,7 +251,6 @@ export class AssetLoader {
     // Production-ready building spawning with SkeletonUtils.clone
     spawnBuilding(typeKey, position, options = {}) {
         const template = this.getTemplate(typeKey);
-        const animations = this.getAnimations(typeKey);
         
         if (!template) {
             Logger.error('No template found:', typeKey);
@@ -285,27 +284,8 @@ export class AssetLoader {
                 }
             });
 
-            // Create animation mixer for this instance
-            const mixer = new THREE.AnimationMixer(building);
-            
-            // Set up animation actions
-            const actions = [];
-            animations.forEach((anim, index) => {
-                const action = mixer.clipAction(anim);
-                actions.push(action);
-                Logger.debug(`Created animation action: ${anim.name}`);
-            });
-
-            // Start all animations if autoPlay is enabled
-            if (actions.length > 0 && options.autoPlay !== false) {
-                actions.forEach((action, index) => {
-                    action.play();
-                    Logger.debug(`Started animation ${index}: ${animations[index].name}`);
-                });
-            }
-
             Logger.debug('✅ Building spawned successfully with SkeletonUtils.clone');
-            return { building, mixer, actions };
+            return building;
         } catch (error) {
             Logger.error('Error spawning building:', error);
             return null;

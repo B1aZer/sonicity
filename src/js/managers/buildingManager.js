@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { BUILDINGS } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
+import { AnimationManager } from './animationManager.js';
 
 export class BuildingManager {
     constructor(gridManager, gameStateContract, initialMoney, assetLoader, gridBuildingsContract = null, districtBuildingsContract = null) {
@@ -10,11 +11,10 @@ export class BuildingManager {
         this.gridBuildingsContract = gridBuildingsContract;
         this.money = initialMoney;
         this.assetLoader = assetLoader;
+        this.animationManager = new AnimationManager();
         this.scene = null;
         this.buildings = new Map();
         this.fixedBuildings = new Map();
-        this.animationMixers = new Map(); // Store animation mixers
-        this.animationActions = new Map(); // Store animation actions
         this.updateTimer = 0;
         this.updateInterval = 0.5;
         Logger.info('BuildingManager initialized', { initialMoney });
@@ -107,26 +107,14 @@ export class BuildingManager {
             if (animations && animations.length > 0) {
                 Logger.debug('Setting up animations for building', { type, level, animationCount: animations.length });
                 
-                // Create animation mixer
-                const mixer = new THREE.AnimationMixer(building);
-                this.animationMixers.set(buildingObj.id, mixer);
-                
-                // Set up animation actions
-                const actions = [];
-                animations.forEach((anim, index) => {
-                    const action = mixer.clipAction(anim);
-                    actions.push(action);
-                    Logger.debug(`Created animation action for ${type}: ${anim.name}`);
-                });
-                this.animationActions.set(buildingObj.id, actions);
-                
-                // Start all animations
-                if (actions.length > 0) {
-                    actions.forEach((action, index) => {
-                        action.play();
-                        Logger.debug(`Started animation ${index} for ${type}: ${animations[index].name}`);
-                    });
-                }
+                // Use AnimationManager to handle all animation setup
+                this.animationManager.setupBuildingAnimations(
+                    buildingObj.id, 
+                    building, 
+                    modelKey, 
+                    animations, 
+                    { autoPlay: true }
+                );
             }
             
             // Store building reference
@@ -157,13 +145,11 @@ export class BuildingManager {
             const modelKey = `${type}_LVL${level}`;
             
             // Use the new spawnBuilding method for proper skinned mesh handling
-            const result = this.assetLoader.spawnBuilding(modelKey, new THREE.Vector3(0, 0, 0), {
-                autoPlay: false // Don't auto-play, we'll handle it in placeBuilding
-            });
+            const result = this.assetLoader.spawnBuilding(modelKey, new THREE.Vector3(0, 0, 0));
             
             if (result) {
                 Logger.debug('Using 3D model for building', { type, level, modelKey });
-                const building = result.building;
+                const building = result;
                 building.castShadow = true;
                 building.receiveShadow = true;
                 
@@ -271,14 +257,8 @@ export class BuildingManager {
             const building = this.buildings.get(buildingKey);
             
             if (building) {
-                // Clean up animations
-                if (this.animationMixers.has(building.id)) {
-                    const mixer = this.animationMixers.get(building.id);
-                    mixer.stopAllAction();
-                    mixer.uncacheRoot(mixer.getRoot());
-                    this.animationMixers.delete(building.id);
-                    this.animationActions.delete(building.id);
-                }
+                // Clean up animations using AnimationManager
+                this.animationManager.cleanupBuildingAnimations(building.id);
                 
                 // Remove from scene
                 this.scene.remove(building.mesh);
@@ -351,31 +331,13 @@ export class BuildingManager {
         return buildings;
     }
 
-    // Animation control methods
+    // Animation control methods - delegate to AnimationManager
     toggleBuildingAnimation(buildingId) {
-        const actions = this.animationActions.get(buildingId);
-        if (actions && actions.length > 0) {
-            const action = actions[0];
-            if (action.isRunning()) {
-                action.stop();
-                Logger.debug('Stopped animation for building', { buildingId });
-            } else {
-                action.play();
-                Logger.debug('Started animation for building', { buildingId });
-            }
-        }
+        return this.animationManager.toggleBuildingAnimation(buildingId);
     }
 
     getAnimationStatus(buildingId) {
-        const actions = this.animationActions.get(buildingId);
-        if (actions && actions.length > 0) {
-            return {
-                hasAnimations: true,
-                isRunning: actions[0].isRunning(),
-                animationCount: actions.length
-            };
-        }
-        return { hasAnimations: false };
+        return this.animationManager.getAnimationStatus(buildingId);
     }
 
     updateBuildingVisuals(building) {
@@ -421,10 +383,8 @@ export class BuildingManager {
     update(deltaTime) {
         this.updateTimer += deltaTime;
         
-        // Update all animation mixers
-        this.animationMixers.forEach((mixer, buildingId) => {
-            mixer.update(deltaTime);
-        });
+        // Update all animation mixers via AnimationManager
+        this.animationManager.update(deltaTime);
         
         if (this.updateTimer >= this.updateInterval) {
             this.updateTimer = 0;
@@ -482,13 +442,8 @@ export class BuildingManager {
     dispose() {
         Logger.info('BuildingManager: Starting disposal');
         
-        // Clean up all animation mixers
-        this.animationMixers.forEach((mixer, buildingId) => {
-            mixer.stopAllAction();
-            mixer.uncacheRoot(mixer.getRoot());
-        });
-        this.animationMixers.clear();
-        this.animationActions.clear();
+        // Clean up animations via AnimationManager
+        this.animationManager.dispose();
         
         // Remove all buildings from scene
         if (this.scene) {
