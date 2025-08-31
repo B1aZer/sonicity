@@ -67,8 +67,6 @@ export class BuildingManager {
      * @returns {THREE.Vector3} Terrain normal vector
      */
     getTerrainNormalAt(x, z) {
-        Logger.debug('🔍 Getting terrain normal at:', { x, z });
-        
         // Find the ground plane in the scene
         let groundPlane = null;
         this.scene.traverse((child) => {
@@ -78,15 +76,8 @@ export class BuildingManager {
         });
 
         if (!groundPlane || !groundPlane.geometry) {
-            Logger.warn('⚠️ No ground plane found, using default up vector');
             return new THREE.Vector3(0, 1, 0); // Default up vector
         }
-
-        Logger.debug('✅ Found ground plane:', { 
-            name: groundPlane.name, 
-            hasGeometry: !!groundPlane.geometry,
-            geometryType: groundPlane.geometry.type
-        });
 
         // Create a raycaster to find terrain intersection
         const raycaster = new THREE.Raycaster();
@@ -94,52 +85,21 @@ export class BuildingManager {
         const rayEnd = new THREE.Vector3(x, -100, z);  // End below terrain
         raycaster.set(rayStart, rayEnd.sub(rayStart).normalize());
 
-        Logger.debug('🎯 Raycasting from:', { 
-            start: rayStart, 
-            end: rayEnd,
-            direction: raycaster.ray.direction
-        });
-
         const intersects = raycaster.intersectObject(groundPlane);
-        Logger.debug('📊 Intersection results:', { 
-            count: intersects.length,
-            hasIntersects: intersects.length > 0
-        });
-
         if (intersects.length > 0) {
-            const intersection = intersects[0];
-            Logger.debug('🎯 Found intersection:', {
-                point: intersection.point,
-                distance: intersection.distance,
-                faceIndex: intersection.faceIndex,
-                hasFace: !!intersection.face
-            });
-
             // Get the face normal at the intersection point
-            const face = intersection.face;
+            const face = intersects[0].face;
             const normal = new THREE.Vector3();
             
             // Calculate face normal using correct Three.js API
             const positions = groundPlane.geometry.attributes.position;
-            Logger.debug('📐 Geometry attributes:', {
-                hasPositions: !!positions,
-                positionCount: positions ? positions.count : 0,
-                faceA: face.a,
-                faceB: face.b,
-                faceC: face.c
-            });
-
             const vertexA = new THREE.Vector3().fromBufferAttribute(positions, face.a);
             const vertexB = new THREE.Vector3().fromBufferAttribute(positions, face.b);
             const vertexC = new THREE.Vector3().fromBufferAttribute(positions, face.c);
             
-            Logger.debug('📍 Face vertices:', { vertexA, vertexB, vertexC });
-            
             const vectorAB = new THREE.Vector3().subVectors(vertexB, vertexA);
             const vectorAC = new THREE.Vector3().subVectors(vertexC, vertexA);
             normal.crossVectors(vectorAB, vectorAC).normalize();
-            
-            Logger.debug('📏 Calculated face normal (local):', normal);
             
             // Transform normal to world space
             normal.applyMatrix4(groundPlane.matrixWorld);
@@ -147,12 +107,9 @@ export class BuildingManager {
             // Normalize the transformed normal to ensure unit length
             normal.normalize();
             
-            Logger.debug('🌍 Transformed normal (world):', normal);
-            
             return normal;
         }
 
-        Logger.warn('⚠️ No intersection found, using default up vector');
         return new THREE.Vector3(0, 1, 0); // Default up vector
     }
 
@@ -162,11 +119,8 @@ export class BuildingManager {
      * @returns {THREE.Euler} Rotation to apply to building
      */
     calculateTerrainRotation(terrainNormal) {
-        Logger.debug('🔄 Calculating terrain rotation for normal:', terrainNormal);
-        
         // Calculate slope angle for debugging
         const slopeAngle = Math.acos(Math.abs(terrainNormal.y)) * (180 / Math.PI);
-        Logger.debug('📐 Terrain slope angle:', slopeAngle.toFixed(2) + '°');
         
         // Default up vector
         const upVector = new THREE.Vector3(0, 1, 0);
@@ -174,11 +128,8 @@ export class BuildingManager {
         // If terrain is flat (normal is mostly up), no rotation needed
         // Lower threshold to detect gentler slopes
         if (Math.abs(terrainNormal.y) > 0.98) {
-            Logger.debug('🏞️ Terrain is flat, no rotation needed');
             return new THREE.Euler(0, 0, 0);
         }
-        
-        Logger.debug('⛰️ Terrain has slope, calculating rotation...');
         
         // Calculate the angle between terrain normal and up vector
         const angle = Math.acos(THREE.MathUtils.clamp(terrainNormal.y, -1, 1));
@@ -189,7 +140,6 @@ export class BuildingManager {
         
         // If rotation axis is zero (parallel vectors), no rotation needed
         if (rotationAxis.length() < 0.001) {
-            Logger.debug('🔄 No rotation axis found, no rotation needed');
             return new THREE.Euler(0, 0, 0);
         }
         
@@ -201,20 +151,10 @@ export class BuildingManager {
         const euler = new THREE.Euler();
         euler.setFromQuaternion(quaternion);
         
-        Logger.debug('📐 Calculated rotation:', {
-            angle: angle * (180 / Math.PI) + '°',
-            rotationAxis: rotationAxis,
-            fullEuler: euler
-        });
-        
         // Only apply X and Z rotation (pitch and roll), keep Y rotation (yaw) for building orientation
         const terrainRotation = new THREE.Euler(euler.x, 0, euler.z);
         
-        Logger.debug('🎯 Final terrain rotation (X, Z only):', {
-            x: terrainRotation.x * (180 / Math.PI) + '°',
-            y: terrainRotation.y * (180 / Math.PI) + '°', 
-            z: terrainRotation.z * (180 / Math.PI) + '°'
-        });
+        Logger.debug(`🏗️ Applied terrain rotation: ${slopeAngle.toFixed(1)}° slope`);
         
         return terrainRotation;
     }
@@ -274,20 +214,6 @@ export class BuildingManager {
             const terrainRotation = this.calculateTerrainRotation(terrainNormal);
             building.rotation.x = terrainRotation.x;
             building.rotation.z = terrainRotation.z;
-            
-            Logger.debug('🏗️ Building terrain alignment applied:', {
-                position: building.position,
-                terrainNormal: terrainNormal,
-                terrainRotation: {
-                    x: terrainRotation.x * (180 / Math.PI) + '°',
-                    z: terrainRotation.z * (180 / Math.PI) + '°'
-                },
-                finalRotation: {
-                    x: building.rotation.x * (180 / Math.PI) + '°',
-                    y: building.rotation.y * (180 / Math.PI) + '°',
-                    z: building.rotation.z * (180 / Math.PI) + '°'
-                }
-            });
             
             // Add subtle random Y rotation for houses to make them look more natural
             if (type === 'HOUSE') {
