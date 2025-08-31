@@ -85,7 +85,7 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/rep_forge',
             levels: {
-                1: { url: 'assets/mine.glb' }
+                1: { url: 'assets/rep_forge.glb' }
             }
         }
     },
