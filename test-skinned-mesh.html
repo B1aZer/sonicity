@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skinned Mesh Test - Yield Station</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+        }
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            font-family: Arial, sans-serif;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+            background: #333;
+            color: white;
+            border: 1px solid #666;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <div id="info">
+        <h3>Skinned Mesh Test - Yield Station</h3>
+        <div id="status">Loading...</div>
+        <div id="model-info"></div>
+    </div>
+    <div id="controls">
+        <h4>Controls</h4>
+        <button onclick="toggleAnimation()">Toggle Animation</button>
+        <button onclick="playBannerAnimation()">Play Banner Animation</button>
+        <button onclick="resetPosition()">Reset Position</button>
+        <button onclick="toggleWireframe()">Toggle Wireframe</button>
+        <button onclick="logModelInfo()">Log Model Info</button>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        let scene, camera, renderer, controls;
+        let model = null;
+        let mixer = null;
+        let clock = new THREE.Clock();
+        let isAnimating = false;
+        let currentAction = null;
+        let bannerFlagAnimations = [];
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x222222);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 5, 5);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Controls
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 5);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            // Grid helper
+            const gridHelper = new THREE.GridHelper(10, 10);
+            scene.add(gridHelper);
+
+            // Load the model
+            loadModel();
+
+            // Start render loop
+            animate();
+        }
+
+        function loadModel() {
+            const loader = new GLTFLoader();
+            const modelUrl = '/assets/yield_station.glb';
+
+            console.log('🔍 Loading model from:', modelUrl);
+
+            loader.load(
+                modelUrl,
+                function (gltf) {
+                    console.log('✅ Model loaded successfully:', gltf);
+                    
+                    model = gltf.scene;
+                    scene.add(model);
+
+                    // Log model structure
+                    logModelStructure(model);
+
+                    // Process skinned meshes
+                    processSkinnedMeshes(model);
+
+                    // Set up animations
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        mixer = new THREE.AnimationMixer(model);
+                        console.log('🎬 Found animations:', gltf.animations.length);
+                        
+                        // Find banner flag animations
+                        bannerFlagAnimations = gltf.animations.filter(anim => 
+                            anim.name.includes('banner_flag') || anim.name.includes('Banner_flag')
+                        );
+                        
+                        if (bannerFlagAnimations.length > 0) {
+                            console.log('🎬 Found banner flag animations:', bannerFlagAnimations.length);
+                            bannerFlagAnimations.forEach((anim, index) => {
+                                console.log(`🎬 Banner flag animation ${index}:`, anim.name);
+                            });
+                            
+                            // Use the first banner flag animation
+                            currentAction = mixer.clipAction(bannerFlagAnimations[0]);
+                            console.log('🎬 Created action for banner flag animation:', bannerFlagAnimations[0].name);
+                            
+                            // Test the animation immediately
+                            currentAction.play();
+                            isAnimating = true;
+                            console.log('🎬 Testing banner flag animation playback...');
+                        } else {
+                            console.log('🎬 No banner flag animations found');
+                        }
+                    } else {
+                        console.log('🎬 No animations found in the model');
+                    }
+
+                    // Position and scale
+                    model.position.set(0, 0, 0);
+                    model.scale.set(1, 1, 1);
+
+                    updateStatus('Model loaded successfully');
+                },
+                function (progress) {
+                    console.log('📥 Loading progress:', (progress.loaded / progress.total * 100) + '%');
+                    updateStatus('Loading: ' + Math.round(progress.loaded / progress.total * 100) + '%');
+                },
+                function (error) {
+                    console.error('❌ Error loading model:', error);
+                    updateStatus('Error loading model: ' + error.message);
+                }
+            );
+        }
+
+        function processSkinnedMeshes(object) {
+            object.traverse((child) => {
+                if (child.isSkinnedMesh) {
+                    console.log('🏗️ Found skinned mesh:', {
+                        name: child.name,
+                        type: child.type,
+                        skeleton: !!child.skeleton,
+                        bones: child.skeleton?.bones?.length || 0,
+                        animations: child.animations?.length || 0
+                    });
+
+                    // Keep original materials but ensure they're visible
+                    child.material.transparent = false;
+                    child.material.opacity = 1.0;
+                    child.material.needsUpdate = true;
+                    
+                    console.log('🏗️ Skinned mesh material:', {
+                        name: child.name,
+                        materialType: child.material.type,
+                        color: child.material.color,
+                        map: !!child.material.map,
+                        transparent: child.material.transparent,
+                        opacity: child.material.opacity
+                    });
+
+                    // Ensure proper setup
+                    child.updateMatrixWorld(true);
+                    if (child.skeleton) {
+                        child.skeleton.update();
+                        console.log('🏗️ Updated skeleton for:', child.name);
+                        
+                        // Log bone information
+                        child.skeleton.bones.forEach((bone, index) => {
+                            console.log(`🏗️ Bone ${index} "${bone.name}":`, {
+                                position: bone.position,
+                                rotation: bone.rotation,
+                                scale: bone.scale
+                            });
+                        });
+                    }
+
+                    // Disable frustum culling
+                    child.frustumCulled = false;
+                }
+            });
+        }
+
+        function logModelStructure(object, depth = 0) {
+            const indent = '  '.repeat(depth);
+            console.log(`${indent}${object.name || 'unnamed'} (${object.type})`);
+            
+            if (object.isMesh) {
+                console.log(`${indent}  - Mesh: ${object.geometry.verticesCount || 'unknown'} vertices`);
+            }
+            if (object.isSkinnedMesh) {
+                console.log(`${indent}  - SkinnedMesh: ${object.skeleton.bones.length} bones`);
+            }
+            
+            object.children.forEach(child => {
+                logModelStructure(child, depth + 1);
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const deltaTime = clock.getDelta();
+
+            // Update controls
+            controls.update();
+
+            // Update animations
+            if (mixer && isAnimating) {
+                mixer.update(deltaTime);
+            }
+
+            // Render
+            renderer.render(scene, camera);
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        function updateModelInfo() {
+            if (model) {
+                const info = document.getElementById('model-info');
+                let text = '';
+                
+                model.traverse((child) => {
+                    if (child.isSkinnedMesh) {
+                        text += `SkinnedMesh: ${child.name}<br>`;
+                        text += `Bones: ${child.skeleton?.bones?.length || 0}<br>`;
+                        text += `Position: ${child.position.x.toFixed(2)}, ${child.position.y.toFixed(2)}, ${child.position.z.toFixed(2)}<br>`;
+                        text += `Visible: ${child.visible}<br><br>`;
+                    }
+                });
+                
+                info.innerHTML = text;
+            }
+        }
+
+        // Global functions for buttons
+        window.toggleAnimation = function() {
+            if (!mixer || !currentAction) {
+                console.log('🎬 No animation available');
+                return;
+            }
+            
+            isAnimating = !isAnimating;
+            
+            if (isAnimating) {
+                currentAction.play();
+                console.log('🎬 Animation started');
+            } else {
+                currentAction.stop();
+                console.log('🎬 Animation stopped');
+            }
+        };
+
+        window.playBannerAnimation = function() {
+            if (bannerFlagAnimations.length > 0) {
+                // Stop current animation
+                if (currentAction) {
+                    currentAction.stop();
+                }
+                
+                // Play the first banner flag animation
+                currentAction = mixer.clipAction(bannerFlagAnimations[0]);
+                currentAction.play();
+                isAnimating = true;
+                console.log('🎬 Playing banner flag animation:', bannerFlagAnimations[0].name);
+            } else {
+                console.log('🎬 No banner flag animations available');
+            }
+        };
+
+        window.resetPosition = function() {
+            if (model) {
+                model.position.set(0, 0, 0);
+                model.rotation.set(0, 0, 0);
+                model.scale.set(1, 1, 1);
+                console.log('🔄 Reset model position');
+            }
+        };
+
+        window.toggleWireframe = function() {
+            if (model) {
+                model.traverse((child) => {
+                    if (child.material) {
+                        child.material.wireframe = !child.material.wireframe;
+                    }
+                });
+                console.log('🔲 Toggled wireframe');
+            }
+        };
+
+        window.logModelInfo = function() {
+            if (model) {
+                console.log('📋 Model info:');
+                logModelStructure(model);
+                updateModelInfo();
+            }
+        };
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html> 
