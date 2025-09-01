@@ -524,16 +524,16 @@ export class SceneManager {
         controls.screenSpacePanning = false;
         
         // Restrict vertical rotation (up/down)
-       // controls.maxPolarAngle = Math.PI / 2; // Limit looking down (was Math.PI / 2 - 0.05)
-        //controls.minPolarAngle = Math.PI / 2; // Limit looking up (new restriction)
+        //controls.maxPolarAngle = Math.PI / 32; // Limit looking down (was Math.PI / 2 - 0.05)
+        //controls.minPolarAngle = -Math.PI / 32; // Limit looking up (new restriction)
         
         // Restrict horizontal rotation (left/right)
-        controls.maxAzimuthAngle = Math.PI / 16; // Limit right rotation (45 degrees)
-        controls.minAzimuthAngle = -Math.PI / 16; // Limit left rotation (-45 degrees)
+        controls.maxAzimuthAngle = Math.PI / 32; // Limit right rotation (45 degrees)
+        controls.minAzimuthAngle = -Math.PI / 32; // Limit left rotation (-45 degrees)
         
         controls.minDistance = 5;
         controls.maxDistance = 100;
-        controls.enableZoom = true;
+        controls.enableZoom = false; // Disabled zoom
         controls.zoomSpeed = 1.0;
         controls.enablePan = true;
         controls.panSpeed = 1.0;
