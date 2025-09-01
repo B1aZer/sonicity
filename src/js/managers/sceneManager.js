@@ -90,9 +90,9 @@ export class SceneManager {
             opacity: 0.8
         });
         const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        sun.position.set(50, 100, -100);
+        sun.position.set(50, 100, -150);
 
-        const sunLight = new THREE.DirectionalLight(0xffffff, 1.5);
+        const sunLight = new THREE.DirectionalLight(0xF0B704, 1);
         sunLight.position.copy(sun.position);
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 2048;
@@ -981,7 +981,7 @@ export class SceneManager {
                 imagePath: '/images/background/back-bg-5.png', // Mountain background image
                 position: { x: 0, y: -35, z: -1250 }, // Moved closer (was -800) to be in front of sky
                 rotation: { x: 0, y: 0, z: 0 },    // No rotation
-                scale: { x: 1.05, y: 1, z: 1 },       // Uniform scale to maintain aspect ratio
+                scale: { x: 1.1, y: 1, z: 1 },       // Uniform scale to maintain aspect ratio
                 size: 1450,                           // Large size to cover the background
                 alwaysFaceCamera: true,             // Always face camera
                 castShadow: false,                  // No shadows
