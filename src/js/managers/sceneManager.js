@@ -524,8 +524,16 @@ export class SceneManager {
         controls.screenSpacePanning = false;
         
         // Restrict vertical rotation (up/down)
-        //controls.maxPolarAngle = Math.PI / 32; // Limit looking down (was Math.PI / 2 - 0.05)
-        //controls.minPolarAngle = -Math.PI / 32; // Limit looking up (new restriction)
+        // Camera is at -3° rotation, so we need constraints around that angle
+        const basePolarAngle = Math.PI / 2; // 90 degrees (horizontal)
+        const cameraTilt = 3 * Math.PI / 180; // 3 degrees in radians
+        
+        // Asymmetric constraints: more down, very restrictive up (billboard after terrain)
+        const upConstraint = Math.PI / 96; // 1.875 degrees up (very restrictive)
+        const downConstraint = Math.PI / 12; // 15 degrees down (large)
+        
+        controls.maxPolarAngle = basePolarAngle + cameraTilt + upConstraint; // Allow slight upward tilt
+        controls.minPolarAngle = basePolarAngle + cameraTilt - downConstraint; // Allow more downward tilt
         
         // Restrict horizontal rotation (left/right)
         controls.maxAzimuthAngle = Math.PI / 32; // Limit right rotation (45 degrees)
