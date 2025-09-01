@@ -369,7 +369,23 @@ export class BuildingManager {
 
             // Set position and rotation
             building.position.copy(position);
-            building.rotation.y = rotation;
+            
+            // Handle both single number rotations (backward compatibility) and Vector3 rotations
+            if (typeof rotation === 'number') {
+                // Single number rotation (legacy support) - applies to Y-axis only
+                building.rotation.y = rotation;
+                Logger.debug('Applied single number rotation to Y-axis', { rotation });
+            } else if (rotation && typeof rotation === 'object') {
+                // Vector3 rotation object with x, y, z properties
+                if (typeof rotation.x === 'number') building.rotation.x = rotation.x;
+                if (typeof rotation.y === 'number') building.rotation.y = rotation.y;
+                if (typeof rotation.z === 'number') building.rotation.z = rotation.z;
+                Logger.debug('Applied Vector3 rotation', { rotation });
+            } else {
+                // No rotation specified
+                building.rotation.set(0, 0, 0);
+                Logger.debug('No rotation applied, using default');
+            }
             
             // Add to scene
             this.scene.add(building);
@@ -396,7 +412,7 @@ export class BuildingManager {
             Logger.info('Fixed building placed successfully', {
                 type,
                 position,
-                rotation,
+                rotation: building.rotation,
                 level
             });
             

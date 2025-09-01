@@ -110,7 +110,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4.5, 4.5, 4.5),
         color: 0xB0C4DE, // Light Steel Blue
         position: { x: 0, y: -0.85, z: -10 }, // Top position
-        rotation: Math.PI + Math.PI / 2 + 0.4,
+        rotation: { x: 0, y: Math.PI + Math.PI / 2 + 0.4, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "The administrative center where district governance and important decisions are managed.",
         assets: {
@@ -125,7 +125,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(3, 3, 3),
         color: 0xFFB6C1, // Light Pink
         position: { x: -8, y: -1.2, z: 0 }, // Left position
-        rotation: Math.PI / 2 - 0.4,
+        rotation: { x: 0, y: Math.PI / 2 - 0.4, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "A sacred place for performing rituals and ceremonies to unlock special abilities.",
         assets: {
@@ -139,8 +139,8 @@ export const BUILDINGS = {
         name: 'Mine',
         size: new THREE.Vector3(4, 4, 4),
         color: 0xFFFFE0, // Light Yellow
-        position: { x: 8, y: -2, z: 0 }, // Right position
-        rotation: -Math.PI / 2 + 0.3,
+        position: { x: 8, y: -1.9, z: 0 }, // Right position
+        rotation: { x: 0, y: -Math.PI / 2 + 0.3, z: -Math.PI / 16 }, // Y: -90°, Z: 45° (as requested)
         tier: 0,
         description: "Extracts valuable minerals and resources from the earth for production and upgrades.",
         assets: {
@@ -155,7 +155,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0xFFD700, // Gold color
         position: { x: -20, y: 0, z: -35 },
-        rotation: 0,
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "A bustling marketplace for trading goods.",
         assets: {
@@ -170,7 +170,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0xFFD700, // Gold color
         position: { x: 20, y: 0, z: -35 },
-        rotation: 0,
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "Repairs buildings to maintain district infrastructure.",
         assets: {
@@ -185,7 +185,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0x8B4513, // Saddle Brown
         position: { x: -15, y: 0, z: -65 },
-        rotation: 0,
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "A forward base for scouting territory and providing early warning of threats.",
         assets: {
@@ -200,11 +200,11 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0xCD5C5C, // Indian Red
         position: { x: -50, y: 0, z: -55 },
-        rotation: 0,
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "Protects your district from enemy attacks with formidable defensive capabilities.",
         assets: {
-            baseUrl: 'assets/defense_tower',
+            baseUrl: 'assets/tower',
             levels: {
                 1: { url: 'assets/tower_lvl1.glb' },
                 2: { url: 'assets/tower_lvl2.glb' },
@@ -217,26 +217,26 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0x8B4513, // Saddle Brown
         position: { x: 35, y: 0, z: -35 },
-        rotation: -Math.PI / 2,
+        rotation: { x: 0, y: -Math.PI / 2, z: -Math.PI / 180 }, // Converted to Vector3 format
         tier: 1,
-        description: "Trains and organizes military forces for district defense and attacks.",
+        description: "Trains and houses military units for district defense and expansion.",
         assets: {
             baseUrl: 'assets/barracks',
             levels: {
                 1: { url: 'assets/barracks_lvl1.glb' },
                 2: { url: 'assets/barracks_lvl2.glb' },
-                3: { url: 'assets/barr_lvl3.glb' }
+                3: { url: 'assets/barracks_lvl3.glb' }
             }
         }
     },
     SCOUT_GUILD: {
         name: 'Scout Guild',
         size: new THREE.Vector3(4, 4, 4),
-        color: 0x4682B4, // Steel Blue
-        position: { x: 15, y: 0, z: -65 },
-        rotation: 0,
+        color: 0x32CD32, // Lime Green
+        position: { x: 15, y: 0, z: -35 },
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 1,
-        description: "Specializes in reconnaissance to find PvP targets and gather intelligence.",
+        description: "Specialized training facility for reconnaissance and intelligence gathering.",
         assets: {
             baseUrl: 'assets/scout_guild',
             levels: {
@@ -247,21 +247,27 @@ export const BUILDINGS = {
     GARRISON: {
         name: 'Garrison',
         size: new THREE.Vector3(4, 4, 4),
-        color: 0x696969, // Dim Gray
-        position: { x: 35, y: 0, z: -55 },
-        rotation: 0,
+        color: 0x8B4513, // Saddle Brown
+        position: { x: 50, y: 0, z: -55 },
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 1,
         description: "Provides secure quarters for defensive troops to protect the district.",
         assets: null,
+        assets: {
+            baseUrl: 'assets/garrison',
+            levels: {
+                1: { url: 'assets/garrison.glb' }
+            }
+        }
     },
     COMMAND_CENTER: {
         name: 'Command Center',
-        size: new THREE.Vector3(30, 30, 30),
-        color: 0xDAA520, // Goldenrod
-        position: { x: 50, y: 0, z: -45 },
-        rotation: 0,
+        size: new THREE.Vector3(4, 4, 4),
+        color: 0x4169E1, // Royal Blue
+        position: { x: -50, y: 0, z: -75 },
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 1,
-        description: "Strategic headquarters for planning and executing military raids against other players.",
+        description: "Strategic headquarters for coordinating military operations and raids.",
         assets: {
             baseUrl: 'assets/command_center',
             levels: {
@@ -273,8 +279,8 @@ export const BUILDINGS = {
         name: 'Tavern',
         size: new THREE.Vector3(4, 4, 4),
         color: 0xD2691E, // Chocolate
-        position: { x: -25, y: 0, z: -75 },
-        rotation: 0,
+        position: { x: 50, y: 0, z: -75 },
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 2,
         description: "A gathering place where you can hire powerful heroes to lead your armies.",
         assets: {
@@ -301,21 +307,21 @@ export const BUILDINGS = {
         position: { x: -35, y: 0, z: -85 },
         rotation: 0,
         tier: 2,
-        description: "A center for magical research and developing powerful spells for battle.",
+        description: "Mystical structure for studying ancient relics and magical artifacts.",
         assets: null,
     },
     TACTICS_CENTER: {
         name: 'Tactics Center',
         size: new THREE.Vector3(4, 4, 4),
-        color: 0x4169E1, // Royal Blue
-        position: { x: 35, y: 0, z: -85 },
-        rotation: 0,
+        color: 0x2F4F4F, // Dark Slate Gray
+        position: { x: -75, y: 0, z: -115 },
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 2,
-        description: "Study advanced military strategies and develop tactical cards for battle advantages.",
+        description: "Advanced training facility for developing military strategies and tactics.",
         assets: {
-            baseUrl: 'assets/tactics-center',
+            baseUrl: 'assets/tactics_center',
             levels: {
-                1: { url: 'assets/tactics-center.glb' }
+                1: { url: 'assets/tactics_center.glb' }
             }
         }
     },
@@ -342,15 +348,15 @@ export const BUILDINGS = {
     ARCANUM_OF_NAMES: {
         name: 'Arcanum of Names',
         size: new THREE.Vector3(4, 4, 4),
-        color: 0xFFD700, // Gold
-        position: { x: 55, y: 0, z: -75 },
-        rotation: 0,
+        color: 0x8A2BE2, // Blue Violet
+        position: { x: 85, y: 0, z: -135 },
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 3,
-        description: "Converts REP points into dynamic on-chain yield NFTs for staking and passive income.",
+        description: "Mystical archive for storing reputation and minting unique NFTs.",
         assets: {
-            baseUrl: 'assets/arcanum',
+            baseUrl: 'assets/arcanum_of_names',
             levels: {
-                1: { url: 'assets/arcanum.glb' }
+                1: { url: 'assets/arcanum_of_names.glb' }
             }
         }
     },
@@ -359,7 +365,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0x32CD32, // Lime Green
         position: { x: -55, y: 0, z: -105 },
-        rotation: 0,
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 3,
         description: "Processes raw materials into more valuable forms for advanced resource production.",
         assets: null // Model not yet implemented
@@ -369,7 +375,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0x8B0000, // Dark Red
         position: { x: 55, y: 0, z: -105 },
-        rotation: 0,
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 4,
         description: "The center of political power where district leaders meet for governance and diplomacy.",
         assets: null // Model not yet implemented
@@ -379,7 +385,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0x808080, // Gray
         position: { x: -65, y: 0, z: -115 },
-        rotation: 0,
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 4,
         description: "Massive fortifications that provide ultimate defense against even the most determined attacks.",
         assets: null // Model not yet implemented
@@ -389,7 +395,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0x4B0082, // Indigo
         position: { x: 65, y: 0, z: -115 },
-        rotation: 0,
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 4,
         description: "A diplomatic center for establishing alliances and peaceful trade agreements with other cities.",
         assets: null // Model not yet implemented
@@ -399,7 +405,7 @@ export const BUILDINGS = {
         size: new THREE.Vector3(4, 4, 4),
         color: 0xFFD700, // Gold
         position: { x: 0, y: 0, z: -125 },
-        rotation: 0,
+        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 4,
         description: "The most secure location for storing your district's wealth and valuable assets.",
         assets: null // Model not yet implemented
