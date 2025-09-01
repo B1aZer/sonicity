@@ -32,7 +32,8 @@ export class SceneManager {
         this.lights = {
             sunLight: null,
             ambientLight: null,
-            hemisphereLight: null
+            hemisphereLight: null,
+            areaLight: null
         };
         this.boundOnWindowResize = null;
         this.clock = new THREE.Clock();
@@ -569,6 +570,19 @@ export class SceneManager {
         // Hemisphere light
         this.lights.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x808080, 0.8);
         this.scene.add(this.lights.hemisphereLight);
+        
+        // Area light for atmospheric fill (matching Blender scene)
+        this.lights.areaLight = new THREE.RectAreaLight(0xFFDA86, 0.5, 62, 62); // Color, intensity, width, height
+        this.lights.areaLight.position.set(0, 6, 20); // Match Blender position
+        this.lights.areaLight.lookAt(0, 0, 0); // Point towards center of scene
+        this.scene.add(this.lights.areaLight);
+        
+        Logger.info('Area light added with Blender configuration:', {
+            color: '0xFFDA86',
+            intensity: 2,
+            size: '62x62',
+            position: [0, 6, 20]
+        });
     }
 
     /**
@@ -1120,7 +1134,8 @@ export class SceneManager {
         this.lights = {
             sunLight: null,
             ambientLight: null,
-            hemisphereLight: null
+            hemisphereLight: null,
+            areaLight: null
         };
         this.boundOnWindowResize = null;
     }
