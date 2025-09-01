@@ -107,9 +107,9 @@ export const BUILDINGS = {
     // Fixed district buildings
     CITY_HALL: {
         name: 'City Hall',
-        size: new THREE.Vector3(4.5, 4.5, 4.5),
+        size: new THREE.Vector3(5, 5, 5),
         color: 0xB0C4DE, // Light Steel Blue
-        position: { x: 0, y: -0.85, z: -10 }, // Top position
+        position: { x: 0, y: -0.92, z: -10 }, // Top position
         rotation: { x: 0, y: Math.PI + Math.PI / 2 + 0.4, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "The administrative center where district governance and important decisions are managed.",

@@ -573,7 +573,7 @@ export class SceneManager {
         
         // Area light for atmospheric fill (matching Blender scene)
         this.lights.areaLight = new THREE.RectAreaLight(0xFFDA86, 0.5, 62, 62); // Color, intensity, width, height
-        this.lights.areaLight.position.set(0, 6, 20); // Match Blender position
+        this.lights.areaLight.position.set(0, 6, 10); // Match Blender position
         this.lights.areaLight.lookAt(0, 0, 0); // Point towards center of scene
         this.scene.add(this.lights.areaLight);
         
