@@ -978,7 +978,7 @@ export class SceneManager {
         const billboardConfigs = [
             {
                 name: 'mountain_background',
-                imagePath: '/images/background/back-bg-2.png', // Mountain background image
+                imagePath: '/images/background/back-bg-5.png', // Mountain background image
                 position: { x: 0, y: -35, z: -1250 }, // Moved closer (was -800) to be in front of sky
                 rotation: { x: 0, y: 0, z: 0 },    // No rotation
                 scale: { x: 1.1, y: 1, z: 1 },       // Uniform scale to maintain aspect ratio

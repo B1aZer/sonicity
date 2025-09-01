@@ -38,8 +38,8 @@ export class BillboardManager {
                 canvas.width = texture.image.width;
                 canvas.height = texture.image.height;
                 
-                // Apply blur effect using canvas filters
-                ctx.filter = 'blur(2px)'; // Adjust blur amount as needed
+                // Apply blur effect using canvas filters - reduced from 2px to 1px for subtle effect
+                ctx.filter = 'blur(1px)'; // More subtle blur (was 2px)
                 ctx.drawImage(texture.image, 0, 0);
                 
                 // Create new texture from blurred canvas
@@ -47,7 +47,7 @@ export class BillboardManager {
                 blurredTexture.colorSpace = THREE.SRGBColorSpace;
                 texture = blurredTexture;
                 
-                Logger.info('BillboardManager: Applied blur effect to mountain texture');
+                Logger.info('BillboardManager: Applied subtle blur effect to mountain texture');
             }
             
             let billboard;
