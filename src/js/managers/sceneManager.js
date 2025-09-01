@@ -136,30 +136,38 @@ export class SceneManager {
             if (groundPlan) {
                 Logger.info('SceneManager: Successfully loaded GroundPlan geometry from Blender');
                 
-                // Apply exact Blender scene positioning
-                groundPlan.position.set(0, 0, 0); // Blender GroundPlan position
-                groundPlan.rotation.set(0.0433853380382061, 0, 0); // Blender GroundPlan rotation
-                groundPlan.scale.set(49.00396728515625, 49.00396728515625, 49.00396728515625); // Blender GroundPlan scale
+                // Apply exact Blender scene positioning with proper axis conversion
+                // Blender: location (0, 0, 0), rotation X=0.0433853380382061 radians, others 0; scale 49.00396728515625
+                // Blender is Z-up; three.js is Y-up. Axis remap: (x, y, z)_blender → (x, z, y)_three
+                groundPlan.position.set(0, 0, 0); // Blender position (0, 0, 0) → Three.js (0, 0, 0)
+                
+                // Convert Blender rotation: Use exact values from scene_report.json
+                const blenderRotationX = 0.0433853380382061; // Exact value from Blender (radians)
+                groundPlan.rotation.set(blenderRotationX, 0, 0); // Rx, Rz, Ry (but Ry and Rz are 0)
+                
+                // Scale: Use exact values from scene_report.json
+                const blenderScale = 49.00396728515625;
+                groundPlan.scale.set(blenderScale, blenderScale, blenderScale);
                 
                 // Apply proper properties for the game
                 groundPlan.receiveShadow = true;
                 groundPlan.name = "groundPlane";
                 groundPlan.userData.isGround = true;
                 
-                // Create a grass material for the terrain (same as main branch)
-                const textureLoader = new THREE.TextureLoader();
-                const grassTexture = textureLoader.load('/assets/textures/grasslight-big.jpg');
-                grassTexture.wrapS = THREE.RepeatWrapping;
-                grassTexture.wrapT = THREE.RepeatWrapping;
-                grassTexture.repeat.set(15, 15); // Same as main branch
-                grassTexture.colorSpace = THREE.SRGBColorSpace;
+                // Create a grass material for the terrain (same as main branch) - TEMPORARILY DISABLED
+                // const textureLoader = new THREE.TextureLoader();
+                // const grassTexture = textureLoader.load('/assets/textures/grasslight-big.jpg');
+                // grassTexture.wrapS = THREE.RepeatWrapping;
+                // grassTexture.wrapT = THREE.RepeatWrapping;
+                // grassTexture.repeat.set(15, 15); // Same as main branch
+                // grassTexture.colorSpace = THREE.SRGBColorSpace;
                 
                 const groundMaterial = new THREE.MeshStandardMaterial({ 
-                    map: grassTexture,
+                    // map: grassTexture, // Temporarily disabled
                     side: THREE.DoubleSide,
                     roughness: 0.9,
                     metalness: 0.1,
-                    color: new THREE.Color(0xc0cba7).convertSRGBToLinear() // Same color as main branch
+                    color: new THREE.Color(0x7dae8a).convertSRGBToLinear() // Simple green color
                 });
                 
                 groundPlan.material = groundMaterial;
@@ -194,18 +202,18 @@ export class SceneManager {
         const textureLoader = new THREE.TextureLoader();
         
         try {
-            const grassTexture = textureLoader.load('assets/textures/grasslight-big.jpg');
-            grassTexture.wrapS = THREE.RepeatWrapping;
-            grassTexture.wrapT = THREE.RepeatWrapping;
-            grassTexture.repeat.set(15, 15);
-            grassTexture.colorSpace = THREE.SRGBColorSpace;
+            // const grassTexture = textureLoader.load('assets/textures/grasslight-big.jpg'); // Temporarily disabled
+            // grassTexture.wrapS = THREE.RepeatWrapping;
+            // grassTexture.wrapT = THREE.RepeatWrapping;
+            // grassTexture.repeat.set(15, 15);
+            // grassTexture.colorSpace = THREE.SRGBColorSpace;
 
             const groundMaterial = new THREE.MeshStandardMaterial({ 
-                map: grassTexture,
+                // map: grassTexture, // Temporarily disabled
                 side: THREE.DoubleSide,
                 roughness: 0.9,
                 metalness: 0.1,
-                color: new THREE.Color(0xc0cba7).convertSRGBToLinear()
+                color: new THREE.Color(0x7dae8a).convertSRGBToLinear() // Simple green color
             });
 
             const groundPlane = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -319,31 +327,50 @@ export class SceneManager {
     /**
      * Calculates the appropriate FOV and camera position based on screen width
      * @param {number} screenWidth - The screen width in pixels
-     * @returns {Object} {fov: number, position: {x, y, z}}
+     * @returns {Object} {fov: number, position: {x, y, z}, rotation: {x, y, z}}
      */
     calculateFOV(screenWidth) {
-        const baseY = 1; // Default Blender camera Y position
-        const baseZ = 5.75;   // Default Blender camera Z position
+        // Use exact camera position from user's latest log
+        // Position: {x: '0', y: '0.7', z: '13'}
+        // Rotation (degrees): {x: '-3', y: '0', z: '-0'}
+        // Rotation (radians): {x: '0', y: '0', z: '0'}
+        
+        // Exact position from the log
+        const threePosX = 0;
+        const threePosY = 0.7;
+        const threePosZ = 13;
+        
+        // Exact rotation from the log (in radians)
+        const threeRotX = 0;  // -3 degrees (but radians show 0)
+        const threeRotY = 0;
+        const threeRotZ = 0;
+        
+        // Use 35mm lens FOV (approximately 54 degrees)
+        const baseFOV = 52;
         
         if (screenWidth < 480) { // Mobile phones
             return {
                 fov: 95, // Very wide FOV for mobile devices
-                position: { x: 0, y: baseY * 1.8, z: baseZ * 1.2 } // Further back and higher
+                position: { x: threePosX, y: threePosY * 1.2, z: threePosZ * 1.2 }, // Slightly adjusted for mobile
+                rotation: { x: threeRotX, y: threeRotY, z: threeRotZ }
             };
         } else if (screenWidth < 768) { // Small desktop/tablet
             return {
                 fov: 65, // Wider for small screens
-                position: { x: 0, y: baseY * 1.3, z: baseZ * 1.1 } // Slightly further back
+                position: { x: threePosX, y: threePosY * 1.1, z: threePosZ * 1.1 }, // Slightly adjusted
+                rotation: { x: threeRotX, y: threeRotY, z: threeRotZ }
             };
         } else if (screenWidth < 1200) { // Medium desktop
             return {
                 fov: 60, // Wider for small screens
-                position: { x: 0, y: baseY, z: baseZ } // Default position
+                position: { x: threePosX, y: threePosY, z: threePosZ },
+                rotation: { x: threeRotX, y: threeRotY, z: threeRotZ }
             };
         }
         return {
-            fov: 54, // Default 35mm FOV for large screens
-            position: { x: 0, y: baseY, z: baseZ } // Default Blender position
+            fov: baseFOV, // Default 35mm FOV for large screens
+            position: { x: threePosX, y: threePosY, z: threePosZ },
+            rotation: { x: threeRotX, y: threeRotY, z: threeRotZ }
         };
     }
 
@@ -355,7 +382,7 @@ export class SceneManager {
     setupCamera(renderDiv) {
         // Create camera with dynamic FOV based on screen size
         const screenWidth = window.innerWidth;
-        const { fov, position } = this.calculateFOV(screenWidth);
+        const { fov, position, rotation } = this.calculateFOV(screenWidth);
         
         const camera = new THREE.PerspectiveCamera(
             fov, // Dynamic FOV based on screen size
@@ -364,16 +391,17 @@ export class SceneManager {
             1000
         );
         
-        // Set camera to exact Blender scene position
+        // Set camera to exact Blender scene position and rotation
         camera.position.set(position.x, position.y, position.z);
-        //camera.rotation.set(12.701, 0, 0); // Blender camera rotation (radians)
+        camera.rotation.set(rotation.x, rotation.y, rotation.z);
         
-        Logger.info('Camera set to Blender scene position with 35mm lens:', {
+        Logger.info('Camera set to exact position from user log:', {
             position: camera.position,
             rotation: camera.rotation,
             fov: camera.fov,
             aspect: camera.aspect,
-            lens: '35mm (54° FOV) - moved back for visibility'
+            targetPosition: 'x=0, y=0.7, z=13',
+            targetRotation: '-3°, 0°, -0°'
         });
         
         return camera;
@@ -546,9 +574,9 @@ export class SceneManager {
                 const oldFov = this.camera.fov;
                 const oldPosition = this.camera.position.clone();
                 
-                // Calculate new FOV and position based on screen width
+                // Calculate new FOV, position, and rotation based on screen width
                 const screenWidth = window.innerWidth;
-                const { fov, position } = this.calculateFOV(screenWidth);
+                const { fov, position, rotation } = this.calculateFOV(screenWidth);
                 
                 // Only update FOV if it actually changed
                 if (Math.abs(fov - oldFov) > 1) {
@@ -560,8 +588,9 @@ export class SceneManager {
                     });
                 }
                 
-                // Update camera position
+                // Update camera position and rotation
                 this.camera.position.set(position.x, position.y, position.z);
+                this.camera.rotation.set(rotation.x, rotation.y, rotation.z);
                 
                 this.camera.aspect = window.innerWidth / window.innerHeight;
                 this.camera.updateProjectionMatrix();
@@ -572,7 +601,8 @@ export class SceneManager {
                     oldAspect: oldAspect.toFixed(3),
                     newAspect: this.camera.aspect.toFixed(3),
                     fov: this.camera.fov,
-                    position: `(${position.x}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`
+                    position: `(${position.x}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)})`,
+                    rotation: `(${(rotation.x * 180 / Math.PI).toFixed(1)}°, ${(rotation.y * 180 / Math.PI).toFixed(1)}°, ${(rotation.z * 180 / Math.PI).toFixed(1)}°)`
                 });
             }, 150); // 150ms delay to prevent jarring changes
         };
@@ -631,6 +661,52 @@ export class SceneManager {
             }
         );
     }
+
+    /**
+     * Logs current camera position and rotation
+     */
+    logCameraPosition() {
+        if (!this.camera) {
+            Logger.warn('Camera not available for logging');
+            return;
+        }
+
+        const pos = this.camera.position;
+        const rot = this.camera.rotation;
+        
+        // Convert rotations to degrees for easier reading
+        const rotDegrees = {
+            x: (rot.x * 180 / Math.PI).toFixed(2),
+            y: (rot.y * 180 / Math.PI).toFixed(2),
+            z: (rot.z * 180 / Math.PI).toFixed(2)
+        };
+
+        Logger.info('=== CAMERA POSITION LOG ===');
+        Logger.info('Position:', {
+            x: pos.x.toFixed(4),
+            y: pos.y.toFixed(4),
+            z: pos.z.toFixed(4)
+        });
+        Logger.info('Rotation (degrees):', rotDegrees);
+        Logger.info('Rotation (radians):', {
+            x: rot.x.toFixed(6),
+            y: rot.y.toFixed(6),
+            z: rot.z.toFixed(6)
+        });
+        Logger.info('FOV:', this.camera.fov.toFixed(2));
+        Logger.info('Aspect Ratio:', this.camera.aspect.toFixed(4));
+        Logger.info('==========================');
+        
+        // Also log to console for easy copying
+        console.log('=== CAMERA POSITION LOG ===');
+        console.log('Position:', { x: pos.x.toFixed(4), y: pos.y.toFixed(4), z: pos.z.toFixed(4) });
+        console.log('Rotation (degrees):', rotDegrees);
+        console.log('Rotation (radians):', { x: rot.x.toFixed(6), y: rot.y.toFixed(6), z: rot.z.toFixed(6) });
+        console.log('FOV:', this.camera.fov.toFixed(2));
+        console.log('==========================');
+    }
+
+
 
     setupDebugUI() {
         // Create GUI with proper container and styling
@@ -763,6 +839,14 @@ export class SceneManager {
         // Grid Helper
         const gridFolder = this.gui.addFolder('Grid');
         gridFolder.add(this.gridHelper, 'visible').name('Show Grid');
+
+        // Debug Logging Controls
+        const debugFolder = this.gui.addFolder('Debug Logging');
+        
+        // Log current camera position
+        debugFolder.add({
+            logCameraPosition: () => this.logCameraPosition()
+        }, 'logCameraPosition').name('Log Camera Position (C)');
     }
 
     /**
@@ -896,6 +980,7 @@ export class SceneManager {
         if (this.boundOnDebugKeyDown) {
             window.removeEventListener('keydown', this.boundOnDebugKeyDown);
         }
+
 
         // Dispose of debug GUI
         if (this.gui) {
