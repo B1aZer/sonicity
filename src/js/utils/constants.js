@@ -40,7 +40,7 @@ export const BUILDINGS = {
     // Grid-based buildings (dynamic placement)
     HOUSE: {
         name: 'House',
-        size: new THREE.Vector3(0.8, 0.8, 0.8), // Scaled to match Blender house proportions
+        size: new THREE.Vector3(2, 2, 2), // Scaled to match Blender house proportions
         color: 0xADD8E6, // Light Blue
         isGridBuilding: true,
         tier: 0,
