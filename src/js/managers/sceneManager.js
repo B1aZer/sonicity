@@ -341,6 +341,7 @@ export class SceneManager {
         const threePosZ = 13;
         
         // Exact rotation from the log (in radians)
+        // TODO: does not seem to work with orbit controls or like at all
         const threeRotX = 0;  // -3 degrees (but radians show 0)
         const threeRotY = 0;
         const threeRotZ = 0;
