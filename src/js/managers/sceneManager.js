@@ -7,6 +7,7 @@ import { River } from '../objects/River.js';
 import { Trees } from '../objects/Trees.js';
 import { SHOW_PERFORMANCE_MONITOR } from '../utils/constants.js';
 import GUI from 'lil-gui';
+import { BillboardManager } from './billboardManager.js';
 
 export class SceneManager {
     constructor(gridManager) {
@@ -26,6 +27,7 @@ export class SceneManager {
         this.gui = null;
         this.boundOnKeyDown = null;
         this.boundOnDebugKeyDown = null;
+        this.billboardManager = null;
         //this.river = null;
         this.lights = {
             sunLight: null,
@@ -44,7 +46,7 @@ export class SceneManager {
      * @returns {THREE.Mesh} The sky mesh
      */
     createSky() {
-        const skyGeometry = new THREE.SphereGeometry(500, 32, 32);
+        const skyGeometry = new THREE.SphereGeometry(1500, 32, 32); // Reduced from 500 to 300 so mountains are visible
         const skyMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 topColor: { value: new THREE.Color(0x0077ff) },
@@ -388,8 +390,8 @@ export class SceneManager {
         const camera = new THREE.PerspectiveCamera(
             fov, // Dynamic FOV based on screen size
             renderDiv.clientWidth / renderDiv.clientHeight,
-            0.1,
-            1000
+            0.1,   // Near plane: 0.1 units
+            3000    // Far plane: 3000 units (increased for distant mountains)
         );
         
         // Set camera to exact Blender scene position and rotation
@@ -401,6 +403,8 @@ export class SceneManager {
             rotation: camera.rotation,
             fov: camera.fov,
             aspect: camera.aspect,
+            near: camera.near,
+            far: camera.far,
             targetPosition: 'x=0, y=0.7, z=13',
             targetRotation: '-3°, 0°, -0°'
         });
@@ -420,7 +424,7 @@ export class SceneManager {
         monitor.style.fontSize = '12px';
         monitor.style.borderRadius = '5px';
         monitor.style.zIndex = '1000';
-        monitor.style.display = SHOW_PERFORMANCE_MONITOR ? 'block' : 'none';
+        monitor.style.display = 'none'; // Hidden by default instead of SHOW_PERFORMANCE_MONITOR
         renderDiv.appendChild(monitor);
         return monitor;
     }
@@ -898,6 +902,12 @@ export class SceneManager {
             this.gridHelper = this.createGridHelper();
             this.scene.add(this.gridHelper);
             
+            // Initialize billboard manager
+            this.billboardManager = new BillboardManager(this.scene);
+            
+            // Create example billboard using back-bg.png
+            await this.createExampleBillboards();
+            
             // Create animated grass
             // this.grassBlades = new GrassBlades(this.scene, {
             //     width: this.gridManager.getTotalSize(),
@@ -949,11 +959,42 @@ export class SceneManager {
                 renderer: this.renderer,
                 controls: this.controls,
                 groundPlane: this.groundPlane,
-                gridHelper: this.gridHelper
+                gridHelper: this.gridHelper,
+                billboardManager: this.billboardManager
             };
         } catch (error) {
             Logger.error('Error setting up scene:', error);
             throw error;
+        }
+    }
+
+    /**
+     * Creates example billboards using back-bg.png at exact Blender positions
+     */
+    async createExampleBillboards() {
+        if (!this.billboardManager) return;
+
+        // Example billboard configuration using back-bg.png for distant mountains
+        const billboardConfigs = [
+            {
+                name: 'mountain_background',
+                imagePath: '/images/background/back-bg.png', // Mountain background image
+                position: { x: 0, y: -35, z: -1050 }, // Moved closer (was -800) to be in front of sky
+                rotation: { x: 0, y: 0, z: 0 },    // No rotation
+                scale: { x: 1, y: 1, z: 1 },       // Uniform scale to maintain aspect ratio
+                size: 1350,                           // Large size to cover the background
+                alwaysFaceCamera: true,             // Always face camera
+                castShadow: false,                  // No shadows
+                receiveShadow: false,               // No shadows
+                blur: false                          // Enable blur for distant effect
+            }
+        ];
+
+        try {
+            await this.billboardManager.createBillboards(billboardConfigs);
+            Logger.info('SceneManager: Mountain background billboard created successfully');
+        } catch (error) {
+            Logger.error('SceneManager: Error creating mountain background billboard:', error);
         }
     }
 
@@ -1025,6 +1066,12 @@ export class SceneManager {
         if (this.trees) {
             this.trees.dispose();
             this.trees = null;
+        }
+
+        // Dispose of billboard manager
+        if (this.billboardManager) {
+            this.billboardManager.dispose();
+            this.billboardManager = null;
         }
 
         // Dispose of river
