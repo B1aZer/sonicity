@@ -233,7 +233,7 @@ export const BUILDINGS = {
         name: 'Scout Guild',
         size: new THREE.Vector3(4, 4, 4),
         color: 0x32CD32, // Lime Green
-        position: { x: 15, y: 0, z: -35 },
+        position: { x: 15, y: -0.5, z: -38 },
         rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 1,
         description: "Specialized training facility for reconnaissance and intelligence gathering.",
