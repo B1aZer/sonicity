@@ -124,8 +124,8 @@ export const BUILDINGS = {
         name: 'Altar',
         size: new THREE.Vector3(3, 3, 3),
         color: 0xFFB6C1, // Light Pink
-        position: { x: -8, y: -1.2, z: 0 }, // Left position
-        rotation: { x: 0, y: Math.PI / 2 - 0.4, z: 0 }, // Converted to Vector3 format
+        position: { x: -7, y: -1.4, z: 1.4 }, // Left position
+        rotation: { x: Math.PI / 64, y: Math.PI / 2 - 0.4, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "A sacred place for performing rituals and ceremonies to unlock special abilities.",
         assets: {
@@ -154,7 +154,7 @@ export const BUILDINGS = {
         name: 'Shop',
         size: new THREE.Vector3(4, 4, 4),
         color: 0xFFD700, // Gold color
-        position: { x: -20, y: 0, z: -35 },
+        position: { x: -10, y: -0.3, z: -15 },
         rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "A bustling marketplace for trading goods.",
@@ -169,7 +169,7 @@ export const BUILDINGS = {
         name: 'Workshop',
         size: new THREE.Vector3(4, 4, 4),
         color: 0xFFD700, // Gold color
-        position: { x: 20, y: 0, z: -35 },
+        position: { x: 7, y: -0.4, z: -15 },
         rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "Repairs buildings to maintain district infrastructure.",
@@ -184,7 +184,7 @@ export const BUILDINGS = {
         name: 'Outpost',
         size: new THREE.Vector3(4, 4, 4),
         color: 0x8B4513, // Saddle Brown
-        position: { x: -15, y: 0, z: -65 },
+        position: { x: -5, y: 0, z: -45 },
         rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "A forward base for scouting territory and providing early warning of threats.",
@@ -199,7 +199,7 @@ export const BUILDINGS = {
         name: 'Defense Tower',
         size: new THREE.Vector3(4, 4, 4),
         color: 0xCD5C5C, // Indian Red
-        position: { x: -50, y: 0, z: -55 },
+        position: { x: -18, y: 2, z: -35 },
         rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 0,
         description: "Protects your district from enemy attacks with formidable defensive capabilities.",
@@ -214,9 +214,9 @@ export const BUILDINGS = {
     },
     BARRACKS: {
         name: 'Barracks',
-        size: new THREE.Vector3(4, 4, 4),
+        size: new THREE.Vector3(5, 5, 5),
         color: 0x8B4513, // Saddle Brown
-        position: { x: 35, y: 0, z: -35 },
+        position: { x: 15, y: 0, z: -15 },
         rotation: { x: 0, y: -Math.PI / 2, z: -Math.PI / 180 }, // Converted to Vector3 format
         tier: 1,
         description: "Trains and houses military units for district defense and expansion.",
