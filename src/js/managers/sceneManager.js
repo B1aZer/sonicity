@@ -46,7 +46,7 @@ export class SceneManager {
      * @returns {THREE.Mesh} The sky mesh
      */
     createSky() {
-        const skyGeometry = new THREE.SphereGeometry(1500, 32, 32); // Reduced from 500 to 300 so mountains are visible
+        const skyGeometry = new THREE.SphereGeometry(2000, 32, 32); // Reduced from 500 to 300 so mountains are visible
         const skyMaterial = new THREE.ShaderMaterial({
             uniforms: {
                 topColor: { value: new THREE.Color(0x0077ff) },
@@ -978,15 +978,15 @@ export class SceneManager {
         const billboardConfigs = [
             {
                 name: 'mountain_background',
-                imagePath: '/images/background/back-bg.png', // Mountain background image
-                position: { x: 0, y: -35, z: -1050 }, // Moved closer (was -800) to be in front of sky
+                imagePath: '/images/background/back-bg-2.png', // Mountain background image
+                position: { x: 0, y: -35, z: -1250 }, // Moved closer (was -800) to be in front of sky
                 rotation: { x: 0, y: 0, z: 0 },    // No rotation
-                scale: { x: 1, y: 1, z: 1 },       // Uniform scale to maintain aspect ratio
-                size: 1350,                           // Large size to cover the background
+                scale: { x: 1.1, y: 1, z: 1 },       // Uniform scale to maintain aspect ratio
+                size: 1450,                           // Large size to cover the background
                 alwaysFaceCamera: true,             // Always face camera
                 castShadow: false,                  // No shadows
                 receiveShadow: false,               // No shadows
-                blur: false                          // Enable blur for distant effect
+                blur: true                          // Enable blur for distant effect
             }
         ];
 
