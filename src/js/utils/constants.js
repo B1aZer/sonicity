@@ -107,10 +107,10 @@ export const BUILDINGS = {
     // Fixed district buildings
     CITY_HALL: {
         name: 'City Hall',
-        size: new THREE.Vector3(4, 4, 4),
+        size: new THREE.Vector3(4.5, 4.5, 4.5),
         color: 0xB0C4DE, // Light Steel Blue
-        position: { x: 0, y: 0, z: -40 }, // Top position
-        rotation: Math.PI,
+        position: { x: 0, y: -0.85, z: -10 }, // Top position
+        rotation: Math.PI + Math.PI / 2 + 0.4,
         tier: 0,
         description: "The administrative center where district governance and important decisions are managed.",
         assets: {
@@ -122,10 +122,10 @@ export const BUILDINGS = {
     },
     ALTAR: {
         name: 'Altar',
-        size: new THREE.Vector3(12, 12, 12),
+        size: new THREE.Vector3(3, 3, 3),
         color: 0xFFB6C1, // Light Pink
-        position: { x: -40, y: 0, z: 0 }, // Left position
-        rotation: Math.PI / 2,
+        position: { x: -8, y: -1.2, z: 0 }, // Left position
+        rotation: Math.PI / 2 - 0.4,
         tier: 0,
         description: "A sacred place for performing rituals and ceremonies to unlock special abilities.",
         assets: {
@@ -139,8 +139,8 @@ export const BUILDINGS = {
         name: 'Mine',
         size: new THREE.Vector3(4, 4, 4),
         color: 0xFFFFE0, // Light Yellow
-        position: { x: 40, y: 0, z: 0 }, // Right position
-        rotation: -Math.PI / 2,
+        position: { x: 8, y: -2, z: 0 }, // Right position
+        rotation: -Math.PI / 2 + 0.3,
         tier: 0,
         description: "Extracts valuable minerals and resources from the earth for production and upgrades.",
         assets: {
