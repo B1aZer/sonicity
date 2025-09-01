@@ -146,12 +146,20 @@ export class SceneManager {
                 groundPlan.name = "groundPlane";
                 groundPlan.userData.isGround = true;
                 
-                // Create a simple material for now (no complex textures)
+                // Create a grass material for the terrain (same as main branch)
+                const textureLoader = new THREE.TextureLoader();
+                const grassTexture = textureLoader.load('/assets/textures/grasslight-big.jpg');
+                grassTexture.wrapS = THREE.RepeatWrapping;
+                grassTexture.wrapT = THREE.RepeatWrapping;
+                grassTexture.repeat.set(15, 15); // Same as main branch
+                grassTexture.colorSpace = THREE.SRGBColorSpace;
+                
                 const groundMaterial = new THREE.MeshStandardMaterial({ 
-                    color: new THREE.Color(0x7dae8a),
+                    map: grassTexture,
                     side: THREE.DoubleSide,
                     roughness: 0.9,
-                    metalness: 0.1
+                    metalness: 0.1,
+                    color: new THREE.Color(0xc0cba7).convertSRGBToLinear() // Same color as main branch
                 });
                 
                 groundPlan.material = groundMaterial;
@@ -487,8 +495,8 @@ export class SceneManager {
         controls.screenSpacePanning = false;
         
         // Restrict vertical rotation (up/down)
-        controls.maxPolarAngle = Math.PI / 2; // Limit looking down (was Math.PI / 2 - 0.05)
-        controls.minPolarAngle = Math.PI / 2; // Limit looking up (new restriction)
+       // controls.maxPolarAngle = Math.PI / 2; // Limit looking down (was Math.PI / 2 - 0.05)
+        //controls.minPolarAngle = Math.PI / 2; // Limit looking up (new restriction)
         
         // Restrict horizontal rotation (left/right)
         controls.maxAzimuthAngle = Math.PI / 16; // Limit right rotation (45 degrees)
