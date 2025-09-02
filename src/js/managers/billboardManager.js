@@ -39,7 +39,7 @@ export class BillboardManager {
                 canvas.height = texture.image.height;
                 
                 // Apply blur effect using canvas filters - reduced from 2px to 1px for subtle effect
-                ctx.filter = 'blur(1px)'; // More subtle blur (was 2px)
+                ctx.filter = 'blur(0.5px)'; // More subtle blur (was 2px)
                 ctx.drawImage(texture.image, 0, 0);
                 
                 // Create new texture from blurred canvas
