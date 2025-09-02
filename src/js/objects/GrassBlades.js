@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { GrassMaterial } from '../materials/GrassMaterial.js';
 import { createNoise2D } from 'simplex-noise';
 import Logger from '../utils/logger.js';
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
 
 export class GrassBlades {
     constructor(scene, options = {}) {
@@ -13,14 +15,18 @@ export class GrassBlades {
             instances: 10000,
             width: 100,
             density: 1.0,
+            slopeThreshold: 0.6,      // New: slope filtering for natural placement
+            terrainMesh: null,         // New: terrain mesh for surface sampling
             ...options
         };
         
         this.noise2D = createNoise2D(Math.random);
         this.material = null;
         this.mesh = null;
+        this.terrainMesh = this.options.terrainMesh;
+        this.sampler = null; // MeshSurfaceSampler instance
         
-        Logger.info('Creating grass blades with options:', this.options);
+        Logger.info('Creating grass blades with terrain following:', this.options);
         this.init();
     }
     
@@ -90,9 +96,23 @@ export class GrassBlades {
             instancedGeometry.attributes.position = baseGeom.attributes.position;
             instancedGeometry.attributes.uv = baseGeom.attributes.uv;
             
-            // Generate attribute data
+            // Generate attribute data using terrain sampling if available
             Logger.info('Generating grass blade attributes...');
-            const attributeData = this.getAttributeData();
+            let attributeData;
+            
+            if (this.terrainMesh) {
+                try {
+                    Logger.info('Using terrain-following placement...');
+                    attributeData = await this.generateTerrainFollowingAttributes();
+                    Logger.info('✅ Terrain sampling completed successfully');
+                } catch (error) {
+                    Logger.error('❌ Terrain sampling failed, using fallback:', error);
+                    attributeData = this.getFallbackAttributeData();
+                }
+            } else {
+                Logger.info('No terrain mesh provided, using fallback placement...');
+                attributeData = this.getFallbackAttributeData();
+            }
             
             // Add instanced attributes
             instancedGeometry.setAttribute('offset', new THREE.InstancedBufferAttribute(new Float32Array(attributeData.offsets), 3));
@@ -121,95 +141,200 @@ export class GrassBlades {
         }
     }
     
-    getAttributeData() {
-        const { instances, width, density } = this.options;
+    /**
+     * Generate terrain-following attributes using MeshSurfaceSampler
+     * This samples the terrain once and creates all grass blade data
+     */
+    async generateTerrainFollowingAttributes() {
+        const { instances, density, slopeThreshold } = this.options;
+        
+        Logger.info('Setting up MeshSurfaceSampler for terrain following...');
+        
+        // Check if we have terrain mesh for sampling
+        if (!this.terrainMesh) {
+            Logger.warn('⚠️ No terrain mesh available, using fallback placement...');
+            return this.getFallbackAttributeData();
+        }
+        
+        try {
+            // Update terrain mesh world matrix before sampling to ensure current state
+            this.terrainMesh.updateMatrixWorld(true);
+            Logger.info('✅ Terrain world matrix updated');
+            
+            // Create surface sampler from terrain mesh
+            this.sampler = new MeshSurfaceSampler(this.terrainMesh).build();
+            Logger.info('✅ MeshSurfaceSampler built successfully');
+            
+            // Debug terrain mesh bounds
+            const terrainBounds = new THREE.Box3().setFromObject(this.terrainMesh);
+            Logger.info('Terrain mesh bounds:', {
+                min: terrainBounds.min.toArray().map(v => v.toFixed(2)),
+                max: terrainBounds.max.toArray().map(v => v.toFixed(2)),
+                size: terrainBounds.getSize(new THREE.Vector3()).toArray().map(v => v.toFixed(2)),
+                center: terrainBounds.getCenter(new THREE.Vector3()).toArray().map(v => v.toFixed(2))
+            });
+            
+            const offsets = [];
+            const orientations = [];
+            const stretches = [];
+            const halfRootAngleSin = [];
+            const halfRootAngleCos = [];
+            
+            // Temporary vectors for sampling
+            const position = new THREE.Vector3();
+            const normal = new THREE.Vector3();
+            const quaternion = new THREE.Quaternion();
+            
+            Logger.info('Sampling terrain surface for grass placement...');
+            
+            let placedCount = 0;
+            let maxAttempts = instances * 4; // Allow more retries for better distribution
+            
+            for (let attempt = 0; attempt < maxAttempts && placedCount < instances; attempt++) {
+                // Sample random point on terrain surface
+                this.sampler.sample(position, normal);
+                
+                // Transform from local terrain coordinates to world coordinates
+                const worldPosition = position.clone().applyMatrix4(this.terrainMesh.matrixWorld);
+                const worldNormal = normal.clone().transformDirection(this.terrainMesh.matrixWorld).normalize();
+                
+                // Seat slightly into ground along normal (avoid z-fighting & floaters)
+                worldPosition.addScaledVector(worldNormal, 0.005);
+                
+                // Slope filtering for natural placement
+                const upness = Math.abs(worldNormal.y); // 1 = flat, 0 = vertical
+                if (upness < slopeThreshold) {
+                    continue; // Reject steep slopes
+                }
+                
+                // Hash-based density filtering (blue-noise-like, stable in world space)
+                const targetDensity = 0.80; // Keep ~80% on flat areas
+                if (this.hash2(worldPosition.x, worldPosition.z) > targetDensity) {
+                    continue; // Reject based on hash density
+                }
+                
+                // If we get here, place the grass blade
+                offsets.push(worldPosition.x, worldPosition.y + 0.02, worldPosition.z); // Slightly above surface
+                
+                // Create orientation based on surface normal
+                // Align grass to surface normal, then add random rotation
+                quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), worldNormal);
+                
+                // Add random rotation around the up axis
+                const randomRotation = Math.random() * Math.PI * 2;
+                quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(worldNormal, randomRotation));
+                
+                orientations.push(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+                
+                // Height variation for natural look
+                const heightVariation = Math.random();
+                if (heightVariation < 0.2) {
+                    // Some very tall blades
+                    stretches.push(1.6 + Math.random() * 0.4);
+                } else if (heightVariation < 0.4) {
+                    // Medium height blades
+                    stretches.push(1.1 + Math.random() * 0.3);
+                } else {
+                    // Regular height blades
+                    stretches.push(0.9 + Math.random() * 0.3);
+                }
+                
+                // Simple angle calculations for compatibility
+                const angle = Math.random() * Math.PI * 2;
+                halfRootAngleSin.push(Math.sin(0.5 * angle));
+                halfRootAngleCos.push(Math.cos(0.5 * angle));
+                
+                placedCount++;
+                
+                // Log progress every 10000 blades
+                if (placedCount % 10000 === 0) {
+                    Logger.info(`Placed ${placedCount} terrain-following grass blades...`);
+                }
+            }
+            
+            Logger.info(`✅ Terrain sampling complete: ${placedCount} blades placed`);
+            
+            // If we didn't place enough, use fallback
+            if (placedCount < instances * 0.8) {
+                Logger.warn(`⚠️ Only placed ${placedCount} blades, using fallback for remaining...`);
+                const fallbackData = this.getFallbackAttributeData();
+                
+                // Combine with fallback data
+                const remainingNeeded = instances - placedCount;
+                for (let i = 0; i < remainingNeeded && i < fallbackData.offsets.length; i++) {
+                    offsets.push(fallbackData.offsets[i * 3], fallbackData.offsets[i * 3 + 1], fallbackData.offsets[i * 3 + 2]);
+                    orientations.push(fallbackData.orientations[i * 4], fallbackData.orientations[i * 4 + 1], fallbackData.orientations[i * 4 + 2], fallbackData.orientations[i * 4 + 3]);
+                    stretches.push(fallbackData.stretches[i]);
+                    halfRootAngleSin.push(fallbackData.halfRootAngleSin[i]);
+                    halfRootAngleCos.push(fallbackData.halfRootAngleCos[i]);
+                }
+            }
+            
+            return {
+                offsets,
+                orientations,
+                stretches,
+                halfRootAngleCos,
+                halfRootAngleSin
+            };
+            
+        } catch (error) {
+            Logger.error('Error with MeshSurfaceSampler, using fallback:', error);
+            return this.getFallbackAttributeData();
+        }
+    }
+    
+    /**
+     * Hash-based density function (blue-noise-like, stable in world space)
+     * @param {number} x - X coordinate
+     * @param {number} z - Z coordinate
+     * @returns {number} Hash value 0..1
+     */
+    hash2(x, z) {
+        const s = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453;
+        return s - Math.floor(s); // 0..1
+    }
+    
+    /**
+     * Fallback attribute data generation with minimal filtering
+     */
+    getFallbackAttributeData() {
+        Logger.info('=== FALLBACK ATTRIBUTE DATA GENERATION ===');
+        
+        const { instances, width } = this.options;
         const offsets = [];
         const orientations = [];
         const stretches = [];
         const halfRootAngleSin = [];
         const halfRootAngleCos = [];
         
-        let quaternion_0 = new THREE.Vector4();
-        let quaternion_1 = new THREE.Vector4();
-        
-        // Increase the range of random angles for more natural bending
-        const min = -0.5;
-        const max = 0.5;
-        
-        // Create a grid for better distribution
-        const gridSize = Math.ceil(Math.sqrt(instances));
-        const cellSize = width / gridSize;
+        Logger.info('Using fallback placement with minimal filtering...');
         
         for (let i = 0; i < instances; i++) {
-            // Calculate grid position
-            const gridX = i % gridSize;
-            const gridZ = Math.floor(i / gridSize);
+            // Simple grid placement with minimal jitter
+            const gridX = i % Math.ceil(Math.sqrt(instances));
+            const gridZ = Math.floor(i / Math.ceil(Math.sqrt(instances)));
             
-            // Add more jitter to grid position for more natural distribution
-            const jitterX = (Math.random() - 0.5) * cellSize * 0.6;
-            const jitterZ = (Math.random() - 0.5) * cellSize * 0.6;
+            const cellSize = width / Math.ceil(Math.sqrt(instances));
+            const offsetX = (gridX * cellSize - width / 2) + (Math.random() - 0.5) * cellSize * 0.5;
+            const offsetZ = (gridZ * cellSize - width / 2) + (Math.random() - 0.5) * cellSize * 0.5;
+            const offsetY = 0.01; // Slightly above ground
             
-            // Calculate final position
-            const offsetX = (gridX * cellSize - width / 2) + jitterX;
-            const offsetZ = (gridZ * cellSize - width / 2) + jitterZ;
-            
-            // Apply density noise with more variation
-            const densityNoise = this.noise2D(offsetX / 12, offsetZ / 12);
-            if (densityNoise < -0.4) continue;
-            
-            const offsetY = this.getYPosition(offsetX, offsetZ);
             offsets.push(offsetX, offsetY, offsetZ);
             
-            // Define random growth directions with more variation
-            let angle = Math.PI - Math.random() * (2 * Math.PI);
+            // Simple random rotation
+            const angle = Math.random() * Math.PI * 2;
             halfRootAngleSin.push(Math.sin(0.5 * angle));
             halfRootAngleCos.push(Math.cos(0.5 * angle));
             
-            // Rotate around Y with more variation
-            let rotationAxis = new THREE.Vector3(0, 1, 0);
-            let x = rotationAxis.x * Math.sin(angle / 2.0);
-            let y = rotationAxis.y * Math.sin(angle / 2.0);
-            let z = rotationAxis.z * Math.sin(angle / 2.0);
-            let w = Math.cos(angle / 2.0);
-            quaternion_0.set(x, y, z, w).normalize();
+            // Simple quaternion
+            orientations.push(0, 0, 0, 1);
             
-            // Rotate around X with more variation
-            angle = Math.random() * (max - min) + min;
-            rotationAxis = new THREE.Vector3(1, 0, 0);
-            x = rotationAxis.x * Math.sin(angle / 2.0);
-            y = rotationAxis.y * Math.sin(angle / 2.0);
-            z = rotationAxis.z * Math.sin(angle / 2.0);
-            w = Math.cos(angle / 2.0);
-            quaternion_1.set(x, y, z, w).normalize();
-            
-            quaternion_0 = this.multiplyQuaternions(quaternion_0, quaternion_1);
-            
-            // Rotate around Z with more variation
-            angle = Math.random() * (max - min) + min;
-            rotationAxis = new THREE.Vector3(0, 0, 1);
-            x = rotationAxis.x * Math.sin(angle / 2.0);
-            y = rotationAxis.y * Math.sin(angle / 2.0);
-            z = rotationAxis.z * Math.sin(angle / 2.0);
-            w = Math.cos(angle / 2.0);
-            quaternion_1.set(x, y, z, w).normalize();
-            
-            quaternion_0 = this.multiplyQuaternions(quaternion_0, quaternion_1);
-            
-            orientations.push(quaternion_0.x, quaternion_0.y, quaternion_0.z, quaternion_0.w);
-            
-            // Define variety in height with more natural distribution
-            const heightVariation = Math.random();
-            if (heightVariation < 0.2) {
-                // Some very tall blades
-                stretches.push(1.6 + Math.random() * 0.4);
-            } else if (heightVariation < 0.4) {
-                // Medium height blades
-                stretches.push(1.1 + Math.random() * 0.3);
-            } else {
-                // Regular height blades
-                stretches.push(0.9 + Math.random() * 0.3);
-            }
+            // Simple stretch
+            stretches.push(0.8 + Math.random() * 0.4);
         }
+        
+        Logger.info(`✅ Fallback placement complete: ${instances} blades placed`);
         
         return {
             offsets,
@@ -218,6 +343,13 @@ export class GrassBlades {
             halfRootAngleCos,
             halfRootAngleSin
         };
+    }
+    
+    getAttributeData() {
+        // This method is now deprecated in favor of generateTerrainFollowingAttributes
+        // Keep for backward compatibility but log a warning
+        Logger.warn('getAttributeData() is deprecated, use generateTerrainFollowingAttributes() instead');
+        return this.getFallbackAttributeData();
     }
     
     multiplyQuaternions(q1, q2) {
@@ -229,7 +361,24 @@ export class GrassBlades {
     }
     
     getYPosition(x, z) {
-        // Enhanced terrain variation
+        // Enhanced terrain variation - now uses terrain sampling if available
+        if (this.terrainMesh && this.sampler) {
+            // Use terrain sampling for accurate height
+            const position = new THREE.Vector3(x, 0, z);
+            const normal = new THREE.Vector3();
+            
+            // Find the closest point on the terrain surface
+            // This is a simplified approach - in practice, you'd want more sophisticated sampling
+            const terrainBounds = new THREE.Box3().setFromObject(this.terrainMesh);
+            if (terrainBounds.containsPoint(position)) {
+                // Sample the terrain at this position
+                this.sampler.sample(position, normal);
+                const worldPosition = position.clone().applyMatrix4(this.terrainMesh.matrixWorld);
+                return worldPosition.y;
+            }
+        }
+        
+        // Fallback to noise-based height if no terrain sampling available
         let y = 0.05 * this.noise2D(x / 50, z / 50);
         y += 0.1 * this.noise2D(x / 100, z / 100);
         y += 0.02 * this.noise2D(x / 10, z / 10);

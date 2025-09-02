@@ -963,14 +963,16 @@ export class SceneManager {
             // Create example billboard using back-bg.png
             await this.createExampleBillboards();
             
-            // Create animated grass
+            // Create animated grass with terrain following
             this.grassBlades = new GrassBlades(this.scene, {
                 width: 200,
                 instances: 100000,  // Reduced from 300000 for more subtle density
                 bladeWidth: 0.08,   // Reduced from 0.15 for thinner blades
                 bladeHeight: 0.8,   // Reduced from 1.0 for shorter grass
                 joints: 1,          // Reduced from 6 for simpler bending
-                density: 0.8        // Reduced from 1.2 for more sparse distribution
+                density: 0.8,       // Reduced from 1.2 for more sparse distribution
+                terrainMesh: this.groundPlane,  // Pass terrain mesh for surface sampling
+                slopeThreshold: 0.6  // Only place on relatively flat areas
             });
 
             // Create trees
