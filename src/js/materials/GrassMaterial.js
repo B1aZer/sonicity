@@ -13,7 +13,8 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 windSpeed: { value: 0.3 },
                 tipColor: { value: new THREE.Color(0.35, 0.75, 0.18).convertSRGBToLinear() },
                 bottomColor: { value: new THREE.Color(0.15, 0.35, 0.1).convertSRGBToLinear() },
-                windDirection: { value: new THREE.Vector2(1.0, 0.0) }
+                windDirection: { value: new THREE.Vector2(1.0, 0.0) },
+                opacity: { value: 0.3 }  // New: global opacity control
             },
             vertexShader: `
                 attribute vec3 offset;
@@ -119,6 +120,7 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 uniform sampler2D colorMap;
                 uniform vec3 tipColor;
                 uniform vec3 bottomColor;
+                uniform float opacity;
                 
                 varying vec2 vUv;
                 varying float vWindStrength;
@@ -155,7 +157,8 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     float windBrightness = 1.0 + (vWindStrength * 0.05);
                     baseColor *= windBrightness;
                     
-                    gl_FragColor = vec4(baseColor, 1.0);
+                    // Apply global opacity
+                    gl_FragColor = vec4(baseColor, alpha * opacity);
                 }
             `,
             transparent: true,
