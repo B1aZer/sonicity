@@ -3,11 +3,12 @@
 
 - fix small aspects billboard etc
 - outpost page
-- terrain mat + grass
++ terrain mat + grass
 - trees
-- link in city for all buidlings for mobile
 - fog
-- small fabs
+
+- link in city for all buidlings for mobile
+- small fabs ??
 Cel Shading - Most impactful for the toon look
 Outline Effect - Classic Ghibli signature
 Warm Color Grading - Magical, golden-hour feel
@@ -23,7 +24,7 @@ Atmospheric Haze - Enhances your mountain backdrop
 ## todo
 
 - add heros building spawn sound
-- add raycaster building lights overview
+- add raycaster building lights overview (out) heroes
 
 Atmospheric Effects
 Fog: Add depth and atmosphere
