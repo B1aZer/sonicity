@@ -1,5 +1,19 @@
 
-##
+## todo
+
+- fix small aspects billboard etc
+- outpost page
+- terrain mat + grass
+- trees
+- fog
+- small fabs
+Cel Shading - Most impactful for the toon look
+Outline Effect - Classic Ghibli signature
+Warm Color Grading - Magical, golden-hour feel
+Atmospheric Haze - Enhances your mountain backdrop
+
+
+## plan
 
 1. camera set fixed
 2. lanscape how 
