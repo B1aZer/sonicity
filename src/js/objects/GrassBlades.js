@@ -17,6 +17,14 @@ export class GrassBlades {
             density: 1.0,
             slopeThreshold: 0.6,      // New: slope filtering for natural placement
             terrainMesh: null,         // New: terrain mesh for surface sampling
+            // Terrain-based density configuration
+            terrainDensity: {
+                flat: { threshold: 0.9, density: 0.8 },      // Very flat areas: 90% grass density
+                gentle: { threshold: 0.8, density: 0.5 },    // Gentle slopes: 70% grass density
+                moderate: { threshold: 0.7, density: 0.2 },  // Moderate slopes: 50% grass density
+                steep: { threshold: 0.5, density: 0.1 },     // Steep slopes: 20% grass density
+                cliff: { threshold: 0.3, density: 0.05 }     // Cliffs: 5% grass density
+            },
             ...options
         };
         
@@ -200,13 +208,18 @@ export class GrassBlades {
             Logger.info('Sampling terrain surface for area-based grass placement...');
             
             let placedCount = 0;
-            let maxAttempts = instances * 4; // Allow more retries for better distribution
+            let maxAttempts = instances * 8; // Allow more retries for better distribution
             let coverageStats = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
-            let rejectionStats = { areaRejected: 0, slopeRejected: 0, densityRejected: 0, totalAttempts: 0 };
+            let rejectionStats = { areaRejected: 0, slopeRejected: 0, terrainDensityRejected: 0, densityRejected: 0, totalAttempts: 0 };
             
-            Logger.info('Starting grass placement with filtering...');
+            // Calculate target instances based on average terrain density
+            const averageDensity = this.calculateAverageTerrainDensity();
+            const targetInstances = Math.floor(instances * averageDensity);
             
-            for (let attempt = 0; attempt < maxAttempts && placedCount < instances; attempt++) {
+            Logger.info(`Terrain density analysis: target instances reduced from ${instances} to ${targetInstances} (${(averageDensity * 100).toFixed(1)}% of original)`);
+            Logger.info('Starting grass placement with terrain-based filtering...');
+            
+            for (let attempt = 0; attempt < maxAttempts && placedCount < targetInstances; attempt++) {
                 rejectionStats.totalAttempts++;
                 
                 // Sample random point on terrain surface
@@ -238,11 +251,18 @@ export class GrassBlades {
                     continue; // Reject steep slopes
                 }
                 
-                // Hash-based density filtering (blue-noise-like, stable in world space)
-                const targetDensity = 0.80; // Keep ~80% on flat areas
-                if (this.hash2(worldPosition.x, worldPosition.z) > targetDensity) {
+                // Terrain-based density filtering
+                const terrainDensity = this.calculateTerrainDensity(worldNormal);
+                if (terrainDensity <= 0) {
+                    rejectionStats.terrainDensityRejected++;
+                    continue; // No grass on this terrain type
+                }
+                
+                // Hash-based density filtering with terrain influence
+                const hashValue = this.hash2(worldPosition.x, worldPosition.z);
+                if (hashValue > terrainDensity) {
                     rejectionStats.densityRejected++;
-                    continue; // Reject based on hash density
+                    continue; // Reject based on terrain-adjusted density
                 }
                 
                 // If we get here, place the grass blade
@@ -290,14 +310,16 @@ export class GrassBlades {
                 }
             }
             
-            Logger.info(`✅ Area-based terrain sampling complete: ${placedCount} blades placed`);
+            Logger.info(`✅ Area-based terrain sampling complete: ${placedCount} blades placed (target was ${targetInstances})`);
             Logger.info('=== REJECTION STATS ===');
             Logger.info('Rejection breakdown:', {
                 areaRejected: rejectionStats.areaRejected,
                 slopeRejected: rejectionStats.slopeRejected,
+                terrainDensityRejected: rejectionStats.terrainDensityRejected,
                 densityRejected: rejectionStats.densityRejected,
                 totalAttempts: rejectionStats.totalAttempts,
-                successRate: ((placedCount / rejectionStats.totalAttempts) * 100).toFixed(2) + '%'
+                successRate: ((placedCount / rejectionStats.totalAttempts) * 100).toFixed(2) + '%',
+                instanceReduction: `${((instances - placedCount) / instances * 100).toFixed(1)}% fewer instances due to terrain density`
             });
             Logger.info('Area coverage stats:', {
                 xRange: `${coverageStats.minX.toFixed(2)} to ${coverageStats.maxX.toFixed(2)}`,
@@ -308,13 +330,13 @@ export class GrassBlades {
                 note: 'Grass only grows in defined area in front of camera'
             });
             
-            // If we didn't place enough, use fallback
-            if (placedCount < instances * 0.8) {
-                Logger.warn(`⚠️ Only placed ${placedCount} blades, using fallback for remaining...`);
+            // If we didn't place enough, use fallback (but respect terrain density)
+            if (placedCount < targetInstances * 0.8) {
+                Logger.warn(`⚠️ Only placed ${placedCount} blades (target: ${targetInstances}), using fallback for remaining...`);
                 const fallbackData = this.getFallbackAttributeData();
                 
-                // Combine with fallback data
-                const remainingNeeded = instances - placedCount;
+                // Combine with fallback data, but don't exceed target instances
+                const remainingNeeded = Math.min(targetInstances - placedCount, instances - placedCount);
                 for (let i = 0; i < remainingNeeded && i < fallbackData.offsets.length; i++) {
                     offsets.push(fallbackData.offsets[i * 3], fallbackData.offsets[i * 3 + 1], fallbackData.offsets[i * 3 + 2]);
                     orientations.push(fallbackData.orientations[i * 4], fallbackData.orientations[i * 4 + 1], fallbackData.orientations[i * 4 + 2], fallbackData.orientations[i * 4 + 3]);
@@ -347,6 +369,89 @@ export class GrassBlades {
     hash2(x, z) {
         const s = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453;
         return s - Math.floor(s); // 0..1
+    }
+    
+    /**
+     * Calculate terrain-based grass density based on surface normal
+     * @param {THREE.Vector3} normal - Surface normal vector
+     * @returns {number} Density value from 0.0 to 1.0
+     */
+    calculateTerrainDensity(normal) {
+        const upness = Math.abs(normal.y); // 1 = flat, 0 = vertical
+        
+        // Find the appropriate density tier based on slope
+        const { terrainDensity } = this.options;
+        
+        if (upness >= terrainDensity.flat.threshold) {
+            return terrainDensity.flat.density;
+        } else if (upness >= terrainDensity.gentle.threshold) {
+            return terrainDensity.gentle.density;
+        } else if (upness >= terrainDensity.moderate.threshold) {
+            return terrainDensity.moderate.density;
+        } else if (upness >= terrainDensity.steep.threshold) {
+            return terrainDensity.steep.density;
+        } else if (upness >= terrainDensity.cliff.threshold) {
+            return terrainDensity.cliff.density;
+        } else {
+            return 0.0; // Too steep, no grass
+        }
+    }
+    
+    /**
+     * Calculate average terrain density across the grass area
+     * This helps determine how many instances to actually place
+     * @returns {number} Average density from 0.0 to 1.0
+     */
+    calculateAverageTerrainDensity() {
+        if (!this.terrainMesh || !this.sampler) {
+            Logger.warn('No terrain mesh available for density calculation, using fallback');
+            return 0.5; // Fallback to 50% density
+        }
+        
+        const sampleCount = 1000; // Sample 1000 points to estimate average density
+        let totalDensity = 0;
+        let validSamples = 0;
+        
+        const position = new THREE.Vector3();
+        const normal = new THREE.Vector3();
+        
+        for (let i = 0; i < sampleCount; i++) {
+            this.sampler.sample(position, normal);
+            const worldNormal = normal.clone().transformDirection(this.terrainMesh.matrixWorld).normalize();
+            
+            const density = this.calculateTerrainDensity(worldNormal);
+            if (density > 0) {
+                totalDensity += density;
+                validSamples++;
+            }
+        }
+        
+        const averageDensity = validSamples > 0 ? totalDensity / validSamples : 0.1;
+        Logger.info(`Terrain density sampling: ${validSamples} valid samples, average density: ${(averageDensity * 100).toFixed(1)}%`);
+        
+        return averageDensity;
+    }
+    
+    /**
+     * Configure terrain-based density thresholds
+     * @param {Object} config - Density configuration object
+     */
+    setTerrainDensity(config) {
+        if (config.flat) this.options.terrainDensity.flat = config.flat;
+        if (config.gentle) this.options.terrainDensity.gentle = config.gentle;
+        if (config.moderate) this.options.terrainDensity.moderate = config.moderate;
+        if (config.steep) this.options.terrainDensity.steep = config.steep;
+        if (config.cliff) this.options.terrainDensity.cliff = config.cliff;
+        
+        Logger.info('Terrain density configuration updated:', this.options.terrainDensity);
+    }
+    
+    /**
+     * Get current terrain density configuration
+     * @returns {Object} Current density configuration
+     */
+    getTerrainDensity() {
+        return { ...this.options.terrainDensity };
     }
     
     /**
