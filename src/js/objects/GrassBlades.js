@@ -174,6 +174,18 @@ export class GrassBlades {
                 center: terrainBounds.getCenter(new THREE.Vector3()).toArray().map(v => v.toFixed(2))
             });
             
+            // Define simple grass area manually (easy to configure) - same as feat/grass-ref
+            const grassArea = {
+                minX: -30,   // Left boundary
+                maxX: 30,    // Right boundary  
+                minZ: -50,   // Start at Z=-50 (forward from camera)
+                maxZ: 10      // End at Z=0 (camera position)
+            };
+            
+            Logger.info('Manual grass coverage area (Z-axis corrected):', grassArea);
+            Logger.info('Note: Z-axis is inverted - negative Z is forward, positive Z is backward');
+            Logger.info('Adjust these values in GrassBlades.js to change grass coverage');
+            
             const offsets = [];
             const orientations = [];
             const stretches = [];
@@ -185,12 +197,18 @@ export class GrassBlades {
             const normal = new THREE.Vector3();
             const quaternion = new THREE.Quaternion();
             
-            Logger.info('Sampling terrain surface for grass placement...');
+            Logger.info('Sampling terrain surface for area-based grass placement...');
             
             let placedCount = 0;
             let maxAttempts = instances * 4; // Allow more retries for better distribution
+            let coverageStats = { minX: Infinity, maxX: -Infinity, minZ: Infinity, maxZ: -Infinity };
+            let rejectionStats = { areaRejected: 0, slopeRejected: 0, densityRejected: 0, totalAttempts: 0 };
+            
+            Logger.info('Starting grass placement with filtering...');
             
             for (let attempt = 0; attempt < maxAttempts && placedCount < instances; attempt++) {
+                rejectionStats.totalAttempts++;
+                
                 // Sample random point on terrain surface
                 this.sampler.sample(position, normal);
                 
@@ -201,20 +219,40 @@ export class GrassBlades {
                 // Seat slightly into ground along normal (avoid z-fighting & floaters)
                 worldPosition.addScaledVector(worldNormal, 0.005);
                 
+                // SIMPLE AREA FILTERING: Only place grass in defined area in front of camera
+                if (worldPosition.x < grassArea.minX || worldPosition.x > grassArea.maxX ||
+                    worldPosition.z < grassArea.minZ || worldPosition.z > grassArea.maxZ) {
+                    rejectionStats.areaRejected++;
+                    
+                    // Log first few rejections to see what's happening
+                    if (rejectionStats.areaRejected <= 5) {
+                        Logger.info(`Area rejection ${rejectionStats.areaRejected}: pos(${worldPosition.x.toFixed(2)}, ${worldPosition.z.toFixed(2)}) outside area [${grassArea.minX.toFixed(2)} to ${grassArea.maxX.toFixed(2)}] x [${grassArea.minZ.toFixed(2)} to ${grassArea.maxZ.toFixed(2)}]`);
+                    }
+                    continue; // Skip positions outside the defined grass area
+                }
+                
                 // Slope filtering for natural placement
                 const upness = Math.abs(worldNormal.y); // 1 = flat, 0 = vertical
                 if (upness < slopeThreshold) {
+                    rejectionStats.slopeRejected++;
                     continue; // Reject steep slopes
                 }
                 
                 // Hash-based density filtering (blue-noise-like, stable in world space)
                 const targetDensity = 0.80; // Keep ~80% on flat areas
                 if (this.hash2(worldPosition.x, worldPosition.z) > targetDensity) {
+                    rejectionStats.densityRejected++;
                     continue; // Reject based on hash density
                 }
                 
                 // If we get here, place the grass blade
                 offsets.push(worldPosition.x, worldPosition.y + 0.02, worldPosition.z); // Slightly above surface
+                
+                // Track coverage area for debugging
+                coverageStats.minX = Math.min(coverageStats.minX, worldPosition.x);
+                coverageStats.maxX = Math.max(coverageStats.maxX, worldPosition.x);
+                coverageStats.minZ = Math.min(coverageStats.minZ, worldPosition.z);
+                coverageStats.maxZ = Math.max(coverageStats.maxZ, worldPosition.z);
                 
                 // Create orientation based on surface normal
                 // Align grass to surface normal, then add random rotation
@@ -248,11 +286,27 @@ export class GrassBlades {
                 
                 // Log progress every 10000 blades
                 if (placedCount % 10000 === 0) {
-                    Logger.info(`Placed ${placedCount} terrain-following grass blades...`);
+                    Logger.info(`Placed ${placedCount} area-focused grass blades...`);
                 }
             }
             
-            Logger.info(`✅ Terrain sampling complete: ${placedCount} blades placed`);
+            Logger.info(`✅ Area-based terrain sampling complete: ${placedCount} blades placed`);
+            Logger.info('=== REJECTION STATS ===');
+            Logger.info('Rejection breakdown:', {
+                areaRejected: rejectionStats.areaRejected,
+                slopeRejected: rejectionStats.slopeRejected,
+                densityRejected: rejectionStats.densityRejected,
+                totalAttempts: rejectionStats.totalAttempts,
+                successRate: ((placedCount / rejectionStats.totalAttempts) * 100).toFixed(2) + '%'
+            });
+            Logger.info('Area coverage stats:', {
+                xRange: `${coverageStats.minX.toFixed(2)} to ${coverageStats.maxX.toFixed(2)}`,
+                zRange: `${coverageStats.minZ.toFixed(2)} to ${coverageStats.maxZ.toFixed(2)}`,
+                actualWidth: (coverageStats.maxX - coverageStats.minX).toFixed(2),
+                actualDepth: (coverageStats.maxZ - coverageStats.minZ).toFixed(2),
+                targetArea: `${grassArea.maxX - grassArea.minX} × ${grassArea.maxZ - grassArea.minZ} units`,
+                note: 'Grass only grows in defined area in front of camera'
+            });
             
             // If we didn't place enough, use fallback
             if (placedCount < instances * 0.8) {
