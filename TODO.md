@@ -5,6 +5,7 @@
 - outpost page
 - terrain mat + grass
 - trees
+- link in city for all buidlings for mobile
 - fog
 - small fabs
 Cel Shading - Most impactful for the toon look
