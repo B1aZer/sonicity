@@ -32,7 +32,7 @@ Weather System: Rain, snow effects
 
 
 ## models
-
++continue from tower lvl 2
 
 
  oracle -> yield statuin
@@ -70,6 +70,7 @@ https://www.fab.com/listings/4b44a80b-b57a-4e79-9d56-73db9defa8c0
 + change charge label
 + change maybe price for rep stations to diamonds ?
 + update help page later
+- postprocessing / bokeh / depth of fieldq
 - shop
 - add this.requiredDistrictBuilding = 'Arcanum of Names';
 - damage system
