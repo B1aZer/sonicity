@@ -966,11 +966,11 @@ export class SceneManager {
             // Create animated grass with terrain following
             this.grassBlades = new GrassBlades(this.scene, {
                 width: 200,
-                instances: 100000,  // Reduced from 300000 for more subtle density
-                bladeWidth: 0.08,   // Reduced from 0.15 for thinner blades
-                bladeHeight: 0.8,   // Reduced from 1.0 for shorter grass
-                joints: 1,          // Reduced from 6 for simpler bending
-                density: 0.8,       // Reduced from 1.2 for more sparse distribution
+                instances: 100000,  // Increased for better coverage with smaller blades
+                bladeWidth: 0.04,   // Much thinner, more subtle blades
+                bladeHeight: 0.6,   // Shorter grass that won't overwhelm buildings
+                joints: 1,          // Simple bending for subtle movement
+                density: 1,       // Good density for natural meadow look
                 terrainMesh: this.groundPlane,  // Pass terrain mesh for surface sampling
                 slopeThreshold: 0.6  // Only place on relatively flat areas
             });
