@@ -133,7 +133,7 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     float alpha = texture2D(alphaMap, vUv).r;
                     
                     // If transparent, don't draw
-                    if(alpha < 0.2) discard;
+                    if(alpha < 0.4) discard;
                     
                     // Sample grayscale texture for variation
                     vec2 variationUV = vUv * 2.5;
