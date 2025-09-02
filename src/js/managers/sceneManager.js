@@ -159,7 +159,7 @@ export class SceneManager {
                 
                 // Create a grass material for the terrain (same as main branch)
                 const textureLoader = new THREE.TextureLoader();
-                const grassTexture = textureLoader.load('/assets/textures/grasslight-big-2.jpg');
+                const grassTexture = textureLoader.load('/assets/textures/grasslight-big-5.jpg');
                 grassTexture.wrapS = THREE.RepeatWrapping;
                 grassTexture.wrapT = THREE.RepeatWrapping;
                 grassTexture.repeat.set(15, 15); // Same as main branch
@@ -205,7 +205,7 @@ export class SceneManager {
         const textureLoader = new THREE.TextureLoader();
         
         try {
-            const grassTexture = textureLoader.load('/assets/textures/grasslight-big-2.jpg');
+            const grassTexture = textureLoader.load('/assets/textures/grasslight-big-5.jpg');
             grassTexture.wrapS = THREE.RepeatWrapping;
             grassTexture.wrapT = THREE.RepeatWrapping;
             grassTexture.repeat.set(15, 15);
@@ -568,7 +568,7 @@ export class SceneManager {
         this.scene.add(this.lights.ambientLight);
         
         // Hemisphere light
-        this.lights.hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x808080, 0.8);
+        this.lights.hemisphereLight = new THREE.HemisphereLight(0xffefc2, 0x808080, 0.8);
         this.scene.add(this.lights.hemisphereLight);
         
         // Area light for atmospheric fill (matching Blender scene)
