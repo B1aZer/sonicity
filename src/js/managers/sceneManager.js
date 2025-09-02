@@ -964,15 +964,14 @@ export class SceneManager {
             await this.createExampleBillboards();
             
             // Create animated grass
-            // this.grassBlades = new GrassBlades(this.scene, {
-            //     width: this.gridManager.getTotalSize(),
-            //     instances: 200000,  // Reduced from 300000 for more subtle density
-            //     width: 200,
-            //     bladeWidth: 0.08,   // Reduced from 0.15 for thinner blades
-            //     bladeHeight: 0.8,   // Reduced from 1.0 for shorter grass
-            //     joints: 4,          // Reduced from 6 for simpler bending
-            //     density: 0.8        // Reduced from 1.2 for more sparse distribution
-            // });
+            this.grassBlades = new GrassBlades(this.scene, {
+                width: 200,
+                instances: 100000,  // Reduced from 300000 for more subtle density
+                bladeWidth: 0.08,   // Reduced from 0.15 for thinner blades
+                bladeHeight: 0.8,   // Reduced from 1.0 for shorter grass
+                joints: 1,          // Reduced from 6 for simpler bending
+                density: 0.8        // Reduced from 1.2 for more sparse distribution
+            });
 
             // Create trees
             // this.trees = new Trees(this.scene, this.gridManager);
@@ -1062,9 +1061,9 @@ export class SceneManager {
         }
         
         // Update grass animation
-        // if (this.grassBlades) {
-        //     this.grassBlades.update(this.clock.getElapsedTime());
-        // }
+        if (this.grassBlades) {
+            this.grassBlades.update(this.clock.getElapsedTime());
+        }
 
         // Update trees
         // if (this.trees) {
