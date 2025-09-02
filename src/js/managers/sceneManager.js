@@ -157,16 +157,16 @@ export class SceneManager {
                 groundPlan.name = "groundPlane";
                 groundPlan.userData.isGround = true;
                 
-                // Create a grass material for the terrain (same as main branch) - TEMPORARILY DISABLED
-                // const textureLoader = new THREE.TextureLoader();
-                // const grassTexture = textureLoader.load('/assets/textures/grasslight-big.jpg');
-                // grassTexture.wrapS = THREE.RepeatWrapping;
-                // grassTexture.wrapT = THREE.RepeatWrapping;
-                // grassTexture.repeat.set(15, 15); // Same as main branch
-                // grassTexture.colorSpace = THREE.SRGBColorSpace;
+                // Create a grass material for the terrain (same as main branch)
+                const textureLoader = new THREE.TextureLoader();
+                const grassTexture = textureLoader.load('/assets/textures/grasslight-big-2.jpg');
+                grassTexture.wrapS = THREE.RepeatWrapping;
+                grassTexture.wrapT = THREE.RepeatWrapping;
+                grassTexture.repeat.set(15, 15); // Same as main branch
+                grassTexture.colorSpace = THREE.SRGBColorSpace;;
                 
                 const groundMaterial = new THREE.MeshStandardMaterial({ 
-                    // map: grassTexture, // Temporarily disabled
+                    map: grassTexture,
                     side: THREE.DoubleSide,
                     roughness: 0.9,
                     metalness: 0.1,
@@ -205,14 +205,14 @@ export class SceneManager {
         const textureLoader = new THREE.TextureLoader();
         
         try {
-            // const grassTexture = textureLoader.load('assets/textures/grasslight-big.jpg'); // Temporarily disabled
-            // grassTexture.wrapS = THREE.RepeatWrapping;
-            // grassTexture.wrapT = THREE.RepeatWrapping;
-            // grassTexture.repeat.set(15, 15);
-            // grassTexture.colorSpace = THREE.SRGBColorSpace;
+            const grassTexture = textureLoader.load('/assets/textures/grasslight-big-2.jpg');
+            grassTexture.wrapS = THREE.RepeatWrapping;
+            grassTexture.wrapT = THREE.RepeatWrapping;
+            grassTexture.repeat.set(15, 15);
+            grassTexture.colorSpace = THREE.SRGBColorSpace;
 
             const groundMaterial = new THREE.MeshStandardMaterial({ 
-                // map: grassTexture, // Temporarily disabled
+                map: grassTexture,
                 side: THREE.DoubleSide,
                 roughness: 0.9,
                 metalness: 0.1,
