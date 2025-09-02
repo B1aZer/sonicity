@@ -776,6 +776,47 @@ export class SceneManager {
             this.camera.updateProjectionMatrix();
         });
 
+        // Free camera mode toggle
+        cameraFolder.add({
+            freeCameraMode: false
+        }, 'freeCameraMode').name('Free Camera Mode')
+        .onChange((value) => {
+            if (this.controls) {
+                if (value) {
+                    // Enable free camera movement
+                    this.controls.enableZoom = true;
+                    this.controls.minDistance = 0.1;
+                    this.controls.maxDistance = 1000;
+                    this.controls.minPolarAngle = 0;
+                    this.controls.maxPolarAngle = Math.PI;
+                    this.controls.minAzimuthAngle = -Infinity;
+                    this.controls.maxAzimuthAngle = Infinity;
+                    Logger.info('Free camera mode enabled');
+                } else {
+                    // Restore normal constraints
+                    this.controls.enableZoom = false;
+                    this.controls.minDistance = 5;
+                    this.controls.maxDistance = 100;
+                    
+                    // Restore polar angle constraints
+                    const currentPolarAngle = Math.atan2(
+                        Math.sqrt(this.camera.position.x * this.camera.position.x + this.camera.position.z * this.camera.position.z),
+                        this.camera.position.y
+                    );
+                    this.controls.maxPolarAngle = currentPolarAngle;
+                    this.controls.minPolarAngle = currentPolarAngle - Math.PI / 12;
+                    
+                    // Restore azimuth constraints
+                    this.controls.maxAzimuthAngle = Math.PI / 32;
+                    this.controls.minAzimuthAngle = -Math.PI / 32;
+                    Logger.info('Normal camera constraints restored');
+                }
+                this.controls.update();
+            }
+        });
+
+        cameraFolder.open();
+
         // Sun Light
         if (this.lights.sunLight && this.sun) {
             const sunFolder = this.gui.addFolder('Sun Light');
