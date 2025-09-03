@@ -404,6 +404,10 @@ export class CityPage extends BasePage {
                     try {
                         await this.contracts.districtBuildings.upgradeDistrictBuilding(buildingType);
                         loadingModal.close();
+                        
+                        // Play spawn sound effect when building is successfully upgraded
+                        this.audioManager.playBuildingSpawn();
+                        
                         await this.loadCityData();
                         this.setupEventListeners();
                         this.modal.success(`Successfully upgraded ${config.name} to level ${Number(currentLevel) + 1}!`);

@@ -32,7 +32,7 @@ export class AudioManager {
     }
     
     /**
-     * Play building spawn sound effect
+     * Play building spawn/upgrade sound effect
      */
     playBuildingSpawn() {
         this.playSound('/assets/sound/spawn.wav', 0.6);
