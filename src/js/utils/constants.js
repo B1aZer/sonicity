@@ -156,14 +156,15 @@ export const PROPS = {
         model: 'assets/pine2.glb',
         instances: [
             // Right side pine forest
-            /*
-            { location: { x: 30, y: 0, z: -20 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.5, z: 0 } },
-            { location: { x: 50, y: 0, z: -40 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.7, z: 0 } },
-            { location: { x: 0, y: 0, z: -85 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.9, z: 0 } },
+           
+            { location: { x: 31, y: -0, z: -45 }, size: new THREE.Vector3(2, 2, 2), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: 58, y: 0, z: -40 }, size: new THREE.Vector3(3, 3, 3), rotation: { x: 0, y: 0.7, z: 0 } },
+            /*TODO: Add back in
+            { location: { x: 0, y: 0, z: -0 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.9, z: 0 } },
             { location: { x: -60, y: 8, z: -50 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.8, z: 0 } },
             { location: { x: 65, y: 8, z: -55 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.5, z: 0 } },
             { location: { x: 100, y: 12, z: -80 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 1.8, z: 0 } }
-            */
+             */
         ]
     },
     
