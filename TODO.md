@@ -1,6 +1,9 @@
 
 ## todo
 
+- redo shop texture, workshop, outpost, tower + 2 lvls make,
+- all barracks levels redo,  scout guild, 
+- make garrison, remake command center, make tavern etc
 - fix small aspects billboard etc
 - outpost page
 + terrain mat + grass
