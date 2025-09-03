@@ -9,8 +9,8 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 map: { value: null },
                 alphaMap: { value: null },
                 colorMap: { value: null },
-                windStrength: { value: 0.15 },
-                windSpeed: { value: 0.3 },
+                windStrength: { value: 0.6 },  // Reduced from 2.0 to 0.6 for natural movement
+                windSpeed: { value: 0.8 },     // Reduced from 2.5 to 0.8 for natural speed
                 tipColor: { value: new THREE.Color(0.35, 0.75, 0.18).convertSRGBToLinear() },
                 bottomColor: { value: new THREE.Color(0.15, 0.35, 0.1).convertSRGBToLinear() },
                 windDirection: { value: new THREE.Vector2(1.0, 0.0) },
@@ -66,13 +66,13 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     float wind = sin(time * windSpeed + x * 0.06) * windStrength;
                     
                     // Secondary wind wave (slower, wider)
-                    wind += sin(time * windSpeed * 0.3 + x * 0.03) * windStrength * 0.3;
+                    wind += sin(time * windSpeed * 0.3 + x * 0.03) * windStrength * 0.25; // Reduced from 0.5 to 0.25
                     
                     // Tertiary wind wave (very slow, very wide)
-                    wind += sin(time * windSpeed * 0.15 + x * 0.015) * windStrength * 0.15;
+                    wind += sin(time * windSpeed * 0.15 + x * 0.015) * windStrength * 0.15; // Reduced from 0.3 to 0.15
                     
                     // Add some very subtle turbulence
-                    wind += sin(time * windSpeed * 1.2 + x * 0.12) * windStrength * 0.05;
+                    wind += sin(time * windSpeed * 1.2 + x * 0.12) * windStrength * 0.08; // Reduced from 0.15 to 0.08
                     
                     return wind;
                 }
@@ -93,12 +93,12 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     float heightFactor = smoothstep(0.0, 1.0, position.y / 1.0);
                     
                     // Apply wind with more natural movement
-                    pos.x += windX * heightFactor * heightFactor * heightFactor; // Cube the height factor for more natural movement
-                    pos.z += windZ * heightFactor * heightFactor * heightFactor;
+                    pos.x += windX * heightFactor * heightFactor; // Reduced from heightFactor^3 to heightFactor^2
+                    pos.z += windZ * heightFactor * heightFactor;
                     
                     // Add slight vertical movement that follows the wind
                     float verticalWind = sin(time * windSpeed * 0.4 + position.x * 0.08) * windStrength * 0.15;
-                    pos.y += verticalWind * heightFactor * heightFactor;
+                    pos.y += verticalWind * heightFactor; // Reduced from heightFactor^2 to heightFactor
                     
                     // Apply stretch
                     pos.y *= stretch;
@@ -154,7 +154,7 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     baseColor *= (1.0 - baseShadow);
                     
                     // Add very slight brightness variation based on wind
-                    float windBrightness = 1.0 + (vWindStrength * 0.05);
+                    float windBrightness = 1.0 + (vWindStrength * 0.2); // Increased from 0.05 to 0.2
                     baseColor *= windBrightness;
                     
                     // Apply global opacity

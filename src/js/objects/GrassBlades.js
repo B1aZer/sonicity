@@ -558,9 +558,9 @@ export class GrassBlades {
                 Math.sin(angle) * strength
             );
             
-            // Use more natural wind parameters
-            this.material.uniforms.windStrength.value = 0.25;
-            this.material.uniforms.windSpeed.value = 0.4;
+            // Don't override wind parameters - let GrassMaterial handle them
+            // this.material.uniforms.windStrength.value = 0.25;
+            // this.material.uniforms.windSpeed.value = 0.4;
         }
     }
     
