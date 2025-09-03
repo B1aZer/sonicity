@@ -139,15 +139,41 @@ export const PROPS = {
         name: 'Pine Trees Type 1',
         model: 'assets/pine1.glb',
         instances: [
-            // Left side pine forest
+            // Left side pine forest (completing the left side)
+            { location: { x: 34, y: 0, z: -72 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: 39, y: 0, z: -90 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.4, z: 0 } },
             /*
-            { location: { x: -30, y: 0, z: -20 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 0.3, z: 0 } },
-            { location: { x: -50, y: 0, z: -40 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.4, z: 0 } },
-            { location: { x: 45, y: 0, z: -35 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.6, z: 0 } },
-            { location: { x: -5, y: 0, z: -80 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.2, z: 0 } },
-            { location: { x: 60, y: 6, z: -50 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.7, z: 0 } },
-            { location: { x: -110, y: 18, z: -85 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 0.7, z: 0 } }
-            */
+            { location: { x: -45, y: 0, z: -50 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: -70, y: 0, z: -55 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: -55, y: 0, z: -60 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -80, y: 0, z: -65 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: -65, y: 0, z: -70 }, size: new THREE.Vector3(2.6, 2.6, 2.6), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: -90, y: 0, z: -75 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 1.5, z: 0 } },
+            { location: { x: -75, y: 0, z: -80 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: -100, y: 0, z: -85 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: -85, y: 0, z: -90 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: -110, y: 0, z: -95 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: -95, y: 0, z: -100 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: -120, y: 0, z: -105 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.3, z: 0 } },
+            { location: { x: -105, y: 0, z: -110 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: -130, y: 0, z: -115 }, size: new THREE.Vector3(2.6, 2.6, 2.6), rotation: { x: 0, y: 1.1, z: 0 } },
+            { location: { x: -115, y: 0, z: -120 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -140, y: 0, z: -125 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: -125, y: 0, z: -130 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: -150, y: 0, z: -135 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: -135, y: 0, z: -140 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: -160, y: 0, z: -145 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: -145, y: 0, z: -150 }, size: new THREE.Vector3(2.6, 2.6, 2.6), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: -170, y: 0, z: -155 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 1.5, z: 0 } },
+            { location: { x: -155, y: 0, z: -160 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: -180, y: 0, z: -165 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: -165, y: 0, z: -170 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: -190, y: 0, z: -175 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: -175, y: 0, z: -180 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: -200, y: 0, z: -185 }, size: new THREE.Vector3(2.6, 2.6, 2.6), rotation: { x: 0, y: 1.2, z: 0 } },
+            { location: { x: -185, y: 0, z: -190 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -210, y: 0, z: -195 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 1.6, z: 0 } }
+             */
         ]
     },
     
@@ -155,16 +181,42 @@ export const PROPS = {
         name: 'Pine Trees Type 2',
         model: 'assets/pine2.glb',
         instances: [
-            // Right side pine forest
-           
-            { location: { x: 31, y: -0, z: -45 }, size: new THREE.Vector3(2, 2, 2), rotation: { x: 0, y: 0.5, z: 0 } },
+            // Right side pine forest (completing the right side)
+            { location: { x: 31, y: 0, z: -45 }, size: new THREE.Vector3(2, 2, 2), rotation: { x: 0, y: 0.5, z: 0 } },
             { location: { x: 58, y: 0, z: -40 }, size: new THREE.Vector3(3, 3, 3), rotation: { x: 0, y: 0.7, z: 0 } },
-            /*TODO: Add back in
-            { location: { x: 0, y: 0, z: -0 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.9, z: 0 } },
-            { location: { x: -60, y: 8, z: -50 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.8, z: 0 } },
-            { location: { x: 65, y: 8, z: -55 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.5, z: 0 } },
-            { location: { x: 100, y: 12, z: -80 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 1.8, z: 0 } }
-             */
+            /*
+            { location: { x: 45, y: 0, z: -50 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.2, z: 0 } },
+            { location: { x: 70, y: 0, z: -55 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: 55, y: 0, z: -60 }, size: new THREE.Vector3(2.8, 2.8, 2.8), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: 80, y: 0, z: -65 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: 65, y: 0, z: -70 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: 90, y: 0, z: -75 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: 75, y: 0, z: -80 }, size: new THREE.Vector3(2.6, 2.6, 2.6), rotation: { x: 0, y: 1.1, z: 0 } },
+            { location: { x: 100, y: 0, z: -85 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 85, y: 0, z: -90 }, size: new THREE.Vector3(2.7, 2.7, 2.7), rotation: { x: 0, y: 1.3, z: 0 } },
+            { location: { x: 110, y: 0, z: -95 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: 95, y: 0, z: -100 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: 120, y: 0, z: -105 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: 105, y: 0, z: -110 }, size: new THREE.Vector3(2.8, 2.8, 2.8), rotation: { x: 0, y: 1.5, z: 0 } },
+            { location: { x: 130, y: 0, z: -115 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: 115, y: 0, z: -120 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: 140, y: 0, z: -125 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: 125, y: 0, z: -130 }, size: new THREE.Vector3(2.6, 2.6, 2.6), rotation: { x: 0, y: 1.2, z: 0 } },
+            { location: { x: 150, y: 0, z: -135 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: 135, y: 0, z: -140 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: 160, y: 0, z: -145 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 145, y: 0, z: -150 }, size: new THREE.Vector3(2.7, 2.7, 2.7), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: 170, y: 0, z: -155 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: 155, y: 0, z: -160 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: 180, y: 0, z: -165 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: 165, y: 0, z: -170 }, size: new THREE.Vector3(2.6, 2.6, 2.6), rotation: { x: 0, y: 1.1, z: 0 } },
+            { location: { x: 190, y: 0, z: -175 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: 175, y: 0, z: -180 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: 200, y: 0, z: -185 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: 185, y: 0, z: -190 }, size: new THREE.Vector3(2.8, 2.8, 2.8), rotation: { x: 0, y: 1.3, z: 0 } },
+            { location: { x: 210, y: 0, z: -195 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: 195, y: 0, z: -200 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.8, z: 0 } }
+            */
         ]
     },
     
@@ -173,15 +225,35 @@ export const PROPS = {
         model: 'assets/pine3.glb',
         instances: [
             // Back pine forest (behind buildings)
+            { location: { x: 96, y: 0, z: -90 }, size: new THREE.Vector3(4.3, 4.3, 4.3), rotation: { x: 0, y: 3.8, z: 0 } },
+            { location: { x: 59, y: -2, z: -75 }, size: new THREE.Vector3(3.1, 3.1, 3.1), rotation: { x: 0, y: 0.6, z: 0 } },
             /*
-            { location: { x: -40, y: 0, z: -30 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.8, z: 0 } },
-            { location: { x: 35, y: 0, z: -25 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.9, z: 0 } },
-            { location: { x: -15, y: 0, z: -70 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.8, z: 0 } },
-            { location: { x: 5, y: 0, z: -90 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.5, z: 0 } },
-            { location: { x: -65, y: 10, z: -55 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.9, z: 0 } },
-            { location: { x: 70, y: 10, z: -60 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 2.0, z: 0 } },
-            { location: { x: 110, y: 16, z: -85 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.4, z: 0 } }
-            */
+            { location: { x: 15, y: 0, z: -80 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.5, z: 0 } },
+            { location: { x: -10, y: 0, z: -85 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: 10, y: 0, z: -90 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: -5, y: 0, z: -95 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: 5, y: 0, z: -100 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: -20, y: 0, z: -105 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: 20, y: 0, z: -110 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: -25, y: 0, z: -115 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: 25, y: 0, z: -120 }, size: new THREE.Vector3(2.6, 2.6, 2.6), rotation: { x: 0, y: 1.3, z: 0 } },
+            { location: { x: -30, y: 0, z: -125 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 30, y: 0, z: -130 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: -35, y: 0, z: -135 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: 35, y: 0, z: -140 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: -40, y: 0, z: -145 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: 40, y: 0, z: -150 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.2, z: 0 } },
+            { location: { x: -45, y: 0, z: -155 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: 45, y: 0, z: -160 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: -50, y: 0, z: -165 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: 50, y: 0, z: -170 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: -55, y: 0, z: -175 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 55, y: 0, z: -180 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: -60, y: 0, z: -185 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: 60, y: 0, z: -190 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 1.3, z: 0 } },
+            { location: { x: -65, y: 0, z: -195 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: 65, y: 0, z: -200 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.5, z: 0 } }
+             */
         ]
     },
     
@@ -189,15 +261,35 @@ export const PROPS = {
         name: 'Pine Trees Type 4',
         model: 'assets/pine4.glb',
         instances: [
-            // Elevated pine areas (hills)
+            // Elevated pine areas (hills and elevated terrain)
+            { location: { x: 40, y: 0, z: -70 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 109, y: 0, z: -130 }, size: new THREE.Vector3(4.8, 4.8, 4.8), rotation: { x: 0, y: 1.7, z: 0 } },
             /*
-            { location: { x: -45, y: 0, z: -35 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 2.1, z: 0 } },
-            { location: { x: 40, y: 0, z: -30 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.2, z: 0 } },
-            { location: { x: -10, y: 0, z: -75 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.4, z: 0 } },
-            { location: { x: 10, y: 0, z: -95 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.6, z: 0 } },
-            { location: { x: -70, y: 12, z: -60 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.3, z: 0 } },
-            { location: { x: -100, y: 15, z: -80 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.3, z: 0 } }
-            */
+            { location: { x: -65, y: 10, z: -55 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: 65, y: 8, z: -55 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -70, y: 12, z: -60 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: 70, y: 10, z: -60 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 2.0, z: 0 } },
+            { location: { x: -75, y: 15, z: -65 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: 75, y: 12, z: -65 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: -80, y: 18, z: -70 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: 80, y: 14, z: -70 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: -85, y: 20, z: -75 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: 85, y: 16, z: -75 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: -90, y: 22, z: -80 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 1.2, z: 0 } },
+            { location: { x: 90, y: 18, z: -80 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: -95, y: 25, z: -85 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: 95, y: 20, z: -85 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: -100, y: 28, z: -90 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.3, z: 0 } },
+            { location: { x: 100, y: 22, z: -90 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -105, y: 30, z: -95 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: 105, y: 24, z: -95 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: -110, y: 32, z: -100 }, size: new THREE.Vector3(2.1, 2.1, 2.1), rotation: { x: 0, y: 1.5, z: 0 } },
+            { location: { x: 110, y: 26, z: -100 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: -115, y: 35, z: -105 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.1, z: 0 } },
+            { location: { x: 115, y: 28, z: -105 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: -120, y: 38, z: -110 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: 120, y: 30, z: -110 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 0.4, z: 0 } }
+             */
         ]
     }
 };
