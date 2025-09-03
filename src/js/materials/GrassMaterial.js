@@ -62,17 +62,21 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                 
                 // Improved wind function with more subtle movement
                 float wind(float x, float y, float time) {
-                    // Primary wind wave with more subtle frequency
-                    float wind = sin(time * windSpeed + x * 0.06) * windStrength;
+                    // Add randomness based on blade position and orientation
+                    float randomOffset = sin(x * 123.456 + y * 789.012) * 0.5;
+                    float bladePhase = sin(x * 45.67 + y * 89.01) * 0.3;
                     
-                    // Secondary wind wave (slower, wider)
-                    wind += sin(time * windSpeed * 0.3 + x * 0.03) * windStrength * 0.25; // Reduced from 0.5 to 0.25
+                    // Primary wind wave with variation per blade
+                    float wind = sin(time * windSpeed + x * 0.06 + randomOffset) * windStrength;
                     
-                    // Tertiary wind wave (very slow, very wide)
-                    wind += sin(time * windSpeed * 0.15 + x * 0.015) * windStrength * 0.15; // Reduced from 0.3 to 0.15
+                    // Secondary wind wave (slower, wider) with different phase per blade
+                    wind += sin(time * windSpeed * 0.3 + x * 0.03 + bladePhase) * windStrength * 0.25;
                     
-                    // Add some very subtle turbulence
-                    wind += sin(time * windSpeed * 1.2 + x * 0.12) * windStrength * 0.08; // Reduced from 0.15 to 0.08
+                    // Tertiary wind wave (very slow, very wide) with position-based variation
+                    wind += sin(time * windSpeed * 0.15 + x * 0.015 + y * 0.02) * windStrength * 0.15;
+                    
+                    // Add some very subtle turbulence with random variation
+                    wind += sin(time * windSpeed * 1.2 + x * 0.12 + randomOffset * 2.0) * windStrength * 0.08;
                     
                     return wind;
                 }
@@ -88,17 +92,22 @@ export class GrassMaterial extends THREE.ShaderMaterial {
                     float windZ = wind(position.x, position.y, time) * windDirection.y;
                     vWindStrength = length(vec2(windX, windZ));
                     
+                    // Add per-blade wind variation based on position
+                    float bladeVariation = sin(position.x * 67.89 + position.z * 123.45) * 0.3 + 0.7;
+                    float localWindStrength = windStrength * bladeVariation;
+                    float localWindSpeed = windSpeed * (0.8 + bladeVariation * 0.4);
+                    
                     // Apply wind to vertex position with height-based influence
                     vec3 pos = position;
                     float heightFactor = smoothstep(0.0, 1.0, position.y / 1.0);
                     
-                    // Apply wind with more natural movement
-                    pos.x += windX * heightFactor * heightFactor; // Reduced from heightFactor^3 to heightFactor^2
-                    pos.z += windZ * heightFactor * heightFactor;
+                    // Apply wind with more natural movement and per-blade variation
+                    pos.x += windX * heightFactor * heightFactor * bladeVariation;
+                    pos.z += windZ * heightFactor * heightFactor * bladeVariation;
                     
-                    // Add slight vertical movement that follows the wind
-                    float verticalWind = sin(time * windSpeed * 0.4 + position.x * 0.08) * windStrength * 0.15;
-                    pos.y += verticalWind * heightFactor; // Reduced from heightFactor^2 to heightFactor
+                    // Add slight vertical movement that follows the wind with variation
+                    float verticalWind = sin(time * localWindSpeed * 0.4 + position.x * 0.08) * localWindStrength * 0.15;
+                    pos.y += verticalWind * heightFactor;
                     
                     // Apply stretch
                     pos.y *= stretch;
