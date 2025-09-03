@@ -851,6 +851,20 @@ export class SceneManager {
             hemiFolder.add(this.lights.hemisphereLight, 'intensity', 0, 2);
         }
 
+        // Area Light
+        if (this.lights.areaLight) {
+            const areaFolder = this.gui.addFolder('Area Light');
+            areaFolder.addColor({ color: this.lights.areaLight.color.getHex() }, 'color')
+                .onChange(value => this.lights.areaLight.color.set(value));
+            areaFolder.add(this.lights.areaLight, 'intensity', 0, 5);
+            areaFolder.add(this.lights.areaLight.position, 'x', -100, 100).name('Position X');
+            areaFolder.add(this.lights.areaLight.position, 'y', 0, 50).name('Position Y');
+            areaFolder.add(this.lights.areaLight.position, 'z', -100, 100).name('Position Z');
+            areaFolder.add(this.lights.areaLight, 'width', 1, 200).name('Width');
+            areaFolder.add(this.lights.areaLight, 'height', 1, 200).name('Height');
+            areaFolder.add(this.lights.areaLight, 'visible').name('Visible');
+        }
+
         // Fog
         if (this.scene && this.scene.fog) {
             const fogFolder = this.gui.addFolder('Fog');
