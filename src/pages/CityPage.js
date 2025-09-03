@@ -2,6 +2,7 @@ import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
 import { BasePage } from './BasePage.js';
 import { BUILDINGS } from '../js/utils/constants.js';
+import { AudioManager } from '../js/managers/audioManager.js';
 
 import('../styles/city-page.css');
 
@@ -10,6 +11,9 @@ export class CityPage extends BasePage {
         super();
         
         Logger.info('CityPage constructor called');
+        
+        // Initialize audio manager for sound effects (without camera for now)
+        this.audioManager = new AudioManager();
         
         this.element.className = 'base-page';
         
@@ -434,6 +438,10 @@ export class CityPage extends BasePage {
                     try {
                         await this.contracts.districtBuildings.buildDistrictBuilding(buildingType);
                         loadingModal.close();
+                        
+                        // Play spawn sound effect when building is successfully built
+                        this.audioManager.playBuildingSpawn();
+                        
                         await this.loadCityData();
                         this.setupEventListeners();
                         this.modal.success(`Successfully built ${config.name}!`);
