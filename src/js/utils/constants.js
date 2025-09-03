@@ -36,11 +36,12 @@ export const SHOW_PERFORMANCE_MONITOR = true;
 // Size uses THREE.Vector3 for independent x, y, z dimension control
 export const PROPS = {
 
-    // TODO: Not used anywhere except for mint page
+    
     FOREST_TREES: {
         name: 'Forest Trees',
         model: 'assets/tree.glb',
         instances: [
+            /*
             // Behind City Hall area (y: -0.82 is building height)
             { location: { x: -8, y: 0, z: -55 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.2, z: 0 } },
             { location: { x: -12, y: 0, z: -58 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.8, z: 0 } },
@@ -89,6 +90,7 @@ export const PROPS = {
             { location: { x: 35, y: 4, z: -70 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 0.3, z: 0 } },
             { location: { x: -35, y: 5, z: -70 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 2.2, z: 0 } },
             { location: { x: 45, y: 7, z: -90 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.0, z: 0 } }
+            */
         ]
     },
     
@@ -96,6 +98,7 @@ export const PROPS = {
         name: 'Decorative Rocks',
         model: 'assets/rock.glb',
         instances: [
+            /*
             // Scattered rocks around the area (on ground level)
             { location: { x: 15, y: 0, z: -20 }, size: new THREE.Vector3(0.6, 0.6, 0.6), rotation: { x: 0, y: 0.3, z: 0 } },
             { location: { x: -10, y: 0, z: -25 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 1.2, z: 0 } },
@@ -108,6 +111,7 @@ export const PROPS = {
             { location: { x: -45, y: 8, z: -35 }, size: new THREE.Vector3(0.5, 0.5, 0.5), rotation: { x: 0, y: 0.8, z: 0 } },
             { location: { x: 55, y: 4, z: -75 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 1.7, z: 0 } },
             { location: { x: -55, y: 5, z: -75 }, size: new THREE.Vector3(0.6, 0.6, 0.6), rotation: { x: 0, y: 0.2, z: 0 } }
+            */
         ]
     },
     
@@ -115,6 +119,7 @@ export const PROPS = {
         name: 'Bushes',
         model: 'assets/bush.glb',
         instances: [
+            /*
             // Small decorative bushes (ground level)
             { location: { x: 5, y: 0, z: -18 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 0.0, z: 0 } },
             { location: { x: -8, y: 0, z: -22 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.1, z: 0 } },
@@ -126,6 +131,7 @@ export const PROPS = {
             { location: { x: 42, y: 6, z: -42 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 1.3, z: 0 } },
             { location: { x: -42, y: 8, z: -32 }, size: new THREE.Vector3(0.7, 0.7, 0.7), rotation: { x: 0, y: 0.9, z: 0 } },
             { location: { x: 52, y: 4, z: -72 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.5, z: 0 } }
+            */
         ]
     },
     
@@ -134,12 +140,14 @@ export const PROPS = {
         model: 'assets/pine1.glb',
         instances: [
             // Left side pine forest
+            /*
             { location: { x: -30, y: 0, z: -20 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 0.3, z: 0 } },
             { location: { x: -50, y: 0, z: -40 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.4, z: 0 } },
             { location: { x: 45, y: 0, z: -35 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.6, z: 0 } },
             { location: { x: -5, y: 0, z: -80 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.2, z: 0 } },
             { location: { x: 60, y: 6, z: -50 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.7, z: 0 } },
             { location: { x: -110, y: 18, z: -85 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 0.7, z: 0 } }
+            */
         ]
     },
     
@@ -148,12 +156,14 @@ export const PROPS = {
         model: 'assets/pine2.glb',
         instances: [
             // Right side pine forest
+            /*
             { location: { x: 30, y: 0, z: -20 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.5, z: 0 } },
             { location: { x: 50, y: 0, z: -40 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.7, z: 0 } },
             { location: { x: 0, y: 0, z: -85 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.9, z: 0 } },
             { location: { x: -60, y: 8, z: -50 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.8, z: 0 } },
             { location: { x: 65, y: 8, z: -55 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.5, z: 0 } },
             { location: { x: 100, y: 12, z: -80 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 1.8, z: 0 } }
+            */
         ]
     },
     
@@ -162,6 +172,7 @@ export const PROPS = {
         model: 'assets/pine3.glb',
         instances: [
             // Back pine forest (behind buildings)
+            /*
             { location: { x: -40, y: 0, z: -30 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.8, z: 0 } },
             { location: { x: 35, y: 0, z: -25 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.9, z: 0 } },
             { location: { x: -15, y: 0, z: -70 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.8, z: 0 } },
@@ -169,6 +180,7 @@ export const PROPS = {
             { location: { x: -65, y: 10, z: -55 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.9, z: 0 } },
             { location: { x: 70, y: 10, z: -60 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 2.0, z: 0 } },
             { location: { x: 110, y: 16, z: -85 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.4, z: 0 } }
+            */
         ]
     },
     
@@ -177,12 +189,14 @@ export const PROPS = {
         model: 'assets/pine4.glb',
         instances: [
             // Elevated pine areas (hills)
+            /*
             { location: { x: -45, y: 0, z: -35 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 2.1, z: 0 } },
             { location: { x: 40, y: 0, z: -30 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.2, z: 0 } },
             { location: { x: -10, y: 0, z: -75 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.4, z: 0 } },
             { location: { x: 10, y: 0, z: -95 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.6, z: 0 } },
             { location: { x: -70, y: 12, z: -60 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.3, z: 0 } },
             { location: { x: -100, y: 15, z: -80 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.3, z: 0 } }
+            */
         ]
     }
 };
