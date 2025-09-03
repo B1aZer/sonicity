@@ -18,6 +18,7 @@ export const CONTRACT_ADDRESSES = {
 };
 
 // Contract configuration
+// TODO: Not used anywhere except for mint page
 export const CONTRACT_CONFIG = {
     MAX_SUPPLY: 10000,
     MIN_STAKING_DURATION: 30 * 60 * 60, // 30 hours in seconds
@@ -28,6 +29,163 @@ export const CONTRACT_CONFIG = {
 
 // Performance monitoring
 export const SHOW_PERFORMANCE_MONITOR = true;
+
+// Props configuration for decorative objects, trees, rocks, etc.
+// Each prop type can have multiple instances with specific positions and rotations
+// Using 3D coordinates and rotations for full control
+// Size uses THREE.Vector3 for independent x, y, z dimension control
+export const PROPS = {
+
+    // TODO: Not used anywhere except for mint page
+    FOREST_TREES: {
+        name: 'Forest Trees',
+        model: 'assets/tree.glb',
+        instances: [
+            // Behind City Hall area (y: -0.82 is building height)
+            { location: { x: -8, y: 0, z: -55 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.2, z: 0 } },
+            { location: { x: -12, y: 0, z: -58 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: -5, y: 0, z: -60 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: -15, y: 0, z: -62 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 2.1, z: 0 } },
+            { location: { x: -3, y: 0, z: -65 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.4, z: 0 } },
+            
+            // Behind Barracks area (y: 0 is building height)
+            { location: { x: 18, y: 0, z: -25 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: 22, y: 0, z: -28 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: 25, y: 0, z: -30 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: 20, y: 0, z: -32 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 2.3, z: 0 } },
+            { location: { x: 28, y: 0, z: -35 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.1, z: 0 } },
+            
+            // Behind Defense Tower area (y: 2 is building height)
+            { location: { x: -20, y: 2, z: -38 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: -25, y: 2, z: -40 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: -18, y: 2, z: -42 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: -22, y: 2, z: -45 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 2.0, z: 0 } },
+            { location: { x: -28, y: 2, z: -47 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.2, z: 0 } },
+            
+            // Behind Outpost area (y: 0 is building height)
+            { location: { x: -3, y: 0, z: -48 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: -8, y: 0, z: -50 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: -1, y: 0, z: -53 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: -6, y: 0, z: -55 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 2.2, z: 0 } },
+            { location: { x: -10, y: 0, z: -58 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.0, z: 0 } },
+            
+            // Far background trees (can be on hills or elevated areas)
+            { location: { x: 50, y: 5, z: -80 }, size: new THREE.Vector3(1.4, 1.4, 1.4), rotation: { x: 0, y: 0.1, z: 0 } },
+            { location: { x: 60, y: 3, z: -85 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 1.5, z: 0 } },
+            { location: { x: 70, y: 8, z: -90 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 80, y: 4, z: -95 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 2.1, z: 0 } },
+            { location: { x: 90, y: 6, z: -100 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.3, z: 0 } },
+            
+            // Left side background (elevated terrain)
+            { location: { x: -80, y: 10, z: -60 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: -90, y: 7, z: -65 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: -100, y: 12, z: -70 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -110, y: 9, z: -75 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 2.0, z: 0 } },
+            { location: { x: -120, y: 15, z: -80 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.1, z: 0 } },
+            
+            // Hills and elevated areas around the map
+            { location: { x: 40, y: 6, z: -40 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: -40, y: 8, z: -30 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: 35, y: 4, z: -70 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: -35, y: 5, z: -70 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 2.2, z: 0 } },
+            { location: { x: 45, y: 7, z: -90 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.0, z: 0 } }
+        ]
+    },
+    
+    DECORATIVE_ROCKS: {
+        name: 'Decorative Rocks',
+        model: 'assets/rock.glb',
+        instances: [
+            // Scattered rocks around the area (on ground level)
+            { location: { x: 15, y: 0, z: -20 }, size: new THREE.Vector3(0.6, 0.6, 0.6), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: -10, y: 0, z: -25 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 1.2, z: 0 } },
+            { location: { x: 25, y: 0, z: -40 }, size: new THREE.Vector3(0.5, 0.5, 0.5), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: -15, y: 0, z: -35 }, size: new THREE.Vector3(0.7, 0.7, 0.7), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: 30, y: 0, z: -15 }, size: new THREE.Vector3(0.6, 0.6, 0.6), rotation: { x: 0, y: 0.4, z: 0 } },
+            
+            // Rocks on elevated areas
+            { location: { x: 45, y: 6, z: -45 }, size: new THREE.Vector3(0.7, 0.7, 0.7), rotation: { x: 0, y: 1.1, z: 0 } },
+            { location: { x: -45, y: 8, z: -35 }, size: new THREE.Vector3(0.5, 0.5, 0.5), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 55, y: 4, z: -75 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: -55, y: 5, z: -75 }, size: new THREE.Vector3(0.6, 0.6, 0.6), rotation: { x: 0, y: 0.2, z: 0 } }
+        ]
+    },
+    
+    BUSHES: {
+        name: 'Bushes',
+        model: 'assets/bush.glb',
+        instances: [
+            // Small decorative bushes (ground level)
+            { location: { x: 5, y: 0, z: -18 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 0.0, z: 0 } },
+            { location: { x: -8, y: 0, z: -22 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.1, z: 0 } },
+            { location: { x: 12, y: 0, z: -28 }, size: new THREE.Vector3(0.7, 0.7, 0.7), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: -12, y: 0, z: -32 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: 18, y: 0, z: -12 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 0.2, z: 0 } },
+            
+            // Bushes on elevated areas
+            { location: { x: 42, y: 6, z: -42 }, size: new THREE.Vector3(0.8, 0.8, 0.8), rotation: { x: 0, y: 1.3, z: 0 } },
+            { location: { x: -42, y: 8, z: -32 }, size: new THREE.Vector3(0.7, 0.7, 0.7), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: 52, y: 4, z: -72 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 1.5, z: 0 } }
+        ]
+    },
+    
+    PINE_TREES_1: {
+        name: 'Pine Trees Type 1',
+        model: 'assets/pine1.glb',
+        instances: [
+            // Left side pine forest
+            { location: { x: -30, y: 0, z: -20 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: -50, y: 0, z: -40 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: 45, y: 0, z: -35 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: -5, y: 0, z: -80 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.2, z: 0 } },
+            { location: { x: 60, y: 6, z: -50 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: -110, y: 18, z: -85 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 0.7, z: 0 } }
+        ]
+    },
+    
+    PINE_TREES_2: {
+        name: 'Pine Trees Type 2',
+        model: 'assets/pine2.glb',
+        instances: [
+            // Right side pine forest
+            { location: { x: 30, y: 0, z: -20 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: 50, y: 0, z: -40 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: 0, y: 0, z: -85 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.9, z: 0 } },
+            { location: { x: -60, y: 8, z: -50 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 65, y: 8, z: -55 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: 100, y: 12, z: -80 }, size: new THREE.Vector3(1.1, 1.1, 1.1), rotation: { x: 0, y: 1.8, z: 0 } }
+        ]
+    },
+    
+    PINE_TREES_3: {
+        name: 'Pine Trees Type 3',
+        model: 'assets/pine3.glb',
+        instances: [
+            // Back pine forest (behind buildings)
+            { location: { x: -40, y: 0, z: -30 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 35, y: 0, z: -25 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: -15, y: 0, z: -70 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.8, z: 0 } },
+            { location: { x: 5, y: 0, z: -90 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.5, z: 0 } },
+            { location: { x: -65, y: 10, z: -55 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: 70, y: 10, z: -60 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 2.0, z: 0 } },
+            { location: { x: 110, y: 16, z: -85 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.4, z: 0 } }
+        ]
+    },
+    
+    PINE_TREES_4: {
+        name: 'Pine Trees Type 4',
+        model: 'assets/pine4.glb',
+        instances: [
+            // Elevated pine areas (hills)
+            { location: { x: -45, y: 0, z: -35 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 2.1, z: 0 } },
+            { location: { x: 40, y: 0, z: -30 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.2, z: 0 } },
+            { location: { x: -10, y: 0, z: -75 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: 10, y: 0, z: -95 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: -70, y: 12, z: -60 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: -100, y: 15, z: -80 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.3, z: 0 } }
+        ]
+    }
+};
 
 // Building definitions combining visual and game properties
 // NOTE: These building types must match the DistrictBuildingType enum in DistrictBuildings.sol

@@ -8,6 +8,7 @@ import { Trees } from '../objects/Trees.js';
 import { SHOW_PERFORMANCE_MONITOR } from '../utils/constants.js';
 import GUI from 'lil-gui';
 import { BillboardManager } from './billboardManager.js';
+import { PropsManager } from './propsManager.js';
 
 export class SceneManager {
     constructor(gridManager) {
@@ -28,6 +29,7 @@ export class SceneManager {
         this.boundOnKeyDown = null;
         this.boundOnDebugKeyDown = null;
         this.billboardManager = null;
+        this.propsManager = null; // Add props manager
         //this.river = null;
         this.lights = {
             sunLight: null,
@@ -978,6 +980,10 @@ export class SceneManager {
             // Create trees
             // this.trees = new Trees(this.scene, this.gridManager);
 
+            // Create props manager for decorative objects
+            this.propsManager = new PropsManager(this.scene, this.assetLoader);
+            await this.propsManager.loadAllProps();
+
             // Create river
             /*
             this.river = new River(this.scene, {
@@ -1128,6 +1134,12 @@ export class SceneManager {
         if (this.billboardManager) {
             this.billboardManager.dispose();
             this.billboardManager = null;
+        }
+
+        // Dispose of props manager
+        if (this.propsManager) {
+            this.propsManager.dispose();
+            this.propsManager = null;
         }
 
         // Dispose of river
