@@ -245,7 +245,7 @@ export const PROPS = {
             // Deep background left forest
             { location: { x: -68, y: -5, z: -180 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: 1.4, z: 0 } },
             { location: { x: -119, y: 0, z: -170 }, size: new THREE.Vector3(5.3, 5.3, 5.3), rotation: { x: 0, y: 0.5, z: 0 } },
-            { location: { x: -50, y: -10, z: -140 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: -1.8, z: 0 } },
+            { location: { x: -45, y: -10, z: -140 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: -1.8, z: 0 } },
         ]
     },
     
@@ -266,7 +266,7 @@ export const PROPS = {
             { location: { x: -65, y: 0, z: -55 }, size: new THREE.Vector3(3.2, 3.2, 3.2), rotation: { x: 0, y: 0.3, z: 0 } },
             
             // Deep background left forest
-            { location: { x: -79, y: -5, z: -135 }, size: new THREE.Vector3(5.8, 5.8, 5.8), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -80, y: -5, z: -135 }, size: new THREE.Vector3(5.8, 5.8, 5.8), rotation: { x: 0, y: 0.5, z: 0 } },
             { location: { x: -126, y: 0, z: -170 }, size: new THREE.Vector3(4.8, 4.8, 4.8), rotation: { x: 0, y: 1.6, z: 0 } },
             { location: { x: -110, y: -2, z: -170 }, size: new THREE.Vector3(5.1, 5.1, 5.1), rotation: { x: 0, y: 0.9, z: 0 } },
         ]
@@ -309,7 +309,7 @@ export const PROPS = {
             { location: { x: -109, y: 0, z: -130 }, size: new THREE.Vector3(4.8, 4.8, 4.8), rotation: { x: 0, y: 1.7, z: 0 } },
             { location: { x: -109, y: -5, z: -170 }, size: new THREE.Vector3(5.1, 5.1, 5.1), rotation: { x: 0, y: 1.9, z: 0 } },
             { location: { x: -94, y: -5, z: -170 }, size: new THREE.Vector3(6.3, 6.3, 6.3), rotation: { x: 0, y: 0.5, z: 0 } },
-            { location: { x: -48, y: -6, z: -200 }, size: new THREE.Vector3(5.0, 5.0, 5.0), rotation: { x: 0, y: 2.0, z: 0 } },
+            { location: { x: -45, y: -8, z: -200 }, size: new THREE.Vector3(5.0, 5.0, 5.0), rotation: { x: 0, y: -1.8, z: 0 } },
         ]
     }
 };
