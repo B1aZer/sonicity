@@ -141,7 +141,7 @@ export const PROPS = {
         instances: [
             // Right side pine forest
             { location: { x: 34, y: 0, z: -72 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.3, z: 0 } },
-            { location: { x: 39, y: 0, z: -90 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: 38, y: -1, z: -90 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.4, z: 0 } },
             
             { location: { x: 53, y: 0, z: -60 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: -0.8, z: 0 } },
             
@@ -249,7 +249,7 @@ export const PROPS = {
             
             { location: { x: 80, y: -5, z: -170 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: 1.7, z: 0 } },
             
-            { location: { x: 106, y: 0, z: -170 }, size: new THREE.Vector3(6.0, 6.0, 6.0), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: 106, y: 0, z: -170 }, size: new THREE.Vector3(4.8, 4.8, 4.8), rotation: { x: 0, y: 0.4, z: 0 } },
             
             { location: { x: 45, y: -10, z: -150 }, size: new THREE.Vector3(5.3, 5.3, 5.3), rotation: { x: 0, y: 1.6, z: 0 } },
             // right front
