@@ -149,7 +149,7 @@ export const PROPS = {
             
             { location: { x: 119, y: 0, z: -170 }, size: new THREE.Vector3(5.3, 5.3, 5.3), rotation: { x: 0, y: 0.5, z: 0 } },
             // TODO:
-            { location: { x: 70, y: -5, z: -200 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: -1.8, z: 0 } },
+            { location: { x: 50, y: -10, z: -140 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: -1.8, z: 0 } },
             // right front
             { location: { x: 42, y: 0, z: -24 }, size: new THREE.Vector3(1.6, 1.6, 1.6), rotation: { x: 0, y: 0.7, z: 0 } },
             /*
