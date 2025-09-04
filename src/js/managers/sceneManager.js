@@ -574,7 +574,7 @@ export class SceneManager {
         this.scene.add(this.lights.hemisphereLight);
         
         // Area light for atmospheric fill (matching Blender scene)
-        this.lights.areaLight = new THREE.RectAreaLight(0xFFDA86, 0.5, 62, 62); // Color, intensity, width, height
+        this.lights.areaLight = new THREE.RectAreaLight(0xFFDA86, 0.4, 62, 62); // Color, intensity, width, height
         this.lights.areaLight.position.set(0, 6, 10); // Match Blender position
         this.lights.areaLight.lookAt(0, 0, 0); // Point towards center of scene
         this.scene.add(this.lights.areaLight);
@@ -982,9 +982,9 @@ export class SceneManager {
             // Create animated grass with terrain following
             this.grassBlades = new GrassBlades(this.scene, {
                 width: 200,
-                instances: 100000,  // Increased for better coverage with smaller blades
-                bladeWidth: 0.04,   // Much thinner, more subtle blades
-                bladeHeight: 0.6,   // Shorter grass that won't overwhelm buildings
+                instances: 140000,  // Increased for better coverage with smaller blades
+                bladeWidth: 0.034,   // Much thinner, more subtle blades
+                bladeHeight: 0.4,   // Shorter grass that won't overwhelm buildings
                 joints: 1,          // Simple bending for subtle movement
                 density: 1,       // Good density for natural meadow look
                 terrainMesh: this.groundPlane,  // Pass terrain mesh for surface sampling
