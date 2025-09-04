@@ -227,6 +227,90 @@ export const PROPS = {
     
             { location: { x: 48, y: -6, z: -200 }, size: new THREE.Vector3(5.0, 5.0, 5.0), rotation: { x: 0, y: 2.0, z: 0 } },
         ]
+    },
+
+    PINE_TREES_LEFT_1: {
+        name: 'Pine Trees Left Type 1',
+        model: 'assets/pine1.glb',
+        instances: [
+            // Left side pine forest - close to viewport
+            { location: { x: -42, y: 0, z: -24 }, size: new THREE.Vector3(1.6, 1.6, 1.6), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: -38, y: 0, z: -28 }, size: new THREE.Vector3(1.4, 1.4, 1.4), rotation: { x: 0, y: 1.4, z: 0 } },
+            
+            // Mid-distance left forest
+            { location: { x: -34, y: 0, z: -72 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.3, z: 0 } },
+            { location: { x: -53, y: 0, z: -60 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: -0.8, z: 0 } },
+            { location: { x: -70, y: 0, z: -55 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.6, z: 0 } },
+            
+            // Deep background left forest
+            { location: { x: -68, y: -5, z: -180 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: -119, y: 0, z: -170 }, size: new THREE.Vector3(5.3, 5.3, 5.3), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -50, y: -10, z: -140 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: -1.8, z: 0 } },
+        ]
+    },
+    
+    PINE_TREES_LEFT_2: {
+        name: 'Pine Trees Left Type 2',
+        model: 'assets/pine2.glb',
+        instances: [
+            // Left side pine forest - close to viewport
+            { location: { x: -40, y: 0, z: -25 }, size: new THREE.Vector3(1.4, 1.4, 1.4), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: -38, y: 0, z: -30 }, size: new THREE.Vector3(1.6, 1.6, 1.6), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: -39, y: 0, z: -28 }, size: new THREE.Vector3(1.4, 1.4, 1.4), rotation: { x: 0, y: 1.1, z: 0 } },
+            { location: { x: -34, y: 0, z: -28 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: -38, y: 3, z: -36 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.3, z: 0 } },
+            
+            // Mid-distance left forest
+            { location: { x: -58, y: 0, z: -40 }, size: new THREE.Vector3(3, 3, 3), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: -54, y: 0, z: -50 }, size: new THREE.Vector3(2.6, 2.6, 2.6), rotation: { x: 0, y: 1.2, z: 0 } },
+            { location: { x: -65, y: 0, z: -55 }, size: new THREE.Vector3(3.2, 3.2, 3.2), rotation: { x: 0, y: 0.3, z: 0 } },
+            
+            // Deep background left forest
+            { location: { x: -79, y: -5, z: -135 }, size: new THREE.Vector3(5.8, 5.8, 5.8), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -126, y: 0, z: -170 }, size: new THREE.Vector3(4.8, 4.8, 4.8), rotation: { x: 0, y: 1.6, z: 0 } },
+            { location: { x: -110, y: -2, z: -170 }, size: new THREE.Vector3(5.1, 5.1, 5.1), rotation: { x: 0, y: 0.9, z: 0 } },
+        ]
+    },
+    
+    PINE_TREES_LEFT_3: {
+        name: 'Pine Trees Left Type 3',
+        model: 'assets/pine3.glb',
+        instances: [
+            // Left side pine forest - close to viewport
+            { location: { x: -38, y: 0, z: -25 }, size: new THREE.Vector3(1.5, 1.5, 1.5), rotation: { x: 0, y: 0.7, z: 0 } },
+            { location: { x: -37, y: 0, z: -29 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: -38, y: 2, z: -34 }, size: new THREE.Vector3(0.9, 0.9, 0.9), rotation: { x: 0, y: 0.5, z: 0 } },
+            
+            // Mid-distance left forest
+            { location: { x: -40, y: -1.8, z: -70 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 3.8, z: 0 } },
+            { location: { x: -59, y: -2, z: -75 }, size: new THREE.Vector3(3.1, 3.1, 3.1), rotation: { x: 0, y: 0.6, z: 0 } },
+            { location: { x: -60, y: 0, z: -60 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.5, z: 0 } },
+            { location: { x: -72, y: 0, z: -55 }, size: new THREE.Vector3(3.2, 3.2, 3.2), rotation: { x: 0, y: 0.9, z: 0 } },
+            
+            // Deep background left forest
+            { location: { x: -96, y: 0, z: -90 }, size: new THREE.Vector3(4.3, 4.3, 4.3), rotation: { x: 0, y: 3.8, z: 0 } },
+            { location: { x: -80, y: -5, z: -170 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: -106, y: 0, z: -170 }, size: new THREE.Vector3(4.8, 4.8, 4.8), rotation: { x: 0, y: 0.4, z: 0 } },
+            { location: { x: -58, y: -8, z: -200 }, size: new THREE.Vector3(5.3, 5.3, 5.3), rotation: { x: 0, y: 1.6, z: 0 } },
+        ]
+    },
+    
+    PINE_TREES_LEFT_4: {
+        name: 'Pine Trees Left Type 4',
+        model: 'assets/pine4.glb',
+        instances: [
+            // Left side pine forest - close to viewport
+            { location: { x: -40, y: 2, z: -30 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: -0.3, z: 0 } },
+            
+            // Mid-distance left forest
+            { location: { x: -50, y: 0, z: -70 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.8, z: 0 } },
+            
+            // Deep background left forest
+            { location: { x: -109, y: 0, z: -130 }, size: new THREE.Vector3(4.8, 4.8, 4.8), rotation: { x: 0, y: 1.7, z: 0 } },
+            { location: { x: -109, y: -5, z: -170 }, size: new THREE.Vector3(5.1, 5.1, 5.1), rotation: { x: 0, y: 1.9, z: 0 } },
+            { location: { x: -94, y: -5, z: -170 }, size: new THREE.Vector3(6.3, 6.3, 6.3), rotation: { x: 0, y: 0.5, z: 0 } },
+            { location: { x: -48, y: -6, z: -200 }, size: new THREE.Vector3(5.0, 5.0, 5.0), rotation: { x: 0, y: 2.0, z: 0 } },
+        ]
     }
 };
 
@@ -293,6 +377,72 @@ export const FOG_CONFIG = {
                 position: { x: 105, y: 5, z: -170 },
                 size: { width: 220, height: 45 },
                 rotation: { x: 0, y: 0.25, z: 0 },
+                opacity: 0.96,
+                opacityVariation: 0.16
+            }
+        ]
+    },
+    
+    LEFT_PINE_FOREST_FOG: {
+        name: 'Left Pine Forest Fog',
+        enabled: true,
+        debug: false, // Enable to show wireframe helpers for fog plane positioning
+        // Base fog properties
+        baseColor: 0xf5efab, // Soft blue-white fog color (matching right side)
+        baseOpacity: 0.18,
+        
+        // Animation settings
+        animated: true,
+        animationSpeed: 0.002,
+        driftSpeed: { x: -0.001, y: 0, z: 0.0005 }, // Opposite drift direction for variety
+        
+        // Noise settings for realistic variation
+        noise: {
+            enabled: true,
+            scale: 2.0,
+            intensity: 0.3,
+            timeScale: 0.0008
+        },
+        
+        // Multiple fog planes with increasing opacity (mirrored from right side)
+        planes: [
+            // Foreground - very subtle
+            {
+                position: { x: -45, y: 1, z: -35 },
+                size: { width: 60, height: 15 },
+                rotation: { x: 0, y: -0.2, z: 0 },
+                opacity: 0.14,
+                opacityVariation: 0.02
+            },
+            // Mid-distance - slightly more visible
+            {
+                position: { x: -70, y: 2, z: -65 },
+                size: { width: 140, height: 20 },
+                rotation: { x: 0, y: 0.15, z: 0 },
+                opacity: 0.36,
+                opacityVariation: 0.06
+            },
+            // Background pines - more pronounced
+            {
+                position: { x: -90, y: 3, z: -95 },
+                size: { width: 160, height: 25 },
+                rotation: { x: 0, y: -0.3, z: 0 },
+                opacity: 0.58,
+                opacityVariation: 0.08
+            },
+            // Far background - strongest effect
+            {
+                position: { x: -110, y: 4, z: -130 },
+                size: { width: 180, height: 30 },
+                rotation: { x: 0, y: 0.1, z: 0 },
+                opacity: 0.72,
+                opacityVariation: 0.10
+            },
+            // Deep background - atmospheric perspective
+            {
+                position: { x: -105, y: 5, z: -170 },
+                size: { width: 220, height: 45 },
+                rotation: { x: 0, y: -0.25, z: 0 },
                 opacity: 0.96,
                 opacityVariation: 0.16
             }
