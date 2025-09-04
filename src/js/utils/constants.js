@@ -148,7 +148,7 @@ export const PROPS = {
             { location: { x: 70, y: 0, z: -55  }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 1.6, z: 0 } },
             
             { location: { x: 119, y: 0, z: -170 }, size: new THREE.Vector3(5.3, 5.3, 5.3), rotation: { x: 0, y: 0.5, z: 0 } },
-            // TODO:
+    
             { location: { x: 50, y: -10, z: -140 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: -1.8, z: 0 } },
             // right front
             { location: { x: 42, y: 0, z: -24 }, size: new THREE.Vector3(1.6, 1.6, 1.6), rotation: { x: 0, y: 0.7, z: 0 } },
@@ -199,7 +199,7 @@ export const PROPS = {
             { location: { x: 80, y: -5, z: -170 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: 1.7, z: 0 } },
             
             { location: { x: 106, y: 0, z: -170 }, size: new THREE.Vector3(4.8, 4.8, 4.8), rotation: { x: 0, y: 0.4, z: 0 } },
-            // TODO:
+    
             { location: { x: 58, y: -8, z: -200 }, size: new THREE.Vector3(5.3, 5.3, 5.3), rotation: { x: 0, y: 1.6, z: 0 } },
             // right front
             { location: { x: 38, y: 0, z: -25 }, size: new THREE.Vector3(1.5, 1.5, 1.5), rotation: { x: 0, y: 0.7, z: 0 } },
@@ -224,7 +224,7 @@ export const PROPS = {
             { location: { x: 94, y: -5, z: -170  }, size: new THREE.Vector3(6.3, 6.3, 6.3), rotation: { x: 0, y: 0.5, z: 0 } },
             
             { location: { x: 40, y: 2, z: -30 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: -0.3, z: 0 } },
-             // TODO:
+    
             { location: { x: 48, y: -6, z: -200 }, size: new THREE.Vector3(5.0, 5.0, 5.0), rotation: { x: 0, y: 2.0, z: 0 } },
         ]
     }
