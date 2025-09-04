@@ -291,8 +291,9 @@ export const PROPS = {
             { location: { x: 109, y: -5, z: -170 }, size: new THREE.Vector3(5.1, 5.1, 5.1), rotation: { x: 0, y: 1.9, z: 0 } },
            
             { location: { x: 94, y: -5, z: -170  }, size: new THREE.Vector3(6.3, 6.3, 6.3), rotation: { x: 0, y: 0.5, z: 0 } },
+            
+            { location: { x: 40, y: 2, z: -30 }, size: new THREE.Vector3(1.2, 1.2, 1.2), rotation: { x: 0, y: -0.3, z: 0 } },
              /*
-            { location: { x: -70, y: 12, z: -60 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 0.3, z: 0 } },
             { location: { x: 70, y: 10, z: -60 }, size: new THREE.Vector3(2.0, 2.0, 2.0), rotation: { x: 0, y: 2.0, z: 0 } },
             { location: { x: -75, y: 15, z: -65 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 1.6, z: 0 } },
             { location: { x: 75, y: 12, z: -65 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 0.7, z: 0 } },
