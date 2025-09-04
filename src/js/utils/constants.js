@@ -239,6 +239,7 @@ export const PROPS = {
         model: 'assets/pine3.glb',
         instances: [
             // Right side forest
+            { location: { x: 40, y: -1.8, z: -70 }, size: new THREE.Vector3(2.4, 2.4, 2.4), rotation: { x: 0, y: 3.8, z: 0 } },
             { location: { x: 96, y: 0, z: -90 }, size: new THREE.Vector3(4.3, 4.3, 4.3), rotation: { x: 0, y: 3.8, z: 0 } },
             { location: { x: 59, y: -2, z: -75 }, size: new THREE.Vector3(3.1, 3.1, 3.1), rotation: { x: 0, y: 0.6, z: 0 } },
             
@@ -285,7 +286,7 @@ export const PROPS = {
         model: 'assets/pine4.glb',
         instances: [
             // Right side forest
-            { location: { x: 40, y: 0, z: -70 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: 50, y: 0, z: -70 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.8, z: 0 } },
             { location: { x: 109, y: 0, z: -130 }, size: new THREE.Vector3(4.8, 4.8, 4.8), rotation: { x: 0, y: 1.7, z: 0 } },
             
             { location: { x: 109, y: -5, z: -170 }, size: new THREE.Vector3(5.1, 5.1, 5.1), rotation: { x: 0, y: 1.9, z: 0 } },
