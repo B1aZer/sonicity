@@ -141,7 +141,7 @@ export const PROPS = {
         instances: [
             // Right side pine forest
             { location: { x: 34, y: 0, z: -72 }, size: new THREE.Vector3(2.2, 2.2, 2.2), rotation: { x: 0, y: 0.3, z: 0 } },
-            { location: { x: 38, y: -1, z: -90 }, size: new THREE.Vector3(2.5, 2.5, 2.5), rotation: { x: 0, y: 1.4, z: 0 } },
+            { location: { x: 68, y: -5, z: -180 }, size: new THREE.Vector3(5.5, 5.5, 5.5), rotation: { x: 0, y: 1.4, z: 0 } },
             
             { location: { x: 53, y: 0, z: -60 }, size: new THREE.Vector3(2.3, 2.3, 2.3), rotation: { x: 0, y: -0.8, z: 0 } },
             
@@ -359,7 +359,7 @@ export const FOG_CONFIG = {
             // Mid-distance - slightly more visible
             {
                 position: { x: 70, y: 2, z: -65 },
-                size: { width: 120, height: 20 },
+                size: { width: 140, height: 20 },
                 rotation: { x: 0, y: -0.15, z: 0 },
                 opacity: 0.36,
                 opacityVariation: 0.06
@@ -367,7 +367,7 @@ export const FOG_CONFIG = {
             // Background pines - more pronounced
             {
                 position: { x: 90, y: 3, z: -95 },
-                size: { width: 120, height: 25 },
+                size: { width: 160, height: 25 },
                 rotation: { x: 0, y: 0.3, z: 0 },
                 opacity: 0.58,
                 opacityVariation: 0.08
@@ -375,7 +375,7 @@ export const FOG_CONFIG = {
             // Far background - strongest effect
             {
                 position: { x: 110, y: 4, z: -130 },
-                size: { width: 160, height: 30 },
+                size: { width: 180, height: 30 },
                 rotation: { x: 0, y: -0.1, z: 0 },
                 opacity: 0.72,
                 opacityVariation: 0.10
@@ -383,7 +383,7 @@ export const FOG_CONFIG = {
             // Deep background - atmospheric perspective
             {
                 position: { x: 105, y: 5, z: -170 },
-                size: { width: 180, height: 35 },
+                size: { width: 220, height: 45 },
                 rotation: { x: 0, y: 0.25, z: 0 },
                 opacity: 0.96,
                 opacityVariation: 0.16
