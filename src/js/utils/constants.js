@@ -257,7 +257,7 @@ export const PROPS = {
             { location: { x: -40, y: 0, z: -25 }, size: new THREE.Vector3(1.4, 1.4, 1.4), rotation: { x: 0, y: 1.4, z: 0 } },
             { location: { x: -38, y: 0, z: -30 }, size: new THREE.Vector3(1.6, 1.6, 1.6), rotation: { x: 0, y: 0.6, z: 0 } },
             { location: { x: -39, y: 0, z: -28 }, size: new THREE.Vector3(1.4, 1.4, 1.4), rotation: { x: 0, y: 1.1, z: 0 } },
-            { location: { x: -34, y: 0, z: -28 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.8, z: 0 } },
+            { location: { x: -30, y: 0, z: -30 }, size: new THREE.Vector3(1.3, 1.3, 1.3), rotation: { x: 0, y: 0.8, z: 0 } },
             { location: { x: -38, y: 3, z: -36 }, size: new THREE.Vector3(1.0, 1.0, 1.0), rotation: { x: 0, y: 1.3, z: 0 } },
             
             // Mid-distance left forest
