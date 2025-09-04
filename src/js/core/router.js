@@ -199,4 +199,73 @@ export class Router {
     requiresInitialization(route) {
         return !this.uninitializedPages.has(route);
     }
+
+    /**
+     * Get the route to page class mapping (for dynamic imports)
+     * This returns a map of routes to their corresponding dynamic import functions
+     */
+    getRouteToPageClassMap() {
+        return {
+            'house': () => import('../../pages/HousePage.js').then(m => m.HousePage),
+            'farm': () => import('../../pages/FarmPage.js').then(m => m.FarmPage),
+            'diamond-station': () => import('../../pages/DiamondStationPage.js').then(m => m.DiamondStationPage),
+            'rep-forge': () => import('../../pages/RepForgePage.js').then(m => m.RepForgePage),
+            'stake': () => import('../../pages/StakeHubPage.js').then(m => m.StakePage),
+            'arcanum': () => import('../../pages/ArcanumPage.js').then(m => m.ArcanumPage),
+            'shop': () => import('../../pages/ShopPage.js').then(m => m.ShopPage),
+            'workshop': () => import('../../pages/WorkshopPage.js').then(m => m.WorkshopPage),
+            'barracks': () => import('../../pages/BarracksPage.js').then(m => m.BarracksPage),
+            'scout-guild': () => import('../../pages/ScoutGuildPage.js').then(m => m.ScoutGuildPage),
+            'command-center': () => import('../../pages/CommandCenterPage.js').then(m => m.CommandCenterPage),
+            'tavern': () => import('../../pages/TavernPage.js').then(m => m.TavernPage),
+            'tactics-center': () => import('../../pages/TacticsCenterPage.js').then(m => m.TacticsCenterPage),
+            'city': () => import('../../pages/CityPage.js').then(m => m.CityPage),
+            'revenue-hub': () => import('../../pages/RevenueHubPage.js').then(m => m.RevenueHubPage),
+            'garrison': () => import('../../pages/GarrisonPage.js').then(m => m.GarrisonPage)
+        };
+    }
+
+    /**
+     * Preload a page and its data in the background
+     * @param {string} route - The route to preload (without leading slash)
+     * @returns {Promise} - Promise that resolves when preloading is complete
+     */
+    async preloadPage(route) {
+        try {
+            Logger.info(`Router: Starting to preload page: ${route}`);
+            
+            const routeMap = this.getRouteToPageClassMap();
+            const pageLoader = routeMap[route];
+            
+            if (!pageLoader) {
+                Logger.warn(`Router: No preloader available for route: ${route}`);
+                return;
+            }
+
+            // Load the page class and create instance
+            const PageClass = await pageLoader();
+            const pageInstance = new PageClass();
+            
+            // Import WalletManager for wallet checking
+            const { WalletManager } = await import('../utils/wallet.js');
+            
+            // Initialize contracts if wallet is connected
+            if (WalletManager.isWalletConnected() && WalletManager.getCurrentWallet()) {
+                await pageInstance.initializeContracts();
+                
+                // Start the onInitialized process to load data
+                pageInstance.onInitialized({ 
+                    success: true, 
+                    address: WalletManager.getCurrentWallet() 
+                }).catch(error => {
+                    Logger.warn(`Router: Error preloading data for ${route}:`, error);
+                });
+            }
+            
+            Logger.info(`Router: Successfully started preloading for: ${route}`);
+            
+        } catch (error) {
+            Logger.warn(`Router: Failed to preload page ${route}:`, error);
+        }
+    }
 } 

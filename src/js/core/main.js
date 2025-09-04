@@ -10,6 +10,10 @@ class App {
         this.layout = new Layout();
         this.container = document.getElementById('app');
         this.router = new Router(this.layout.content);
+        
+        // Make router globally accessible
+        window.appRouter = this.router;
+        
         this.init();
     }
 

@@ -30,6 +30,9 @@ export const CONTRACT_CONFIG = {
 // Performance monitoring
 export const SHOW_PERFORMANCE_MONITOR = true;
 
+// UI/UX timing constants
+export const BUILDING_ENTER_DELAY = 450; // ms - Delay between sound and page navigation
+
 // Props configuration for decorative objects, trees, rocks, etc.
 // Each prop type can have multiple instances with specific positions and rotations
 // Using 3D coordinates and rotations for full control

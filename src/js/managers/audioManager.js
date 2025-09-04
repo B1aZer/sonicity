@@ -38,6 +38,13 @@ export class AudioManager {
         this.playSound('/assets/sound/spawn.wav', 0.6);
     }
     
+    /**
+     * Play building enter sound effect when clicking on a building
+     */
+    playBuildingEnter() {
+        this.playSound('/assets/sound/enter.wav', 0.5);
+    }
+    
 
 
     /**

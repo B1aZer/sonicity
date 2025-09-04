@@ -5,8 +5,9 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { AccessControl } from '../js/utils/accessControl.js';
 import { BasePage } from './BasePage.js';
-import { BUILDINGS } from '../js/utils/constants.js';
+import { BUILDINGS, BUILDING_ENTER_DELAY } from '../js/utils/constants.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
+import { AudioManager } from '../js/managers/audioManager.js';
 
 import('../styles/game-page.css');
 
@@ -18,6 +19,7 @@ export class GamePage extends BasePage {
         this.element.className = 'game-page';
         this.game = null;
         this.resourceUpdateInterval = null;
+        this.audioManager = new AudioManager();
         this.render();
         this.setupGame();
     }
@@ -33,6 +35,20 @@ export class GamePage extends BasePage {
         } catch (error) {
             Logger.error('Error initializing game page:', error);
             this.modal.error('Failed to initialize game page. Please try refreshing the page.');
+        }
+    }
+
+    /**
+     * Preload a page using the router's preload method
+     * @param {string} route - The route to preload (with leading slash)
+     */
+    async preloadPage(route) {
+        if (window.appRouter) {
+            // Remove leading slash for router
+            const routeWithoutSlash = route.startsWith('/') ? route.slice(1) : route;
+            await window.appRouter.preloadPage(routeWithoutSlash);
+        } else {
+            Logger.warn('Router not available for preloading');
         }
     }
 
@@ -355,68 +371,132 @@ export class GamePage extends BasePage {
                 // Check for building types using userData flags
                 if (clickedObject.userData.isMine) {
                     Logger.info('Mine clicked');
-                    window.history.pushState({}, '', '/revenue-hub');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/revenue-hub');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/revenue-hub');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isCityhall) {
                     Logger.info('City Hall clicked');
-                    window.history.pushState({}, '', '/city');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/city');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/city');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isAltar) {
                     Logger.info('Altar clicked');
-                    window.history.pushState({}, '', '/stake');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/stake');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/stake');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isHouse) {
                     Logger.info('House clicked');
-                    window.history.pushState({}, '', '/house');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/house');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/house');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isFarm) {
                     Logger.info('Farm clicked');
-                    window.history.pushState({}, '', '/farm');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/farm');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/farm');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isDiamondstation) {
                     Logger.info('Diamond Station clicked');
-                    window.history.pushState({}, '', '/diamond-station');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/diamond-station');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/diamond-station');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isRepforge) {
                     Logger.info('REP Forge clicked');
-                    window.history.pushState({}, '', '/rep-forge');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/rep-forge');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/rep-forge');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isYieldstation) {
                     Logger.info('Yield Station clicked');
-                    window.history.pushState({}, '', '/stake');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/stake');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/stake');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isArcanumofnames) {
                     Logger.info('Arcanum of Names clicked');
-                    window.history.pushState({}, '', '/arcanum');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/arcanum');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/arcanum');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isShop) {
                     Logger.info('Shop clicked');
-                    window.history.pushState({}, '', '/shop');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/shop');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/shop');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isWorkshop) {
                     Logger.info('Workshop clicked');
-                    window.history.pushState({}, '', '/workshop');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/workshop');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/workshop');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isBarracks) {
                     Logger.info('Barracks clicked');
-                    window.history.pushState({}, '', '/barracks');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/barracks');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/barracks');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isScoutguild) {
                     Logger.info('Scout Guild clicked');
-                    window.history.pushState({}, '', '/scout-guild');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/scout-guild');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/scout-guild');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isCommandcenter) {
                     Logger.info('Command Center clicked');
-                    window.history.pushState({}, '', '/command-center');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/command-center');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/command-center');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isTavern) {
                     Logger.info('Tavern clicked');
-                    window.history.pushState({}, '', '/tavern');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/tavern');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/tavern');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isTacticsCenter) {
                     Logger.info('Tactics Center clicked');
-                    window.history.pushState({}, '', '/tactics-center');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/tactics-center');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/tactics-center');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 }
             }
         });
