@@ -1,14 +1,17 @@
 
 ## todo
 
-- redo shop texture, workshop, outpost, tower + 2 lvls make,
-- all barracks levels redo,  scout guild, 
-- make garrison, remake command center, make tavern etc
+- trees
+- fog
+
++ scout guild, city hall, terrain.glb, groundplan.glb, placement_manifest.json
++ redo shop texture, workshop, outpost, tower + 2 lvls make,
++ all barracks levels redo,  scout guild, 
+- make garrison, remake command center, tactics_center, make tavern etc
 - fix small aspects billboard etc
 - outpost page
 + terrain mat + grass
-- trees
-- fog
+
 
 - link in city for all buidlings for mobile
 - small fabs ??
