@@ -324,8 +324,8 @@ export const PROPS = {
 // Fog configuration for atmospheric effects in the pine forest area
 // Multiple planes with increasing opacity towards the background
 export const FOG_CONFIG = {
-    PINE_FOREST_FOG: {
-        name: 'Pine Forest Fog',
+    RIGHT_PINE_FOREST_FOG: {
+        name: 'Right Pine Forest Fog',
         enabled: true,
         debug: false, // Enable to show wireframe helpers for fog plane positioning
         // Base fog properties
