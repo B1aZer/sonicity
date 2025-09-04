@@ -320,6 +320,76 @@ export const PROPS = {
     }
 };
 
+// Fog configuration for atmospheric effects in the pine forest area
+// Multiple planes with increasing opacity towards the background
+export const FOG_CONFIG = {
+    PINE_FOREST_FOG: {
+        name: 'Pine Forest Fog',
+        enabled: true,
+        debug: false, // Enable to show wireframe helpers for fog plane positioning
+        // Base fog properties
+        baseColor: 0xf5efab, // Soft blue-white fog color
+        baseOpacity: 0.08,
+        
+        // Animation settings
+        animated: true,
+        animationSpeed: 0.002,
+        driftSpeed: { x: 0.001, y: 0, z: 0.0005 },
+        
+        // Noise settings for realistic variation
+        noise: {
+            enabled: true,
+            scale: 2.0,
+            intensity: 0.3,
+            timeScale: 0.0008
+        },
+        
+        // Multiple fog planes with increasing opacity
+        planes: [
+            // Foreground - very subtle
+            {
+                position: { x: 45, y: 1, z: -35 },
+                size: { width: 60, height: 15 },
+                rotation: { x: 0, y: 0.2, z: 0 },
+                opacity: 0.14,
+                opacityVariation: 0.02
+            },
+            // Mid-distance - slightly more visible
+            {
+                position: { x: 70, y: 2, z: -65 },
+                size: { width: 80, height: 20 },
+                rotation: { x: 0, y: -0.15, z: 0 },
+                opacity: 0.26,
+                opacityVariation: 0.03
+            },
+            // Background pines - more pronounced
+            {
+                position: { x: 90, y: 3, z: -95 },
+                size: { width: 100, height: 25 },
+                rotation: { x: 0, y: 0.3, z: 0 },
+                opacity: 0.38,
+                opacityVariation: 0.04
+            },
+            // Far background - strongest effect
+            {
+                position: { x: 110, y: 4, z: -130 },
+                size: { width: 120, height: 30 },
+                rotation: { x: 0, y: -0.1, z: 0 },
+                opacity: 0.42,
+                opacityVariation: 0.05
+            },
+            // Deep background - atmospheric perspective
+            {
+                position: { x: 105, y: 5, z: -170 },
+                size: { width: 140, height: 35 },
+                rotation: { x: 0, y: 0.25, z: 0 },
+                opacity: 0.56,
+                opacityVariation: 0.06
+            }
+        ]
+    }
+};
+
 // Building definitions combining visual and game properties
 // NOTE: These building types must match the DistrictBuildingType enum in DistrictBuildings.sol
 // Contract enum order (23 buildings):

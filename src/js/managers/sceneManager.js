@@ -9,6 +9,7 @@ import { SHOW_PERFORMANCE_MONITOR } from '../utils/constants.js';
 import GUI from 'lil-gui';
 import { BillboardManager } from './billboardManager.js';
 import { PropsManager } from './propsManager.js';
+import { FogManager } from './fogManager.js';
 
 export class SceneManager {
     constructor(gridManager) {
@@ -30,6 +31,7 @@ export class SceneManager {
         this.boundOnDebugKeyDown = null;
         this.billboardManager = null;
         this.propsManager = null; // Add props manager
+        this.fogManager = null; // Add fog manager
         //this.river = null;
         this.lights = {
             sunLight: null,
@@ -933,6 +935,47 @@ export class SceneManager {
         debugFolder.add({
             logCameraPosition: () => this.logCameraPosition()
         }, 'logCameraPosition').name('Log Camera Position (C)');
+
+        // Add fog controls if fog manager exists
+        if (this.fogManager) {
+            const fogFolder = this.gui.addFolder('Fog Effects');
+            
+            const fogControls = {
+                visible: true,
+                globalOpacity: 1.0,
+                debugMode: false,
+                debugVisible: true
+            };
+            
+            fogFolder.add(fogControls, 'visible').name('Fog Visible').onChange((value) => {
+                this.fogManager.setFogVisible(value);
+            });
+            
+            fogFolder.add(fogControls, 'globalOpacity', 0, 2).name('Global Opacity').onChange((value) => {
+                this.fogManager.setGlobalOpacity(value);
+            });
+
+            // Debug controls
+            const debugFolder = fogFolder.addFolder('Debug');
+            
+            debugFolder.add(fogControls, 'debugMode').name('Debug Mode').onChange((value) => {
+                this.fogManager.setDebugMode(value);
+                fogControls.debugVisible = value; // Update debug visible state
+            });
+            
+            debugFolder.add(fogControls, 'debugVisible').name('Debug Helpers Visible').onChange((value) => {
+                this.fogManager.setDebugVisible(value);
+            });
+
+            // Add button to enable debug in config and reload
+            debugFolder.add({
+                enableConfigDebug: () => {
+                    // This would require reloading the fog system
+                    console.log('To enable config debug mode, set FOG_CONFIG.PINE_FOREST_FOG.debug = true and reload');
+                    alert('Set FOG_CONFIG.PINE_FOREST_FOG.debug = true in constants.js and reload to see debug helpers from start');
+                }
+            }, 'enableConfigDebug').name('Enable Config Debug');
+        }
     }
 
     /**
@@ -997,6 +1040,10 @@ export class SceneManager {
             // Create props manager for decorative objects
             this.propsManager = new PropsManager(this.scene, this.assetLoader);
             await this.propsManager.loadAllProps();
+
+            // Create fog manager for atmospheric effects
+            this.fogManager = new FogManager(this.scene);
+            await this.fogManager.loadAllFog();
 
             // Create river
             /*
@@ -1154,6 +1201,12 @@ export class SceneManager {
         if (this.propsManager) {
             this.propsManager.dispose();
             this.propsManager = null;
+        }
+
+        // Dispose of fog manager
+        if (this.fogManager) {
+            this.fogManager.dispose();
+            this.fogManager = null;
         }
 
         // Dispose of river
