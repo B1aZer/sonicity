@@ -245,12 +245,34 @@ export class BasePage {
 
     // Event listener management
     addEventListener(selector, event, handler) {
-        const elements = this.element.querySelectorAll(selector);
-        elements.forEach((element, index) => {
-            element.addEventListener(event, handler);
-            // Use unique keys for each element to properly track them
-            this.eventListeners.set(`${selector}-${event}-${index}`, { element, event, handler });
-        });
+        try {
+            const elements = this.element.querySelectorAll(selector);
+            if (elements.length === 0) {
+                Logger.warn(`No elements found for selector: ${selector}`);
+                return;
+            }
+            
+            elements.forEach((element, index) => {
+                // Wrap handler with error handling
+                const safeHandler = (e) => {
+                    try {
+                        handler(e);
+                    } catch (error) {
+                        Logger.error(`Error in event handler for ${selector}:`, error);
+                    }
+                };
+                
+                element.addEventListener(event, safeHandler);
+                // Use unique keys for each element to properly track them
+                this.eventListeners.set(`${selector}-${event}-${index}`, { 
+                    element, 
+                    event, 
+                    handler: safeHandler 
+                });
+            });
+        } catch (error) {
+            Logger.error(`Error setting up event listener for ${selector}:`, error);
+        }
     }
 
     removeEventListeners() {
