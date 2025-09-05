@@ -371,7 +371,37 @@ export class GamePage extends BasePage {
             Logger.info('Click detected, intersections:', intersects.length);
             
             if (intersects.length > 0) {
-                const clickedObject = intersects[0].object;
+                // Filter out Line objects (grid lines) and look for the first building object
+                let clickedObject = null;
+                
+                for (const intersection of intersects) {
+                    const obj = intersection.object;
+                    
+                    // Skip Line objects (grid lines)
+                    if (obj.type === 'Line') {
+                        continue;
+                    }
+                    
+                    // Check if this object or any of its parents has building userData
+                    let current = obj;
+                    while (current) {
+                        if (current.userData && this.hasBuildingType(current.userData)) {
+                            clickedObject = current;
+                            break;
+                        }
+                        current = current.parent;
+                    }
+                    
+                    if (clickedObject) {
+                        break;
+                    }
+                }
+                
+                if (!clickedObject) {
+                    Logger.info('No building object found in click intersections');
+                    return;
+                }
+                
                 Logger.info('Clicked object:', {
                     name: clickedObject.name,
                     userData: clickedObject.userData,
@@ -514,6 +544,19 @@ export class GamePage extends BasePage {
                 }
             }
         });
+    }
+
+    /**
+     * Helper method to check if userData contains any building type flags
+     */
+    hasBuildingType(userData) {
+        const buildingTypes = [
+            'isMine', 'isCityhall', 'isAltar', 'isHouse', 'isFarm', 'isDiamondstation',
+            'isRepforge', 'isYieldstation', 'isArcanumofnames', 'isShop', 'isWorkshop',
+            'isBarracks', 'isScoutguild', 'isCommandcenter', 'isTavern', 'isTacticsCenter'
+        ];
+        
+        return buildingTypes.some(type => userData[type] === true);
     }
 
     render() {
