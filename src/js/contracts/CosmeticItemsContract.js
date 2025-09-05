@@ -11,24 +11,9 @@ export class CosmeticItemsContract extends BaseContract {
         return this.transact('purchaseCosmetic', [cosmeticId], options);
     }
 
-    // Activate a cosmetic item
-    async activateCosmetic(cosmeticId, options = {}) {
-        return this.transact('activateCosmetic', [cosmeticId], options);
-    }
-
-    // Deactivate a cosmetic type
-    async deactivateCosmetic(cosmeticType, options = {}) {
-        return this.transact('deactivateCosmetic', [cosmeticType], options);
-    }
-
     // Check if player owns a cosmetic
     async ownsCosmetic(player, cosmeticId) {
         return this.contract.ownsCosmetic(player, cosmeticId);
-    }
-
-    // Get active cosmetic for a player and type
-    async getActiveCosmetic(player, cosmeticType) {
-        return this.contract.getActiveCosmetic(player, cosmeticType);
     }
 
     // Get cosmetic configuration
@@ -47,8 +32,8 @@ export class CosmeticItemsContract extends BaseContract {
     }
 
     // Owner functions (if needed)
-    async setCosmeticConfig(cosmeticId, name, description, diamondCost, modelPath, cosmeticType, enabled, options = {}) {
-        return this.transact('setCosmeticConfig', [cosmeticId, name, description, diamondCost, modelPath, cosmeticType, enabled], options);
+    async setCosmeticConfig(cosmeticId, name, cost, resourceType, enabled, options = {}) {
+        return this.transact('setCosmeticConfig', [cosmeticId, name, cost, resourceType, enabled], options);
     }
 
     async setCosmeticEnabled(cosmeticId, enabled, options = {}) {

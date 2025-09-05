@@ -989,8 +989,6 @@ export const COSMETIC_ITEMS = [
     description: 'A majestic banner to display your achievements',
     cost: 10,
     currency: 'DIAMONDS',
-    type: 'BANNER',
-    modelPath: 'assets/banner.glb',
     image: '/images/shop/cosmetic.png',
   },
   // Future cosmetic items will be added here

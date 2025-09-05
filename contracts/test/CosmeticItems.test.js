@@ -38,8 +38,8 @@ describe("CosmeticItems", function () {
         it("Should initialize with Royal Banner cosmetic", async function () {
             const config = await cosmeticItems.getCosmeticConfig(0);
             expect(config.name).to.equal("Royal Banner");
-            expect(config.diamondCost).to.equal(10);
-            expect(config.modelPath).to.equal("assets/banner.glb");
+            expect(config.cost).to.equal(10);
+            expect(config.resourceType).to.equal(1); // DIAMONDS
             expect(config.enabled).to.be.true;
         });
 
@@ -74,9 +74,6 @@ describe("CosmeticItems", function () {
             // Check diamonds were deducted
             const finalDiamonds = await gameState.getPlayerDiamonds(player1Address);
             expect(finalDiamonds).to.equal(initialDiamonds - 10n);
-            
-            // Check auto-activation
-            expect(await cosmeticItems.getActiveCosmetic(player1Address, 0)).to.equal(0); // BANNER type
         });
 
         it("Should not allow purchase without sufficient diamonds", async function () {
@@ -120,55 +117,11 @@ describe("CosmeticItems", function () {
             
             await expect(cosmeticItems.connect(player1).purchaseCosmetic(0))
                 .to.emit(cosmeticItems, "CosmeticPurchased")
-                .withArgs(player1Address, 0, 10);
+                .withArgs(player1Address, 0, 10, 1); // 1 = DIAMONDS
         });
     });
 
-    describe("Cosmetic Activation", function () {
-        beforeEach(async function () {
-            // Purchase cosmetic first
-            await cosmeticItems.connect(player1).purchaseCosmetic(0);
-        });
 
-        it("Should activate owned cosmetic", async function () {
-            const player1Address = await player1.getAddress();
-            
-            await cosmeticItems.connect(player1).activateCosmetic(0);
-            
-            expect(await cosmeticItems.getActiveCosmetic(player1Address, 0)).to.equal(0);
-        });
-
-        it("Should not allow activating unowned cosmetic", async function () {
-            await expect(
-                cosmeticItems.connect(player2).activateCosmetic(0)
-            ).to.be.revertedWith("Cosmetic not owned");
-        });
-
-        it("Should emit CosmeticActivated event", async function () {
-            const player1Address = await player1.getAddress();
-            
-            await expect(cosmeticItems.connect(player1).activateCosmetic(0))
-                .to.emit(cosmeticItems, "CosmeticActivated")
-                .withArgs(player1Address, 0, 0); // 0 = BANNER type
-        });
-
-        it("Should deactivate cosmetic type", async function () {
-            const player1Address = await player1.getAddress();
-            
-            // Deactivate BANNER type (0)
-            await cosmeticItems.connect(player1).deactivateCosmetic(0);
-            
-            expect(await cosmeticItems.getActiveCosmetic(player1Address, 0)).to.equal(0);
-        });
-
-        it("Should emit CosmeticDeactivated event", async function () {
-            const player1Address = await player1.getAddress();
-            
-            await expect(cosmeticItems.connect(player1).deactivateCosmetic(0))
-                .to.emit(cosmeticItems, "CosmeticDeactivated")
-                .withArgs(player1Address, 0);
-        });
-    });
 
     describe("View Functions", function () {
         beforeEach(async function () {
@@ -187,10 +140,8 @@ describe("CosmeticItems", function () {
             const config = await cosmeticItems.getCosmeticConfig(0);
             
             expect(config.name).to.equal("Royal Banner");
-            expect(config.description).to.equal("A majestic banner to display your achievements");
-            expect(config.diamondCost).to.equal(10);
-            expect(config.modelPath).to.equal("assets/banner.glb");
-            expect(config.cosmeticType).to.equal(0); // BANNER
+            expect(config.cost).to.equal(10);
+            expect(config.resourceType).to.equal(1); // DIAMONDS
             expect(config.enabled).to.be.true;
         });
 
@@ -214,24 +165,22 @@ describe("CosmeticItems", function () {
             await cosmeticItems.setCosmeticConfig(
                 1, // ID
                 "Magic Aura",
-                "A mystical aura effect",
                 20, // cost
-                "assets/aura.glb",
-                2, // EFFECT type
+                0, // GOLD type
                 true
             );
 
             const config = await cosmeticItems.getCosmeticConfig(1);
             expect(config.name).to.equal("Magic Aura");
-            expect(config.diamondCost).to.equal(20);
-            expect(config.cosmeticType).to.equal(2);
+            expect(config.cost).to.equal(20);
+            expect(config.resourceType).to.equal(0); // GOLD
         });
 
         it("Should allow owner to update cosmetic price", async function () {
             await cosmeticItems.setCosmeticPrice(0, 15);
             
             const config = await cosmeticItems.getCosmeticConfig(0);
-            expect(config.diamondCost).to.equal(15);
+            expect(config.cost).to.equal(15);
         });
 
         it("Should allow owner to enable/disable cosmetic", async function () {
@@ -250,35 +199,23 @@ describe("CosmeticItems", function () {
         it("Should emit CosmeticConfigUpdated event", async function () {
             await expect(cosmeticItems.setCosmeticPrice(0, 15))
                 .to.emit(cosmeticItems, "CosmeticConfigUpdated")
-                .withArgs(0, "Royal Banner", 15);
+                .withArgs(0, "Royal Banner", 15, 1); // 1 = DIAMONDS
         });
     });
 
-    describe("Multiple Cosmetic Types", function () {
+    describe("Multiple Cosmetics", function () {
         beforeEach(async function () {
-            // Add different types of cosmetics
-            await cosmeticItems.setCosmeticConfig(1, "Garden Decoration", "Beautiful flowers", 15, "assets/garden.glb", 1, true); // DECORATION
-            await cosmeticItems.setCosmeticConfig(2, "Magic Sparkles", "Magical effects", 25, "assets/sparkles.glb", 2, true); // EFFECT
-        });
-
-        it("Should handle multiple cosmetic types independently", async function () {
-            const player1Address = await player1.getAddress();
-            
-            // Purchase different types
-            await cosmeticItems.connect(player1).purchaseCosmetic(0); // BANNER
-            await cosmeticItems.connect(player1).purchaseCosmetic(1); // DECORATION
-            await cosmeticItems.connect(player1).purchaseCosmetic(2); // EFFECT
-            
-            // Check each type is activated independently
-            expect(await cosmeticItems.getActiveCosmetic(player1Address, 0)).to.equal(0); // BANNER
-            expect(await cosmeticItems.getActiveCosmetic(player1Address, 1)).to.equal(1); // DECORATION
-            expect(await cosmeticItems.getActiveCosmetic(player1Address, 2)).to.equal(2); // EFFECT
+            // Add different cosmetics with different resource types
+            await cosmeticItems.setCosmeticConfig(1, "Garden Decoration", 15, 0, true); // GOLD
+            await cosmeticItems.setCosmeticConfig(2, "Magic Sparkles", 25, 2, true); // FOOD
         });
 
         it("Should return correct owned cosmetics count", async function () {
             const player1Address = await player1.getAddress();
             
             await cosmeticItems.connect(player1).purchaseCosmetic(0);
+            // Need to give player gold for the second cosmetic
+            await gameState.testEarnGold(player1Address, 100);
             await cosmeticItems.connect(player1).purchaseCosmetic(1);
             
             const owned = await cosmeticItems.getOwnedCosmetics(player1Address, 10);

@@ -12,29 +12,24 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
  */
 contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     
-    // Cosmetic item types
-    enum CosmeticType {
-        BANNER,
-        DECORATION,
-        EFFECT,
-        TERRAIN_MODIFIER
+    // Resource types for pricing
+    enum ResourceType {
+        GOLD,
+        DIAMONDS,
+        FOOD,
+        REP
     }
     
     // Cosmetic item configuration
     struct CosmeticConfig {
         string name;
-        string description;
-        uint256 diamondCost;
-        string modelPath;
-        CosmeticType cosmeticType;
+        uint256 cost;
+        ResourceType resourceType;
         bool enabled;
     }
     
     // Player cosmetic inventory - mapping(player => mapping(cosmeticId => owned))
     mapping(address => mapping(uint8 => bool)) public ownedCosmetics;
-    
-    // Player active cosmetics - mapping(player => mapping(cosmeticType => activeCosmeticId))
-    mapping(address => mapping(CosmeticType => uint8)) public activeCosmetics;
     
     // Cosmetic configurations
     mapping(uint8 => CosmeticConfig) public cosmeticConfigs;
@@ -43,10 +38,8 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     address public gameStateAddress;
     
     // Events
-    event CosmeticPurchased(address indexed player, uint8 indexed cosmeticId, uint256 diamondCost);
-    event CosmeticActivated(address indexed player, uint8 indexed cosmeticId, CosmeticType cosmeticType);
-    event CosmeticDeactivated(address indexed player, CosmeticType cosmeticType);
-    event CosmeticConfigUpdated(uint8 indexed cosmeticId, string name, uint256 diamondCost);
+    event CosmeticPurchased(address indexed player, uint8 indexed cosmeticId, uint256 cost, ResourceType resourceType);
+    event CosmeticConfigUpdated(uint8 indexed cosmeticId, string name, uint256 cost, ResourceType resourceType);
     
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -64,10 +57,8 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Initialize cosmetic items with banner as the first item
         cosmeticConfigs[0] = CosmeticConfig({
             name: "Royal Banner",
-            description: "A majestic banner to display your achievements",
-            diamondCost: 10,
-            modelPath: "assets/banner.glb",
-            cosmeticType: CosmeticType.BANNER,
+            cost: 10,
+            resourceType: ResourceType.DIAMONDS,
             enabled: true
         });
         
@@ -90,19 +81,34 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
     
     /**
-     * @dev Purchase a cosmetic item with diamonds
+     * @dev Purchase a cosmetic item with the specified resource
      * @param cosmeticId The ID of the cosmetic to purchase
      */
     function purchaseCosmetic(uint8 cosmeticId) external nonReentrant {
         CosmeticConfig memory config = cosmeticConfigs[cosmeticId];
         require(config.enabled, "Cosmetic not available");
-        require(config.diamondCost > 0, "Invalid cosmetic");
+        require(config.cost > 0, "Invalid cosmetic");
         require(!ownedCosmetics[msg.sender][cosmeticId], "Already owned");
         
-        // Deduct diamonds from player via GameState
+        // Deduct the required resource from player via GameState
+        uint256 goldAmount = 0;
+        uint256 foodAmount = 0;
+        uint256 repAmount = 0;
+        uint256 diamondAmount = 0;
+        
+        if (config.resourceType == ResourceType.GOLD) {
+            goldAmount = config.cost;
+        } else if (config.resourceType == ResourceType.FOOD) {
+            foodAmount = config.cost;
+        } else if (config.resourceType == ResourceType.REP) {
+            repAmount = config.cost;
+        } else if (config.resourceType == ResourceType.DIAMONDS) {
+            diamondAmount = config.cost;
+        }
+        
         (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("deductResources(address,uint256,uint256,uint256,uint256)", 
-                msg.sender, 0, 0, 0, config.diamondCost)
+                msg.sender, goldAmount, foodAmount, repAmount, diamondAmount)
         );
         if (!success) {
             // If the call failed, decode and propagate the error message
@@ -111,44 +117,16 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
                     revert(add(returnData, 32), mload(returnData))
                 }
             }
-            revert("Failed to deduct diamonds");
+            revert("Failed to deduct resources");
         }
         
         // Mark cosmetic as owned
         ownedCosmetics[msg.sender][cosmeticId] = true;
         
-        // Auto-activate if it's the first of its type
-        if (activeCosmetics[msg.sender][config.cosmeticType] == 0 || 
-            !ownedCosmetics[msg.sender][activeCosmetics[msg.sender][config.cosmeticType]]) {
-            activeCosmetics[msg.sender][config.cosmeticType] = cosmeticId;
-            emit CosmeticActivated(msg.sender, cosmeticId, config.cosmeticType);
-        }
-        
-        emit CosmeticPurchased(msg.sender, cosmeticId, config.diamondCost);
+        emit CosmeticPurchased(msg.sender, cosmeticId, config.cost, config.resourceType);
     }
     
-    /**
-     * @dev Activate a cosmetic item (switch between owned cosmetics)
-     * @param cosmeticId The ID of the cosmetic to activate
-     */
-    function activateCosmetic(uint8 cosmeticId) external {
-        require(ownedCosmetics[msg.sender][cosmeticId], "Cosmetic not owned");
-        
-        CosmeticConfig memory config = cosmeticConfigs[cosmeticId];
-        require(config.enabled, "Cosmetic not available");
-        
-        activeCosmetics[msg.sender][config.cosmeticType] = cosmeticId;
-        emit CosmeticActivated(msg.sender, cosmeticId, config.cosmeticType);
-    }
-    
-    /**
-     * @dev Deactivate a cosmetic type (remove active cosmetic)
-     * @param cosmeticType The type of cosmetic to deactivate
-     */
-    function deactivateCosmetic(CosmeticType cosmeticType) external {
-        activeCosmetics[msg.sender][cosmeticType] = 0;
-        emit CosmeticDeactivated(msg.sender, cosmeticType);
-    }
+
     
     /**
      * @dev Check if a player owns a specific cosmetic
@@ -160,15 +138,7 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         return ownedCosmetics[player][cosmeticId];
     }
     
-    /**
-     * @dev Get the active cosmetic for a player and type
-     * @param player The player address
-     * @param cosmeticType The cosmetic type
-     * @return uint8 The active cosmetic ID (0 if none)
-     */
-    function getActiveCosmetic(address player, CosmeticType cosmeticType) external view returns (uint8) {
-        return activeCosmetics[player][cosmeticType];
-    }
+
     
     /**
      * @dev Get cosmetic configuration
@@ -215,7 +185,7 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint8 count = 0;
         
         for (uint8 i = 0; i <= maxId; i++) {
-            if (cosmeticConfigs[i].enabled && cosmeticConfigs[i].diamondCost > 0) {
+            if (cosmeticConfigs[i].enabled && cosmeticConfigs[i].cost > 0) {
                 tempResult[count] = i;
                 count++;
             }
@@ -236,31 +206,25 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @dev Add or update a cosmetic configuration (only owner)
      * @param cosmeticId The cosmetic ID
      * @param name The name of the cosmetic
-     * @param description The description
-     * @param diamondCost The cost in diamonds
-     * @param modelPath The path to the 3D model
-     * @param cosmeticType The type of cosmetic
+     * @param cost The cost of the cosmetic
+     * @param resourceType The type of resource required
      * @param enabled Whether the cosmetic is available
      */
     function setCosmeticConfig(
         uint8 cosmeticId,
         string memory name,
-        string memory description,
-        uint256 diamondCost,
-        string memory modelPath,
-        CosmeticType cosmeticType,
+        uint256 cost,
+        ResourceType resourceType,
         bool enabled
     ) external onlyOwner {
         cosmeticConfigs[cosmeticId] = CosmeticConfig({
             name: name,
-            description: description,
-            diamondCost: diamondCost,
-            modelPath: modelPath,
-            cosmeticType: cosmeticType,
+            cost: cost,
+            resourceType: resourceType,
             enabled: enabled
         });
         
-        emit CosmeticConfigUpdated(cosmeticId, name, diamondCost);
+        emit CosmeticConfigUpdated(cosmeticId, name, cost, resourceType);
     }
     
     /**
@@ -275,10 +239,10 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     /**
      * @dev Update cosmetic price (only owner)
      * @param cosmeticId The cosmetic ID
-     * @param newPrice The new price in diamonds
+     * @param newPrice The new price
      */
     function setCosmeticPrice(uint8 cosmeticId, uint256 newPrice) external onlyOwner {
-        cosmeticConfigs[cosmeticId].diamondCost = newPrice;
-        emit CosmeticConfigUpdated(cosmeticId, cosmeticConfigs[cosmeticId].name, newPrice);
+        cosmeticConfigs[cosmeticId].cost = newPrice;
+        emit CosmeticConfigUpdated(cosmeticId, cosmeticConfigs[cosmeticId].name, newPrice, cosmeticConfigs[cosmeticId].resourceType);
     }
 } 
