@@ -261,8 +261,13 @@ export class SceneManager {
         const totalWidth = width * cellSize;
         const totalHeight = height * cellSize;
         const group = new THREE.Group();
-        const color = 0x000000;
-        const material = new THREE.LineBasicMaterial({ color });
+        // Changed from pure black (0x000000) to a subtle gray with transparency
+        const color = 0xd4880d; // Golden brown color instead of gray
+        const material = new THREE.LineBasicMaterial({ 
+            color,
+            transparent: true,
+            opacity: 0.3  // 30% opacity for subtlety
+        });
 
         // Function to get terrain height at a given position
         const getTerrainHeight = (x, z) => {
