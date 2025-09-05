@@ -22,7 +22,7 @@ export class GamePage extends BasePage {
         this.audioManager = new AudioManager();
         this.render();
 
-        // setupGame() moved to onInitialized() to prevent race condition
+        // Don't call setupGame() here - moved to onInitialized() to prevent race condition
     }
 
     async onInitialized(walletResult) {
@@ -41,6 +41,12 @@ export class GamePage extends BasePage {
             
             // Check for outpost warnings on page load
             await this.checkOutpostWarning();
+            
+            // Hide loading screen after everything is completely loaded
+            const renderDiv = this.element.querySelector('#renderDiv');
+            if (renderDiv) {
+                LoadingScreen.hide(renderDiv);
+            }
             
             Logger.info('GamePage initialized successfully');
         } catch (error) {
@@ -247,10 +253,7 @@ export class GamePage extends BasePage {
                 Logger.error('Renderer not initialized');
             }
 
-            // Hide loading screen after all buildings are placed and click handlers are set up
-            LoadingScreen.hide(renderDiv);
-            
-            Logger.info('Game setup complete');
+            Logger.info('Game setup complete (loading screen still visible)');
         } catch (error) {
             Logger.error('Error in setupGame:', error);
             this.modal.error('Failed to setup game. Please try refreshing the page.');
@@ -540,6 +543,7 @@ export class GamePage extends BasePage {
         if (this.game) {
             this.game.dispose();
         }
+        
         this.element.remove();
     }
 
