@@ -41,6 +41,9 @@ describe("CosmeticItems", function () {
             expect(config.cost).to.equal(10);
             expect(config.resourceType).to.equal(1); // DIAMONDS
             expect(config.enabled).to.be.true;
+            expect(config.description).to.equal("A majestic banner to display your achievements");
+            expect(config.modelPath).to.equal("assets/banner.glb");
+            expect(config.cosmeticType).to.equal(0);
         });
 
         it("Should set owner correctly", async function () {
@@ -143,6 +146,9 @@ describe("CosmeticItems", function () {
             expect(config.cost).to.equal(10);
             expect(config.resourceType).to.equal(1); // DIAMONDS
             expect(config.enabled).to.be.true;
+            expect(config.description).to.equal("A majestic banner to display your achievements");
+            expect(config.modelPath).to.equal("assets/banner.glb");
+            expect(config.cosmeticType).to.equal(0);
         });
 
         it("Should return owned cosmetics", async function () {
@@ -167,13 +173,19 @@ describe("CosmeticItems", function () {
                 "Magic Aura",
                 20, // cost
                 0, // GOLD type
-                true
+                true,
+                "A mystical aura effect",
+                "assets/aura.glb",
+                1 // DECORATION type
             );
 
             const config = await cosmeticItems.getCosmeticConfig(1);
             expect(config.name).to.equal("Magic Aura");
             expect(config.cost).to.equal(20);
             expect(config.resourceType).to.equal(0); // GOLD
+            expect(config.description).to.equal("A mystical aura effect");
+            expect(config.modelPath).to.equal("assets/aura.glb");
+            expect(config.cosmeticType).to.equal(1);
         });
 
         it("Should allow owner to update cosmetic price", async function () {
@@ -206,8 +218,8 @@ describe("CosmeticItems", function () {
     describe("Multiple Cosmetics", function () {
         beforeEach(async function () {
             // Add different cosmetics with different resource types
-            await cosmeticItems.setCosmeticConfig(1, "Garden Decoration", 15, 0, true); // GOLD
-            await cosmeticItems.setCosmeticConfig(2, "Magic Sparkles", 25, 2, true); // FOOD
+            await cosmeticItems.setCosmeticConfig(1, "Garden Decoration", 15, 0, true, "Beautiful flowers", "assets/garden.glb", 1); // GOLD
+            await cosmeticItems.setCosmeticConfig(2, "Magic Sparkles", 25, 2, true, "Magical effects", "assets/sparkles.glb", 2); // FOOD
         });
 
         it("Should return correct owned cosmetics count", async function () {

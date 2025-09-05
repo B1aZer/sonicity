@@ -32,8 +32,8 @@ export class CosmeticItemsContract extends BaseContract {
     }
 
     // Owner functions (if needed)
-    async setCosmeticConfig(cosmeticId, name, cost, resourceType, enabled, options = {}) {
-        return this.transact('setCosmeticConfig', [cosmeticId, name, cost, resourceType, enabled], options);
+    async setCosmeticConfig(cosmeticId, name, cost, resourceType, enabled, description = "", modelPath = "", cosmeticType = 0, options = {}) {
+        return this.transact('setCosmeticConfig', [cosmeticId, name, cost, resourceType, enabled, description, modelPath, cosmeticType], options);
     }
 
     async setCosmeticEnabled(cosmeticId, enabled, options = {}) {

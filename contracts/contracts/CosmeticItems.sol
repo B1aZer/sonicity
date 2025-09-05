@@ -26,6 +26,10 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 cost;
         ResourceType resourceType;
         bool enabled;
+        // Optional fields for UI/game display (not used in core logic)
+        string description;
+        string modelPath;
+        uint8 cosmeticType; // Generic type field for future categorization
     }
     
     // Player cosmetic inventory - mapping(player => mapping(cosmeticId => owned))
@@ -59,7 +63,10 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             name: "Royal Banner",
             cost: 10,
             resourceType: ResourceType.DIAMONDS,
-            enabled: true
+            enabled: true,
+            description: "A majestic banner to display your achievements",
+            modelPath: "assets/banner.glb",
+            cosmeticType: 0 // 0 = Banner type
         });
         
         // Add more cosmetic items here in the future
@@ -209,19 +216,28 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      * @param cost The cost of the cosmetic
      * @param resourceType The type of resource required
      * @param enabled Whether the cosmetic is available
+     * @param description Optional description for UI
+     * @param modelPath Optional model path for 3D display
+     * @param cosmeticType Optional type for categorization
      */
     function setCosmeticConfig(
         uint8 cosmeticId,
         string memory name,
         uint256 cost,
         ResourceType resourceType,
-        bool enabled
+        bool enabled,
+        string memory description,
+        string memory modelPath,
+        uint8 cosmeticType
     ) external onlyOwner {
         cosmeticConfigs[cosmeticId] = CosmeticConfig({
             name: name,
             cost: cost,
             resourceType: resourceType,
-            enabled: enabled
+            enabled: enabled,
+            description: description,
+            modelPath: modelPath,
+            cosmeticType: cosmeticType
         });
         
         emit CosmeticConfigUpdated(cosmeticId, name, cost, resourceType);

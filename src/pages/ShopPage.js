@@ -1,5 +1,5 @@
 import { BasePage } from './BasePage.js';
-import { COSMETIC_ITEMS } from '../js/utils/constants.js';
+import { COSMETIC_METADATA, RESOURCE_TYPES } from '../js/utils/constants.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 
@@ -9,7 +9,7 @@ export class ShopPage extends BasePage {
     constructor() {
         super();
         
-        
+        this.cosmeticItems = []; // Will be loaded from contract
         this.element.className = 'base-page';
         
         this.render();
@@ -18,12 +18,48 @@ export class ShopPage extends BasePage {
     async onInitialized(walletResult) {
         Logger.info('ShopPage onInitialized called with wallet:', walletResult);
         try {
+            await this.loadCosmeticItems();
             await this.loadPlayerResources();
             this.setupBuyHandlers();
             Logger.info('Shop page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing shop page:', error);
             this.modal.error('Failed to initialize shop page. Please try refreshing the page.');
+        }
+    }
+
+    async loadCosmeticItems() {
+        try {
+            // Get available cosmetics from contract
+            const availableIds = await this.contracts.cosmeticItems.getAvailableCosmetics(255); // Max 255 items
+            
+            this.cosmeticItems = [];
+            for (const id of availableIds) {
+                const config = await this.contracts.cosmeticItems.getCosmeticConfig(id);
+                const metadata = COSMETIC_METADATA[id] || {};
+                
+                this.cosmeticItems.push({
+                    id: Number(id),
+                    name: config.name,
+                    cost: Number(config.cost),
+                    currency: RESOURCE_TYPES[config.resourceType] || 'UNKNOWN',
+                    enabled: config.enabled,
+                    // Use contract data when available, fallback to constants
+                    description: config.description || metadata.description || 'No description available',
+                    modelPath: config.modelPath || metadata.modelPath || '',
+                    type: metadata.type || 'unknown',
+                    cosmeticType: Number(config.cosmeticType) || 0,
+                    // Image from constants (file paths not suitable for contracts)
+                    image: metadata.image || '/images/shop/default.png'
+                });
+            }
+            
+            // Re-render if items were loaded after initial render
+            if (this.cosmeticItems.length > 0) {
+                this.render();
+            }
+        } catch (error) {
+            Logger.error('Error loading cosmetic items:', error);
         }
     }
 
@@ -39,7 +75,7 @@ export class ShopPage extends BasePage {
             }
 
             // Update ownership status for each cosmetic item
-            for (const item of COSMETIC_ITEMS) {
+            for (const item of this.cosmeticItems) {
                 await this.updateItemOwnership(playerAddress, item.id);
             }
         } catch (error) {
@@ -105,7 +141,7 @@ export class ShopPage extends BasePage {
                 <div class="page-section">
                     <h2>Available Items</h2>
                     <div class="buildings-grid-rows">
-                        ${COSMETIC_ITEMS.map(item => `
+                        ${this.cosmeticItems.map(item => `
                             <div class="shop-item-card">
                                 <div class="shop-item-image">
                                     <img src="/images/shop/cosmetic.png" alt="${item.name}" />
@@ -146,7 +182,7 @@ export class ShopPage extends BasePage {
         buyButtons.forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const itemId = parseInt(btn.getAttribute('data-item-id'));
-                const item = COSMETIC_ITEMS.find(i => i.id === itemId);
+                const item = this.cosmeticItems.find(i => i.id === itemId);
                 if (!item) return;
                 
                 Logger.info(`Shop: Attempting to buy cosmetic: ${item.name}`);

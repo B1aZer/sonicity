@@ -982,17 +982,33 @@ export const BUILDINGS_BY_TIER = Object.entries(BUILDINGS)
         return acc;
     }, {});
 
-export const COSMETIC_ITEMS = [
-  {
-    id: 0,
-    name: 'Royal Banner',
-    description: 'A majestic banner to display your achievements',
-    cost: 10,
-    currency: 'DIAMONDS',
+// Cosmetic item types for frontend display
+export const COSMETIC_TYPES = {
+  BANNER: 'banner',
+  DECORATION: 'decoration', 
+  EFFECT: 'effect',
+  TERRAIN_MODIFIER: 'terrain'
+};
+
+// Resource type mapping for frontend display
+export const RESOURCE_TYPES = {
+  0: 'GOLD',
+  1: 'DIAMONDS', 
+  2: 'FOOD',
+  3: 'REP'
+};
+
+// Static cosmetic metadata (images, descriptions, model paths)
+// This data doesn't change often and is UI-specific
+export const COSMETIC_METADATA = {
+  0: {
     image: '/images/shop/cosmetic.png',
-  },
-  // Future cosmetic items will be added here
-];
+    description: 'A majestic banner to display your achievements',
+    type: COSMETIC_TYPES.BANNER,
+    modelPath: 'assets/banner.glb'
+  }
+  // Future cosmetic metadata will be added here
+};
 
 export const SCOUT_GUILD_MESSAGES = [
     "Your scouts returned from the mist, empty-handed. No banners on the horizon.",
