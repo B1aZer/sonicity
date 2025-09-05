@@ -21,17 +21,24 @@ export class GamePage extends BasePage {
         this.resourceUpdateInterval = null;
         this.audioManager = new AudioManager();
         this.render();
-        this.setupGame();
+        this.setupGame(); // Only wallet-independent setup
     }
 
     async onInitialized(walletResult) {
         try {
+            Logger.info('GamePage onInitialized called with wallet:', walletResult);
+            
             // All contracts are already initialized by BasePage.initializeContracts()
-            // Just update the resource display
+            // Load all wallet-dependent data here (like other pages)
+            await this.loadPlayerData();
+            
+            // Update resource display
             await this.updateResourceDisplay();
             
             // Check for outpost warnings on page load
             await this.checkOutpostWarning();
+            
+            Logger.info('GamePage initialized successfully');
         } catch (error) {
             Logger.error('Error initializing game page:', error);
             this.modal.error('Failed to initialize game page. Please try refreshing the page.');
@@ -229,8 +236,29 @@ export class GamePage extends BasePage {
                 Logger.error('Error placing district buildings:', error);
             }
 
+            // Set up click handlers for the buildings
+            if (this.game.renderer && this.game.renderer.domElement) {
+                this.setupClickHandlers();
+            } else {
+                Logger.error('Renderer not initialized');
+            }
+
+            // Hide loading screen after all buildings are placed and click handlers are set up
+            LoadingScreen.hide(renderDiv);
+            
+            Logger.info('Game setup complete');
+        } catch (error) {
+            Logger.error('Error in setupGame:', error);
+            this.modal.error('Failed to setup game. Please try refreshing the page.');
+        }
+    }
+
+    /**
+     * Load player's grid buildings and place them in the scene
+     */
+    async loadPlayerBuildings(playerAddress) {
+        try {
             // Get all house building IDs from contract
-            const playerAddress = await this.contracts.gameState.getAddress();
             const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings(playerAddress);
             Logger.info('Retrieved active buildings:', activeBuildings);
 
@@ -242,35 +270,26 @@ export class GamePage extends BasePage {
                 // Skip if building type is 0 and level is 0 (inactive building)
                 if (building.buildingType === 0 && building.level === 0) {
                     Logger.info('Skipping building - inactive:', {
+                        buildingId: buildingId.toString(),
                         buildingType: building.buildingType,
                         level: building.level
                     });
                     continue;
                 }
 
-                // Map building type to string
-                let buildingType;
-                
-                if (building.buildingType === GridBuildingsContract.BuildingType.HOUSE) {
-                    buildingType = 'HOUSE';
-                } else if (building.buildingType === GridBuildingsContract.BuildingType.FARM) {
-                    buildingType = 'FARM';
-                } else if (building.buildingType === GridBuildingsContract.BuildingType.DIAMOND_STATION) {
-                    buildingType = 'DIAMOND_STATION';
-                } else if (building.buildingType === GridBuildingsContract.BuildingType.REP_FORGE) {
-                    buildingType = 'REP_FORGE';
-                } else if (building.buildingType === GridBuildingsContract.BuildingType.YIELD_STATION) {
-                    buildingType = 'YIELD_STATION';
-                } else {
-                    Logger.info('Skipping building - unknown type:', {
-                        buildingType: building.buildingType
-                    });
+                const buildingType = this.getBuildingTypeFromContract(building.buildingType);
+                if (!buildingType) {
+                    Logger.warn('Unknown building type:', building.buildingType);
                     continue;
                 }
 
-                Logger.info(`Placing ${buildingType.toLowerCase()}:`, building);
+                Logger.info('Placing building:', {
+                    buildingId: buildingId.toString(),
+                    buildingType,
+                    level: building.level
+                });
 
-                // Find an available grid position
+                // Find an available position for this building using spiral search
                 let foundPosition = false;
                 let gridX = 0, gridZ = 0;
 
@@ -312,27 +331,15 @@ export class GamePage extends BasePage {
                         this.game.gridManager.occupyCell(gridX, gridZ, house.mesh);
                         Logger.info(`Successfully placed ${buildingType.toLowerCase()} at grid position (${gridX}, ${gridZ})`);
                     } else {
-                        Logger.error(`Failed to place ${buildingType.toLowerCase()} at grid position (${gridX}, ${gridZ})`);
+                        Logger.error(`Failed to place ${buildingType.toLowerCase()}`);
                     }
                 } else {
-                    Logger.error('No available grid position found for house');
+                    Logger.error('No available position found for building');
                 }
             }
-
-            // Set up click handlers for the buildings
-            if (this.game.renderer && this.game.renderer.domElement) {
-                this.setupClickHandlers();
-            } else {
-                Logger.error('Renderer not initialized');
-            }
-
-            // Hide loading screen after all buildings are placed and click handlers are set up
-            LoadingScreen.hide(renderDiv);
-            
-            Logger.info('Game setup complete');
         } catch (error) {
-            Logger.error('Error in setupGame:', error);
-            this.modal.error('Failed to setup game. Please try refreshing the page.');
+            Logger.error('Error loading player buildings:', error);
+            throw error;
         }
     }
 
@@ -530,5 +537,49 @@ export class GamePage extends BasePage {
             this.game.dispose();
         }
         this.element.remove();
+    }
+
+    /**
+     * Map building type from contract to string
+     */
+    getBuildingTypeFromContract(buildingType) {
+        if (buildingType === GridBuildingsContract.BuildingType.HOUSE) {
+            return 'HOUSE';
+        } else if (buildingType === GridBuildingsContract.BuildingType.FARM) {
+            return 'FARM';
+        } else if (buildingType === GridBuildingsContract.BuildingType.DIAMOND_STATION) {
+            return 'DIAMOND_STATION';
+        } else if (buildingType === GridBuildingsContract.BuildingType.REP_FORGE) {
+            return 'REP_FORGE';
+        } else if (buildingType === GridBuildingsContract.BuildingType.YIELD_STATION) {
+            return 'YIELD_STATION';
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Load all player-specific data (buildings, cosmetics, etc.)
+     * This is called from onInitialized() for both existing and new wallet connections
+     */
+    async loadPlayerData() {
+        try {
+            const playerAddress = await this.contracts.gameState.getAddress();
+            Logger.info('Loading player data for:', playerAddress);
+
+            // Load player's grid buildings
+            await this.loadPlayerBuildings(playerAddress);
+            
+            // Load player's cosmetics
+            if (this.game && this.game.cosmeticManager) {
+                Logger.info('Loading player cosmetics for:', playerAddress);
+                await this.game.loadPlayerCosmetics(playerAddress);
+            }
+            
+            Logger.info('Player data loaded successfully');
+        } catch (error) {
+            Logger.error('Error loading player data:', error);
+            throw error;
+        }
     }
 } 
