@@ -1527,20 +1527,22 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Test function to add money to revenue pool (only for testing)
-     * WARNING: Remove this function before production deployment!
+     * @dev Add funds to revenue pool - anyone can contribute to boost yields
+     * @notice Allows players or sponsors to add SONIC to the revenue pool
+     * The exact amount sent (msg.value) is added to the pool
      */
-    function testAddRevenuePool() external payable {
-        // Hardcoded amount: 10 SONIC
-        uint256 amountToAdd = 10 ether;
+    function addRevenuePool() external payable {
+        require(msg.value > 0, "Must send SONIC to add to pool");
         
-        // TODO: REMOVE THIS FUNCTION BEFORE PRODUCTION DEPLOYMENT
-        // Only allow in test environment
-        require(block.chainid == 31337 || block.chainid == 1337, "Only available in test environment");
-        
-        revenuePool += amountToAdd;
+        // Add the EXACT amount sent to the pool (perfect 1:1 accounting)
+        revenuePool += msg.value;
         poolLastUpdateTime = block.timestamp;
+        
+        emit RevenuePoolContribution(msg.sender, msg.value, revenuePool);
     }
+    
+    // Event for tracking pool contributions
+    event RevenuePoolContribution(address indexed contributor, uint256 amount, uint256 newPoolTotal);
 
 
 }

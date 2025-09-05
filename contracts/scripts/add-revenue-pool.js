@@ -33,8 +33,9 @@ async function main() {
     const gridBuildingsWithSigner = gridBuildings.connect(signer);
     
     try {
-        // Add money to revenue pool (hardcoded 10 SONIC)
-        const tx = await gridBuildingsWithSigner.testAddRevenuePool({ 
+        // Add money to revenue pool (send 10 SONIC)
+        const tx = await gridBuildingsWithSigner.addRevenuePool({ 
+            value: ethers.parseEther("10"), // Send 10 SONIC
             gasLimit: 100000 // Set a reasonable gas limit
         });
         

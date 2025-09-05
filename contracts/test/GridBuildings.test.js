@@ -2685,7 +2685,7 @@ describe("GridBuildings", function () {
         
         // Add funds to revenue pool for testing (call multiple times to get enough funds)
         for (let i = 0; i < 50; i++) {
-          await gridBuildings.testAddRevenuePool({ value: ethers.parseEther("10") });
+          await gridBuildings.addRevenuePool({ value: ethers.parseEther("10") });
         }
         
         // Recharge the yield station to start accumulating revenue
@@ -2739,7 +2739,7 @@ describe("GridBuildings", function () {
         
         // Add funds to revenue pool for testing (call multiple times to get enough funds)
         for (let i = 0; i < 50; i++) {
-          await gridBuildings.testAddRevenuePool({ value: ethers.parseEther("10") });
+          await gridBuildings.addRevenuePool({ value: ethers.parseEther("10") });
         }
         
         // Recharge the yield station to start accumulating revenue
