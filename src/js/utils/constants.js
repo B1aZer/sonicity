@@ -451,6 +451,49 @@ export const FOG_CONFIG = {
                 opacityVariation: 0.16
             }
         ]
+    },
+    
+    CENTER_FOG: {
+        name: 'Center Background Fog',
+        enabled: true,
+        debug: false, // Enable to show wireframe helpers for fog plane positioning
+        // Base fog properties - background atmospheric effect
+        baseColor: 0xf5efab, // Matching the side fogs color
+        baseOpacity: 0.018,
+        
+        // Animation settings
+        animated: true,
+        animationSpeed: 0.002,
+        driftSpeed: { x: 0, y: 0, z: 0.0005 }, // Gentle forward drift
+        
+        // Noise settings for realistic variation
+        noise: {
+            enabled: true,
+            scale: 2.0,
+            intensity: 0.3,
+            timeScale: 0.0008
+        },
+        
+        // Background center fog planes - positioned after terrain
+        planes: [
+            // Mid-background center
+            {
+                position: { x: 0, y: 3, z: -100 },
+                size: { width: 120, height: 25 },
+                rotation: { x: 0, y: 0, z: 0 },
+                opacity: 0.28,
+                opacityVariation: 0.08
+            },
+            // Far background center
+            {
+                position: { x: 0, y: 4.5, z: -140 },
+                size: { width: 160, height: 35 },
+                rotation: { x: 0, y: 0.1, z: 0 },
+                opacity: 0.45,
+                opacityVariation: 0.12
+            },
+        
+        ]
     }
 };
 
