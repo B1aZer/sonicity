@@ -121,7 +121,8 @@ export class CosmeticManager {
             this.removePlayerCosmetics(playerAddress);
             
             // Get all available cosmetic IDs from contract
-            const availableIds = await this.cosmeticItemsContract.getAvailableCosmetics(255);
+            // Note: Limited to 10 to avoid gas limit issues with large loops in contract
+            const availableIds = await this.cosmeticItemsContract.getAvailableCosmetics(10);
             const playerCosmeticInstances = new Set();
             
             for (const cosmeticId of availableIds) {
