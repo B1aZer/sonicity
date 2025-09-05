@@ -187,27 +187,6 @@ export class Game {
         }
     }
 
-    restartGame() {
-        Logger.info("Game: Restarting game");
-        
-        // Stop current game
-        this.stop();
-        
-        // Clear scene
-        if (this.scene) {
-            while(this.scene.children.length > 0) { 
-                this.scene.remove(this.scene.children[0]); 
-            }
-        }
-        
-        // Reset game state
-        this.isRunning = false;
-        this.grid = [];
-        
-        // Reinitialize
-        this.init();
-    }
-
     dispose() {
         Logger.info("Game: Starting disposal");
         
