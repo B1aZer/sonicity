@@ -211,11 +211,7 @@ export class ShopPage extends BasePage {
             // Show loading modal
             const loadingModal = this.modal.loading('Processing purchase...');
             
-            await this.contracts.cosmeticItems.transact('purchaseCosmetic', [cosmeticId], {
-                statusUpdate: (message) => {
-                    Logger.info(`Purchase status: ${message}`);
-                }
-            });
+            await this.contracts.cosmeticItems.transact('purchaseCosmetic', cosmeticId);
             
             // Close loading modal
             loadingModal.close();
