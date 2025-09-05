@@ -14,10 +14,7 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
 
     // Token config
     uint256 public constant MAX_SUPPLY = 5000;  // House NFTs - 5k limit
-    uint256 public constant MAX_MINT_PER_TX = 10;
     uint256 public constant MAX_MINT_PER_PLAYER = 100;  // Per-player mint limit
-    uint256 public mintPrice = 0; // Free minting
-    bool public mintIsActive = false;
 
     // Base URI
     string public baseURI;
@@ -34,30 +31,6 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
     // Constructor - initialize NFT contract
     constructor() ERC721("Sonicity Land NFT", "SONIC") Ownable(msg.sender) {
         baseURI = "http://localhost:3000/metadata/houses/";
-        mintIsActive = true; // Enable minting by default
-    }
-
-    // DEPRECATED: Mint function - allows users to mint NFTs
-    // This method is deprecated and will be disabled on production
-    // Use mintForAltar method instead which can only be called by the Altar contract
-    function mint(uint256 _numTokens) external payable {
-        require(mintIsActive, "Minting is not active");
-        require(_numTokens > 0 && _numTokens <= MAX_MINT_PER_TX, "Invalid token count");
-        require(totalSupply() + _numTokens <= MAX_SUPPLY, "Exceeds max supply");
-        require(playerMintCount[msg.sender] + _numTokens <= MAX_MINT_PER_PLAYER, "Exceeds per-player mint limit");
-        require(mintPrice * _numTokens <= msg.value, "Insufficient payment");
-        
-        for (uint256 i = 0; i < _numTokens; i++) {
-            uint256 tokenId = totalSupply() + 1;
-            _safeMint(msg.sender, tokenId);
-        }
-
-        // Update player mint count
-        playerMintCount[msg.sender] += _numTokens;
-        
-        if (playerMintCount[msg.sender] == MAX_MINT_PER_PLAYER) {
-            emit PlayerMintLimitReached(msg.sender, playerMintCount[msg.sender]);
-        }
     }
 
     /**
@@ -113,12 +86,12 @@ contract SonicityNFT is ERC721Enumerable, Ownable {
 
     // Set mint state (active/inactive)
     function setMintActive(bool _state) external onlyOwner {
-        mintIsActive = _state;
+        // This function is no longer needed as minting is removed
     }
     
     // Set mint price
     function setMintPrice(uint256 _price) external onlyOwner {
-        mintPrice = _price;
+        // This function is no longer needed as minting is removed
     }
     
     // Set base URI for metadata

@@ -14,10 +14,7 @@ contract SonicityDiamond is ERC721Enumerable, Ownable {
 
     // Token config
     uint256 public constant MAX_SUPPLY = 3000;  // Diamond NFTs - 3k limit
-    uint256 public constant MAX_MINT_PER_TX = 3;  // Lower mint limit (premium)
     uint256 public constant MAX_MINT_PER_PLAYER = 100;  // Per-player mint limit
-    uint256 public mintPrice = 0;  // Free minting
-    bool public mintIsActive = false;
 
     // Base URI
     string public baseURI;
@@ -34,30 +31,6 @@ contract SonicityDiamond is ERC721Enumerable, Ownable {
     // Constructor - initialize NFT contract
     constructor() ERC721("Sonicity Diamond NFT", "SDIAMOND") Ownable(msg.sender) {
         baseURI = "http://localhost:3000/metadata/diamonds/";
-        mintIsActive = true;  // Enable minting by default
-    }
-
-    // DEPRECATED: Mint function - allows users to mint NFTs
-    // This method is deprecated and will be disabled on production
-    // Use mintForAltar method instead which can only be called by the Altar contract
-    function mint(uint256 _numTokens) external payable {
-        require(mintIsActive, "Minting is not active");
-        require(_numTokens > 0 && _numTokens <= MAX_MINT_PER_TX, "Invalid token count");
-        require(totalSupply() + _numTokens <= MAX_SUPPLY, "Exceeds max supply");
-        require(playerMintCount[msg.sender] + _numTokens <= MAX_MINT_PER_PLAYER, "Exceeds per-player mint limit");
-        require(mintPrice * _numTokens <= msg.value, "Insufficient payment");
-        
-        for (uint256 i = 0; i < _numTokens; i++) {
-            uint256 tokenId = totalSupply() + 1;
-            _safeMint(msg.sender, tokenId);
-        }
-
-        // Update player mint count
-        playerMintCount[msg.sender] += _numTokens;
-        
-        if (playerMintCount[msg.sender] == MAX_MINT_PER_PLAYER) {
-            emit PlayerMintLimitReached(msg.sender, playerMintCount[msg.sender]);
-        }
     }
 
     /**
@@ -111,15 +84,8 @@ contract SonicityDiamond is ERC721Enumerable, Ownable {
         altarContract = _altarContract;
     }
 
-    // Set mint state (active/inactive)
-    function setMintActive(bool _state) external onlyOwner {
-        mintIsActive = _state;
-    }
-    
-    // Set mint price
-    function setMintPrice(uint256 _price) external onlyOwner {
-        mintPrice = _price;
-    }
+    // These functions are no longer needed as direct minting is removed
+    // All minting now goes through the Altar contract
     
     // Set base URI for metadata
     function setBaseURI(string memory _newBaseURI) external onlyOwner {

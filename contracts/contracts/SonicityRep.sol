@@ -18,14 +18,8 @@ contract SonicityRep is ERC721Enumerable, Ownable {
     uint256 public constant MAX_SUPPLY = 2000;  // REP Station NFTs - 2k limit
     uint256 public constant MAX_MINT_PER_PLAYER = 100;  // Per-player mint limit
     
-    // Mint price for REP Forge NFTs
-    uint256 public constant MINT_PRICE = 0.025 ether;
-    
     // Base URI for token metadata
     string private _baseTokenURI;
-    
-    // Flag to control minting
-    bool public mintActive = true;
     
     // Altar contract address
     address public altarContract;
@@ -35,7 +29,6 @@ contract SonicityRep is ERC721Enumerable, Ownable {
 
     // Events
     event AltarContractSet(address indexed altarContract);
-    event MintActiveSet(bool indexed mintActive);
     event PlayerMintLimitReached(address indexed player, uint256 totalMinted);
 
     constructor() ERC721("Sonicity REP Forge", "SONICITY_REP") Ownable(msg.sender) {
@@ -52,14 +45,7 @@ contract SonicityRep is ERC721Enumerable, Ownable {
         emit AltarContractSet(_altarContract);
     }
 
-    /**
-     * @dev Set minting active/inactive
-     * @param _mintActive Whether minting should be active
-     */
-    function setMintActive(bool _mintActive) external onlyOwner {
-        mintActive = _mintActive;
-        emit MintActiveSet(_mintActive);
-    }
+    // Minting control functions removed - all minting now goes through Altar contract
 
     /**
      * @dev Mint NFT for Altar contract - only callable by Altar contract
@@ -103,28 +89,7 @@ contract SonicityRep is ERC721Enumerable, Ownable {
         _burn(tokenId);
     }
 
-    // DEPRECATED: Mint function - allows users to mint NFTs
-    // This method is deprecated and will be disabled on production
-    // Use mintForAltar method instead which can only be called by the Altar contract
-    function mint(uint256 _numTokens) external payable {
-        require(mintActive, "Minting is not active");
-        require(_numTokens > 0 && _numTokens <= 10, "Invalid number of tokens");
-        require(msg.value == MINT_PRICE * _numTokens, "Incorrect payment amount");
-        require(totalSupply() + _numTokens <= MAX_SUPPLY, "Exceeds maximum supply");
-        require(playerMintCount[msg.sender] + _numTokens <= MAX_MINT_PER_PLAYER, "Exceeds per-player mint limit");
-
-        for (uint256 i = 0; i < _numTokens; i++) {
-            uint256 tokenId = totalSupply() + 1;
-            _safeMint(msg.sender, tokenId);
-        }
-
-        // Update player mint count
-        playerMintCount[msg.sender] += _numTokens;
-        
-        if (playerMintCount[msg.sender] == MAX_MINT_PER_PLAYER) {
-            emit PlayerMintLimitReached(msg.sender, playerMintCount[msg.sender]);
-        }
-    }
+    // Direct minting removed - all minting now goes through the Altar contract
 
     /**
      * @dev Get the base URI for token metadata
