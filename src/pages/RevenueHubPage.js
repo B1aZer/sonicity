@@ -534,7 +534,7 @@ export class RevenueHubPage extends BasePage {
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Diamonds:</span>
-                            <span class="detail-value">Required for building upgrades</span>
+                            <span class="detail-value">Required for building upgrades and purchases</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">REP Points:</span>
