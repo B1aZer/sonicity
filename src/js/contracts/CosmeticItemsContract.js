@@ -1,9 +1,10 @@
 import { BaseContract } from './BaseContract.js';
+import { CONTRACT_ADDRESSES } from '../utils/constants.js';
 import cosmeticItemsABI from '../../../contracts/artifacts/contracts/CosmeticItems.sol/CosmeticItems.json' assert { type: 'json' };
 
 export class CosmeticItemsContract extends BaseContract {
-    constructor(address, wallet) {
-        super(address, cosmeticItemsABI.abi, wallet);
+    constructor() {
+        super(CONTRACT_ADDRESSES.COSMETIC_ITEMS, cosmeticItemsABI.abi);
     }
 
     // Purchase a cosmetic item
