@@ -1,5 +1,5 @@
 import { BasePage } from './BasePage.js';
-import { SHOP_ITEMS } from '../js/utils/constants.js';
+import { COSMETIC_ITEMS } from '../js/utils/constants.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 
@@ -18,11 +18,60 @@ export class ShopPage extends BasePage {
     async onInitialized(walletResult) {
         Logger.info('ShopPage onInitialized called with wallet:', walletResult);
         try {
+            await this.loadPlayerResources();
             this.setupBuyHandlers();
             Logger.info('Shop page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing shop page:', error);
             this.modal.error('Failed to initialize shop page. Please try refreshing the page.');
+        }
+    }
+
+    async loadPlayerResources() {
+        try {
+            const playerAddress = await this.wallet.getAddress();
+            const diamonds = await this.contracts.gameState.getPlayerDiamonds(playerAddress);
+            
+            // Update diamonds display
+            const diamondsElement = this.element.querySelector('#diamonds-amount');
+            if (diamondsElement) {
+                diamondsElement.textContent = diamonds.toString();
+            }
+
+            // Update ownership status for each cosmetic item
+            for (const item of COSMETIC_ITEMS) {
+                await this.updateItemOwnership(playerAddress, item.id);
+            }
+        } catch (error) {
+            Logger.error('Error loading player resources:', error);
+        }
+    }
+
+    async updateItemOwnership(playerAddress, itemId) {
+        try {
+            const isOwned = await this.contracts.cosmeticItems.ownsCosmetic(playerAddress, itemId);
+            const card = this.element.querySelector(`[data-item-id="${itemId}"]`).closest('.shop-item-card');
+            
+            if (card) {
+                const statusElement = card.querySelector('.shop-item-stock');
+                const button = card.querySelector('.buy-btn');
+                
+                if (isOwned) {
+                    statusElement.innerHTML = '<i class="fas fa-check-circle"></i>Owned';
+                    statusElement.className = 'shop-item-stock in-stock';
+                    button.textContent = 'Already Owned';
+                    button.disabled = true;
+                    button.className = 'btn btn-secondary buy-btn';
+                } else {
+                    statusElement.innerHTML = '<i class="fas fa-plus-circle"></i>Available';
+                    statusElement.className = 'shop-item-stock in-stock';
+                    button.innerHTML = '<i class="fas fa-shopping-cart"></i> Purchase';
+                    button.disabled = false;
+                    button.className = 'btn btn-primary buy-btn';
+                }
+            }
+        } catch (error) {
+            Logger.error('Error updating item ownership:', error);
         }
     }
 
@@ -38,43 +87,49 @@ export class ShopPage extends BasePage {
         this.element.innerHTML = `
             <div class="page-container">
                 <h1 class="page-title">Shop</h1>
+                <p class="page-description">
+                    <strong>Welcome to the Shop!</strong> Here you can purchase cosmetic items to personalize your city.
+                    <em>These decorative elements don't affect gameplay but make your city unique and showcase your style.</em>
+                </p>
+                
                 <div class="page-section">
-                    <h2>Status</h2>
+                    <h2>Resources</h2>
                     <div class="status-grid">
                         <div class="status-item">
-                            <span class="status-label">Gold:</span>
-                            <span id="gold-amount" class="status-value">0</span>
+                            <span class="status-label">Diamonds:</span>
+                            <span id="diamonds-amount" class="status-value">0</span>
                         </div>
                     </div>
                 </div>
+                
                 <div class="page-section">
                     <h2>Available Items</h2>
                     <div class="buildings-grid-rows">
-                        ${SHOP_ITEMS.map(item => `
+                        ${COSMETIC_ITEMS.map(item => `
                             <div class="shop-item-card">
                                 <div class="shop-item-image">
-                                    <img src="${item.image.replace('emergency_help', 'help').replace('production_boost', 'boost').replace('cosmetic_item', 'cosmetic')}" alt="${item.name}" />
+                                    <img src="/images/shop/cosmetic.png" alt="${item.name}" />
                                 </div>
                                 <div class="shop-item-info">
                                     <div class="shop-item-title-row">
                                         <h3>${item.name}</h3>
-                                        <span class="shop-item-stock ${item.count > 0 ? 'in-stock' : 'out-of-stock'}">
-                                            <i class="fas ${item.count > 0 ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-                                            ${item.count > 0 ? `${item.count} in stock` : 'Out of stock'}
+                                        <span class="shop-item-stock in-stock">
+                                            <i class="fas fa-plus-circle"></i>
+                                            Available
                                         </span>
                                     </div>
                                     <div class="shop-item-desc">${item.description}</div>
                                     <div class="cost-component">
                                         <div class="cost-item">
-                                            <i class="fas fa-coins cost-icon"></i>
+                                            <i class="fas fa-gem cost-icon"></i>
                                             <span class="cost-value">${item.cost}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="shop-item-action-row">
-                                    <button class="btn btn-primary buy-btn" data-item-id="${item.id}" ${item.count === 0 ? 'disabled' : ''}>
+                                    <button class="btn btn-primary buy-btn" data-item-id="${item.id}">
                                         <i class="fas fa-shopping-cart"></i>
-                                        ${item.cost > 0 ? 'Buy' : 'Claim'}
+                                        Purchase
                                     </button>
                                 </div>
                             </div>
@@ -89,21 +144,64 @@ export class ShopPage extends BasePage {
     setupBuyHandlers() {
         const buyButtons = this.element.querySelectorAll('.buy-btn');
         buyButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const itemId = btn.getAttribute('data-item-id');
-                const item = SHOP_ITEMS.find(i => i.id === itemId);
+            btn.addEventListener('click', async (e) => {
+                const itemId = parseInt(btn.getAttribute('data-item-id'));
+                const item = COSMETIC_ITEMS.find(i => i.id === itemId);
                 if (!item) return;
-                Logger.info(`Shop: Attempting to buy item: ${item.name}`);
-                this.modal.confirm(
-                    item.cost > 0 ? `Buy <b>${item.name}</b> for <b>${item.cost} Gold</b>?` : `Claim <b>${item.name}</b> for FREE?`,
-                    { title: 'Confirm Purchase' }
-                ).then(result => {
-                    if (result.isConfirmed) {
-                        Logger.info(`Shop: Purchased item: ${item.name}`);
-                        this.modal.success(`You have purchased <b>${item.name}</b>!`);
+                
+                Logger.info(`Shop: Attempting to buy cosmetic: ${item.name}`);
+                
+                try {
+                    const playerAddress = await this.wallet.getAddress();
+                    const diamonds = await this.contracts.gameState.getPlayerDiamonds(playerAddress);
+                    
+                    if (diamonds < item.cost) {
+                        this.modal.error(`Insufficient diamonds! You need ${item.cost} diamonds but only have ${diamonds}.`);
+                        return;
                     }
-                });
+                    
+                    // Check if already owned
+                    const alreadyOwned = await this.contracts.cosmeticItems.ownsCosmetic(playerAddress, itemId);
+                    if (alreadyOwned) {
+                        this.modal.info(`You already own <b>${item.name}</b>!`);
+                        return;
+                    }
+                    
+                    const result = await this.modal.confirm(
+                        `Purchase <b>${item.name}</b> for <b>${item.cost} 💎 Diamonds</b>?<br><small>${item.description}</small>`,
+                        { title: 'Confirm Purchase' }
+                    );
+                    
+                    if (result.isConfirmed) {
+                        await this.purchaseCosmetic(itemId, item);
+                    }
+                } catch (error) {
+                    Logger.error('Error in buy handler:', error);
+                    this.modal.error('Failed to process purchase. Please try again.');
+                }
             });
         });
+    }
+    
+    async purchaseCosmetic(cosmeticId, item) {
+        try {
+            Logger.info(`Purchasing cosmetic: ${item.name} (ID: ${cosmeticId})`);
+            
+            await this.contracts.cosmeticItems.transact('purchaseCosmetic', [cosmeticId], {
+                statusUpdate: (message) => {
+                    Logger.info(`Purchase status: ${message}`);
+                }
+            });
+            
+            Logger.info(`Successfully purchased cosmetic: ${item.name}`);
+            this.modal.success(`You have purchased <b>${item.name}</b>! It will appear in your city.`);
+            
+            // Refresh player resources and ownership status
+            await this.loadPlayerResources();
+            
+        } catch (error) {
+            Logger.error('Error purchasing cosmetic:', error);
+            this.modal.error(`Failed to purchase ${item.name}. ${error.message || 'Please try again.'}`);
+        }
     }
 } 

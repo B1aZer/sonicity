@@ -25,6 +25,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     address public heroNFTAddress;
     // Reference to the TacticsNFT contract
     address public tacticsNFTAddress;
+    // Reference to the CosmeticItems contract
+    address public cosmeticItemsAddress;
 
     // Upgrade level thresholds (in SONIC wei) - adjusted for 1.0 SONIC recharge cost
     uint256 public constant UPGRADE_LEVEL_2_THRESHOLD = 10 ether;     // 10 SONIC for level 2 (10 recharges)
@@ -449,6 +451,14 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     function setTacticsNFTAddress(address _tacticsNFTAddress) external onlyOwner {
         tacticsNFTAddress = _tacticsNFTAddress;
     }
+    
+    /**
+     * @dev Set cosmetic items address (only owner)
+     * @param _cosmeticItemsAddress The new cosmetic items address
+     */
+    function setCosmeticItemsAddress(address _cosmeticItemsAddress) external onlyOwner {
+        cosmeticItemsAddress = _cosmeticItemsAddress;
+    }
 
     /**
      * @dev Get player's treasury
@@ -489,7 +499,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             msg.sender == battleSystemAddress ||
             msg.sender == altarAddress ||
             msg.sender == heroNFTAddress ||
-            msg.sender == tacticsNFTAddress, 
+            msg.sender == tacticsNFTAddress ||
+            msg.sender == cosmeticItemsAddress, 
             "Unauthorized caller"
         );
         PlayerState storage state = playerState[player];

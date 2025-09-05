@@ -70,6 +70,15 @@ async function main() {
     console.log("TacticsNFT upgraded to:", await tacticsNFTProxy.getAddress());
   }
 
+  // Upgrade CosmeticItems (if it exists)
+  if (addresses.cosmeticItemsProxy) {
+    console.log("Upgrading CosmeticItems...");
+    const CosmeticItems = await ethers.getContractFactory("CosmeticItems");
+    const cosmeticItemsProxy = await upgrades.upgradeProxy(addresses.cosmeticItemsProxy, CosmeticItems);
+    await cosmeticItemsProxy.waitForDeployment();
+    console.log("CosmeticItems upgraded to:", await cosmeticItemsProxy.getAddress());
+  }
+
   // Set up contract interactions
   console.log("Setting up contract interactions...");
   
@@ -135,7 +144,7 @@ async function main() {
     await battleSystemProxy.setHeroNFTAddress(await heroNFTProxy.getAddress());
   }
 
-  if (addresses.tacticsNFTProxy) {
+    if (addresses.tacticsNFTProxy) {
     console.log("Setting up TacticsNFT contract interactions...");
     const tacticsNFTProxy = await ethers.getContractAt("TacticsNFT", addresses.tacticsNFTProxy);
     
@@ -146,10 +155,23 @@ async function main() {
     // Set TacticsNFT address in GameState
     console.log("Setting TacticsNFT address in GameState...");
     await gameStateProxy.setTacticsNFTAddress(await tacticsNFTProxy.getAddress());
-
+    
     // Set TacticsNFT address in BattleSystem
     console.log("Setting TacticsNFT address in BattleSystem...");
     await battleSystemProxy.setTacticsNFTAddress(await tacticsNFTProxy.getAddress());
+  }
+
+  if (addresses.cosmeticItemsProxy) {
+    console.log("Setting up CosmeticItems contract interactions...");
+    const cosmeticItemsProxy = await ethers.getContractAt("CosmeticItems", addresses.cosmeticItemsProxy);
+    
+    // Set GameState address in CosmeticItems
+    console.log("Setting GameState address in CosmeticItems...");
+    await cosmeticItemsProxy.setGameStateAddress(await gameStateProxy.getAddress());
+    
+    // Set CosmeticItems address in GameState
+    console.log("Setting CosmeticItems address in GameState...");
+    await gameStateProxy.setCosmeticItemsAddress(await cosmeticItemsProxy.getAddress());
   }
 
   // Set Altar contract address on all NFT contracts (in case they were redeployed)

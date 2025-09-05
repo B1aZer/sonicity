@@ -14,7 +14,8 @@ export const CONTRACT_ADDRESSES = {
     GRID_BUILDINGS: "0x9849832a1d8274aaeDb1112ad9686413461e7101", // Will be updated by update-addresses.sh
     BATTLE_SYSTEM: "0x8ac5eE52F70AE01dB914bE459D8B3d50126fd6aE", // Will be updated by update-addresses.sh
     HERO_NFT: "0x325c8Df4CFb5B068675AFF8f62aA668D1dEc3C4B", // Will be updated by update-addresses.sh
-    TACTICS_NFT: "0x4eaB29997D332A666c3C366217Ab177cF9A7C436" // Will be updated by update-addresses.sh
+    TACTICS_NFT: "0x4eaB29997D332A666c3C366217Ab177cF9A7C436", // Will be updated by update-addresses.sh
+    COSMETIC_ITEMS: "0x0000000000000000000000000000000000000000" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
@@ -981,37 +982,18 @@ export const BUILDINGS_BY_TIER = Object.entries(BUILDINGS)
         return acc;
     }, {});
 
-export const SHOP_ITEMS = [
+export const COSMETIC_ITEMS = [
   {
-    id: 'emergency_help',
-    name: 'Emergency Help',
-    description: 'Grants 100 gold immediately',
-    cost: 50,
-    currency: 'S',
-    effect: 'GOLD_100',
-    count: 5,
-    image: '/images/shop/help.png',
-  },
-  {
-    id: 'production_boost',
-    name: 'Production Boost',
-    description: '100% boost to production for 24h',
-    cost: 100,
-    currency: 'S',
-    effect: 'PROD_BOOST_24H',
-    count: 1,
-    image: '/images/shop/boost.png',
-  },
-  {
-    id: 'cosmetic_item',
-    name: 'Some Cosmetic Item',
-    description: 'FREE',
-    cost: 0,
-    currency: 'FREE',
-    effect: 'COSMETIC',
-    count: 1,
+    id: 0,
+    name: 'Royal Banner',
+    description: 'A majestic banner to display your achievements',
+    cost: 10,
+    currency: 'DIAMONDS',
+    type: 'BANNER',
+    modelPath: 'assets/banner.glb',
     image: '/images/shop/cosmetic.png',
   },
+  // Future cosmetic items will be added here
 ];
 
 export const SCOUT_GUILD_MESSAGES = [

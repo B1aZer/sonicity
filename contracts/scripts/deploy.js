@@ -116,6 +116,15 @@ async function main() {
   const tacticsNFTImplAddress = await tacticsNFTImpl.getAddress();
   console.log("TacticsNFT implementation deployed to:", tacticsNFTImplAddress);
 
+  // Deploy CosmeticItems implementation
+  console.log("Deploying CosmeticItems implementation...");
+  const CosmeticItemsImpl = await ethers.getContractFactory("CosmeticItems");
+  const cosmeticItemsImpl = await CosmeticItemsImpl.deploy();
+  console.log("Waiting for CosmeticItems implementation deployment...");
+  await cosmeticItemsImpl.waitForDeployment();
+  const cosmeticItemsImplAddress = await cosmeticItemsImpl.getAddress();
+  console.log("CosmeticItems implementation deployed to:", cosmeticItemsImplAddress);
+
   // Deploy GameState proxy
   console.log("Deploying GameState proxy...");
   const gameStateProxy = await upgrades.deployProxy(GameState, [], {
@@ -192,6 +201,17 @@ async function main() {
   await tacticsNFTProxy.waitForDeployment();
   const tacticsNFTProxyAddress = await tacticsNFTProxy.getAddress();
   console.log("TacticsNFT proxy deployed to:", tacticsNFTProxyAddress);
+
+  // Deploy CosmeticItems proxy
+  console.log("Deploying CosmeticItems proxy...");
+  const cosmeticItemsProxy = await upgrades.deployProxy(CosmeticItemsImpl, [], {
+    kind: 'uups',
+    initializer: 'initialize',
+  });
+  console.log("Waiting for CosmeticItems proxy deployment...");
+  await cosmeticItemsProxy.waitForDeployment();
+  const cosmeticItemsProxyAddress = await cosmeticItemsProxy.getAddress();
+  console.log("CosmeticItems proxy deployed to:", cosmeticItemsProxyAddress);
 
   // Set up contract interactions
   console.log("Setting up contract interactions...");
@@ -286,6 +306,14 @@ async function main() {
   // Set TacticsNFT address in GameState
   console.log("Setting TacticsNFT address in GameState...");
   await gameStateProxy.setTacticsNFTAddress(tacticsNFTProxyAddress);
+  
+  // Set CosmeticItems address in GameState
+  console.log("Setting CosmeticItems address in GameState...");
+  await gameStateProxy.setCosmeticItemsAddress(cosmeticItemsProxyAddress);
+  
+  // Set GameState address in CosmeticItems
+  console.log("Setting GameState address in CosmeticItems...");
+  await cosmeticItemsProxy.setGameStateAddress(gameStateProxyAddress);
 
   // Set HeroNFT address in BattleSystem
   console.log("Setting HeroNFT address in BattleSystem...");
@@ -318,6 +346,8 @@ async function main() {
   console.log("HeroNFT proxy:", heroNFTProxyAddress);
   console.log("TacticsNFT implementation:", tacticsNFTImplAddress);
   console.log("TacticsNFT proxy:", tacticsNFTProxyAddress);
+  console.log("CosmeticItems implementation:", cosmeticItemsImplAddress);
+  console.log("CosmeticItems proxy:", cosmeticItemsProxyAddress);
 
   // Save addresses to a file for frontend use
   const addresses = {
@@ -341,6 +371,8 @@ async function main() {
     heroNFTProxy: heroNFTProxyAddress,
     tacticsNFTImpl: tacticsNFTImplAddress,
     tacticsNFTProxy: tacticsNFTProxyAddress,
+    cosmeticItemsImpl: cosmeticItemsImplAddress,
+    cosmeticItemsProxy: cosmeticItemsProxyAddress,
   };
 
   const fs = require('fs');

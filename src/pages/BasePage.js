@@ -11,6 +11,7 @@ import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js'
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
 import { HeroNFTContract } from '../js/contracts/HeroNFTContract.js';
 import { TacticsNFTContract } from '../js/contracts/TacticsNFTContract.js';
+import { CosmeticItemsContract } from '../js/contracts/CosmeticItemsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 
@@ -31,7 +32,8 @@ export class BasePage {
             gridBuildings: new GridBuildingsContract(),
             battleSystem: new BattleSystemContract(),
             heroNFT: new HeroNFTContract(),
-            tacticsNFT: new TacticsNFTContract()
+            tacticsNFT: new TacticsNFTContract(),
+            cosmeticItems: new CosmeticItemsContract()
         };
         
         // Page state management
@@ -129,6 +131,10 @@ export class BasePage {
                 }),
                 this.contracts.tacticsNFT.initialize().catch(e => {
                     Logger.warn('TacticsNFT contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.cosmeticItems.initialize().catch(e => {
+                    Logger.warn('CosmeticItems contract initialization failed:', e);
                     return null;
                 })
             ];

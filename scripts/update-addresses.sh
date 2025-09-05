@@ -24,6 +24,7 @@ GRID_BUILDINGS=$(jq -r '.gridBuildingsProxy' "$PROJECT_ROOT/contracts/deployed-a
 BATTLE_SYSTEM=$(jq -r '.battleSystemProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 HERO_NFT=$(jq -r '.heroNFTProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 TACTICS_NFT=$(jq -r '.tacticsNFTProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+COSMETIC_ITEMS=$(jq -r '.cosmeticItemsProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 
 # Check if jq was successful
 if [ -z "$SONICITY_NFT" ] || [ -z "$SONICITY_FARM" ] || [ -z "$SONICITY_DIAMOND" ] || [ -z "$SONICITY_REP" ] || [ -z "$ALTAR" ] || [ -z "$GAME_STATE" ] || [ -z "$DISTRICT_BUILDINGS" ] || [ -z "$GRID_BUILDINGS" ] || [ -z "$BATTLE_SYSTEM" ]; then
@@ -61,6 +62,10 @@ if [ ! -z "$TACTICS_NFT" ]; then
     sed -i '' "s/TACTICS_NFT: \".*\"/TACTICS_NFT: \"$TACTICS_NFT\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 fi
 
+if [ ! -z "$COSMETIC_ITEMS" ]; then
+    sed -i '' "s/COSMETIC_ITEMS: \".*\"/COSMETIC_ITEMS: \"$COSMETIC_ITEMS\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+fi
+
 echo "Contract addresses updated successfully!"
 echo "SonicityNFT: $SONICITY_NFT"
 echo "SonicityFarm: $SONICITY_FARM"
@@ -82,4 +87,7 @@ if [ ! -z "$HERO_NFT" ]; then
 fi
 if [ ! -z "$TACTICS_NFT" ]; then
     echo "TacticsNFT: $TACTICS_NFT"
+fi
+if [ ! -z "$COSMETIC_ITEMS" ]; then
+    echo "CosmeticItems: $COSMETIC_ITEMS"
 fi 
