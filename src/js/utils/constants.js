@@ -1049,9 +1049,9 @@ export const COSMETIC_METADATA = {
     description: 'A majestic banner to display your achievements',
     type: COSMETIC_TYPES.BANNER,
     modelPath: 'assets/banner.glb',
-    position: { x: 0, y: 0, z: -12 }, // Near city center, in front
-    rotation: { x: 0, y: 0, z: 0 },   // Default rotation
-    size: new THREE.Vector3(1, 1, 1)  // Default size (consistent with PROPS)
+    position: { x: -20, y: 0, z: -22 }, // Near city center, in front
+    rotation: { x: 0, y: 1.2, z: 0 },   // Default rotation
+    size: new THREE.Vector3(1.5, 1.5, 1.5)  // Default size (consistent with PROPS)
   }
   // Future cosmetic metadata will be added here
 };
