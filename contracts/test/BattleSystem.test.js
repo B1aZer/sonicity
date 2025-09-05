@@ -503,12 +503,19 @@ describe("BattleSystem", function () {
             // Test with 50% chance of finding opponent
             await battleSystem.connect(owner).setNoOpponentFoundChance(50);
             
+            // Ensure player has enough gold upfront (avoid hitting mint limits)
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
+            
             const attempts = 100;
             let zeroAddressCount = 0;
             const foundOpponents = new Set();
 
             for (let i = 0; i < attempts; i++) {
-                await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
+                // Player already has gold, just check they have enough for search (100 gold)
+                const playerGold = await gameState.getPlayerGold(await player1.getAddress());
+                if (playerGold < 100n) {
+                    throw new Error(`Player only has ${playerGold} gold, need at least 100 for search`);
+                }
                 // Start search
                 await battleSystem.connect(player1).startSearch();
                 

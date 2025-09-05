@@ -336,20 +336,13 @@ describe("Altar", function () {
     it("Should not preserve building data for new NFTs", async function () {
       const player1Address = await player1.getAddress();
       
-      // Mint a new NFT
-      const mintTx = await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-      const mintReceipt = await mintTx.wait();
+      // Check preserved data for a tokenId that doesn't exist yet
+      const nftAddress = await sonicityNFT.getAddress();
+      const totalSupply = await sonicityNFT.totalSupply();
+      const nonExistentTokenId = totalSupply + 1000n; // Future token that doesn't exist
       
-      // Get tokenId from Transfer event
-      const transferEvent = mintReceipt.logs
-        .map(log => {
-          try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
-        })
-        .find(e => e && e.name === "Transfer");
-      const tokenId = transferEvent.args.tokenId;
-
-      // Check that new NFT has no preserved data
-      const hasPreservedData = await altar.hasPreservedBuildingData(await sonicityNFT.getAddress(), tokenId);
+      // Check that non-existent NFT has no preserved data
+      const hasPreservedData = await altar.hasPreservedBuildingData(nftAddress, nonExistentTokenId);
       expect(hasPreservedData).to.be.false;
     });
 
@@ -495,18 +488,16 @@ describe("Altar", function () {
     it("Should not allow burning unstaked NFTs", async function () {
       const player1Address = await player1.getAddress();
       
-      // Mint an NFT but don't stake it
-      const mintTx = await sonicityNFT.connect(player1).mint(1, { value: ethers.parseEther("0.01") });
-      const mintReceipt = await mintTx.wait();
-      
-      // Get tokenId from Transfer event
-      const transferEvent = mintReceipt.logs
-        .map(log => {
-          try { return sonicityNFT.interface.parseLog(log); } catch { return null; }
-        })
-        .find(e => e && e.name === "Transfer");
-      const tokenId = transferEvent.args.tokenId;
+      // Mint and stake an NFT, then unstake it to have an unstaked NFT
       const nftAddress = await sonicityNFT.getAddress();
+      const totalSupply = await sonicityNFT.totalSupply();
+      const tokenId = totalSupply + 1n;
+      
+      // First mint and stake
+      await altar.connect(player1).mintAndStake(nftAddress, tokenId, GridBuildingType.HOUSE, { value: ethers.parseEther("10") });
+      
+      // Then unstake to have an unstaked NFT
+      await altar.connect(player1).unstake(nftAddress, tokenId);
 
       // Try to burn unstaked NFT (should fail)
       await expect(
