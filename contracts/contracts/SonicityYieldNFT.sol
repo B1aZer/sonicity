@@ -24,9 +24,7 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
 
     // Token config
     uint256 public constant MAX_SUPPLY = 1000;
-    uint256 public constant MAX_MINT_PER_TX = 5;
-    uint256 public mintPrice = 0; // Free minting
-    bool public mintIsActive = false;
+    uint256 public constant MAX_MINT_PER_PLAYER = 100;  // Per-player mint limit
 
     // Base URI
     string public baseURI;
@@ -36,6 +34,9 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
 
     // Art proxy for dynamic metadata
     address public artProxy;
+
+    // Track how many NFTs each player has minted
+    mapping(address => uint256) public playerMintCount;
 
     // Stake data for each token
     struct StakeData {
@@ -49,12 +50,11 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
     // Events
     event AltarContractSet(address indexed altarContract);
     event ArtProxySet(address indexed artProxy);
-    event MintActiveSet(bool indexed mintActive);
+    event PlayerMintLimitReached(address indexed player, uint256 totalMinted);
 
     // Constructor - initialize NFT contract
     constructor() ERC721("Sonicity Yield NFT", "SYNFT") Ownable(msg.sender) {
         baseURI = "http://localhost:3000/metadata/yield/";
-        mintIsActive = true; // Enable minting by default
     }
 
     /**
@@ -88,6 +88,7 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
         require(tokenId > 0 && tokenId <= MAX_SUPPLY, "Invalid token ID");
         require(_ownerOf(tokenId) == address(0), "Token already exists");
         require(repAmount > 0, "REP amount must be positive");
+        require(playerMintCount[to] < MAX_MINT_PER_PLAYER, "Player has reached mint limit");
         
         stakeInfo[tokenId] = StakeData({
             repStaked: repAmount,
@@ -95,6 +96,13 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
         });
         
         _safeMint(to, tokenId);
+        
+        // Update player mint count
+        playerMintCount[to] += 1;
+        
+        if (playerMintCount[to] == MAX_MINT_PER_PLAYER) {
+            emit PlayerMintLimitReached(to, playerMintCount[to]);
+        }
     }
 
     /**
@@ -126,20 +134,7 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
         _burn(tokenId);
     }
 
-    // DEPRECATED: Mint function - allows users to mint NFTs
-    // This method is deprecated and will be disabled on production
-    // Use mintForAltar method instead which can only be called by the Altar contract
-    function mint(uint256 _numTokens) external payable {
-        require(mintIsActive, "Minting is not active");
-        require(_numTokens > 0 && _numTokens <= MAX_MINT_PER_TX, "Invalid token count");
-        require(totalSupply() + _numTokens <= MAX_SUPPLY, "Exceeds max supply");
-        require(mintPrice * _numTokens <= msg.value, "Insufficient payment");
-        
-        for (uint256 i = 0; i < _numTokens; i++) {
-            uint256 tokenId = totalSupply() + 1;
-            _safeMint(msg.sender, tokenId);
-        }
-    }
+    // Direct minting removed - all minting now goes through the Altar contract
 
     /**
      * @dev Lock NFT for yield generation
@@ -159,16 +154,7 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
         lockedForYield[tokenId] = false;
     }
 
-    // Set mint state (active/inactive)
-    function setMintActive(bool _state) external onlyOwner {
-        mintIsActive = _state;
-        emit MintActiveSet(_state);
-    }
-    
-    // Set mint price
-    function setMintPrice(uint256 _price) external onlyOwner {
-        mintPrice = _price;
-    }
+    // Minting control functions removed - all minting now goes through the Altar contract
     
     // Set base URI for metadata
     function setBaseURI(string memory _newBaseURI) external onlyOwner {
@@ -203,6 +189,28 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
         ));
     }
     
+    /**
+     * @dev Get remaining mint allowance for a player
+     * @param player The player address to check
+     * @return The number of NFTs the player can still mint
+     */
+    function getRemainingMintAllowance(address player) external view returns (uint256) {
+        if (playerMintCount[player] >= MAX_MINT_PER_PLAYER) {
+            return 0;
+        }
+        return MAX_MINT_PER_PLAYER - playerMintCount[player];
+    }
+
+    /**
+     * @dev Check if a player can mint a specific number of NFTs
+     * @param player The player address to check
+     * @param amount The number of NFTs to check
+     * @return Whether the player can mint the specified amount
+     */
+    function canPlayerMint(address player, uint256 amount) external view returns (bool) {
+        return playerMintCount[player] + amount <= MAX_MINT_PER_PLAYER;
+    }
+
     // Withdraw funds from contract
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
