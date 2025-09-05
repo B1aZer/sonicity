@@ -6,9 +6,10 @@ export class FogManager {
     constructor(scene) {
         this.scene = scene;
         this.fogPlanes = new Map(); // Track all fog planes
-        this.debugHelpers = new Map(); // Track debug wireframe helpers
-        this.clock = new THREE.Clock();
-        this.animated = false;
+        this.debugHelpers = new Set(); // Track debug wireframe helpers
+        this.debugVisible = false;
+        this.debugIcons = new Map(); // Store debug icon meshes
+        this.shaderMaterial = null; // Cache for fog shader material
         
         Logger.info('FogManager initialized');
     }
@@ -26,11 +27,6 @@ export class FogManager {
                 }
             }
             
-            // Start animation if any fog is animated
-            if (this.animated) {
-                this.startAnimation();
-            }
-            
             Logger.info('✅ All fog configurations loaded');
         } catch (error) {
             Logger.error('Error loading fog:', error);
@@ -43,11 +39,6 @@ export class FogManager {
     async loadFogType(fogType, config) {
         try {
             Logger.info(`Loading fog type: ${config.name} (${config.planes.length} planes)`);
-            
-            // Track if this fog type is animated
-            if (config.animated) {
-                this.animated = true;
-            }
             
             // Create fog planes for this type
             for (let i = 0; i < config.planes.length; i++) {
@@ -69,7 +60,7 @@ export class FogManager {
                         const debugHelper = this.createDebugHelper(planeConfig, i);
                         if (debugHelper) {
                             const debugId = `${fogType}_debug_${i}`;
-                            this.debugHelpers.set(debugId, debugHelper);
+                            this.debugHelpers.add(debugHelper);
                             this.scene.add(debugHelper);
                         }
                     }
@@ -377,26 +368,7 @@ export class FogManager {
         }
     }
 
-    /**
-     * Start animation loop for fog effects
-     */
-    startAnimation() {
-        const animate = () => {
-            const time = this.clock.getElapsedTime();
-            
-            // Update all fog plane uniforms
-            this.fogPlanes.forEach((fogData) => {
-                if (fogData.config.animated && fogData.mesh.material.uniforms) {
-                    fogData.mesh.material.uniforms.time.value = time * fogData.config.animationSpeed;
-                }
-            });
 
-            requestAnimationFrame(animate);
-        };
-
-        animate();
-        Logger.info('Fog animation started');
-    }
 
     /**
      * Toggle fog visibility
@@ -431,7 +403,7 @@ export class FogManager {
                     // Create new debug helper
                     debugHelper = this.createDebugHelper(fogData.planeConfig, parseInt(index));
                     if (debugHelper) {
-                        this.debugHelpers.set(debugId, debugHelper);
+                        this.debugHelpers.add(debugHelper);
                         this.scene.add(debugHelper);
                     }
                 } else {
