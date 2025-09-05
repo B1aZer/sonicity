@@ -599,18 +599,18 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Check if station is still active
         if (currentTime > building.lastRechargeTime + yieldStationDuration) {
             // Station has expired, calculate final earnings up to expiration
-            uint256 lastUpdate = lastRateUpdateTime[player][buildingId];
-            uint256 timeElapsed = 0;
+            uint256 expiredLastUpdate = lastRateUpdateTime[player][buildingId];
+            uint256 expiredTimeElapsed = 0;
             
-            if (lastUpdate > 0) {
+            if (expiredLastUpdate > 0) {
                 uint256 expirationTime = building.lastRechargeTime + yieldStationDuration;
-                timeElapsed = expirationTime - lastUpdate;
+                expiredTimeElapsed = expirationTime - expiredLastUpdate;
             } else {
                 // If lastUpdate is 0, use time since recharge up to expiration
-                timeElapsed = yieldStationDuration;
+                expiredTimeElapsed = yieldStationDuration;
             }
             
-            uint256 finalEarnings = currentRate[player][buildingId] * timeElapsed;
+            uint256 finalEarnings = currentRate[player][buildingId] * expiredTimeElapsed;
             return accumulatedRevenue[player][buildingId] + finalEarnings;
         }
         

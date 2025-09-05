@@ -464,18 +464,15 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
 
     /**
      * @dev Implementation of IERC721Receiver.onERC721Received
-     * @param operator The address which called `safeTransferFrom` function
-     * @param from The address which previously owned the token
-     * @param tokenId The NFT identifier which is being transferred
-     * @param data Additional data with no specified format
+     * Required for the contract to receive NFTs when minting directly to the contract
      * @return bytes4 `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`
      */
     function onERC721Received(
-        address operator,
-        address from,
-        uint256 tokenId,
-        bytes calldata data
-    ) external override returns (bytes4) {
+        address /* operator */,
+        address /* from */,
+        uint256 /* tokenId */,
+        bytes calldata /* data */
+    ) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 
@@ -547,7 +544,7 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
         );
         
         if (success && data.length >= 64) {
-            (uint256 repAmount, uint256 mintedAt) = abi.decode(data, (uint256, uint256));
+            (uint256 repAmount, ) = abi.decode(data, (uint256, uint256));
             return repAmount;
         }
         
