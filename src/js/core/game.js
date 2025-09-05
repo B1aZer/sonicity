@@ -190,28 +190,52 @@ export class Game {
     dispose() {
         Logger.info("Game: Starting disposal");
         
-        // Stop the game loop
+        // Stop the game loop FIRST to prevent any further execution
         this.stop();
+        
+        // Dispose of input handler (includes event listener cleanup)
+        if (this.inputHandler) {
+            this.inputHandler.dispose();
+            this.inputHandler = null;
+        }
         
         // Dispose of building manager
         if (this.buildingManager) {
             this.buildingManager.dispose();
+            this.buildingManager = null;
         }
         
         // Dispose of cosmetic manager
         if (this.cosmeticManager) {
             this.cosmeticManager.dispose();
+            this.cosmeticManager = null;
         }
         
-        // Dispose of scene manager
-        this.sceneManager.dispose();
+        // Dispose of scene manager (includes THREE.js cleanup)
+        if (this.sceneManager) {
+            this.sceneManager.dispose();
+            this.sceneManager = null;
+        }
         
-        // Clear references
-        this.buildingManager = null;
-        this.cosmeticManager = null;
-        this.inputHandler = null;
-        this.sceneManager = null;
+        // Clear additional references that might hold memory
+        this.raycaster = null;
+        this.pointer = null;
+        this.clock = null;
+        this.scene = null;
+        this.camera = null;
+        this.renderer = null;
+        this.controls = null;
+        this.groundPlane = null;
+        this.gridHelper = null;
+        this.assetLoader = null;
+        this.grid = [];
         
-        console.log("Game: dispose() method completed");
+        // Clear contract references
+        this.gameStateContract = null;
+        this.gridBuildingsContract = null;
+        this.districtBuildingsContract = null;
+        this.cosmeticItemsContract = null;
+        
+        Logger.info("Game: dispose() method completed");
     }
 }
