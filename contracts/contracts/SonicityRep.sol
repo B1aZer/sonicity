@@ -16,6 +16,7 @@ contract SonicityRep is ERC721Enumerable, Ownable {
 
     // Maximum supply of REP Forge NFTs
     uint256 public constant MAX_SUPPLY = 2000;  // REP Station NFTs - 2k limit
+    uint256 public constant MAX_MINT_PER_PLAYER = 100;  // Per-player mint limit
     
     // Mint price for REP Forge NFTs
     uint256 public constant MINT_PRICE = 0.025 ether;
@@ -29,9 +30,13 @@ contract SonicityRep is ERC721Enumerable, Ownable {
     // Altar contract address
     address public altarContract;
 
+    // Track how many NFTs each player has minted
+    mapping(address => uint256) public playerMintCount;
+
     // Events
     event AltarContractSet(address indexed altarContract);
     event MintActiveSet(bool indexed mintActive);
+    event PlayerMintLimitReached(address indexed player, uint256 totalMinted);
 
     constructor() ERC721("Sonicity REP Forge", "SONICITY_REP") Ownable(msg.sender) {
         _baseTokenURI = "http://localhost:3000/metadata/rep/";
@@ -65,8 +70,16 @@ contract SonicityRep is ERC721Enumerable, Ownable {
         require(msg.sender == altarContract, "Only Altar contract can call this function");
         require(tokenId > 0 && tokenId <= MAX_SUPPLY, "Invalid token ID");
         require(_ownerOf(tokenId) == address(0), "Token already exists");
+        require(playerMintCount[to] < MAX_MINT_PER_PLAYER, "Player has reached mint limit");
         
         _safeMint(to, tokenId);
+        
+        // Update player mint count
+        playerMintCount[to] += 1;
+        
+        if (playerMintCount[to] == MAX_MINT_PER_PLAYER) {
+            emit PlayerMintLimitReached(to, playerMintCount[to]);
+        }
     }
 
     /**
@@ -98,10 +111,18 @@ contract SonicityRep is ERC721Enumerable, Ownable {
         require(_numTokens > 0 && _numTokens <= 10, "Invalid number of tokens");
         require(msg.value == MINT_PRICE * _numTokens, "Incorrect payment amount");
         require(totalSupply() + _numTokens <= MAX_SUPPLY, "Exceeds maximum supply");
+        require(playerMintCount[msg.sender] + _numTokens <= MAX_MINT_PER_PLAYER, "Exceeds per-player mint limit");
 
         for (uint256 i = 0; i < _numTokens; i++) {
             uint256 tokenId = totalSupply() + 1;
             _safeMint(msg.sender, tokenId);
+        }
+
+        // Update player mint count
+        playerMintCount[msg.sender] += _numTokens;
+        
+        if (playerMintCount[msg.sender] == MAX_MINT_PER_PLAYER) {
+            emit PlayerMintLimitReached(msg.sender, playerMintCount[msg.sender]);
         }
     }
 
@@ -140,5 +161,27 @@ contract SonicityRep is ERC721Enumerable, Ownable {
         
         (bool success, ) = payable(owner()).call{value: balance}("");
         require(success, "Withdrawal failed");
+    }
+
+    /**
+     * @dev Get remaining mint allowance for a player
+     * @param player The player address to check
+     * @return The number of NFTs the player can still mint
+     */
+    function getRemainingMintAllowance(address player) external view returns (uint256) {
+        if (playerMintCount[player] >= MAX_MINT_PER_PLAYER) {
+            return 0;
+        }
+        return MAX_MINT_PER_PLAYER - playerMintCount[player];
+    }
+
+    /**
+     * @dev Check if a player can mint a specific number of NFTs
+     * @param player The player address to check
+     * @param amount The number of NFTs to check
+     * @return Whether the player can mint the specified amount
+     */
+    function canPlayerMint(address player, uint256 amount) external view returns (bool) {
+        return playerMintCount[player] + amount <= MAX_MINT_PER_PLAYER;
     }
 } 
