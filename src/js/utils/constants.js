@@ -998,14 +998,17 @@ export const RESOURCE_TYPES = {
   3: 'REP'
 };
 
-// Static cosmetic metadata (images, descriptions, model paths)
+// Static cosmetic metadata (images, descriptions, model paths, positioning)
 // This data doesn't change often and is UI-specific
 export const COSMETIC_METADATA = {
   0: {
     image: '/images/shop/banner-icon.png',
     description: 'A majestic banner to display your achievements',
     type: COSMETIC_TYPES.BANNER,
-    modelPath: 'assets/banner.glb'
+    modelPath: 'assets/banner.glb',
+    position: { x: 0, y: 0, z: -12 }, // Near city center, in front
+    rotation: { x: 0, y: 0, z: 0 },   // Default rotation
+    size: new THREE.Vector3(1, 1, 1)  // Default size (consistent with PROPS)
   }
   // Future cosmetic metadata will be added here
 };

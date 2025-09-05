@@ -4,9 +4,11 @@ import { BuildingManager } from '../managers/buildingManager.js';
 import { AssetLoader } from '../managers/assetLoader.js';
 import { GridManager } from '../managers/gridManager.js';
 import { SceneManager } from '../managers/sceneManager.js';
+import { CosmeticManager } from '../managers/cosmeticManager.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
 import { GridBuildingsContract } from '../contracts/GridBuildingsContract.js';
 import { DistrictBuildingsContract } from '../contracts/DistrictBuildingsContract.js';
+import { CosmeticItemsContract } from '../contracts/CosmeticItemsContract.js';
 import Logger from '../utils/logger.js';
 import { musicManager } from '../managers/musicManager.js';
 
@@ -30,12 +32,14 @@ export class Game {
         // Managers
         this.assetLoader = new AssetLoader();
         this.buildingManager = null; // Will be initialized after assets are loaded
+        this.cosmeticManager = null; // Will be initialized after scene is ready
         this.inputHandler = new InputHandler(this);
         
         // Initialize contracts
         this.gameStateContract = new GameStateContract();
         this.gridBuildingsContract = new GridBuildingsContract();
         this.districtBuildingsContract = new DistrictBuildingsContract();
+        this.cosmeticItemsContract = new CosmeticItemsContract();
 
         // Get reference to money display
         this.goldDisplay = document.getElementById('gold-amount');
@@ -75,6 +79,10 @@ export class Game {
             this.districtBuildingsContract
         );
         this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.assetLoader);
+        
+        // Initialize cosmetic manager
+        await this.cosmeticItemsContract.initialize();
+        this.cosmeticManager = new CosmeticManager(this.scene, this.cosmeticItemsContract);
         
         // Set up input handlers
         Logger.info("Game: Setting up input handlers");
@@ -167,6 +175,21 @@ export class Game {
         }
     }
 
+    // Cosmetic management methods
+    async loadPlayerCosmetics(playerAddress) {
+        if (this.cosmeticManager && playerAddress) {
+            Logger.info(`Game: Loading cosmetics for player ${playerAddress}`);
+            await this.cosmeticManager.loadPlayerCosmetics(playerAddress);
+        }
+    }
+
+    removePlayerCosmetics(playerAddress) {
+        if (this.cosmeticManager && playerAddress) {
+            Logger.info(`Game: Removing cosmetics for player ${playerAddress}`);
+            this.cosmeticManager.removePlayerCosmetics(playerAddress);
+        }
+    }
+
     restartGame() {
         Logger.info("Game: Restarting game");
         
@@ -199,11 +222,17 @@ export class Game {
             this.buildingManager.dispose();
         }
         
+        // Dispose of cosmetic manager
+        if (this.cosmeticManager) {
+            this.cosmeticManager.dispose();
+        }
+        
         // Dispose of scene manager
         this.sceneManager.dispose();
         
         // Clear references
         this.buildingManager = null;
+        this.cosmeticManager = null;
         this.inputHandler = null;
         this.sceneManager = null;
         
