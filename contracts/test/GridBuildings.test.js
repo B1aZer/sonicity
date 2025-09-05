@@ -2289,7 +2289,6 @@ describe("GridBuildings", function () {
     });
   });
 
-  /*
   describe("Diamond Production System", () => {
     it("Should create and manage diamond stations", async () => {
       // Ensure player has enough gold for tier 2
@@ -2317,7 +2316,7 @@ describe("GridBuildings", function () {
       
       // Get recharge cost
       const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.DIAMOND_STATION);
-      expect(rechargeCost).to.equal(ethers.parseEther("0.03")); // 0.03 SONIC
+      expect(rechargeCost).to.equal(ethers.parseEther("1.0")); // 1.0 SONIC
       
       // Recharge the building
       await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
@@ -2337,23 +2336,23 @@ describe("GridBuildings", function () {
       const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.DIAMOND_STATION);
       await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
       
-      // Fast forward 72 hours (diamond production duration)
-      await ethers.provider.send("evm_increaseTime", [72 * 3600]);
+      // Fast forward 24 hours (diamond production duration)
+      await ethers.provider.send("evm_increaseTime", [24 * 3600]);
       await ethers.provider.send("evm_mine");
       
       // Check claimable diamonds
       const claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
-      expect(claimable).to.equal(1); // 1 diamond per 72 hours at level 1
+      expect(claimable).to.equal(8); // 8 diamonds per 24 hours at level 1
       
       // Collect diamonds
       const initialDiamonds = await gameState.getPlayerDiamonds(player1.address);
       await gridBuildings.connect(player1).collectResources(buildingId);
       const finalDiamonds = await gameState.getPlayerDiamonds(player1.address);
       
-      expect(finalDiamonds - initialDiamonds).to.equal(1);
+      expect(finalDiamonds - initialDiamonds).to.equal(8);
     });
 
-    it("Should cap diamond production at 72 hours", async () => {
+    it("Should cap diamond production at 24 hours", async () => {
       // Ensure player has enough gold for tier 2
       await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 2500);
       
@@ -2363,13 +2362,13 @@ describe("GridBuildings", function () {
       const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.DIAMOND_STATION);
       await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
       
-      // Fast forward 144 hours (2x production duration)
-      await ethers.provider.send("evm_increaseTime", [144 * 3600]);
+      // Fast forward 48 hours (2x production duration)
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
       await ethers.provider.send("evm_mine");
       
-      // Check claimable diamonds - should be capped at 1
+      // Check claimable diamonds - should be capped at 8 (max for 24h production cycle)
       const claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
-      expect(claimable).to.equal(1); // Capped at 1 diamond
+      expect(claimable).to.equal(8); // Capped at 8 diamonds (24h production cycle)
     });
 
     it("Should upgrade diamond station production", async () => {
@@ -2378,20 +2377,31 @@ describe("GridBuildings", function () {
       
       const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityDiamond, GridBuildingType.DIAMOND_STATION);
       
+      // Recharge building multiple times to unlock level 2 and collect diamonds for upgrade cost
+      const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.DIAMOND_STATION);
+      // Recharge 10 times to accumulate enough recharge amount for level 2 and get diamonds
+      for (let i = 0; i < 10; i++) {
+        await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
+        if (i > 0) { // Collect diamonds from previous cycles (not first cycle)
+          await ethers.provider.send("evm_increaseTime", [24 * 3600]);
+          await ethers.provider.send("evm_mine");
+          await gridBuildings.connect(player1).collectResources(buildingId);
+        }
+      }
+      
       // Upgrade building to level 2
       await gridBuildings.connect(player1).upgradeBuilding(buildingId);
       
-      // Recharge the building
-      const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.DIAMOND_STATION);
+      // Recharge after upgrade to start production at level 2
       await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
       
-      // Fast forward 72 hours
-      await ethers.provider.send("evm_increaseTime", [72 * 3600]);
+      // Fast forward 24 hours
+      await ethers.provider.send("evm_increaseTime", [24 * 3600]);
       await ethers.provider.send("evm_mine");
       
-      // Check claimable diamonds - should be 2 at level 2
+      // Check claimable diamonds - should be 16 at level 2 (level * 8 diamonds per 24h)
       const claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
-      expect(claimable).to.equal(2); // 2 diamonds per 72 hours at level 2
+      expect(claimable).to.equal(16); // 16 diamonds per 24 hours at level 2
     });
   });
 
@@ -2414,18 +2424,18 @@ describe("GridBuildings", function () {
       expect(config.tier).to.equal(3);
     });
 
-    it("Should recharge REP forges for free", async () => {
+    it("Should recharge REP forges with correct cost", async () => {
       // Ensure player has enough gold for tier 3
       await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 5000);
       
       const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityRep, GridBuildingType.REP_FORGE);
       
-      // Get recharge cost - should be free
+      // Get recharge cost - should be 1.0 SONIC
       const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.REP_FORGE);
-      expect(rechargeCost).to.equal(0); // Free recharge
+      expect(rechargeCost).to.equal(ethers.parseEther("1.0")); // 1.0 SONIC recharge
       
-      // Recharge the building for free
-      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: 0 });
+      // Recharge the building with correct cost
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
       
       // Verify recharge
       const building = await gridBuildings.buildings(player1.address, buildingId);
@@ -2439,15 +2449,16 @@ describe("GridBuildings", function () {
       const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityRep, GridBuildingType.REP_FORGE);
       
       // Recharge the building
-      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: 0 });
+      const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.REP_FORGE);
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
       
-      // Fast forward 168 hours (7 days - REP production duration)
-      await ethers.provider.send("evm_increaseTime", [168 * 3600]);
+      // Fast forward 48 hours (2 days - REP production duration)
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
       await ethers.provider.send("evm_mine");
       
       // Check claimable REP
       const claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
-      expect(claimable).to.equal(1); // 1 REP per 168 hours at level 1
+      expect(claimable).to.equal(1); // 1 REP per 48 hours at level 1
       
       // Collect REP
       const initialRep = await gameState.getPlayerRep(player1.address);
@@ -2457,27 +2468,39 @@ describe("GridBuildings", function () {
       expect(finalRep - initialRep).to.equal(1);
     });
 
-    it("Should cap REP production at 168 hours", async () => {
+    it("Should cap REP production at 48 hours", async () => {
       // Ensure player has enough gold for tier 3
       await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 5000);
       
       const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityRep, GridBuildingType.REP_FORGE);
       
       // Recharge the building
-      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: 0 });
+      const rechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.REP_FORGE);
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: rechargeCost });
       
-      // Fast forward 336 hours (2x production duration)
-      await ethers.provider.send("evm_increaseTime", [336 * 3600]);
+      // Fast forward 96 hours (2x production duration)
+      await ethers.provider.send("evm_increaseTime", [96 * 3600]);
       await ethers.provider.send("evm_mine");
       
-      // Check claimable REP - should be capped at 1
+      // Check claimable REP - should be capped at 1 (max for 48h production cycle)
       const claimable = await gridBuildings.calculateClaimableResources(player1.address, buildingId);
-      expect(claimable).to.equal(1); // Capped at 1 REP
+      expect(claimable).to.equal(1); // Capped at 1 REP (48h production cycle)
     });
 
     it("Should upgrade REP forge production", async () => {
       // Ensure player has enough gold for tier 3
       await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 5000);
+      
+      // First, create and collect diamonds for the upgrade cost (REP forge upgrade requires 100 diamonds)
+      const { buildingId: diamondBuildingId } = await mintAndStakeNFT(player1, altar, sonicityDiamond, GridBuildingType.DIAMOND_STATION);
+      const diamondRechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.DIAMOND_STATION);
+      // Recharge and collect diamonds multiple times to get enough for upgrade
+      for (let i = 0; i < 13; i++) { // 13 * 8 = 104 diamonds (more than 100 needed)
+        await gridBuildings.connect(player1).rechargeBuilding(diamondBuildingId, { value: diamondRechargeCost });
+        await ethers.provider.send("evm_increaseTime", [24 * 3600]); // 24 hours
+        await ethers.provider.send("evm_mine");
+        await gridBuildings.connect(player1).collectResources(diamondBuildingId);
+      }
       
       const { buildingId } = await mintAndStakeNFT(player1, altar, sonicityRep, GridBuildingType.REP_FORGE);
       
@@ -2508,19 +2531,11 @@ describe("GridBuildings", function () {
 
   describe("MVP Cycle Integration", () => {
     it("Should complete full MVP cycle: Houses -> Farms -> Diamonds -> REP -> NFTs", async () => {
-      // Step 1: Initialize player and create houses
-      await gameState.connect(player1).initializePlayer();
+      // Step 1: Use helper to get enough gold for all tiers
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 5000);
+      
+      // Step 2: Create and test farm
       const { buildingId: houseId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
-      
-      // Recharge house and collect gold
-      const houseRechargeFee = await getRechargeCost(gridBuildings, GridBuildingType.HOUSE);
-      await gridBuildings.connect(player1).rechargeBuilding(houseId, { value: houseRechargeFee });
-      await ethers.provider.send("evm_increaseTime", [24 * 3600]);
-      await ethers.provider.send("evm_mine");
-      await gridBuildings.connect(player1).collectResources(houseId);
-      
-      // Step 2: Donate gold to reach tier 1 and unlock farms
-      await gameState.connect(player1).donateGold(1000);
       const { buildingId: farmId } = await mintAndStakeNFT(player1, altar, sonicityFarm, GridBuildingType.FARM);
       
       // Recharge farm and collect food
@@ -2530,23 +2545,23 @@ describe("GridBuildings", function () {
       await ethers.provider.send("evm_mine");
       await gridBuildings.connect(player1).collectResources(farmId);
       
-      // Step 3: Donate more gold to reach tier 2 and unlock diamond stations
-      await gameState.connect(player1).donateGold(1500);
+      // Step 3: Create diamond station (tier already unlocked by helper)
       const { buildingId: diamondId } = await mintAndStakeNFT(player1, altar, sonicityDiamond, GridBuildingType.DIAMOND_STATION);
       
       // Recharge diamond station and collect diamonds
-      await gridBuildings.connect(player1).rechargeBuilding(diamondId, { value: ethers.parseEther("0.03") });
-      await ethers.provider.send("evm_increaseTime", [72 * 3600]);
+      const diamondRechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.DIAMOND_STATION);
+      await gridBuildings.connect(player1).rechargeBuilding(diamondId, { value: diamondRechargeCost });
+      await ethers.provider.send("evm_increaseTime", [24 * 3600]);
       await ethers.provider.send("evm_mine");
       await gridBuildings.connect(player1).collectResources(diamondId);
       
-      // Step 4: Donate more gold to reach tier 3 and unlock REP forges
-      await gameState.connect(player1).donateGold(2500);
+      // Step 4: Create REP forge (tier already unlocked by helper)
       const { buildingId: repForgeId } = await mintAndStakeNFT(player1, altar, sonicityRep, GridBuildingType.REP_FORGE);
       
       // Recharge REP forge and collect REP
-      await gridBuildings.connect(player1).rechargeBuilding(repForgeId, { value: ethers.parseEther("0.05") });
-      await ethers.provider.send("evm_increaseTime", [168 * 3600]);
+      const repRechargeCost = await gridBuildings.getBuildingRechargeCost(GridBuildingType.REP_FORGE);
+      await gridBuildings.connect(player1).rechargeBuilding(repForgeId, { value: repRechargeCost });
+      await ethers.provider.send("evm_increaseTime", [48 * 3600]);
       await ethers.provider.send("evm_mine");
       await gridBuildings.connect(player1).collectResources(repForgeId);
       
@@ -2574,7 +2589,8 @@ describe("GridBuildings", function () {
       // This test is for a feature that hasn't been implemented yet
       // (setBuildingFoodCost and setBuildingRepCost functions don't exist)
       // TODO: Implement resource cost functionality for buildings
-      /*
+      // Test skipped - functionality not implemented yet
+      return;
       // Ensure player has enough gold for tier 2
       await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 2500);
       
@@ -2598,11 +2614,8 @@ describe("GridBuildings", function () {
       const remainingRep = await gameState.getPlayerRep(player1.address);
       expect(remainingFood).to.equal(50); // 100 - 50
       expect(remainingRep).to.equal(25); // 50 - 25
-      */
-     /*
     });
   });
-  */
 
   describe("Helper Function Test", () => {
     it("Should reach 2000 gold with improved helper", async () => {
