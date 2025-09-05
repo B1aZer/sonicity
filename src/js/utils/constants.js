@@ -2,20 +2,20 @@ import * as THREE from 'three';
 
 // Contract addresses
 export const CONTRACT_ADDRESSES = {
-    SONICITY_NFT: "0x96E303b6D807c0824E83f954784e2d6f3614f167", // Will be updated by update-addresses.sh
-    SONICITY_FARM: "0x9CC8B5379C40E24F374cd55973c138fff83ed214", // Will be updated by update-addresses.sh
-    SONICITY_DIAMOND: "0xd3b893cd083f07Fe371c1a87393576e7B01C52C6", // Will be updated by update-addresses.sh
-    SONICITY_REP: "0x3BFbbf82657577668144921b96aAb72BC170646C", // Will be updated by update-addresses.sh
-    SONICITY_YIELD_NFT: "0x930b218f3e63eE452c13561057a8d5E61367d5b7", // Will be updated by update-addresses.sh
-    SONICITY_ART_PROXY: "0x721d8077771Ebf9B931733986d619aceea412a1C", // Will be updated by update-addresses.sh
-    ALTAR: "0x20Dc424c5fa468CbB1c702308F0cC9c14DA2825C", // Will be updated by update-addresses.sh
-    GAME_STATE: "0xc4Fe39a1588807CfF8d8897050c39F065eBAb0B8", // Will be updated by update-addresses.sh
-    DISTRICT_BUILDINGS: "0x8731d45ff9684d380302573cCFafd994Dfa7f7d3", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0x969E3128DB078b179E9F3b3679710d2443cCDB72", // Will be updated by update-addresses.sh
-    BATTLE_SYSTEM: "0x4653251486a57f90Ee89F9f34E098b9218659b83", // Will be updated by update-addresses.sh
-    HERO_NFT: "0x89ec9355b1Bcc964e576211c8B011BD709083f8d", // Will be updated by update-addresses.sh
-    TACTICS_NFT: "0x72662E4da74278430123cE51405c1e7A1B87C294", // Will be updated by update-addresses.sh
-    COSMETIC_ITEMS: "0x52bad4A8584909895C22bdEcf8DBF33314468Fb0" // Will be updated by update-addresses.sh
+    SONICITY_NFT: "0x0aD6371dd7E9923d9968D63Eb8B9858c700abD9d", // Will be updated by update-addresses.sh
+    SONICITY_FARM: "0xAA5c5496e2586F81d8d2d0B970eB85aB088639c2", // Will be updated by update-addresses.sh
+    SONICITY_DIAMOND: "0xa95A928eEc085801d981d13FFE749872D8FD5bec", // Will be updated by update-addresses.sh
+    SONICITY_REP: "0x575D3d18666B28680255a202fB5d482D1949bB32", // Will be updated by update-addresses.sh
+    SONICITY_YIELD_NFT: "0x4458AcB1185aD869F982D51b5b0b87e23767A3A9", // Will be updated by update-addresses.sh
+    SONICITY_ART_PROXY: "0x8d375dE3D5DDde8d8caAaD6a4c31bD291756180b", // Will be updated by update-addresses.sh
+    ALTAR: "0xa4d0806d597146df93796A38435ABB2a3cb96677", // Will be updated by update-addresses.sh
+    GAME_STATE: "0xd8A9159c111D0597AD1b475b8d7e5A217a1d1d05", // Will be updated by update-addresses.sh
+    DISTRICT_BUILDINGS: "0xCdb63c58b907e76872474A0597C5252eDC97c883", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0x15BB2cc3Ea43ab2658F7AaecEb78A9d3769BE3cb", // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0xAE246E208ea35B3F23dE72b697D47044FC594D5F", // Will be updated by update-addresses.sh
+    HERO_NFT: "0x82BBAA3B0982D88741B275aE1752DB85CAfe3c65", // Will be updated by update-addresses.sh
+    TACTICS_NFT: "0x084815D1330eCC3eF94193a19Ec222C0C73dFf2d", // Will be updated by update-addresses.sh
+    COSMETIC_ITEMS: "0x76a999d5F7EFDE0a300e710e6f52Fb0A4b61aD58" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
