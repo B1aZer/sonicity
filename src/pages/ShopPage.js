@@ -56,11 +56,9 @@ export class ShopPage extends BasePage {
         try {
             Logger.info('Loading shop data...');
             
-            // Load cosmetic items and player resources in parallel
-            await Promise.all([
-                this.loadCosmeticItems(),
-                this.loadPlayerResources()
-            ]);
+            // Load cosmetic items first, then player resources (to update ownership)
+            await this.loadCosmeticItems();
+            await this.loadPlayerResources();
             
         } catch (error) {
             Logger.error('Error loading shop data:', error);
