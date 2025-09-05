@@ -554,10 +554,10 @@ export class StakePage extends BasePage {
                 resourceType = 'Food';
                 productionDurationHours = 24;
             } else if (item.buildingType === 2) { // Diamond Station
-                // Diamond Stations: 1 diamond per 72 hours at level 1
-                productionRate = item.level / 72; // diamonds per hour
+                // Diamond Stations: 8 diamonds per 24 hours at level 1 (as per contract)
+                productionRate = (item.level * 8) / 24; // diamonds per hour
                 resourceType = 'Diamonds';
-                productionDurationHours = 72;
+                productionDurationHours = 24;
             } else if (item.buildingType === 3) { // REP Forge
                 // REP Forges: 1 rep NFT per 168 hours at level 1
                 productionRate = item.level / 168; // rep per hour
@@ -575,8 +575,8 @@ export class StakePage extends BasePage {
             let productionRateDisplay = '';
             if (item.buildingType === 2 || item.buildingType === 3) {
                 // For Diamond Stations and REP Forges, show as "X per Y hours"
-                const hoursPerUnit = item.buildingType === 2 ? 72 : 168;
-                const unitsPerCycle = item.level;
+                const hoursPerUnit = item.buildingType === 2 ? 24 : 168;  // Diamond stations: 24h, REP forges: 168h
+                const unitsPerCycle = item.buildingType === 2 ? (item.level * 8) : item.level;  // Diamond stations: level * 8, REP forges: level * 1
                 productionRateDisplay = `${unitsPerCycle} per ${hoursPerUnit}h`;
             } else if (item.buildingType === 4) {
                 // For Yield Stations, show dynamic rate in SONIC per hour

@@ -75,6 +75,9 @@ export class DiamondStationPage extends BasePage {
             const baseProductionRate = buildingConfig.baseProductionRate;
             Logger.info('Current Diamond Station production rate:', baseProductionRate.toString());
 
+            // Contract produces 8 diamonds per 24 hours at level 1
+            const diamondsPerStation = 8 * stations.length; // 8 diamonds per station per 24h cycle
+            
             // Get total claimable diamonds directly from contract
             const totalClaimableDiamonds = await this.contracts.gridBuildings.calculateTotalClaimableResources(
                 GridBuildingsContract.BuildingType.DIAMOND_STATION
@@ -85,7 +88,7 @@ export class DiamondStationPage extends BasePage {
             this.setState({
                 stationCount: stations.length,
                 claimableDiamonds: totalClaimableDiamonds.toString(),
-                productionRate: `${stations.length} diamond(s) per 72 hours`,
+                productionRate: `${diamondsPerStation} diamond(s) per 24 hours`,
                 canClaim: totalClaimableDiamonds > BigInt(0)
             });
 
@@ -138,8 +141,8 @@ export class DiamondStationPage extends BasePage {
             <div class="page-container">
                 <h1>Diamond Station Management</h1>
                 <p class="page-description">
-                    <strong>Diamonds are precious resources for advanced upgrades.</strong> Diamond Stations produce diamonds slowly but steadily over time. 
-                    <em>Each station produces 1 diamond every 72 hours, scaling with building level.</em>
+                    <strong>Diamonds are precious resources for advanced upgrades.</strong> Diamond Stations produce diamonds steadily over time. 
+                    <em>Each station produces 8 diamonds every 24 hours at level 1, scaling with building level.</em>
                 </p>
                 
                 <!-- Status Section -->
@@ -181,7 +184,7 @@ export class DiamondStationPage extends BasePage {
                             <div class="building-details">
                                 <div class="detail-item">
                                     <span class="detail-label">Max Collection:</span>
-                                    <span class="detail-value">72 hours</span>
+                                    <span class="detail-value">24 hours</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Collection Cooldown:</span>
