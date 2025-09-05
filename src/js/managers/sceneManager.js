@@ -262,7 +262,7 @@ export class SceneManager {
         const totalHeight = height * cellSize;
         const group = new THREE.Group();
         // Changed from pure black (0x000000) to a subtle gray with transparency
-        const color = 0xd4880d; // Golden brown color instead of gray
+        const color = 0x467002; // Golden brown color instead of gray
         const material = new THREE.LineBasicMaterial({ 
             color,
             transparent: true,
