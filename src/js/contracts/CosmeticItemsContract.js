@@ -9,7 +9,7 @@ export class CosmeticItemsContract extends BaseContract {
 
     // Purchase a cosmetic item
     async purchaseCosmetic(cosmeticId, options = {}) {
-        return this.transact('purchaseCosmetic', [cosmeticId], options);
+        return this.transact('purchaseCosmetic', cosmeticId, options);
     }
 
     // Check if player owns a cosmetic
@@ -34,14 +34,14 @@ export class CosmeticItemsContract extends BaseContract {
 
     // Owner functions (if needed)
     async setCosmeticConfig(cosmeticId, name, cost, resourceType, enabled, description = "", modelPath = "", cosmeticType = 0, options = {}) {
-        return this.transact('setCosmeticConfig', [cosmeticId, name, cost, resourceType, enabled, description, modelPath, cosmeticType], options);
+        return this.transact('setCosmeticConfig', cosmeticId, name, cost, resourceType, enabled, description, modelPath, cosmeticType, options);
     }
 
     async setCosmeticEnabled(cosmeticId, enabled, options = {}) {
-        return this.transact('setCosmeticEnabled', [cosmeticId, enabled], options);
+        return this.transact('setCosmeticEnabled', cosmeticId, enabled, options);
     }
 
     async setCosmeticPrice(cosmeticId, newPrice, options = {}) {
-        return this.transact('setCosmeticPrice', [cosmeticId, newPrice], options);
+        return this.transact('setCosmeticPrice', cosmeticId, newPrice, options);
     }
 } 
