@@ -625,7 +625,7 @@ export const BUILDINGS = {
         position: { x: -10, y: -0.3, z: -15 },
         rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 0,
-        description: "A bustling marketplace for trading goods.",
+        description: "A stylish boutique offering decorative items and cosmetic enhancements for your district.",
         assets: {
             baseUrl: 'assets/shop',
             levels: {
