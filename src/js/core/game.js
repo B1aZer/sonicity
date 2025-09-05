@@ -13,7 +13,7 @@ import Logger from '../utils/logger.js';
 import { musicManager } from '../managers/musicManager.js';
 
 export class Game {
-    constructor(renderDiv) {
+    constructor(renderDiv, contracts = null) {
         this.renderDiv = renderDiv;
         this.gridManager = new GridManager();
         this.sceneManager = new SceneManager(this.gridManager);
@@ -35,14 +35,21 @@ export class Game {
         this.cosmeticManager = null; // Will be initialized after scene is ready
         this.inputHandler = new InputHandler(this);
         
-        // Initialize contracts
-        this.gameStateContract = new GameStateContract();
-        this.gridBuildingsContract = new GridBuildingsContract();
-        this.districtBuildingsContract = new DistrictBuildingsContract();
-        this.cosmeticItemsContract = new CosmeticItemsContract();
+        // Use provided contracts or create new ones
+        if (contracts) {
+            this.gameStateContract = contracts.gameState;
+            this.gridBuildingsContract = contracts.gridBuildings;
+            this.districtBuildingsContract = contracts.districtBuildings;
+            this.cosmeticItemsContract = contracts.cosmeticItems;
+        } else {
+            // Fallback: Initialize contracts (for standalone usage)
+            this.gameStateContract = new GameStateContract();
+            this.gridBuildingsContract = new GridBuildingsContract();
+            this.districtBuildingsContract = new DistrictBuildingsContract();
+            this.cosmeticItemsContract = new CosmeticItemsContract();
+        }
 
-        // Get reference to money display
-        this.goldDisplay = document.getElementById('gold-amount');
+        // Game initialization complete
     }
 
     async init() {
@@ -81,7 +88,6 @@ export class Game {
         this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.assetLoader);
         
         // Initialize cosmetic manager
-        await this.cosmeticItemsContract.initialize();
         this.cosmeticManager = new CosmeticManager(this.scene, this.cosmeticItemsContract);
         
         // Set up input handlers
@@ -91,7 +97,6 @@ export class Game {
         // Show UI and update initial state
         Logger.info("Game: Setting up UI");
         this.showUI();
-        this.updateUI();
         
         // Start the game loop
         Logger.info("Game: Starting game loop");
@@ -168,17 +173,9 @@ export class Game {
         }
     }
 
-    updateUI() {
-        // Update gold display
-        if (this.goldDisplay) {
-            this.goldDisplay.textContent = this.gameStateContract.getGold() || 0;
-        }
-    }
-
     // Cosmetic management methods
     async loadPlayerCosmetics(playerAddress) {
         if (this.cosmeticManager && playerAddress) {
-            Logger.info(`Game: Loading cosmetics for player ${playerAddress}`);
             await this.cosmeticManager.loadPlayerCosmetics(playerAddress);
         }
     }

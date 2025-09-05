@@ -21,7 +21,8 @@ export class GamePage extends BasePage {
         this.resourceUpdateInterval = null;
         this.audioManager = new AudioManager();
         this.render();
-        this.setupGame(); // Only wallet-independent setup
+
+        // setupGame() moved to onInitialized() to prevent race condition
     }
 
     async onInitialized(walletResult) {
@@ -29,6 +30,9 @@ export class GamePage extends BasePage {
             Logger.info('GamePage onInitialized called with wallet:', walletResult);
             
             // All contracts are already initialized by BasePage.initializeContracts()
+            // Now setup the game since contracts are ready
+            await this.setupGame();
+            
             // Load all wallet-dependent data here (like other pages)
             await this.loadPlayerData();
             
@@ -177,7 +181,7 @@ export class GamePage extends BasePage {
     async setupGame() {
         try {
             const renderDiv = this.element.querySelector('#renderDiv');
-            this.game = new Game(renderDiv);
+            this.game = new Game(renderDiv, this.contracts);
             
             // Show loading screen before starting initialization
             LoadingScreen.show(renderDiv);
@@ -572,7 +576,6 @@ export class GamePage extends BasePage {
             
             // Load player's cosmetics
             if (this.game && this.game.cosmeticManager) {
-                Logger.info('Loading player cosmetics for:', playerAddress);
                 await this.game.loadPlayerCosmetics(playerAddress);
             }
             
