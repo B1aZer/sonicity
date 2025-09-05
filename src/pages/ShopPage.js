@@ -43,7 +43,6 @@ export class ShopPage extends BasePage {
             });
             
             await this.loadShopData();
-            this.setupEventListeners();
             Logger.info('Shop page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing shop page:', error);
@@ -212,7 +211,7 @@ export class ShopPage extends BasePage {
             // Show loading modal
             const loadingModal = this.modal.loading('Processing purchase...');
             
-            await this.contracts.cosmeticItems.purchaseCosmetic(cosmeticId, {
+            await this.contracts.cosmeticItems.transact('purchaseCosmetic', [cosmeticId], {
                 statusUpdate: (message) => {
                     Logger.info(`Purchase status: ${message}`);
                 }
@@ -307,15 +306,11 @@ export class ShopPage extends BasePage {
                 ${this.state.cosmeticItems.map(item => `
                     <div class="shop-item-card">
                         <div class="shop-item-image">
-                            <img src="/images/shop/cosmetic.png" alt="${item.name}" />
+                            <img src="${item.image}" alt="${item.name}" />
                         </div>
                         <div class="shop-item-info">
                             <div class="shop-item-title-row">
                                 <h3>${item.name}</h3>
-                                <span class="shop-item-stock ${item.isOwned ? 'owned' : 'in-stock'}">
-                                    <i class="fas ${item.isOwned ? 'fa-check-circle' : 'fa-plus-circle'}"></i>
-                                    ${item.isOwned ? 'Owned' : 'Available'}
-                                </span>
                             </div>
                             <div class="shop-item-desc">${item.description}</div>
                             <div class="cost-component">
@@ -337,6 +332,9 @@ export class ShopPage extends BasePage {
                 `).join('')}
             </div>
         `;
+        
+        // Setup event listeners after creating the buttons
+        this.setupEventListeners();
     }
 
     updateUI(oldState, newState) {
