@@ -24,12 +24,8 @@ export class Router {
     constructor(container) {
         this.container = container;
         this.currentPage = null;
-        // TODO: Page caching disabled for now to ensure reliable page state management
-        // To re-enable caching later:
-        // 1. Uncomment: this.pageCache = new Map();
-        // 2. Add pages to cache in getPageInstance()
-        // 3. Consider excluding complex pages (3D, heavy resources) from caching
-        // this.pageCache = new Map();
+        // Re-enable page caching for lightweight pages (excluding complex 3D pages)
+        this.pageCache = new Map();
         this.game = null;
         
         // Pages that don't require wallet connection
@@ -37,6 +33,9 @@ export class Router {
         
         // Pages that don't require player initialization
         this.uninitializedPages = new Set(['', 'access']);
+        
+        // Pages that should NOT be cached (complex pages with heavy resources)
+        this.noCachePages = new Set(['', 'overview']); // StartPage and GamePage
         
         // Route to page class mapping
         this.routeMap = {
@@ -141,10 +140,19 @@ export class Router {
     }
 
     /**
-     * Get or create page instance (no caching for now)
+     * Get or create page instance with selective caching
      */
     async getPageInstance(route) {
-        // Create new page instance (caching disabled for reliability)
+        // Check if this page should be cached
+        const shouldCache = !this.noCachePages.has(route);
+        
+        // Try to get from cache first if caching is enabled for this page
+        if (shouldCache && this.pageCache.has(route)) {
+            Logger.info('Using cached page instance for:', route);
+            return this.pageCache.get(route);
+        }
+        
+        // Create new page instance
         const PageClass = this.routeMap[route];
         if (!PageClass) {
             Logger.error('Unknown route:', route);
@@ -154,6 +162,12 @@ export class Router {
         Logger.info('Creating new page instance for:', route);
         const pageInstance = new PageClass();
         pageInstance.route = route; // Add route property for identification
+        
+        // Cache the instance if caching is enabled for this page
+        if (shouldCache) {
+            this.pageCache.set(route, pageInstance);
+            Logger.info('Cached page instance for:', route);
+        }
         
         return pageInstance;
     }
@@ -210,18 +224,44 @@ export class Router {
             'farm': () => import('../../pages/FarmPage.js').then(m => m.FarmPage),
             'diamond-station': () => import('../../pages/DiamondStationPage.js').then(m => m.DiamondStationPage),
             'rep-forge': () => import('../../pages/RepForgePage.js').then(m => m.RepForgePage),
-            'stake': () => import('../../pages/StakeHubPage.js').then(m => m.StakePage),
             'arcanum': () => import('../../pages/ArcanumPage.js').then(m => m.ArcanumPage),
+            'city': () => import('../../pages/CityPage.js').then(m => m.CityPage),
             'shop': () => import('../../pages/ShopPage.js').then(m => m.ShopPage),
             'workshop': () => import('../../pages/WorkshopPage.js').then(m => m.WorkshopPage),
             'barracks': () => import('../../pages/BarracksPage.js').then(m => m.BarracksPage),
             'scout-guild': () => import('../../pages/ScoutGuildPage.js').then(m => m.ScoutGuildPage),
             'command-center': () => import('../../pages/CommandCenterPage.js').then(m => m.CommandCenterPage),
-            'tavern': () => import('../../pages/TavernPage.js').then(m => m.TavernPage),
-            'tactics-center': () => import('../../pages/TacticsCenterPage.js').then(m => m.TacticsCenterPage),
-            'city': () => import('../../pages/CityPage.js').then(m => m.CityPage),
+            'garrison': () => import('../../pages/GarrisonPage.js').then(m => m.GarrisonPage),
             'revenue-hub': () => import('../../pages/RevenueHubPage.js').then(m => m.RevenueHubPage),
-            'garrison': () => import('../../pages/GarrisonPage.js').then(m => m.GarrisonPage)
+            'stake': () => import('../../pages/StakeHubPage.js').then(m => m.StakePage),
+            'tavern': () => import('../../pages/TavernPage.js').then(m => m.TavernPage),
+            'tactics-center': () => import('../../pages/TacticsCenterPage.js').then(m => m.TacticsCenterPage)
+        };
+    }
+
+    /**
+     * Clear page cache (useful for memory management)
+     * @param {string} route - Optional specific route to clear, or all if not specified
+     */
+    clearPageCache(route = null) {
+        if (route) {
+            if (this.pageCache.has(route)) {
+                Logger.info(`Router: Clearing cache for route: ${route}`);
+                this.pageCache.delete(route);
+            }
+        } else {
+            Logger.info('Router: Clearing all page cache');
+            this.pageCache.clear();
+        }
+    }
+
+    /**
+     * Get cache info for debugging
+     */
+    getCacheInfo() {
+        return {
+            cachedRoutes: Array.from(this.pageCache.keys()),
+            cacheSize: this.pageCache.size
         };
     }
 
@@ -234,6 +274,19 @@ export class Router {
         try {
             Logger.info(`Router: Starting to preload page: ${route}`);
             
+            // Check if we should cache this page
+            const shouldCache = !this.noCachePages.has(route);
+            if (!shouldCache) {
+                Logger.info(`Router: Skipping preload for non-cacheable page: ${route}`);
+                return;
+            }
+            
+            // Check if already cached
+            if (this.pageCache.has(route)) {
+                Logger.info(`Router: Page already preloaded: ${route}`);
+                return;
+            }
+            
             const routeMap = this.getRouteToPageClassMap();
             const pageLoader = routeMap[route];
             
@@ -242,27 +295,39 @@ export class Router {
                 return;
             }
 
-            // Load the page class and create instance
+            // Load the page class and create instance using getPageInstance for consistency
             const PageClass = await pageLoader();
-            const pageInstance = new PageClass();
             
-            // Import WalletManager for wallet checking
-            const { WalletManager } = await import('../utils/wallet.js');
+            // Temporarily add to routeMap for getPageInstance to work
+            const originalClass = this.routeMap[route];
+            this.routeMap[route] = PageClass;
             
-            // Initialize contracts if wallet is connected
-            if (WalletManager.isWalletConnected() && WalletManager.getCurrentWallet()) {
-                await pageInstance.initializeContracts();
+            try {
+                // Use getPageInstance to create and cache the page
+                const pageInstance = await this.getPageInstance(route);
                 
-                // Start the onInitialized process to load data
-                pageInstance.onInitialized({ 
-                    success: true, 
-                    address: WalletManager.getCurrentWallet() 
-                }).catch(error => {
-                    Logger.warn(`Router: Error preloading data for ${route}:`, error);
-                });
+                // Import WalletManager for wallet checking
+                const { WalletManager } = await import('../utils/wallet.js');
+                
+                // Initialize contracts if wallet is connected
+                if (WalletManager.isWalletConnected() && WalletManager.getCurrentWallet()) {
+                    await pageInstance.initializeContracts();
+                    
+                    // Start the onInitialized process to load data
+                    pageInstance.onInitialized({ 
+                        success: true, 
+                        address: WalletManager.getCurrentWallet() 
+                    }).catch(error => {
+                        Logger.warn(`Router: Error preloading data for ${route}:`, error);
+                    });
+                }
+                
+                Logger.info(`Router: Successfully started preloading for: ${route}`);
+                
+            } finally {
+                // Restore original class mapping
+                this.routeMap[route] = originalClass;
             }
-            
-            Logger.info(`Router: Successfully started preloading for: ${route}`);
             
         } catch (error) {
             Logger.warn(`Router: Failed to preload page ${route}:`, error);
