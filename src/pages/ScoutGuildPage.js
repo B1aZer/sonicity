@@ -277,6 +277,7 @@ export class ScoutGuildPage extends BasePage {
             clearInterval(this.searchTimer);
             this.searchTimer = null;
         }
-        this.element.remove();
+        // Call parent unmount to properly clean up event listeners
+        super.unmount();
     }
 } 

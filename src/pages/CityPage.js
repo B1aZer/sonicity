@@ -605,7 +605,4 @@ export class CityPage extends BasePage {
         });
     }
 
-    unmount() {
-        this.element.remove();
-    }
 }

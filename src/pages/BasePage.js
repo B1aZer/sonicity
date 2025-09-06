@@ -253,6 +253,15 @@ export class BasePage {
             }
             
             elements.forEach((element, index) => {
+                const listenerKey = `${selector}-${event}-${index}`;
+                
+                // Remove existing listener for this key if it exists (for cached pages)
+                if (this.eventListeners.has(listenerKey)) {
+                    const existing = this.eventListeners.get(listenerKey);
+                    existing.element.removeEventListener(existing.event, existing.handler);
+                    this.eventListeners.delete(listenerKey);
+                }
+                
                 // Wrap handler with error handling
                 const safeHandler = (e) => {
                     try {
@@ -264,7 +273,7 @@ export class BasePage {
                 
                 element.addEventListener(event, safeHandler);
                 // Use unique keys for each element to properly track them
-                this.eventListeners.set(`${selector}-${event}-${index}`, { 
+                this.eventListeners.set(listenerKey, { 
                     element, 
                     event, 
                     handler: safeHandler 
@@ -273,6 +282,11 @@ export class BasePage {
         } catch (error) {
             Logger.error(`Error setting up event listener for ${selector}:`, error);
         }
+    }
+    
+    // Helper method to clear all event listeners before setting up new ones
+    clearEventListeners() {
+        this.removeEventListeners();
     }
 
     removeEventListeners() {

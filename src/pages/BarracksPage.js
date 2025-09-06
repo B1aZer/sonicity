@@ -330,7 +330,4 @@ export class BarracksPage extends BasePage {
         });
     }
 
-    unmount() {
-        this.element.remove();
-    }
 } 

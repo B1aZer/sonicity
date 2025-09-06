@@ -587,7 +587,8 @@ export class GamePage extends BasePage {
             this.game.dispose();
         }
         
-        this.element.remove();
+        // Call parent unmount to properly clean up event listeners
+        super.unmount();
     }
 
     /**

@@ -828,6 +828,7 @@ export class CommandCenterPage extends BasePage {
         if (this.battleProgressBar) {
             this.battleProgressBar.destroy();
         }
-        this.element.remove();
+        // Call parent unmount to properly clean up event listeners
+        super.unmount();
     }
 } 
