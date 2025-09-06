@@ -1,3 +1,18 @@
+/**
+ * ARCHIVED: DashboardPage.js
+ * 
+ * This page was moved to archive because:
+ * 1. It's not imported or used in the current routing system (src/js/core/router.js)
+ * 2. The /dashboard route is not defined in the routeMap
+ * 3. Navigation references to /dashboard have been updated to /overview
+ * 
+ * The functionality appears to have been superseded by:
+ * - GamePage (/overview) for the main game view
+ * - CityPage (/city) for city management
+ * 
+ * Archived on: December 2024
+ */
+
 import Logger from '../js/utils/logger.js';
 import { GameStateContract } from '../js/contracts/GameStateContract.js';
 import { ethers } from 'ethers';
@@ -173,30 +188,23 @@ export class DashboardPage extends BasePage {
     setupEventListeners() {
         Logger.info('Setting up event listeners');
         
-        // Add click event listeners for building buttons
-        const buildingButtons = this.element.querySelectorAll('.building-button');
-        buildingButtons.forEach(button => {
-            Logger.info(`Setting up listener for button: ${button.getAttribute('data-building')}`);
-            button.addEventListener('click', (event) => {
-                Logger.info('Building button clicked');
-                const buildingType = button.getAttribute('data-building');
-                if (buildingType) {
-                    Logger.info(`Attempting to build: ${buildingType}`);
-                    this.handleBuildingAction(buildingType).catch(error => {
-                        Logger.error('Error in handleBuildingAction:', error);
-                    });
-                }
-            });
+        // Use the new event listener system for building buttons
+        this.addEventListener('.building-button', 'click', (event) => {
+            Logger.info('Building button clicked');
+            const buildingType = event.target.getAttribute('data-building');
+            if (buildingType) {
+                Logger.info(`Attempting to build: ${buildingType}`);
+                this.handleBuildingAction(buildingType).catch(error => {
+                    Logger.error('Error in handleBuildingAction:', error);
+                });
+            }
         });
 
         // Add click event listener for the bottom left city
-        const bottomLeftCity = this.element.querySelector('.city-bottom-left');
-        if (bottomLeftCity) {
-            bottomLeftCity.addEventListener('click', () => {
-                window.history.pushState({}, '', '/dashboard');
-                window.dispatchEvent(new PopStateEvent('popstate'));
-            });
-        }
+        this.addEventListener('.city-bottom-left', 'click', () => {
+            window.history.pushState({}, '', '/dashboard');
+            window.dispatchEvent(new PopStateEvent('popstate'));
+        });
     }
 
     render() {
