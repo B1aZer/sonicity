@@ -676,7 +676,9 @@ export const BUILDINGS = {
             levels: {
                 1: { url: 'assets/tower_lvl1.glb' },
                 2: { url: 'assets/tower_lvl2.glb' },
-                3: { url: 'assets/tower_lvl3.glb' }
+                3: { url: 'assets/tower_lvl3.glb' },
+                4: { url: 'assets/tower_lvl3.glb' },
+                5: { url: 'assets/tower_lvl3.glb' },
             }
         }
     },
