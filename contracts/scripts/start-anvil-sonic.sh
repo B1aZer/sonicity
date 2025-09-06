@@ -49,7 +49,7 @@ anvil \
   --mnemonic "$MNEMONIC" \
   --dump-state "$STATE_FILE" \
   $LOAD_STATE \
-  --block-time 2 \
+  --block-time 0 \
   --gas-limit 12000000 \
   --gas-price 8000000000
 
