@@ -684,10 +684,10 @@ export const BUILDINGS = {
     },
     BARRACKS: {
         name: 'Barracks',
-        size: new THREE.Vector3(5, 5, 5),
+        size: new THREE.Vector3(4, 4, 4),
         color: 0x8B4513, // Saddle Brown
-        position: { x: 15, y: 0, z: -15 },
-        rotation: { x: 0, y: -Math.PI / 2, z: -Math.PI / 180 }, // Converted to Vector3 format
+        position: { x: 12, y: -0.5, z: -10 },
+        rotation: { x: 0, y: -1, z: -Math.PI / 180 }, // Converted to Vector3 format
         tier: 1,
         description: "Trains and houses military units for district defense and expansion.",
         assets: {
@@ -718,7 +718,7 @@ export const BUILDINGS = {
         name: 'Garrison',
         size: new THREE.Vector3(4, 4, 4),
         color: 0x8B4513, // Saddle Brown
-        position: { x: 50, y: 0, z: -55 },
+        position: { x: 7, y: 2, z: -35 },
         rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 1,
         description: "Provides secure quarters for defensive troops to protect the district.",
@@ -732,10 +732,10 @@ export const BUILDINGS = {
     },
     COMMAND_CENTER: {
         name: 'Command Center',
-        size: new THREE.Vector3(4, 4, 4),
+        size: new THREE.Vector3(6, 6, 6),
         color: 0x4169E1, // Royal Blue
-        position: { x: -50, y: 0, z: -75 },
-        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
+        position: { x: 16, y: 0, z: -25 },
+        rotation: { x: 0, y: -0.4, z: 0 }, // Converted to Vector3 format
         tier: 1,
         description: "Strategic headquarters for coordinating military operations and raids.",
         assets: {
