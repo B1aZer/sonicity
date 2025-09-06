@@ -465,67 +465,61 @@ export class CityPage extends BasePage {
     setupEventListeners() {
         Logger.info('Setting up event listeners');
         
-        // Donation form
-        const donateButton = this.element.querySelector('.btn-primary');
-        const donationInput = this.element.querySelector('.donation-amount');
-        
-        if (donateButton && donationInput) {
-            donateButton.addEventListener('click', () => {
+        // Donation form - use more specific selector since there might be multiple .btn-primary buttons
+        this.addEventListener('.donation-form .btn-primary', 'click', () => {
+            const donationInput = this.element.querySelector('.donation-amount');
+            if (donationInput) {
                 const amount = parseInt(donationInput.value);
                 if (amount > 0) {
                     this.handleDonation(amount);
                 } else {
                     this.modal.error('Please enter a valid amount to donate');
                 }
-            });
-        }
+            }
+        });
 
         // Tier tabs
-        const tierTabs = this.element.querySelectorAll('.tier-tab');
-        tierTabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Don't allow clicking locked tabs
-                if (tab.classList.contains('locked')) {
-                    return;
-                }
+        this.addEventListener('.tier-tab', 'click', (event) => {
+            const tab = event.target;
+            // Don't allow clicking locked tabs
+            if (tab.classList.contains('locked')) {
+                return;
+            }
 
-                // Remove active class from all tabs and contents
-                this.element.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
-                this.element.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked tab and corresponding content
-                tab.classList.add('active');
-                const tier = tab.dataset.tier;
-                this.element.querySelector(`.tier-content[data-tier="${tier}"]`).classList.add('active');
-            });
+            // Remove active class from all tabs and contents
+            this.element.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
+            this.element.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            tab.classList.add('active');
+            const tier = tab.dataset.tier;
+            this.element.querySelector(`.tier-content[data-tier="${tier}"]`).classList.add('active');
         });
 
         // Building buttons
-        const buildingButtons = this.element.querySelectorAll('.building-button');
-        buildingButtons.forEach(button => {
-            button.addEventListener('click', async () => {
-                const buildingType = button.dataset.building;
-                const buildingCard = button.closest('.building-card');
-                const requiredDonation = buildingCard.dataset.requiredDonation;
-                
-                try {
-                    // Check if building is disabled
-                    if (buildingCard.classList.contains('disabled')) {
-                        this.modal.error('This building is currently disabled and cannot be built.');
-                        return;
-                    }
-                    
-                    // Check if building is locked
-                    if (buildingCard.classList.contains('locked')) {
-                        this.modal.error(`This building requires ${requiredDonation} gold in donations to unlock`);
-                        return;
-                    }
-                    
-                    await this.handleBuildingAction(buildingType);
-                } catch (error) {
-                    this.modal.error('Failed to build: ' + error.message);
+        this.addEventListener('.building-button', 'click', async (event) => {
+            const button = event.target;
+            const buildingType = button.dataset.building;
+            const buildingCard = button.closest('.building-card');
+            const requiredDonation = buildingCard.dataset.requiredDonation;
+            
+            try {
+                // Check if building is disabled
+                if (buildingCard.classList.contains('disabled')) {
+                    this.modal.error('This building is currently disabled and cannot be built.');
+                    return;
                 }
-            });
+                
+                // Check if building is locked
+                if (buildingCard.classList.contains('locked')) {
+                    this.modal.error(`This building requires ${requiredDonation} gold in donations to unlock`);
+                    return;
+                }
+                
+                await this.handleBuildingAction(buildingType);
+            } catch (error) {
+                this.modal.error('Failed to build: ' + error.message);
+            }
         });
     }
 

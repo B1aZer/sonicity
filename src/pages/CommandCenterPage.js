@@ -534,14 +534,12 @@ export class CommandCenterPage extends BasePage {
     }
 
     setupEventListeners() {
-        const deployButton = this.element.querySelector('.deploy-troops-btn');
-        const resolveBattleBtn = this.element.querySelector('.resolve-battle-btn');
-        const infantryInput = this.element.querySelector('#deploy-infantry');
-        const cavalryInput = this.element.querySelector('#deploy-cavalry');
-        const siegeInput = this.element.querySelector('#deploy-siege');
-        const heroSelect = this.element.querySelector('#deploy-hero');
-
-        deployButton.addEventListener('click', async () => {
+        // Use BasePage event management system to prevent duplicate handlers
+        this.addEventListener('.deploy-troops-btn', 'click', async () => {
+            const infantryInput = this.element.querySelector('#deploy-infantry');
+            const cavalryInput = this.element.querySelector('#deploy-cavalry');
+            const siegeInput = this.element.querySelector('#deploy-siege');
+            const heroSelect = this.element.querySelector('#deploy-hero');
             try {
                 const infantryCount = parseInt(infantryInput.value) || 0;
                 const cavalryCount = parseInt(cavalryInput.value) || 0;
@@ -585,7 +583,7 @@ export class CommandCenterPage extends BasePage {
             }
         });
 
-        resolveBattleBtn.addEventListener('click', async () => {
+        this.addEventListener('.resolve-battle-btn', 'click', async () => {
             try {
                 const address = WalletManager.getCurrentWallet();
                 
@@ -639,13 +637,13 @@ export class CommandCenterPage extends BasePage {
         });
 
         // Add input validation
-        [infantryInput, cavalryInput, siegeInput].forEach(input => {
-            input.addEventListener('input', () => {
-                const value = parseInt(input.value) || 0;
-                const max = parseInt(input.max) || 0;
-                if (value < 0) input.value = 0;
-                if (value > max) input.value = max;
-            });
+        // Use BasePage event management for input validation
+        this.addEventListener('#deploy-infantry, #deploy-cavalry, #deploy-siege', 'input', (event) => {
+            const input = event.target;
+            const value = parseInt(input.value) || 0;
+            const max = parseInt(input.max) || 0;
+            if (value < 0) input.value = 0;
+            if (value > max) input.value = max;
         });
     }
 

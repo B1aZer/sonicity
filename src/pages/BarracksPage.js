@@ -244,9 +244,9 @@ export class BarracksPage extends BasePage {
     }
 
     setupTrainHandlers() {
-        const trainButtons = this.element.querySelectorAll('.train-btn');
-        trainButtons.forEach(button => {
-            button.addEventListener('click', async () => {
+        // Use BasePage event management system to prevent duplicate handlers
+        this.addEventListener('.train-btn', 'click', async (event) => {
+            const button = event.target;
                 const troopType = button.getAttribute('data-troop-type');
                 const troopCard = button.closest('.shop-item-card');
                 
@@ -317,7 +317,6 @@ export class BarracksPage extends BasePage {
                     console.error('Error training troops:', error);
                     this.modal.error('Failed to train troops: ' + error.message);
                 }
-            });
         });
     }
 

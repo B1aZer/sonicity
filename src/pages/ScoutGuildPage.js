@@ -155,10 +155,8 @@ export class ScoutGuildPage extends BasePage {
     }
 
     setupSearchHandlers() {
-        const searchButton = this.element.querySelector('.search-btn');
-        const checkResultsButton = this.element.querySelector('.check-results-btn');
-
-        searchButton.addEventListener('click', async () => {
+        // Use BasePage event management system to prevent duplicate handlers
+        this.addEventListener('.search-btn', 'click', async () => {
             try {
                 const searchDuration = await this.contracts.battleSystem.searchDuration();
                 const hours = Math.floor(Number(searchDuration) / 3600);
@@ -182,7 +180,7 @@ export class ScoutGuildPage extends BasePage {
             }
         });
 
-        checkResultsButton.addEventListener('click', async () => {
+        this.addEventListener('.check-results-btn', 'click', async () => {
             try {
                 Logger.info('Starting to check scout reports...');
                 
