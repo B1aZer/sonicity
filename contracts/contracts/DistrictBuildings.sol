@@ -242,7 +242,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         districtBuildingConfigs[DistrictBuildingType.COMMAND_CENTER] = DistrictBuildingConfig({
             name: "Command Center",
             unlockCost: 2500,
-            buildCost: 250,
+            buildCost: 500,
             upgradeCost: 0,
             maxLevel: 1,
             description: "Deploy troops for raids",
@@ -259,7 +259,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         districtBuildingConfigs[DistrictBuildingType.TAVERN] = DistrictBuildingConfig({
             name: "Tavern",
             unlockCost: 3000,
-            buildCost: 200,
+            buildCost: 400,
             upgradeCost: 0,
             maxLevel: 1,
             description: "Hire heroes",
@@ -271,7 +271,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         districtBuildingConfigs[DistrictBuildingType.ADVENTURE_CAMP] = DistrictBuildingConfig({
             name: "Adventure Camp",
             unlockCost: 3500,
-            buildCost: 300,
+            buildCost: 800,
             upgradeCost: 0,
             maxLevel: 1,
             description: "Start adventures",
@@ -283,7 +283,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         districtBuildingConfigs[DistrictBuildingType.MAGE_TOWER] = DistrictBuildingConfig({
             name: "Mage Tower",
             unlockCost: 4000,
-            buildCost: 250,
+            buildCost: 500,
             upgradeCost: 0,
             maxLevel: 1,
             description: "Explore relics",
@@ -295,7 +295,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         districtBuildingConfigs[DistrictBuildingType.TACTICS_CENTER] = DistrictBuildingConfig({
             name: "Tactics Center",
             unlockCost: 4500,
-            buildCost: 300,
+            buildCost: 600,
             upgradeCost: 0,
             maxLevel: 1,
             description: "Learn new tactics",
@@ -336,7 +336,7 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         districtBuildingConfigs[DistrictBuildingType.ARCANUM_OF_NAMES] = DistrictBuildingConfig({
             name: "Arcanum of Names",
             unlockCost: 7000,
-            buildCost: 450,
+            buildCost: 1000,
             upgradeCost: 0,
             maxLevel: 1,
             description: "Store Rep as NFT",
