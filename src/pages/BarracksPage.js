@@ -246,7 +246,7 @@ export class BarracksPage extends BasePage {
     setupTrainHandlers() {
         // Use BasePage event management system to prevent duplicate handlers
         this.addEventListener('.train-btn', 'click', async (event) => {
-            const button = event.target;
+            const button = event.currentTarget;
                 const troopType = button.getAttribute('data-troop-type');
                 const troopCard = button.closest('.shop-item-card');
                 
