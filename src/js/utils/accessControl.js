@@ -15,10 +15,10 @@ export class AccessControl {
     }
 
     /**
-     * Check if the user can access the dashboard
+     * Check if the user can access the overview (main game view)
      * Requires wallet connection and player initialization
      */
-    static async canAccessDashboard() {
+    static async canAccessOverview() {
         if (!this.isWalletConnected()) {
             Logger.info('Access denied: Wallet not connected');
             return false;
@@ -27,7 +27,7 @@ export class AccessControl {
         const isInitialized = await this.isPlayerInitialized();
         if (!isInitialized) {
             Logger.info('Access denied: Player not initialized');
-            this.modal.error('Please start the game first to access the dashboard.');
+            this.modal.error('Please start the game first to access the overview.');
             return false;
         }
 
@@ -36,10 +36,10 @@ export class AccessControl {
 
     /**
      * Check if the user can access the city overview
-     * Same requirements as dashboard
+     * Same requirements as main overview
      */
-    static async canAccessOverview() {
-        return await this.canAccessDashboard();
+    static async canAccessCityOverview() {
+        return await this.canAccessOverview();
     }
 
     /**
