@@ -165,18 +165,16 @@ export class StakePage extends BasePage {
     }
 
     setupEventListeners() {
-        // Tier tab switching
-        const tierTabs = this.element.querySelectorAll('.tier-tab');
-        tierTabs.forEach(tab => {
-            tab.addEventListener('click', async () => {
-                this.element.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
-                this.element.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
-                tab.classList.add('active');
-                const tier = tab.dataset.tier;
-                this.element.querySelector(`.tier-content[data-tier="${tier}"]`).classList.add('active');
-                this.state.selectedTier = Number(tier);
-                await this.renderTierContent(Number(tier));
-            });
+        // Use BasePage event management system to prevent duplicate handlers
+        this.addEventListener('.tier-tab', 'click', async (event) => {
+            const tab = event.target.closest('.tier-tab');
+            this.element.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
+            this.element.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
+            tab.classList.add('active');
+            const tier = tab.dataset.tier;
+            this.element.querySelector(`.tier-content[data-tier="${tier}"]`).classList.add('active');
+            this.state.selectedTier = Number(tier);
+            await this.renderTierContent(Number(tier));
         });
     }
 
@@ -446,22 +444,72 @@ export class StakePage extends BasePage {
             });
         }
         
-        // Attach per-tier action listeners
-        tierContent.querySelector('.claim-all-btn')?.addEventListener('click', () => this.claimAllInTier(tier));
-        tierContent.querySelector('.mint-building-btn')?.addEventListener('click', (e) => {
-            const button = e.target.closest('.mint-building-btn') || e.target;
-            const tier = Number(button.dataset.tier);
-            const price = button.dataset.price;
-            const priceRaw = button.dataset.priceRaw;
-            const resourceType = BigInt(button.dataset.resourceType);
-            const resourceName = button.dataset.resourceName;
-            this.mintBuilding(tier, price, priceRaw, resourceType, resourceName);
-        });
-        tierContent.querySelector('.recharge-tier-btn')?.addEventListener('click', () => {
-            const input = tierContent.querySelector('.recharge-amount');
-            const n = Math.max(1, Math.min(Number(input.value), buildingCount));
-            this.rechargeNInTier(tier, n);
-        });
+        // Attach per-tier action listeners using safe approach for cached pages
+        const claimAllBtn = tierContent.querySelector('.claim-all-btn');
+        if (claimAllBtn) {
+            const listenerKey = `claim-all-${tier}`;
+            // Remove existing listener if it exists
+            if (this.eventListeners.has(listenerKey)) {
+                const existing = this.eventListeners.get(listenerKey);
+                existing.element.removeEventListener(existing.event, existing.handler);
+                this.eventListeners.delete(listenerKey);
+            }
+            const claimAllHandler = () => this.claimAllInTier(tier);
+            claimAllBtn.addEventListener('click', claimAllHandler);
+            this.eventListeners.set(listenerKey, { 
+                element: claimAllBtn, 
+                event: 'click', 
+                handler: claimAllHandler 
+            });
+        }
+        
+        const mintBuildingBtn = tierContent.querySelector('.mint-building-btn');
+        if (mintBuildingBtn) {
+            const listenerKey = `mint-building-${tier}`;
+            // Remove existing listener if it exists
+            if (this.eventListeners.has(listenerKey)) {
+                const existing = this.eventListeners.get(listenerKey);
+                existing.element.removeEventListener(existing.event, existing.handler);
+                this.eventListeners.delete(listenerKey);
+            }
+            const mintHandler = (e) => {
+                const button = e.target.closest('.mint-building-btn') || e.target;
+                const tier = Number(button.dataset.tier);
+                const price = button.dataset.price;
+                const priceRaw = button.dataset.priceRaw;
+                const resourceType = BigInt(button.dataset.resourceType);
+                const resourceName = button.dataset.resourceName;
+                this.mintBuilding(tier, price, priceRaw, resourceType, resourceName);
+            };
+            mintBuildingBtn.addEventListener('click', mintHandler);
+            this.eventListeners.set(listenerKey, { 
+                element: mintBuildingBtn, 
+                event: 'click', 
+                handler: mintHandler 
+            });
+        }
+        
+        const rechargeTierBtn = tierContent.querySelector('.recharge-tier-btn');
+        if (rechargeTierBtn) {
+            const listenerKey = `recharge-tier-${tier}`;
+            // Remove existing listener if it exists
+            if (this.eventListeners.has(listenerKey)) {
+                const existing = this.eventListeners.get(listenerKey);
+                existing.element.removeEventListener(existing.event, existing.handler);
+                this.eventListeners.delete(listenerKey);
+            }
+            const rechargeHandler = () => {
+                const input = tierContent.querySelector('.recharge-amount');
+                const n = Math.max(1, Math.min(Number(input.value), buildingCount));
+                this.rechargeNInTier(tier, n);
+            };
+            rechargeTierBtn.addEventListener('click', rechargeHandler);
+            this.eventListeners.set(listenerKey, { 
+                element: rechargeTierBtn, 
+                event: 'click', 
+                handler: rechargeHandler 
+            });
+        }
     }
 
     getTierStatus(tier, staked) {
@@ -717,16 +765,58 @@ export class StakePage extends BasePage {
     }
 
     attachCardListeners(card, item) {
-        if (item.isStaked) {
-            card.querySelector('.recharge-btn')?.addEventListener('click', () => this.rechargeBuilding(item));
-            card.querySelector('.upgrade-btn')?.addEventListener('click', () => this.upgradeBuilding(item));
-            card.querySelector('.claim-btn')?.addEventListener('click', () => this.claimBuilding(item));
-            card.querySelector('.destroy-btn')?.addEventListener('click', () => {
-                this.destroyBuilding(item);
+        const cardId = `card-${item.tokenId}-${item.contractAddress}`;
+        
+        // Helper function to safely attach listener
+        const safeAttachListener = (btn, action, handler) => {
+            if (!btn) return;
+            const listenerKey = `${cardId}-${action}`;
+            // Remove existing listener if it exists
+            if (this.eventListeners.has(listenerKey)) {
+                const existing = this.eventListeners.get(listenerKey);
+                existing.element.removeEventListener(existing.event, existing.handler);
+                this.eventListeners.delete(listenerKey);
+            }
+            btn.addEventListener('click', handler);
+            this.eventListeners.set(listenerKey, { 
+                element: btn, 
+                event: 'click', 
+                handler: handler 
             });
+        };
+        
+        if (item.isStaked) {
+            safeAttachListener(
+                card.querySelector('.recharge-btn'),
+                'recharge', 
+                () => this.rechargeBuilding(item)
+            );
+            safeAttachListener(
+                card.querySelector('.upgrade-btn'),
+                'upgrade', 
+                () => this.upgradeBuilding(item)
+            );
+            safeAttachListener(
+                card.querySelector('.claim-btn'),
+                'claim', 
+                () => this.claimBuilding(item)
+            );
+            safeAttachListener(
+                card.querySelector('.destroy-btn'),
+                'destroy', 
+                () => this.destroyBuilding(item)
+            );
         } else {
-            card.querySelector('.stake-btn')?.addEventListener('click', () => this.stakeNFT(item.tokenId, item.contractAddress));
-            card.querySelector('.burn-btn')?.addEventListener('click', () => this.burnNFT(item.tokenId, item.contractAddress));
+            safeAttachListener(
+                card.querySelector('.stake-btn'),
+                'stake', 
+                () => this.stakeNFT(item.tokenId, item.contractAddress)
+            );
+            safeAttachListener(
+                card.querySelector('.burn-btn'),
+                'burn', 
+                () => this.burnNFT(item.tokenId, item.contractAddress)
+            );
         }
     }
 
