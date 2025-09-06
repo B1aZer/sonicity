@@ -97,7 +97,7 @@ export class RevenueHubPage extends BasePage {
     setupEventListeners() {
         // Tab switching functionality
         this.addEventListener('.tier-tab', 'click', (event) => {
-            const clickedTab = event.target;
+            const clickedTab = event.currentTarget;
             const tier = parseInt(clickedTab.dataset.tier);
             
             // Remove active class from all tabs and contents

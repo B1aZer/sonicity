@@ -126,7 +126,7 @@ export class ArcanumPage extends BasePage {
     setupEventListeners() {
         // Tab switching functionality
         this.addEventListener('.tier-tab', 'click', (event) => {
-            const clickedTab = event.target;
+            const clickedTab = event.currentTarget;
             const tier = parseInt(clickedTab.dataset.tier);
             
             // Check if tier is unlocked

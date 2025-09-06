@@ -153,10 +153,10 @@ export class TacticsCenterPage extends BasePage {
     }
 
     setupMintHandlers() {
-        const mintButtons = this.element.querySelectorAll('.mint-tactic-btn');
-        mintButtons.forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const tacticId = parseInt(btn.getAttribute('data-tactic-id'));
+        // Use BasePage event management system to prevent duplicate handlers
+        this.addEventListener('.mint-tactic-btn', 'click', async (event) => {
+            const btn = event.currentTarget;
+            const tacticId = parseInt(btn.getAttribute('data-tactic-id'));
                 if (!tacticId) return;
 
                 const cost = this.state.tacticCosts[tacticId];
@@ -191,7 +191,6 @@ export class TacticsCenterPage extends BasePage {
                 if (result.isConfirmed) {
                     await this.mintTactic(tacticId, tacticInfo.name);
                 }
-            });
         });
     }
 

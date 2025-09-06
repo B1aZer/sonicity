@@ -480,7 +480,7 @@ export class CityPage extends BasePage {
 
         // Tier tabs
         this.addEventListener('.tier-tab', 'click', (event) => {
-            const tab = event.target;
+            const tab = event.currentTarget;
             // Don't allow clicking locked tabs
             if (tab.classList.contains('locked')) {
                 return;
@@ -498,7 +498,7 @@ export class CityPage extends BasePage {
 
         // Building buttons
         this.addEventListener('.building-button', 'click', async (event) => {
-            const button = event.target;
+            const button = event.currentTarget;
             const buildingType = button.dataset.building;
             const buildingCard = button.closest('.building-card');
             const requiredDonation = buildingCard.dataset.requiredDonation;

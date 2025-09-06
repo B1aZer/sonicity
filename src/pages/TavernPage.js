@@ -156,10 +156,10 @@ export class TavernPage extends BasePage {
     }
 
     setupMintHandlers() {
-        const mintButtons = this.element.querySelectorAll('.mint-hero-btn');
-        mintButtons.forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const heroClass = btn.getAttribute('data-hero-class');
+        // Use BasePage event management system to prevent duplicate handlers
+        this.addEventListener('.mint-hero-btn', 'click', async (event) => {
+            const btn = event.currentTarget;
+            const heroClass = btn.getAttribute('data-hero-class');
                 if (!heroClass) return;
 
                 const heroClassValue = HeroNFTContract.HERO_CLASSES[heroClass];
@@ -195,7 +195,6 @@ export class TavernPage extends BasePage {
                 if (result.isConfirmed) {
                     await this.mintHero(heroClassValue, heroClass);
                 }
-            });
         });
     }
 

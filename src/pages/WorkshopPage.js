@@ -184,7 +184,7 @@ export class WorkshopPage extends BasePage {
         const repairButtons = this.element.querySelectorAll('.repair-building-button');
         if (repairButtons.length > 0) {
             this.addEventListener('.repair-building-button', 'click', (event) => {
-                const buildingId = event.target.dataset.buildingId;
+                const buildingId = event.currentTarget.dataset.buildingId;
                 if (buildingId) {
                     this.handleRepairBuilding(buildingId).catch(error => {
                         Logger.error('Error in handleRepairBuilding:', error);

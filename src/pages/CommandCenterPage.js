@@ -639,7 +639,7 @@ export class CommandCenterPage extends BasePage {
         // Add input validation
         // Use BasePage event management for input validation
         this.addEventListener('#deploy-infantry, #deploy-cavalry, #deploy-siege', 'input', (event) => {
-            const input = event.target;
+            const input = event.currentTarget;
             const value = parseInt(input.value) || 0;
             const max = parseInt(input.max) || 0;
             if (value < 0) input.value = 0;

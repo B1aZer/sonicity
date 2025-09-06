@@ -231,7 +231,7 @@ export class ShopPage extends BasePage {
         
         // Use the BasePage event listener system for proper cleanup
         this.addEventListener('.buy-btn', 'click', (event) => {
-            const itemId = parseInt(event.target.getAttribute('data-item-id'));
+            const itemId = parseInt(event.currentTarget.getAttribute('data-item-id'));
             this.handlePurchaseCosmetic(itemId).catch(error => {
                 Logger.error('Error in handlePurchaseCosmetic:', error);
             });

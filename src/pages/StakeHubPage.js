@@ -167,7 +167,7 @@ export class StakePage extends BasePage {
     setupEventListeners() {
         // Use BasePage event management system to prevent duplicate handlers
         this.addEventListener('.tier-tab', 'click', async (event) => {
-            const tab = event.target.closest('.tier-tab');
+            const tab = event.currentTarget;
             this.element.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
             this.element.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
             tab.classList.add('active');
