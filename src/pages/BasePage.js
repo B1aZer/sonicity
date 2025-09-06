@@ -15,6 +15,52 @@ import { CosmeticItemsContract } from '../js/contracts/CosmeticItemsContract.js'
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 
+/**
+ * BasePage - Base class for all game pages
+ * 
+ * EVENT LISTENER BEST PRACTICES:
+ * 
+ * 1. STATIC CONTENT (in render() method):
+ *    - Use this.addEventListener() in setupEventListeners()
+ *    - setupEventListeners() is called once during onInitialized()
+ *    - Examples: claim buttons, navigation buttons, form buttons
+ * 
+ * 2. DYNAMIC CONTENT (populated later):
+ *    - Add event listeners AFTER creating the DOM elements
+ *    - Do this in update methods like updateBuildingsList(), updateShopItems(), etc.
+ *    - Examples: repair buttons for damaged buildings, purchase buttons for shop items
+ * 
+ * 3. ALWAYS USE this.addEventListener():
+ *    - Provides automatic cleanup when page is destroyed
+ *    - Handles error catching and logging
+ *    - Ensures consistent behavior across pages
+ *    - DO NOT use direct element.addEventListener()
+ * 
+ * 4. TIMING PATTERNS:
+ *    - constructor() → render() → onInitialized() → setupEventListeners()
+ *    - Dynamic updates → updateXXXList() → this.addEventListener() for new elements
+ * 
+ * EXAMPLES:
+ * 
+ * ✅ GOOD - Static content:
+ * setupEventListeners() {
+ *     this.addEventListener('.claim-button', 'click', () => { ... });
+ * }
+ * 
+ * ✅ GOOD - Dynamic content:
+ * updateDamagedBuildingsList() {
+ *     container.innerHTML = buildingList;
+ *     this.addEventListener('.repair-button', 'click', (event) => { ... });
+ * }
+ * 
+ * ❌ BAD - Direct DOM manipulation:
+ * element.addEventListener('click', handler); // No cleanup, no error handling
+ * 
+ * ❌ BAD - Wrong timing:
+ * setupEventListeners() {
+ *     this.addEventListener('.dynamic-button', 'click', handler); // Elements don't exist yet
+ * }
+ */
 export class BasePage {
     constructor() {
         this.modal = new Modal();
