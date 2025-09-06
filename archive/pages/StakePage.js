@@ -1,3 +1,18 @@
+/**
+ * ARCHIVED: StakePage.js
+ * 
+ * This page was moved to archive because:
+ * 1. Router imports StakePage from StakeHubPage.js instead of this file
+ * 2. This appears to be an older, simpler version (386 lines vs 1360 lines)
+ * 3. Only referenced in temp script files, not in active routing
+ * 4. StakeHubPage.js provides the comprehensive "grid hub style" staking interface
+ * 
+ * The functionality has been superseded by:
+ * - StakeHubPage.js (/stake) for the main staking interface
+ * 
+ * Archived on: December 2024
+ */
+
 import { formatAddress } from '../js/utils/wallet.js';
 import Logger from '../js/utils/logger.js';
 import { NFTCard } from '../components/NFTCard.js';

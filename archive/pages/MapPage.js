@@ -1,3 +1,19 @@
+/**
+ * ARCHIVED: MapPage.js
+ * 
+ * This page was moved to archive because:
+ * 1. It's not imported or used in the current routing system (src/js/core/router.js)
+ * 2. The /map route is not defined in the routeMap
+ * 3. No navigation references to /map found in active codebase
+ * 4. Evidence shows the /map route was removed in previous refactoring
+ * 
+ * The functionality appears to have been superseded by:
+ * - GamePage (/overview) for the main game view with 3D city
+ * - CityPage (/city) for city management interface
+ * 
+ * Archived on: December 2024
+ */
+
 import '../styles/map-page.css';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
@@ -47,8 +63,8 @@ export class MapPage extends BasePage {
                     Logger.info('Current player city:', currentCity);
 
                     if (currentCity) {
-                        // Player is already in a city, just navigate to dashboard
-                        window.history.pushState({}, '', '/dashboard');
+                        // Player is already in a city, just navigate to overview
+                        window.history.pushState({}, '', '/overview');
                         window.dispatchEvent(new PopStateEvent('popstate'));
                         return;
                     }
@@ -65,8 +81,8 @@ export class MapPage extends BasePage {
                     // Show success message
                     this.modal.success('Successfully joined city!');
 
-                    // Navigate to dashboard
-                    window.history.pushState({}, '', '/dashboard');
+                    // Navigate to overview
+                    window.history.pushState({}, '', '/overview');
                     window.dispatchEvent(new PopStateEvent('popstate'));
                 } catch (error) {
                     Logger.error('Error joining city:', error);
