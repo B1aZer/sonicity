@@ -180,15 +180,18 @@ export class WorkshopPage extends BasePage {
             });
         });
 
-        // Add event listeners for individual repair buttons
-        this.addEventListener('.repair-building-button', 'click', (event) => {
-            const buildingId = event.target.dataset.buildingId;
-            if (buildingId) {
-                this.handleRepairBuilding(buildingId).catch(error => {
-                    Logger.error('Error in handleRepairBuilding:', error);
-                });
-            }
-        });
+        // Add event listeners for individual repair buttons only if they exist
+        const repairButtons = this.element.querySelectorAll('.repair-building-button');
+        if (repairButtons.length > 0) {
+            this.addEventListener('.repair-building-button', 'click', (event) => {
+                const buildingId = event.target.dataset.buildingId;
+                if (buildingId) {
+                    this.handleRepairBuilding(buildingId).catch(error => {
+                        Logger.error('Error in handleRepairBuilding:', error);
+                    });
+                }
+            });
+        }
     }
 
     render() {
@@ -296,6 +299,8 @@ export class WorkshopPage extends BasePage {
                 </button>
             </div>
         `).join('');
+
+        this.setupEventListeners();
     }
 
     updateUI(oldState, newState) {
