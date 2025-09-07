@@ -313,10 +313,15 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(activeBattles[defender].startTime == 0, "Defender already in a battle");
         require(infantryCount > 0 || cavalryCount > 0 || siegeCount > 0, "Must deploy at least one troop");
 
-        // Clear search state
+        // Clear search state for both attacker and defender
         playerSearches[msg.sender].active = false;
         playerSearches[msg.sender].foundOpponent = address(0);
         emit SearchCompleted(msg.sender);
+        
+        // Clear defender's search state as well to prevent asymmetric advantage
+        playerSearches[defender].active = false;
+        playerSearches[defender].foundOpponent = address(0);
+        emit SearchCompleted(defender);
 
         // Check if attacker has enough troops
         require(playerTroops[msg.sender][TroopType.INFANTRY] >= infantryCount, "Not enough infantry");
