@@ -541,6 +541,14 @@ export class GamePage extends BasePage {
                         window.history.pushState({}, '', '/tactics-center');
                         window.dispatchEvent(new PopStateEvent('popstate'));
                     }, BUILDING_ENTER_DELAY);
+                } else if (clickedObject.userData.isGarrison) {
+                    Logger.info('Garrison clicked');
+                    this.audioManager.playBuildingEnter();
+                    this.preloadPage('/garrison');
+                    setTimeout(() => {
+                        window.history.pushState({}, '', '/garrison');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                    }, BUILDING_ENTER_DELAY);
                 }
             }
         });
