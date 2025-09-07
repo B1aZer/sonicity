@@ -160,14 +160,14 @@ export class GamePage extends BasePage {
                 
                 // Show warning modal
                 const modalContent = `ENEMY ATTACK IN PROGRESS!<br><br>
-                    Your outpost has detected an active enemy assault!<br><br>
+                    Your district is under attack by enemy forces!<br><br>
                     Battle duration: ${timeString}.<br><br>
                     Deploy your troops to the Garrison and prepare your defenses!`;
                 
                 const result = await this.modal.confirm(
                     modalContent,
                     { 
-                        title: 'Outpost Alert',
+                        title: 'Battle Alert',
                         confirmButtonText: 'Acknowledge',
                         showCancelButton: false,
                         icon: 'warning'
