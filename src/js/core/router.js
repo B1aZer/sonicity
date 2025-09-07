@@ -15,6 +15,7 @@ import { BarracksPage } from '../../pages/BarracksPage.js';
 import { ScoutGuildPage } from '../../pages/ScoutGuildPage.js';
 import { CommandCenterPage } from '../../pages/CommandCenterPage.js';
 import { GarrisonPage } from '../../pages/GarrisonPage.js';
+import { OutpostPage } from '../../pages/OutpostPage.js';
 import { RevenueHubPage } from '../../pages/RevenueHubPage.js';
 import { TavernPage } from '../../pages/TavernPage.js';
 import { TacticsCenterPage } from '../../pages/TacticsCenterPage.js';
@@ -55,6 +56,7 @@ export class Router {
             'scout-guild': ScoutGuildPage,
             'command-center': CommandCenterPage,
             'garrison': GarrisonPage,
+            'outpost': OutpostPage,
             'revenue-hub': RevenueHubPage,
             'tavern': TavernPage,
             'tactics-center': TacticsCenterPage
@@ -232,6 +234,7 @@ export class Router {
             'scout-guild': () => import('../../pages/ScoutGuildPage.js').then(m => m.ScoutGuildPage),
             'command-center': () => import('../../pages/CommandCenterPage.js').then(m => m.CommandCenterPage),
             'garrison': () => import('../../pages/GarrisonPage.js').then(m => m.GarrisonPage),
+            'outpost': () => import('../../pages/OutpostPage.js').then(m => m.OutpostPage),
             'revenue-hub': () => import('../../pages/RevenueHubPage.js').then(m => m.RevenueHubPage),
             'stake': () => import('../../pages/StakeHubPage.js').then(m => m.StakePage),
             'tavern': () => import('../../pages/TavernPage.js').then(m => m.TavernPage),
