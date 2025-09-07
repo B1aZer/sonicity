@@ -487,10 +487,11 @@ export class GarrisonPage extends BasePage {
             }
 
             // Sort battles by timestamp in descending order (newest first)
-            battleHistory.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+            // Create a new array to avoid "read only property" error
+            const sortedBattles = [...battleHistory].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
 
             // Process battles sequentially to handle async power calculations
-            for (const battle of battleHistory) {
+            for (const battle of sortedBattles) {
                 const battleDate = new Date(Number(battle.timestamp) * 1000);
                 const isAttacker = battle.attacker.toLowerCase() === address.toLowerCase();
                 const won = isAttacker ? battle.attackerWon : !battle.attackerWon;
@@ -593,7 +594,7 @@ export class GarrisonPage extends BasePage {
                 const opponent = isAttacker ? lastBattle.defender : lastBattle.attacker;
                 const shortOpponent = opponent.substring(0, 6) + '...' + opponent.substring(opponent.length - 4);
                 
-                let message = `${won ? '🏆 VICTORY!' : '💀 DEFEAT!'}\n\n`;
+                let message = `${won ? 'VICTORY!' : 'DEFEAT!'}\n\n`;
                 message += `Opponent: ${shortOpponent}\n`;
                 message += `Your Power: ${isAttacker ? lastBattle.attackerPower : lastBattle.defenderPower}\n`;
                 message += `Opponent Power: ${isAttacker ? lastBattle.defenderPower : lastBattle.attackerPower}\n\n`;

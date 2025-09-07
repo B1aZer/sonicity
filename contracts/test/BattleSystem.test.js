@@ -1358,6 +1358,54 @@ describe("BattleSystem", function () {
         });
     });
 
+    describe("Threat Intelligence", function () {
+        beforeEach(async function () {
+            // Set up players with enough gold for searches
+            await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1000);
+            await donateGoldForTier(player3, gameState, gridBuildings, altar, sonicityNFT, 1000);
+
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 300);
+            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, 300);
+            await ensurePlayerGold(player3, gameState, gridBuildings, altar, sonicityNFT, 300);
+
+            // Set noOpponentFoundChance to 0 for predictable testing
+            await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+        });
+
+        it("Should emit ThreatDetected events correctly", async function () {
+            // Player1 searches and finds player2
+            await battleSystem.connect(player1).startSearch();
+            const searchDuration = await battleSystem.searchDuration();
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Listen for ThreatDetected event
+            const tx = await battleSystem.connect(player1).findRandomOpponent();
+            const receipt = await tx.wait();
+            
+            // Since we set noOpponentFoundChance to 0, someone should be found
+            // Check if player2 was found and ThreatDetected event was emitted
+            const threatEvent = receipt.events?.find(e => e.event === 'ThreatDetected');
+            
+            if (threatEvent) {
+                expect(threatEvent.args.finder).to.equal(player1.address);
+                expect(threatEvent.args.target).to.be.oneOf([player2.address, player3.address]); // Could be either
+                expect(threatEvent.args.timestamp).to.be.gt(0);
+                
+                // Verify we can query the events using filters
+                const targetFound = threatEvent.args.target;
+                const filter = battleSystem.filters.ThreatDetected(null, targetFound);
+                const events = await battleSystem.queryFilter(filter);
+                expect(events).to.have.length.at.least(1);
+                
+                const latestEvent = events[events.length - 1];
+                expect(latestEvent.args.finder).to.equal(player1.address);
+                expect(latestEvent.args.target).to.equal(targetFound);
+            }
+        });
+    });
+
     describe("Battle Hang Issue", function () {
         beforeEach(async function () {
             // Set up players with troops

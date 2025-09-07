@@ -172,7 +172,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 timestamp
     );
     event SearchStarted(address indexed player, uint256 startTime);
-    event SearchCompleted(address indexed player);
+    event SearchCompleted(address indexed player, address indexed target);
     event BattleAutoResolved(address indexed attacker, address indexed defender, string reason);
     event OutpostWarningConfirmed(address indexed defender);
 
@@ -316,12 +316,12 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         // Clear search state for both attacker and defender
         playerSearches[msg.sender].active = false;
         playerSearches[msg.sender].foundOpponent = address(0);
-        emit SearchCompleted(msg.sender);
+        emit SearchCompleted(msg.sender, defender);
         
         // Clear defender's search state as well to prevent asymmetric advantage
         playerSearches[defender].active = false;
         playerSearches[defender].foundOpponent = address(0);
-        emit SearchCompleted(defender);
+        emit SearchCompleted(defender, address(0));
 
         // Check if attacker has enough troops
         require(playerTroops[msg.sender][TroopType.INFANTRY] >= infantryCount, "Not enough infantry");
@@ -983,6 +983,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         // Store the found opponent and mark that we've attempted to find one
         playerSearches[msg.sender].foundOpponent = potentialOpponents[opponentIndex];
         playerSearches[msg.sender].hasAttemptedFind = true;
+        
+        // Emit search completed with target found
+        emit SearchCompleted(msg.sender, potentialOpponents[opponentIndex]);
         
         return potentialOpponents[opponentIndex];
     }
