@@ -561,7 +561,7 @@ export class GamePage extends BasePage {
         const buildingTypes = [
             'isMine', 'isCityhall', 'isAltar', 'isHouse', 'isFarm', 'isDiamondstation',
             'isRepforge', 'isYieldstation', 'isArcanumofnames', 'isShop', 'isWorkshop',
-            'isBarracks', 'isScoutguild', 'isCommandcenter', 'isTavern', 'isTacticsCenter'
+            'isBarracks', 'isScoutguild', 'isCommandcenter', 'isGarrison', 'isTavern', 'isTacticsCenter'
         ];
         
         return buildingTypes.some(type => userData[type] === true);
