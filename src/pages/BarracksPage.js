@@ -162,6 +162,10 @@ export class BarracksPage extends BasePage {
         this.element.innerHTML = `
             <div class="page-container">
                 <h1 class="page-title">Barracks</h1>
+                <p class="page-description">
+                    <strong>Train and manage your military forces.</strong> 
+                    <em>Build armies to defend your district and launch raids against other players.</em>
+                </p>
                 
                 <div class="page-section">
                     <h2>Resources</h2>

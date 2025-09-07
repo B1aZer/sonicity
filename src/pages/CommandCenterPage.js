@@ -353,6 +353,10 @@ export class CommandCenterPage extends BasePage {
         this.element.innerHTML = `
             <div class="page-container command-center-container">
                 <h1 class="page-title">Command Center</h1>
+                <p class="page-description">
+                    <strong>Launch coordinated attacks on enemy districts.</strong> 
+                    <em>Deploy your forces strategically and command them in battle to claim victory and resources.</em>
+                </p>
                 
                 <!-- Battle Progress Bar Container -->
                 <div id="battle-progress-container"></div>

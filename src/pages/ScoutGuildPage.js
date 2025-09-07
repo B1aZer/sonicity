@@ -121,6 +121,10 @@ export class ScoutGuildPage extends BasePage {
         this.element.innerHTML = `
             <div class="page-container scout-guild-container">
                 <h1 class="page-title">Scout Guild</h1>
+                <p class="page-description">
+                    <strong>Discover and target enemy districts for raids.</strong> 
+                    <em>Use your scouts to find vulnerable opponents and plan strategic attacks.</em>
+                </p>
                 
                 <div class="page-section status-section">
                     <h2>Resources</h2>
