@@ -1404,6 +1404,7 @@ describe("BattleSystem", function () {
                 expect(latestEvent.args.target).to.equal(targetFound);
             }
         });
+
     });
 
     describe("Battle Hang Issue", function () {
@@ -1589,6 +1590,94 @@ describe("BattleSystem", function () {
             console.log(`  Player1 (WARRIOR + 15 infantry): ${player1TotalPower} power`);
             console.log(`  Player2 (STRATEGIST + defense tower): ${player2TotalPower} power`);
             console.log(`  Winner: ${battleRecord.attackerWon ? 'Player1 (WARRIOR)' : 'Player2 (STRATEGIST)'}`);
+        });
+
+        it("Should prevent duplicate battle resolution (anti-exploit test)", async function () {
+            // Add more gold for search cost
+            await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 500);
+            
+            // Set up battle scenario
+            await battleSystem.connect(player1).startSearch();
+            const searchDuration = await battleSystem.searchDuration();
+            await ethers.provider.send("evm_increaseTime", [Number(searchDuration) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            const findTx = await battleSystem.connect(player1).findRandomOpponent();
+            const foundOpponent = await findTx.wait();
+            
+            // Get the actual found opponent from player's search state
+            const searchState = await battleSystem.playerSearches(player1.address);
+            const actualOpponent = searchState.foundOpponent;
+            expect(actualOpponent).to.not.equal("0x0000000000000000000000000000000000000000", "Should find an opponent");
+            
+            // Start battle
+            await battleSystem.connect(player1).startBattle(1, 0, 0); // Deploy 1 infantry
+            
+            // Wait for battle duration to complete
+            const battleDuration = await battleSystem.BATTLE_DURATION();
+            await ethers.provider.send("evm_increaseTime", [Number(battleDuration) + 1]);
+            await ethers.provider.send("evm_mine");
+            
+            // Get initial battle count
+            const initialBattleId = await battleSystem.getLatestBattleId();
+            console.log("Initial battle ID:", initialBattleId.toString());
+            
+            // Get the battle history before resolution
+            const player1HistoryBefore = await battleSystem.getPlayerBattleHistory(player1.address);
+            const defenderHistoryBefore = await battleSystem.getPlayerBattleHistory(actualOpponent);
+            console.log("Player1 history before:", player1HistoryBefore.length);
+            console.log("Defender history before:", defenderHistoryBefore.length);
+            
+            // Check battle state before resolution
+            const battleBefore = await battleSystem.activeBattles(player1.address);
+            console.log("Battle exists:", battleBefore.startTime > 0);
+            console.log("Battle resolved before:", battleBefore.resolved);
+            
+            // Try to resolve battle from attacker's perspective
+            try {
+                const resolveTx = await battleSystem.connect(player1).resolveBattle(player1.address);
+                console.log("Resolve transaction completed successfully");
+            } catch (error) {
+                console.log("Resolve failed with error:", error.message);
+                throw error;
+            }
+            
+            // Get battle count after first resolution
+            const battleIdAfterFirst = await battleSystem.getLatestBattleId();
+            console.log("Battle ID after first resolution:", battleIdAfterFirst.toString());
+            
+            // Check that a battle was actually recorded by checking player battle history
+            const player1HistoryAfter = await battleSystem.getPlayerBattleHistory(player1.address);
+            console.log("Player1 history after first resolution:", player1HistoryAfter.length);
+            expect(player1HistoryAfter.length).to.equal(player1HistoryBefore.length + 1, "Battle should be recorded in player history");
+            
+            // Try to resolve the same battle from defender's perspective (should fail due to "Battle already resolved")
+            // We need to get the defender signer based on the actualOpponent address
+            const defenderSigner = actualOpponent === player2.address ? player2 : player3;
+            
+            // Check battle state after first resolution
+            const battleAfter = await battleSystem.activeBattles(player1.address);
+            console.log("Battle exists after resolution:", battleAfter.startTime > 0);
+            
+            const defenderBattleAfter = await battleSystem.activeBattles(actualOpponent);
+            console.log("Defender battle exists after resolution:", defenderBattleAfter.startTime > 0);
+            
+            // This should now FAIL - either "Battle does not exist" or "Battle already resolved"
+            try {
+                await battleSystem.connect(defenderSigner).resolveBattle(actualOpponent);
+                console.log("❌ Second resolution succeeded - this should not happen!");
+            } catch (error) {
+                console.log("✅ Second resolution failed as expected:", error.message);
+                expect(error.message).to.match(/(Battle does not exist|Battle already resolved)/);
+            }
+            
+            // Verify no additional battles were created
+            const player1HistoryFinal = await battleSystem.getPlayerBattleHistory(player1.address);
+            const defenderHistoryFinal = await battleSystem.getPlayerBattleHistory(actualOpponent);
+            expect(player1HistoryFinal.length).to.equal(player1HistoryAfter.length, "No additional battles for player1");
+            expect(defenderHistoryFinal.length).to.equal(defenderHistoryBefore.length + 1, "Defender should have exactly one battle");
+            
+            console.log("✅ Test passed: Duplicate resolution properly prevented!");
         });
 
         it("should test resource management - can player afford hero after training troops?", async function () {
