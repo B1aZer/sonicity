@@ -14,6 +14,7 @@ import { TacticsNFTContract } from '../js/contracts/TacticsNFTContract.js';
 import { CosmeticItemsContract } from '../js/contracts/CosmeticItemsContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
+import { ContractErrorHandler } from '../js/utils/contractErrorHandler.js';
 
 export class BasePage {
     constructor() {
@@ -314,6 +315,15 @@ export class BasePage {
             Logger.error('Error during page initialization:', error);
             this.modal.error('Failed to initialize page. Please try refreshing the page.');
         });
+    }
+
+    /**
+     * Handle contract errors with centralized error processing
+     * @param {Error} error - The error from contract call
+     * @param {string} operation - The operation being performed
+     */
+    handleContractError(error, operation) {
+        ContractErrorHandler.handleError(error, operation, this.modal);
     }
 
     unmount() {

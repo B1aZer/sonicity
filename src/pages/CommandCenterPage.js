@@ -568,23 +568,7 @@ export class CommandCenterPage extends BasePage {
                 this.modal.success(`Battle started${heroText}! Your troops are marching to battle.`);
                 await this.loadCommandCenterData();
             } catch (error) {
-                Logger.error('Error starting battle:', error);
-                
-                // Provide more specific error messages
-                let errorMessage = 'Failed to start battle';
-                if (error.message.includes('Not enough')) {
-                    errorMessage = 'You don\'t have enough troops available for deployment.';
-                } else if (error.message.includes('Not in battle')) {
-                    errorMessage = 'You are not currently in a battle.';
-                } else if (error.message.includes('No opponent found')) {
-                    errorMessage = 'No opponent was found. Please try searching again.';
-                } else if (error.message.includes('Must deploy at least one troop')) {
-                    errorMessage = 'You must deploy at least one troop to start a battle.';
-                } else {
-                    errorMessage += ': ' + error.message;
-                }
-                
-                this.modal.error(errorMessage);
+                this.handleContractError(error, 'start battle');
             }
         });
 
@@ -636,8 +620,7 @@ export class CommandCenterPage extends BasePage {
                 
                 await this.loadCommandCenterData();
             } catch (error) {
-                Logger.error('Error resolving battle:', error);
-                this.modal.error('Failed to resolve battle: ' + error.message);
+                this.handleContractError(error, 'resolve battle');
             }
         });
 

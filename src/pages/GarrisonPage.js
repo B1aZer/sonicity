@@ -552,23 +552,7 @@ export class GarrisonPage extends BasePage {
                 this.modal.success(`Troops deployed to garrison${heroText}! Your defenses are strengthened.`);
                 await this.loadGarrisonData();
             } catch (error) {
-                Logger.error('Error deploying to garrison:', error);
-                
-                // Provide more specific error messages
-                let errorMessage = 'Failed to deploy to garrison';
-                if (error.message.includes('Troops already deployed')) {
-                    errorMessage = 'Troops are already deployed to garrison. You can only deploy once per battle.';
-                } else if (error.message.includes('Not enough')) {
-                    errorMessage = 'You don\'t have enough troops available for deployment.';
-                } else if (error.message.includes('Not in battle')) {
-                    errorMessage = 'You are not currently in a battle.';
-                } else if (error.message.includes('Not the defender')) {
-                    errorMessage = 'Only the defender can deploy troops to garrison.';
-                } else {
-                    errorMessage += ': ' + error.message;
-                }
-                
-                this.modal.error(errorMessage);
+                this.handleContractError(error, 'deploy to garrison');
             }
         });
 
@@ -620,8 +604,7 @@ export class GarrisonPage extends BasePage {
                 
                 await this.loadGarrisonData();
             } catch (error) {
-                Logger.error('Error resolving battle:', error);
-                this.modal.error('Failed to resolve battle: ' + error.message);
+                this.handleContractError(error, 'resolve battle');
             }
         });
 
