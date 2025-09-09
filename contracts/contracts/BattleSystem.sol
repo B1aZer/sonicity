@@ -239,13 +239,13 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      */
     function trainTroops(TroopType troopType, uint256 amount) external nonReentrant {
         TroopConfig memory config = troopConfigs[troopType];
-        require(amount > 0, "Amount must be greater than 0");
+        require(amount > 0, "Amount must be > 0");
 
         // Check if player can train this troop type based on barracks level
         (bool success, bytes memory returnData) = districtBuildingsAddress.staticcall(
             abi.encodeWithSignature("canTrainTroopType(address,uint8)", msg.sender, uint8(troopType))
         );
-        require(success && abi.decode(returnData, (bool)), "Cannot train this troop type at current barracks level");
+        require(success && abi.decode(returnData, (bool)), "Cannot train troop type");
 
         // Check and deduct resources
         (success, returnData) = gameStateAddress.call(
@@ -258,15 +258,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
                 0   // No diamond cost for training
             )
         );
-        if (!success) {
-            // If the call failed, decode and propagate the error message
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to deduct resources");
-        }
+        _revertWithReason(success, returnData, "Resource deduction failed");
 
         // Add troops to player's army
         playerTroops[msg.sender][troopType] += amount;
@@ -460,6 +452,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(battle.startTime > 0, "Battle does not exist");
         require(!battle.resolved, "Battle already resolved");
         require(block.timestamp >= battle.startTime + BATTLE_DURATION, "Battle duration not elapsed");
+        
+        // Check opponent's battle state to prevent duplicate resolution
+        address opponent = (battleId == battle.attacker) ? battle.defender : battle.attacker;
+        require(!activeBattles[opponent].resolved, "Battle already resolved");
 
         // Calculate final powers on-the-fly (RPS multipliers applied during calculation)
         uint256 finalAttackerPower = getAttackerPowerWithTactics(battleId);
@@ -479,6 +475,12 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             // Update battle state
             battle.repPoints = calculateRepPoints(finalAttackerPower, finalDefenderPower);
         }
+
+        // Mark battle as resolved FIRST to prevent race conditions
+        // Synchronize both battle copies to prevent duplicate resolution
+        battle.resolved = true;
+        activeBattles[battle.attacker].resolved = true;
+        activeBattles[battle.defender].resolved = true;
 
         // Record battle history
         uint256 currentBattleId = nextBattleId++;
@@ -502,8 +504,6 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         // Update last battle time for both players
         lastBattleTime[battle.attacker] = block.timestamp;
         lastBattleTime[battle.defender] = block.timestamp;
-
-        battle.resolved = true;
 
         // Clear the battle from activeBattles for both players
         delete activeBattles[battle.attacker];
@@ -540,15 +540,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         (bool success, bytes memory returnData) = gridBuildingsAddress.call(
             abi.encodeWithSignature("damageBuildings(address,uint256)", defender, amount)
         );
-        if (!success) {
-            // If the call failed, decode and propagate the error message
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to damage grid building");
-        }
+        _revertWithReason(success, returnData, "Failed to damage grid building");
         
         // Decode and return the number of buildings damaged
         return abi.decode(returnData, (uint256));
@@ -567,21 +559,24 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         (bool success, bytes memory returnData) = districtBuildingsAddress.call(
             abi.encodeWithSignature("damageBuildings(address,uint256)", defender, amount)
         );
-        if (!success) {
-            // If the call failed, decode and propagate the error message
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to damage district building");
-        }
+        _revertWithReason(success, returnData, "Failed to damage district building");
         
         // Decode and return the number of buildings damaged
         return abi.decode(returnData, (uint256));
     }
 
     // Internal helper functions
+
+    function _revertWithReason(bool success, bytes memory returnData, string memory message) internal pure {
+        if (!success) {
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert(message);
+        }
+    }
 
     function getDefenseTowerPower(address player) internal view returns (uint256) {
         (bool success, bytes memory data) = districtBuildingsAddress.staticcall(
@@ -644,14 +639,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("earnRep(address,uint256)", attacker, effects.repPoints)
         );
-        if (!success) {
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to award REP points");
-        }
+        _revertWithReason(success, returnData, "Failed to award REP points");
     }
 
     function applyCavalryEffects(address attacker, address defender) internal returns (uint256) {
@@ -677,14 +665,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         (bool success, bytes memory returnData) = gridBuildingsAddress.call(
             abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
         );
-        if (!success) {
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to damage grid building");
-        }
+        _revertWithReason(success, returnData, "Failed to damage grid building");
 
         return abi.decode(returnData, (uint256));
     }
@@ -735,14 +716,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         (bool success, bytes memory returnData) = districtBuildingsAddress.call(
             abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
         );
-        if (!success) {
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to damage district building");
-        }
+        _revertWithReason(success, returnData, "Failed to damage district building");
 
         return abi.decode(returnData, (uint256));
     }
@@ -766,14 +740,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         (bool success, bytes memory returnData) = gameStateAddress.call(
             abi.encodeWithSignature("burnTreasury(address,uint256)", defender, treasuryBurned)
         );
-        if (!success) {
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to burn treasury");
-        }
+        _revertWithReason(success, returnData, "Failed to burn treasury");
 
         return treasuryBurned;
     }
@@ -893,14 +860,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
                 0           // no diamond cost
             )
         );
-        if (!success) {
-            if (returnData.length > 0) {
-                assembly {
-                    revert(add(returnData, 32), mload(returnData))
-                }
-            }
-            revert("Failed to deduct search cost");
-        }
+        _revertWithReason(success, returnData, "Failed to deduct search cost");
 
         // Reset and start new search
         playerSearches[msg.sender] = SearchState({
