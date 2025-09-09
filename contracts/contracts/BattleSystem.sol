@@ -605,8 +605,11 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
     function calculateRepPoints(uint256 attackerPower, uint256 defenderPower) internal pure returns (uint256) {
         if (attackerPower == 0) return 0;
+        uint256 baseReward = 1; // Base 1 REP for winning (balanced vs 48h passive)
         uint256 powerDiff = attackerPower > defenderPower ? attackerPower - defenderPower : 0;
-        return (powerDiff * 10) / 100; // 10 REP points per 100 power difference
+        uint256 powerBonus = (powerDiff * 5) / 100; // 5 REP per 100 power difference
+        uint256 maxBonus = 3; // Cap bonus at 3 REP (total max: 4 REP)
+        return baseReward + (powerBonus > maxBonus ? maxBonus : powerBonus);
     }
 
     function applyBattleEffects(

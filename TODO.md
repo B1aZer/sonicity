@@ -1,25 +1,203 @@
+# Now
 
 ## todo
 
-- trees
-- fog
+- no REPs for battles?
+
+1. Contract Issues
+Revenue Pool Calculation: Complex dynamic rate system needs simplification
+Production Edge Cases: Timestamp-based calculations can have timing issues
+Gas Estimation: Some functions may fail gas estimation in certain states
+2. Frontend Issues
+Memory Leaks: Some pages don't properly clean up event listeners
+State Synchronization: Occasional sync issues between wallet state and page state
+Performance: Some pages load all data upfront instead of lazy loading
+3. Integration Issues
+Contract Addresses: Hardcoded addresses in some places
+ABI Management: Inconsistent ABI import patterns
+Error Propagation: Some errors don't bubble up properly to the UI
+📊 IMPLEMENTATION QUALITY SCORE: 7.5/10
+Breakdown:
+Architecture: 8/10 (Good patterns, some inconsistencies)
+Security: 9/10 (Excellent security practices)
+Performance: 7/10 (Good but could be optimized)
+Maintainability: 7/10 (Good structure, some complexity)
+User Experience: 6/10 (Functional but could be smoother)
+Code Quality: 8/10 (Clean code, good patterns)
+🎯 RECOMMENDATIONS:
+High Priority:
+Standardize Error Handling: Ensure all pages use the improved ContractErrorHandler
+Complete BasePage Migration: Migrate remaining pages to the new pattern
+Simplify Production System: Reduce complexity in timestamp calculations
+Improve Loading States: Add consistent loading indicators
+Medium Priority:
+Mobile Optimization: Improve responsive design
+Real-time Updates: Add live updates for battles and production
+Performance Optimization: Implement lazy loading and caching
+Code Consistency: Standardize import patterns and CSS usage
+Low Priority:
+Enhanced Battle System: Add more tactical depth
+Social Features: Add alliances or team play
+Advanced Analytics: Better player statistics and insights
+�� CONCLUSION:
+The current implementation is solid and well-architected with good security practices and clean code patterns. The recent refactoring to use WalletManager as a single source of truth was a significant improvement. The main areas for improvement are around user experience, code consistency, and simplifying some of the more complex systems like production calculations.
+The codebase shows good engineering practices and is maintainable, but could benefit from some polish in the areas mentioned above.
+
+## todo
+
+- models 
+- show upgrade price
+- check revert messages and fix
+- continue playing and fix:
+
+do not make any changes, lets think, we have 3 players with yiels statios, 100 sonic in rev pool
+
+1 changes yeild station,
+after 1 hour 2 charges yoeil
+after 1 hour 3 charges yeild
+
+what happens to reveneue calculation ?
+
+- we need to calculate based on tier AND duration
+- fix upgrades/deployment of single scripts
+
+# anvil
+
+## start
+
+npm run anvil:sonic
+
+## privs
+
+(0) <REDACTED-ANVIL-DEFAULT-KEY> (0x70997970C51812dc3A010C7d01b50e0d17dc79C8)
+(1) <REDACTED-ANVIL-DEFAULT-KEY>
+(2) <REDACTED-ANVIL-DEFAULT-KEY>
+(3) <REDACTED-ANVIL-DEFAULT-KEY>
+(4) <REDACTED-ANVIL-DEFAULT-KEY>
+(5) <REDACTED-ANVIL-DEFAULT-KEY>
+(6) <REDACTED-ANVIL-DEFAULT-KEY>
+(7) <REDACTED-ANVIL-DEFAULT-KEY>
+(8) <REDACTED-ANVIL-DEFAULT-KEY>
+(9) <REDACTED-ANVIL-DEFAULT-KEY>
+
+## todo
+
+- booking
+
+- second player
+- continue from garrison
+- rep icon
+
+- update/check nft metadata
+- stake error proper on limit
+- shop
+- change fog color
+- loading for shop?
+
+- svanwars
+
+1 shop -> only banner (in diamonds), but how place ??
+2 damage system, new models, animation ??
+
+- make garrison, remake command center, tactics_center, make tavern etc ...
+
+
+- change music when in battle
+
++ trees
++ fog
+
++ click building sound
+
+## todo +
 
 + scout guild, city hall, terrain.glb, groundplan.glb, placement_manifest.json
 + redo shop texture, workshop, outpost, tower + 2 lvls make,
 + all barracks levels redo,  scout guild, 
-- make garrison, remake command center, tactics_center, make tavern etc
-- fix small aspects billboard etc
-- outpost page
 + terrain mat + grass
 
+## mobile
 
 - link in city for all buidlings for mobile
+- fix small aspects billboard etc
+- outpost page ?
+- responsive changes
+
+## todo
+
 - small fabs ??
 Cel Shading - Most impactful for the toon look
 Outline Effect - Classic Ghibli signature
 Warm Color Grading - Magical, golden-hour feel
 Atmospheric Haze - Enhances your mountain backdrop
 
+Atmospheric Effects
+Fog: Add depth and atmosphere
+Particle System: Dust particles, smoke from chimneys
+Post-processing: Bloom for lights, color grading
+Weather System: Rain, snow effects
+
+## todo +
+
++ new production 24 stadnard, diamonds, gold 250 ?
++ change charge label
++ change maybe price for rep stations to diamonds ?
++ update help page later
+
+## imporvements (later)
+
+- add raycaster building lights overview (out) heroes
+- merge nft buidling
+- troop survival, add description garris, center
+- postprocessing / bokeh / depth of fieldq
+- add this check for buildling to all pages:
+if (!isArcanumBuilt) {
+                this.setState({
+                    arcanumStatus: 'Not Built',
+                    buildingLevel: 'Build Required',
+                    canCreateNFT: false
+                });
+                return;
+            }
+            
+            // Get building level if built
+            const buildingLevel = isArcanumBuilt ? 1 : 0; // Arcanum is maxLevel 1
+
+
+## todo PRODUCTION
+
+- metrics / sentry
+- you know the driss like, rt for wl
+- update _baseTokenURI on nft contracts
+
+- build all buidlings and adjust 3d scene view
+
+- go through game ONLY using ffard
+
++ add detailed description to disctrict in js
+
++ nft images and so on, should we populate all tokens, limits on mint ?    
+
+## todo other +
+
++ players should noe care about nft for now
++ grid updates  - simply diamonds, current system too complex
++ barrack/district updates - diamonds
++ cache buidlings, preload
++ burn and unstake after upgrade
++ move mint to district buidling, add tier by rarirty
++ right bullding should completely for help and resource/rev status, optining by tiers. Guidance building
++ we completely disable unstake for now, meaning destory completely destroys with nft. For tier 4 yield stations we remove house actions for now. And allow stake directly, unstake removes nft.
++ what happens whaen attacke goes to garrison and vie versa
++ cmd center rm resource, make similar
+
+# Pre
+
+## todo
+
+- remove house nft left
++ connected address white
+- restricut url by pages
 
 ## plan
 
@@ -29,14 +207,7 @@ Atmospheric Haze - Enhances your mountain backdrop
 
 ## todo
 
-- add heros building spawn sound
-- add raycaster building lights overview (out) heroes
-
-Atmospheric Effects
-Fog: Add depth and atmosphere
-Particle System: Dust particles, smoke from chimneys
-Post-processing: Bloom for lights, color grading
-Weather System: Rain, snow effects
++ add heros building spawn sound
 
 
 ## models
@@ -61,27 +232,16 @@ Weather System: Rain, snow effects
 guaiadance ?? smithy
 workshop ? blacksmith
 SCOUT_GUILD ? sm watch tower
-GARRISON ? sm barracks
+-GARRISON ? sm barracks
 OUTPOST ? sm outpost
-COMMAND_CENTER ? sm fortress
-TAVERN ? sm church
-TACTICS_CENTER ?  sm archery ?
-ARCANUME ? mine ?
+-COMMAND_CENTER ? sm fortress
+-TAVERN ? sm church
+-TACTICS_CENTER ?  sm archery ?
+-ARCANUME ? mine ?
 
 ## fab
 
 https://www.fab.com/listings/4b44a80b-b57a-4e79-9d56-73db9defa8c0
-
-## todo
-
-+ new production 24 stadnard, diamonds, gold 250 ?
-+ change charge label
-+ change maybe price for rep stations to diamonds ?
-+ update help page later
-- postprocessing / bokeh / depth of fieldq
-- shop
-- add this.requiredDistrictBuilding = 'Arcanum of Names';
-- damage system
 
 ## question goals
 
@@ -113,6 +273,16 @@ https://www.fab.com/listings/4b44a80b-b57a-4e79-9d56-73db9defa8c0
 
 how to achieve ? ride on whales - but the game is COMPLETELY Anti whales
 
+
+## todo
+
++ make a pass trees from right sloly go to center making more and more small
++ move left 5 trees later to make straight down path
++ left from left to 5th green tree on billboard
++ pine 1_7
++ pine 4_5 change
+
+
 ## examples:
 
 1. petroleum : sold to whales and fucked economy, big extraction
@@ -141,51 +311,6 @@ how to achieve ? ride on whales - but the game is COMPLETELY Anti whales
 - terraian, patrly blender, partly unreal map
 - lightning
 - other props
-
-## todo
-
-- metrics / sentry
-- you know the driss like, rt for wl
-- update _baseTokenURI on nft contracts
-- merge nft buidling
-- responsive changes
-
-- build all buidlings and adjust 3d scene view
-
-- go through game ONLY using ffard
-
-+ add detailed description to disctrict in js
-- add this check for buildling to all pages:
-if (!isArcanumBuilt) {
-                this.setState({
-                    arcanumStatus: 'Not Built',
-                    buildingLevel: 'Build Required',
-                    canCreateNFT: false
-                });
-                return;
-            }
-            
-            // Get building level if built
-            const buildingLevel = isArcanumBuilt ? 1 : 0; // Arcanum is maxLevel 1
-- nft images and so on, should we populate all tokens, limits on mint ?    
-
-+ players should noe care about nft for now
-+ grid updates  - simply diamonds, current system too complex
-+ barrack/district updates - diamonds
-- cache buidlings
-+ burn and unstake after upgrade
-+ move mint to district buidling, add tier by rarirty
-+ right bullding should completely for help and resource/rev status, optining by tiers. Guidance building
-+ we completely disable unstake for now, meaning destory completely destroys with nft. For tier 4 yield stations we remove house actions for now. And allow stake directly, unstake removes nft.
-+ what happens whaen attacke goes to garrison and vie versa
-+ cmd center rm resource, make similar
-
-## todo
-
-- remove house nft left
-+ connected address white
-- troop survival, add description garris, center
-- restricut url by pages
 
 ## models
 
@@ -418,6 +543,7 @@ https://www.fab.com/listings/29645efb-1b5a-467a-82eb-3321df823e58
 - stkae houses 
 - do you pay dor city buildings?
 - other options for shop?
+- loading on shop is nice
 
 
 + decouple mint status page from staking page and reuse
