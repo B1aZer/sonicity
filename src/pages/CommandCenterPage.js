@@ -31,7 +31,7 @@ export class CommandCenterPage extends BasePage {
             Logger.info('Command center page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing command center page:', error);
-            this.modal.error('Failed to initialize command center page. Please try refreshing the page.');
+            this.handleContractError(error, 'initialize command center page');
         }
     }
 
@@ -40,6 +40,7 @@ export class CommandCenterPage extends BasePage {
         if (address) {
             this.loadCommandCenterData().catch(error => {
                 Logger.error('Error loading command center data after wallet update:', error);
+                this.handleContractError(error, 'load command center data after wallet update');
             });
         }
     }
@@ -108,7 +109,7 @@ export class CommandCenterPage extends BasePage {
             }
         } catch (error) {
             Logger.error('Error loading command center data:', error);
-            this.modal.error('Failed to load command center data: ' + error.message);
+            this.handleContractError(error, 'load command center data');
         }
     }
 
@@ -166,6 +167,7 @@ export class CommandCenterPage extends BasePage {
                 battleTimer.textContent = `Time until battle resolution: ${hours}h ${minutes}m`;
             } catch (error) {
                 Logger.error('Error updating battle timer:', error);
+                // Don't show modal for timer update errors - just log them
             }
         };
 
@@ -336,7 +338,8 @@ export class CommandCenterPage extends BasePage {
                 }
             } catch (error) {
                 Logger.error('Error getting hero tactics:', error);
-                deployedHero.textContent = 'Error';
+                deployedHero.textContent = 'Error loading hero data';
+                // Don't show modal for non-critical display errors
             }
             
             deployedSection.style.display = 'block';
@@ -510,6 +513,7 @@ export class CommandCenterPage extends BasePage {
             }
         } catch (error) {
             Logger.error('Error loading battle history:', error);
+            // Don't show modal for battle history errors - just log them
         }
     }
 
@@ -535,6 +539,7 @@ export class CommandCenterPage extends BasePage {
             Logger.info('Hero selection dropdown updated');
         } catch (error) {
             Logger.error('Error updating hero selection dropdown:', error);
+            // Don't show modal for dropdown update errors - just log them
         }
     }
 
@@ -551,8 +556,14 @@ export class CommandCenterPage extends BasePage {
                 const siegeCount = parseInt(siegeInput.value) || 0;
                 const heroClass = heroSelect.value === "" ? 255 : parseInt(heroSelect.value);
 
+                // Validate input values
+                if (infantryCount < 0 || cavalryCount < 0 || siegeCount < 0) {
+                    this.modal.error('Troop counts cannot be negative', { title: 'Invalid Input' });
+                    return;
+                }
+
                 if (infantryCount === 0 && cavalryCount === 0 && siegeCount === 0) {
-                    this.modal.error('Please select at least one troop type to start battle');
+                    this.modal.error('Please select at least one troop type to start battle', { title: 'Invalid Battle Setup' });
                     return;
                 }
 
@@ -640,7 +651,7 @@ export class CommandCenterPage extends BasePage {
         container.appendChild(this.element);
         this.initialize().catch(error => {
             Logger.error('Error during command center page initialization:', error);
-            this.modal.error('Failed to initialize command center page. Please try refreshing the page.');
+            this.handleContractError(error, 'initialize command center page');
         });
     }
 
@@ -685,6 +696,7 @@ export class CommandCenterPage extends BasePage {
             return deployedTactics;
         } catch (error) {
             Logger.error('Error getting deployed tactics:', error);
+            // Return empty array for non-critical errors
             return [];
         }
     }
@@ -760,17 +772,24 @@ export class CommandCenterPage extends BasePage {
         
         deployButtons.forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                const tacticId = parseInt(btn.getAttribute('data-tactic-id'));
-                
-                if (deployedTactics.length >= 3) {
-                    this.modal.error('You can only deploy up to 3 tactics per battle');
-                    return;
-                }
+                try {
+                    const tacticId = parseInt(btn.getAttribute('data-tactic-id'));
+                    
+                    // Validate tactic ID
+                    if (isNaN(tacticId) || tacticId < 1 || tacticId > 9) {
+                        this.modal.error('Invalid tactic selected', { title: 'Invalid Selection' });
+                        return;
+                    }
+                    
+                    if (deployedTactics.length >= 3) {
+                        this.modal.error('You can only deploy up to 3 tactics per battle', { title: 'Tactic Limit Reached' });
+                        return;
+                    }
 
-                if (deployedTactics.includes(tacticId)) {
-                    this.modal.error('This tactic is already deployed');
-                    return;
-                }
+                    if (deployedTactics.includes(tacticId)) {
+                        this.modal.error('This tactic is already deployed', { title: 'Tactic Already Deployed' });
+                        return;
+                    }
 
                 const result = await this.modal.confirm(
                     `Deploy ${TacticsNFTContract.getTacticName(tacticId)} to this battle?`,
@@ -779,6 +798,10 @@ export class CommandCenterPage extends BasePage {
 
                 if (result.isConfirmed) {
                     await this.deployTactic(tacticId);
+                }
+                } catch (error) {
+                    Logger.error('Error in tactics deployment event handler:', error);
+                    this.handleContractError(error, 'deploy tactic');
                 }
             });
         });
@@ -805,7 +828,7 @@ export class CommandCenterPage extends BasePage {
             
         } catch (error) {
             Logger.error('Error deploying tactic:', error);
-            this.modal.error('Failed to deploy tactic: ' + error.message);
+            this.handleContractError(error, 'deploy tactic');
         }
     }
 

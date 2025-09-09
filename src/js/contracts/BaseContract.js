@@ -90,18 +90,7 @@ export class BaseContract {
                 console.error('Error reason:', error.reason);
             }
             
-            // If it's a gas estimation error, try to provide a more helpful message
-            if (error.message && error.message.includes('missing revert data')) {
-                // This usually means the contract reverted during gas estimation
-                // We can't get the exact reason, but we can provide context
-                const errorMessage = `Transaction failed during simulation. This usually means the operation cannot be completed.`;
-                
-                // Create a new error with the helpful message
-                const helpfulError = new Error(errorMessage);
-                helpfulError.originalError = error;
-                throw helpfulError;
-            }
-            
+            // Let the ContractErrorHandler process the error instead of intercepting it
             throw error;
         }
     }

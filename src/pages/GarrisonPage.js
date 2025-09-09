@@ -31,7 +31,7 @@ export class GarrisonPage extends BasePage {
             Logger.info('Garrison page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing garrison page:', error);
-            this.modal.error('Failed to initialize garrison page. Please try refreshing the page.');
+            this.handleContractError(error, 'initialize garrison page');
         }
     }
 
@@ -40,6 +40,7 @@ export class GarrisonPage extends BasePage {
         if (address) {
             this.loadGarrisonData().catch(error => {
                 Logger.error('Error loading garrison data after wallet update:', error);
+                this.handleContractError(error, 'load garrison data after wallet update');
             });
         }
     }
@@ -105,7 +106,7 @@ export class GarrisonPage extends BasePage {
             }
         } catch (error) {
             Logger.error('Error loading garrison data:', error);
-            this.modal.error('Failed to load garrison data: ' + error.message);
+            this.handleContractError(error, 'load garrison data');
         }
     }
 
@@ -181,7 +182,8 @@ export class GarrisonPage extends BasePage {
                 }
             } catch (error) {
                 Logger.error('Garrison: Error getting hero tactics:', error);
-                deployedHero.textContent = 'Error';
+                deployedHero.textContent = 'Error loading hero data';
+                // Don't show modal for non-critical display errors
             }
             
             deployedSection.style.display = 'block';
@@ -248,6 +250,7 @@ export class GarrisonPage extends BasePage {
                 battleTimer.textContent = `Time until battle resolution: ${hours}h ${minutes}m`;
             } catch (error) {
                 Logger.error('Error updating battle timer:', error);
+                // Don't show modal for timer update errors - just log them
             }
         };
 
@@ -476,6 +479,7 @@ export class GarrisonPage extends BasePage {
             Logger.info('Hero selection dropdown updated');
         } catch (error) {
             Logger.error('Error updating hero selection dropdown:', error);
+            // Don't show modal for dropdown update errors - just log them
         }
     }
 
@@ -525,6 +529,7 @@ export class GarrisonPage extends BasePage {
             }
         } catch (error) {
             Logger.error('Error loading battle history:', error);
+            // Don't show modal for battle history errors - just log them
         }
     }
 
@@ -541,8 +546,14 @@ export class GarrisonPage extends BasePage {
                 const siegeCount = parseInt(siegeInput.value) || 0;
                 const heroClass = heroSelect.value !== '' ? parseInt(heroSelect.value) : 255;
 
+                // Validate input values
+                if (infantryCount < 0 || cavalryCount < 0 || siegeCount < 0) {
+                    this.modal.error('Troop counts cannot be negative', { title: 'Invalid Input' });
+                    return;
+                }
+
                 if (infantryCount === 0 && cavalryCount === 0 && siegeCount === 0) {
-                    this.modal.error('Please select at least one troop type to deploy to garrison');
+                    this.modal.error('Please select at least one troop type to deploy to garrison', { title: 'Invalid Deployment' });
                     return;
                 }
 
@@ -629,7 +640,7 @@ export class GarrisonPage extends BasePage {
         container.appendChild(this.element);
         this.initialize().catch(error => {
             Logger.error('Error during garrison page initialization:', error);
-            this.modal.error('Failed to initialize garrison page. Please try refreshing the page.');
+            this.handleContractError(error, 'initialize garrison page');
         });
     }
 
@@ -666,6 +677,7 @@ export class GarrisonPage extends BasePage {
             return deployedTactics;
         } catch (error) {
             Logger.error('Error getting deployed tactics:', error);
+            // Return empty array for non-critical errors
             return [];
         }
     }
@@ -729,17 +741,24 @@ export class GarrisonPage extends BasePage {
         
         deployButtons.forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                const tacticId = parseInt(btn.getAttribute('data-tactic-id'));
-                
-                if (deployedTactics.length >= 3) {
-                    this.modal.error('You can only deploy up to 3 tactics per battle');
-                    return;
-                }
+                try {
+                    const tacticId = parseInt(btn.getAttribute('data-tactic-id'));
+                    
+                    // Validate tactic ID
+                    if (isNaN(tacticId) || tacticId < 1 || tacticId > 9) {
+                        this.modal.error('Invalid tactic selected', { title: 'Invalid Selection' });
+                        return;
+                    }
+                    
+                    if (deployedTactics.length >= 3) {
+                        this.modal.error('You can only deploy up to 3 tactics per battle', { title: 'Tactic Limit Reached' });
+                        return;
+                    }
 
-                if (deployedTactics.includes(tacticId)) {
-                    this.modal.error('This tactic is already deployed');
-                    return;
-                }
+                    if (deployedTactics.includes(tacticId)) {
+                        this.modal.error('This tactic is already deployed', { title: 'Tactic Already Deployed' });
+                        return;
+                    }
 
                 const result = await this.modal.confirm(
                     `Deploy ${TacticsNFTContract.getTacticName(tacticId)} to this battle?`,
@@ -748,6 +767,10 @@ export class GarrisonPage extends BasePage {
 
                 if (result.isConfirmed) {
                     await this.deployTactic(tacticId);
+                }
+                } catch (error) {
+                    Logger.error('Error in tactics deployment event handler:', error);
+                    this.handleContractError(error, 'deploy tactic');
                 }
             });
         });
@@ -775,7 +798,7 @@ export class GarrisonPage extends BasePage {
             
         } catch (error) {
             Logger.error('Error deploying tactic:', error);
-            this.modal.error('Failed to deploy tactic: ' + error.message);
+            this.handleContractError(error, 'deploy tactic');
         }
     }
 

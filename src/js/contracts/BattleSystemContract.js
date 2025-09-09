@@ -34,13 +34,11 @@ export class BattleSystemContract extends BaseContract {
     }
 
     async startSearch() {
-        const contract = await this.getContract();
-        return contract.startSearch();
+        return this.transact('startSearch');
     }
 
     async findRandomOpponent() {
-        const contract = await this.getContract();
-        return contract.findRandomOpponent();
+        return this.transact('findRandomOpponent');
     }
 
     async checkSearchStatus() {
@@ -67,23 +65,19 @@ export class BattleSystemContract extends BaseContract {
     }
 
     async startBattle(infantry, cavalry, siege) {
-        const contract = await this.getContract();
-        return contract.startBattle(infantry, cavalry, siege);
+        return this.transact('startBattle', infantry, cavalry, siege);
     }
 
     async startBattleWithHero(infantry, cavalry, siege, heroClass) {
-        const contract = await this.getContract();
-        return contract.startBattleWithHero(infantry, cavalry, siege, heroClass);
+        return this.transact('startBattleWithHero', infantry, cavalry, siege, heroClass);
     }
 
     async resolveBattle(attacker) {
-        const contract = await this.getContract();
-        return contract.resolveBattle(attacker);
+        return this.transact('resolveBattle', attacker);
     }
 
     async trainTroops(troopType, amount) {
-        const contract = await this.getContract();
-        return contract.trainTroops(troopType, amount);
+        return this.transact('trainTroops', troopType, amount);
     }
 
     async playerTroops(player, troopType) {
@@ -202,13 +196,11 @@ export class BattleSystemContract extends BaseContract {
     }
 
     async deployToGarrison(infantry, cavalry, siege, heroClass) {
-        const contract = await this.getContract();
-        return contract.deployToGarrison(infantry, cavalry, siege, heroClass);
+        return this.transact('deployToGarrison', infantry, cavalry, siege, heroClass);
     }
 
     async deployTacticToBattle(tacticId) {
-        const contract = await this.getContract();
-        return contract.deployTacticToBattle(tacticId);
+        return this.transact('deployTacticToBattle', tacticId);
     }
 
     async battleHeroTactics(player) {

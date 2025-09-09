@@ -60,6 +60,7 @@ export class ContractErrorHandler {
             /revert ([^"]+)/,                        // Generic
             /Error: ([^"]+)/,                        // Generic
             /missing revert data.*action="([^"]+)"/, // ethers.js v6 missing revert data
+            /Battle already resolved/,               // Specific battle resolution error
         ];
         
         const errorString = error.message || error.toString();
@@ -112,6 +113,9 @@ export class ContractErrorHandler {
         
         // Fallback to text-based detection
         if (errorString.includes('resolveBattle') || errorString.includes('resolve battle')) {
+            return 'Battle has already been resolved or does not exist';
+        }
+        if (errorString.includes('Battle already resolved')) {
             return 'Battle has already been resolved or does not exist';
         }
         if (errorString.includes('startBattle') || errorString.includes('start battle')) {
