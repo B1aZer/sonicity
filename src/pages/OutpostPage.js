@@ -67,14 +67,92 @@ export class OutpostPage extends BasePage {
 
     async loadThreatIntelligence(playerAddress) {
         try {
-            // Query SearchCompleted events where this player is the target
+            Logger.info('🔍 Starting threat intelligence check for:', playerAddress);
+            
+            // Ensure battleSystem contract is initialized
+            if (!this.contracts.battleSystem.initialized) {
+                Logger.info('🔄 Initializing battleSystem contract...');
+                await this.contracts.battleSystem.initialize();
+            }
+            
+            // First, let's check ALL recent SearchCompleted events to see what's happening
             const filters = await this.contracts.battleSystem.getFilters();
+            Logger.info('✅ Filters obtained:', filters);
+            
+            // Get current block info for debugging
+            try {
+                const currentBlock = await this.contracts.battleSystem.provider.getBlock("latest");
+                Logger.info(`📦 Current block: ${currentBlock.number}, timestamp: ${currentBlock.timestamp}`);
+            } catch (error) {
+                Logger.warn('Could not get current block:', error);
+            }
+            
+            // Check all SearchCompleted events (no filter) - use a wider range
+            const currentBlock = await this.contracts.battleSystem.provider.getBlock("latest");
+            const fromBlock = Math.max(0, currentBlock.number - 20000);
+            const allEvents = await this.contracts.battleSystem.queryFilter(filters.SearchCompleted(), fromBlock);
+            Logger.info(`📊 Found ${allEvents.length} total SearchCompleted events (last 20000 blocks)`);
+            
+            // Also check for SearchStarted events to compare
+            const searchStartedFromBlock = Math.max(0, currentBlock.number - 5000);
+            const searchStartedEvents = await this.contracts.battleSystem.queryFilter(filters.SearchStarted(), searchStartedFromBlock);
+            Logger.info(`🚀 Found ${searchStartedEvents.length} total SearchStarted events (last 5000 blocks)`);
+            
+            // Also check for ANY events from the battle system contract
+            try {
+                const contractAddress = await this.contracts.battleSystem.getContractAddress();
+                Logger.info(`🏗️ BattleSystem contract address: ${contractAddress}`);
+                
+                // Get current block for the range
+                const currentBlock = await this.contracts.battleSystem.provider.getBlock("latest");
+                
+                // Get all events from the contract (not just SearchCompleted)
+                const allContractEvents = await this.contracts.battleSystem.provider.getLogs({
+                    address: contractAddress,
+                    fromBlock: currentBlock.number - 5000,
+                    toBlock: 'latest'
+                });
+                Logger.info(`📋 Found ${allContractEvents.length} total events from BattleSystem contract`);
+                
+                // Log recent events
+                for (let i = 0; i < Math.min(allContractEvents.length, 5); i++) {
+                    const log = allContractEvents[i];
+                    Logger.info(`📋 Event ${i}: topics=${log.topics}, data=${log.data}, block=${log.blockNumber}`);
+                }
+            } catch (error) {
+                Logger.warn('Could not get contract events:', error);
+            }
+            
+            // Log all recent SearchCompleted events for debugging
+            for (let i = 0; i < Math.min(allEvents.length, 10); i++) {
+                const event = allEvents[i];
+                const block = await event.getBlock();
+                Logger.info(`📅 Recent SearchCompleted event ${i}: player=${event.args.player}, target=${event.args.target}, block=${block.number}, time=${block.timestamp}`);
+                
+                // Check if this event is relevant to our player
+                if (event.args.target.toLowerCase() === playerAddress.toLowerCase()) {
+                    Logger.info(`🎯 FOUND RELEVANT EVENT: ${event.args.player} found ${event.args.target} at block ${block.number}`);
+                }
+            }
+            
+            // Now filter for our specific player
             const filter = filters.SearchCompleted(null, playerAddress);
-            const events = await this.contracts.battleSystem.queryFilter(filter, -2000); // Last ~2000 blocks
+            Logger.info('🔍 Created filter for player:', filter);
+            Logger.info('🔍 Filter details:', {
+                address: filter.address,
+                topics: filter.topics,
+                fromBlock: filter.fromBlock,
+                toBlock: filter.toBlock
+            });
+            Logger.info('🔍 Looking for events where ANY player found:', playerAddress);
+            
+            const events = await this.contracts.battleSystem.queryFilter(filter, fromBlock); // Last ~20000 blocks
+            Logger.info(`📊 Found ${events.length} SearchCompleted events for this player`);
             
             // Process events to get recent threats (last 24 hours)
             const currentTime = Math.floor(Date.now() / 1000);
             const oneDayAgo = currentTime - (24 * 60 * 60);
+            Logger.info(`⏰ Current time: ${currentTime}, 24h ago: ${oneDayAgo}`);
             
             const threats = [];
             const seenAttackers = new Set(); // Avoid duplicates
@@ -84,19 +162,30 @@ export class OutpostPage extends BasePage {
                 const event = events[i];
                 const block = await event.getBlock();
                 
+                Logger.info(`📅 Event ${i}: block ${block.number}, timestamp ${block.timestamp}, attacker ${event.args.player}`);
+                
                 // Skip if too old
-                if (block.timestamp < oneDayAgo) continue;
+                if (block.timestamp < oneDayAgo) {
+                    Logger.info(`⏰ Event too old: ${block.timestamp} < ${oneDayAgo}`);
+                    continue;
+                }
                 
                 const attacker = event.args.player;
                 
                 // Skip if we've already seen this attacker (keep most recent)
-                if (seenAttackers.has(attacker)) continue;
+                if (seenAttackers.has(attacker)) {
+                    Logger.info(`👀 Already seen attacker: ${attacker}`);
+                    continue;
+                }
                 seenAttackers.add(attacker);
                 
                 // Check if there's an active battle with this attacker
                 try {
                     const activeBattle = await this.contracts.battleSystem.activeBattles(attacker);
+                    Logger.info(`⚔️ Active battle check for ${attacker}:`, activeBattle);
+                    
                     if (activeBattle && activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
+                        Logger.info(`⚔️ Battle already started with ${attacker}, skipping`);
                         continue; // Skip if battle already started
                     }
                 } catch (error) {
@@ -105,17 +194,21 @@ export class OutpostPage extends BasePage {
                 
                 const shortAddress = attacker.substring(0, 6) + '...' + attacker.substring(attacker.length - 4);
                 
-                threats.push({
+                const threat = {
                     attacker,
                     shortAddress,
                     foundTime: block.timestamp,
                     threatLevel: this.calculateThreatLevel(block.timestamp)
-                });
+                };
+                
+                Logger.info(`🚨 Adding threat:`, threat);
+                threats.push(threat);
             }
             
+            Logger.info(`🎯 Final threats found: ${threats.length}`, threats);
             return threats.sort((a, b) => b.foundTime - a.foundTime);
         } catch (error) {
-            Logger.warn('Threat intelligence not available yet:', error);
+            Logger.error('❌ Threat intelligence error:', error);
             return [];
         }
     }
