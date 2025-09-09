@@ -210,13 +210,6 @@
     font-weight: bold;
 }
 
-.command-center-page .section-description,
-.garrison-page .section-description {
-    color: var(--text-muted);
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--spacing-lg);
-    line-height: 1.5;
-}
 
 /* Reuse existing shop-item-card styles for tactic cards */
 .command-center-page .tactics-grid,
