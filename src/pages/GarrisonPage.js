@@ -48,11 +48,12 @@ export class GarrisonPage extends BasePage {
         try {
             const address = WalletManager.getCurrentWallet();
 
-            // Load troop counts and battle data
-            const [infantryCount, cavalryCount, siegeCount, activeBattle, battleDuration] = await Promise.all([
+            // Load troop counts, defense tower level, and battle data
+            const [infantryCount, cavalryCount, siegeCount, defenseTowerLevel, activeBattle, battleDuration] = await Promise.all([
                 this.contracts.battleSystem.playerTroops(address, 0), // INFANTRY
                 this.contracts.battleSystem.playerTroops(address, 1), // CAVALRY
                 this.contracts.battleSystem.playerTroops(address, 2),  // SIEGE
+                this.contracts.districtBuildings.getBuildingLevel('Defense Tower'),
                 this.contracts.battleSystem.activeBattles(address),
                 this.contracts.battleSystem.battleDuration()
             ]);
@@ -64,12 +65,13 @@ export class GarrisonPage extends BasePage {
             }
             Logger.info('Owned tactics loaded:', ownedTactics);
 
-            Logger.info('Garrison data loaded:', { infantryCount, cavalryCount, siegeCount, activeBattle, battleDuration });
+            Logger.info('Garrison data loaded:', { infantryCount, cavalryCount, siegeCount, defenseTowerLevel, activeBattle, battleDuration });
 
             // Update troop displays
             this.element.querySelector('#infantry-count').textContent = infantryCount.toString();
             this.element.querySelector('#cavalry-count').textContent = cavalryCount.toString();
             this.element.querySelector('#siege-count').textContent = siegeCount.toString();
+            this.element.querySelector('#defense-tower-level').textContent = `Level ${defenseTowerLevel}`;
 
             // Update deployed troops display
             await this.updateDeployedTroopsDisplay(activeBattle);
@@ -353,6 +355,10 @@ export class GarrisonPage extends BasePage {
                         <div class="status-item">
                             <span class="status-label">Siege:</span>
                             <span id="siege-count" class="status-value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Defense Tower:</span>
+                            <span id="defense-tower-level" class="status-value">Level 0</span>
                         </div>
                     </div>
                 </div>
