@@ -230,4 +230,16 @@ export class BattleSystemContract extends BaseContract {
         const contract = await this.getContract();
         return contract.getBattlePower(battleId, isAttacker);
     }
+
+    // Expose filters for event querying (needed for OutpostPage threat intelligence)
+    async getFilters() {
+        const contract = await this.getContract();
+        return contract.filters;
+    }
+
+    // Expose queryFilter method for event querying
+    async queryFilter(filter, fromBlock, toBlock) {
+        const contract = await this.getContract();
+        return contract.queryFilter(filter, fromBlock, toBlock);
+    }
 } 

@@ -68,7 +68,8 @@ export class OutpostPage extends BasePage {
     async loadThreatIntelligence(playerAddress) {
         try {
             // Query SearchCompleted events where this player is the target
-            const filter = this.contracts.battleSystem.filters.SearchCompleted(null, playerAddress);
+            const filters = await this.contracts.battleSystem.getFilters();
+            const filter = filters.SearchCompleted(null, playerAddress);
             const events = await this.contracts.battleSystem.queryFilter(filter, -2000); // Last ~2000 blocks
             
             // Process events to get recent threats (last 24 hours)
@@ -91,6 +92,16 @@ export class OutpostPage extends BasePage {
                 // Skip if we've already seen this attacker (keep most recent)
                 if (seenAttackers.has(attacker)) continue;
                 seenAttackers.add(attacker);
+                
+                // Check if there's an active battle with this attacker
+                try {
+                    const activeBattle = await this.contracts.battleSystem.activeBattles(attacker);
+                    if (activeBattle && activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
+                        continue; // Skip if battle already started
+                    }
+                } catch (error) {
+                    Logger.debug(`Error checking active battle for ${attacker}:`, error);
+                }
                 
                 const shortAddress = attacker.substring(0, 6) + '...' + attacker.substring(attacker.length - 4);
                 
