@@ -128,18 +128,18 @@ export class GarrisonPage extends BasePage {
     async updateDeployedTroopsDisplay(activeBattle) {
         Logger.info('Garrison: Updating deployed troops display...');
         Logger.info('Garrison: Active battle data:', {
-            startTime: activeBattle.startTime?.toString(),
-            attacker: activeBattle.attacker,
-            defender: activeBattle.defender,
+            startTime: activeBattle?.startTime?.toString(),
+            attacker: activeBattle?.attacker,
+            defender: activeBattle?.defender,
             attackerTroops: {
-                infantry: activeBattle.attackerTroops?.infantry?.toString(),
-                cavalry: activeBattle.attackerTroops?.cavalry?.toString(),
-                siege: activeBattle.attackerTroops?.siege?.toString()
+                infantry: activeBattle?.attackerTroops?.infantry?.toString(),
+                cavalry: activeBattle?.attackerTroops?.cavalry?.toString(),
+                siege: activeBattle?.attackerTroops?.siege?.toString()
             },
             defenderTroops: {
-                infantry: activeBattle.defenderTroops?.infantry?.toString(),
-                cavalry: activeBattle.defenderTroops?.cavalry?.toString(),
-                siege: activeBattle.defenderTroops?.siege?.toString()
+                infantry: activeBattle?.defenderTroops?.infantry?.toString(),
+                cavalry: activeBattle?.defenderTroops?.cavalry?.toString(),
+                siege: activeBattle?.defenderTroops?.siege?.toString()
             }
         });
         
@@ -335,7 +335,7 @@ export class GarrisonPage extends BasePage {
 
         // Determine player role
         let playerRole = 'none';
-        if (activeBattle && activeBattle.startTime > 0n) {
+        if (activeBattle) {
             if (activeBattle.attacker.toLowerCase() === playerAddress.toLowerCase()) {
                 playerRole = 'attacker';
             } else if (activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {

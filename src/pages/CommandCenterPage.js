@@ -122,7 +122,7 @@ export class CommandCenterPage extends BasePage {
         const battleTimer = statusSection.querySelector('.battle-timer');
         const resolveBattleBtn = statusSection.querySelector('.resolve-battle-btn');
 
-        if (activeBattle.startTime > 0n) {
+        if (activeBattle) {
             statusText.textContent = 'Battle in Progress!';
             const battleTime = new Date(Number(activeBattle.startTime) * 1000);
             statusDetails.textContent = `Battle started at: ${battleTime.toLocaleString()}`;
@@ -186,7 +186,7 @@ export class CommandCenterPage extends BasePage {
         const siegeInput = deploymentSection.querySelector('#deploy-siege');
 
         // Enable/disable deployment section based on search status and active battle
-        if (activeBattle.startTime > 0n) {
+        if (activeBattle) {
             // Battle is active - check if troops are already deployed
             const deployedInfantry = Number(activeBattle.attackerTroops?.infantry || 0);
             const deployedCavalry = Number(activeBattle.attackerTroops?.cavalry || 0);
@@ -242,7 +242,7 @@ export class CommandCenterPage extends BasePage {
 
         // Determine player role
         let playerRole = 'none';
-        if (activeBattle && activeBattle.startTime > 0n) {
+        if (activeBattle) {
             if (activeBattle.attacker.toLowerCase() === playerAddress.toLowerCase()) {
                 playerRole = 'attacker';
             } else if (activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
@@ -261,18 +261,18 @@ export class CommandCenterPage extends BasePage {
     async updateDeployedTroopsDisplay(activeBattle) {
         Logger.info('Updating deployed troops display...');
         Logger.info('Active battle data:', {
-            startTime: activeBattle.startTime?.toString(),
-            attacker: activeBattle.attacker,
-            defender: activeBattle.defender,
+            startTime: activeBattle?.startTime?.toString(),
+            attacker: activeBattle?.attacker,
+            defender: activeBattle?.defender,
             attackerTroops: {
-                infantry: activeBattle.attackerTroops?.infantry?.toString(),
-                cavalry: activeBattle.attackerTroops?.cavalry?.toString(),
-                siege: activeBattle.attackerTroops?.siege?.toString()
+                infantry: activeBattle?.attackerTroops?.infantry?.toString(),
+                cavalry: activeBattle?.attackerTroops?.cavalry?.toString(),
+                siege: activeBattle?.attackerTroops?.siege?.toString()
             },
             defenderTroops: {
-                infantry: activeBattle.defenderTroops?.infantry?.toString(),
-                cavalry: activeBattle.defenderTroops?.cavalry?.toString(),
-                siege: activeBattle.defenderTroops?.siege?.toString()
+                infantry: activeBattle?.defenderTroops?.infantry?.toString(),
+                cavalry: activeBattle?.defenderTroops?.cavalry?.toString(),
+                siege: activeBattle?.defenderTroops?.siege?.toString()
             }
         });
         
@@ -283,7 +283,7 @@ export class CommandCenterPage extends BasePage {
         const deployedSection = this.element.querySelector('.deployed-troops-section');
         const tacticsSection = this.element.querySelector('.tactics-deployment-section');
 
-        if (activeBattle.startTime > 0n) {
+        if (activeBattle) {
             Logger.info('Active battle detected, showing deployed troops and tactics sections');
             
             // Check if player is attacker or defender
