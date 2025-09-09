@@ -3,6 +3,7 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { SCOUT_GUILD_MESSAGES } from '../js/utils/constants.js';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
+import { WalletManager } from '../js/utils/wallet.js';
 
 import('../styles/scout-guild-page.css');
 
@@ -162,6 +163,8 @@ export class ScoutGuildPage extends BasePage {
         // Use BasePage event management system to prevent duplicate handlers
         this.addEventListener('.search-btn', 'click', async () => {
             try {
+                Logger.info('Starting search...');
+                
                 const searchDuration = await this.contracts.battleSystem.searchDuration();
                 const hours = Math.floor(Number(searchDuration) / 3600);
                 
@@ -190,6 +193,7 @@ export class ScoutGuildPage extends BasePage {
                 
                 // Verify search is complete before proceeding
                 const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
+                
                 if (!searchStatus.completed) {
                     this.modal.error('Your scouts are still searching. Please wait for them to return.', { title: 'Search Not Complete' });
                     return;
@@ -199,6 +203,7 @@ export class ScoutGuildPage extends BasePage {
                     this.modal.info('You have already found an opponent in this search. Start a new search to find another.', { title: 'Already Found Opponent' });
                     return;
                 }
+                
                 
                 Logger.info('Calling findRandomOpponent...');
                 const tx = await this.contracts.battleSystem.findRandomOpponent();
@@ -229,11 +234,6 @@ export class ScoutGuildPage extends BasePage {
                 }
             } catch (error) {
                 Logger.error('Error checking scout results:', error);
-                Logger.error('Error details:', {
-                    message: error.message,
-                    code: error.code,
-                    stack: error.stack
-                });
                 
                 // Handle specific error messages
                 if (error.message.includes('Already attempted to find opponent')) {
