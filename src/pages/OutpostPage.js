@@ -17,6 +17,7 @@ export class OutpostPage extends BasePage {
         // Initialize state
         this.setState({
             threats: [],
+            activeBattle: null,
             isLoading: true
         });
         
@@ -48,11 +49,15 @@ export class OutpostPage extends BasePage {
         try {
             const address = WalletManager.getCurrentWallet();
             
-            // Load threat intelligence 
-            const threats = await this.loadThreatIntelligence(address);
+            // Load threat intelligence and active battle status
+            const [threats, activeBattle] = await Promise.all([
+                this.loadThreatIntelligence(address),
+                this.contracts.battleSystem.activeBattles(address)
+            ]);
 
             this.setState({
                 threats,
+                activeBattle,
                 isLoading: false
             });
 
@@ -142,6 +147,21 @@ export class OutpostPage extends BasePage {
     updateThreatDisplay() {
         const threatList = this.element.querySelector('.threat-list');
         if (!threatList) return;
+
+        // Check if currently under attack
+        const isUnderAttack = this.state.activeBattle && this.state.activeBattle.startTime > 0n;
+        
+        if (isUnderAttack) {
+            threatList.innerHTML = `
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Status:</span>
+                        <span class="status-value" style="color: #ff4444;">Under Attack</span>
+                    </div>
+                </div>
+            `;
+            return;
+        }
 
         if (this.state.threats.length === 0) {
             threatList.innerHTML = `
