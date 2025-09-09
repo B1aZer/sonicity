@@ -133,11 +133,10 @@ export class GamePage extends BasePage {
     async checkOutpostWarning() {
         try {
             const playerAddress = await this.contracts.gameState.getAddress();
-            const activeBattle = await this.contracts.battleSystem.activeBattles(playerAddress);
+            const activeBattle = await this.contracts.battleSystem.getActiveBattle(playerAddress);
             
             // Check if player is in battle as defender and hasn't seen the warning yet
             if (activeBattle && 
-                activeBattle[2] > 0n && // startTime
                 activeBattle[1] === playerAddress && // defender
                 !activeBattle[12]) { // outpostWarningShown
                 

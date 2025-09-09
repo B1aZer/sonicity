@@ -52,7 +52,7 @@ export class OutpostPage extends BasePage {
             // Load threat intelligence and active battle status
             const [threats, activeBattle] = await Promise.all([
                 this.loadThreatIntelligence(address),
-                this.contracts.battleSystem.activeBattles(address)
+                this.contracts.battleSystem.getActiveBattle(address) // Only returns truly active battles
             ]);
 
             this.setState({
@@ -116,7 +116,7 @@ export class OutpostPage extends BasePage {
                 
                 // Check if there's an active battle with this attacker
                 try {
-                    const activeBattle = await this.contracts.battleSystem.activeBattles(attacker);
+                    const activeBattle = await this.contracts.battleSystem.getActiveBattle(attacker);
                     if (activeBattle && activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
                         continue; // Skip if battle already started
                     }
@@ -149,7 +149,7 @@ export class OutpostPage extends BasePage {
         if (!threatList) return;
 
         // Check if currently under attack
-        const isUnderAttack = this.state.activeBattle && this.state.activeBattle.startTime > 0n;
+        const isUnderAttack = this.state.activeBattle !== null;
         
         if (isUnderAttack) {
             threatList.innerHTML = `

@@ -57,7 +57,7 @@ export class CommandCenterPage extends BasePage {
                 this.contracts.battleSystem.playerTroops(address, 1), // CAVALRY
                 this.contracts.battleSystem.playerTroops(address, 2),  // SIEGE
                 this.contracts.battleSystem.checkSearchStatus(),
-                this.contracts.battleSystem.activeBattles(address),
+                this.contracts.battleSystem.getActiveBattle(address), // Only returns truly active battles
                 this.contracts.battleSystem.battleDuration()
             ]);
 
@@ -90,18 +90,20 @@ export class CommandCenterPage extends BasePage {
             await this.updateHeroSelectionDropdown(address);
 
             // Start battle timer if there's an active battle
-            if (activeBattle.startTime > 0n) {
+            if (activeBattle) {
                 await this.startBattleTimer(Number(activeBattle.startTime), Number(battleDuration));
             }
 
             // Load battle history
             await this.loadBattleHistory();
 
-            // Render Battle Progress Bar
-            await this.renderBattleProgressBar(activeBattle, address);
+            // Render Battle Progress Bar only if battle is active
+            if (activeBattle) {
+                await this.renderBattleProgressBar(activeBattle, address);
+            }
 
             // Load and update tactics deployment section if in battle
-            if (activeBattle.startTime > 0n) {
+            if (activeBattle) {
                 Logger.info('Active battle detected, loading tactics deployment section');
                 await this.loadTacticsDeploymentSection(ownedTactics, activeBattle);
             } else {

@@ -90,6 +90,19 @@ export class BattleSystemContract extends BaseContract {
         return contract.activeBattles(player);
     }
 
+    async getActiveBattle(player) {
+        const contract = await this.getContract();
+        const battle = await contract.activeBattles(player);
+        
+        // Filter out resolved battles - only return truly active battles
+        if (battle.startTime > 0n && !battle.resolved) {
+            return battle;
+        }
+        
+        // Return null for resolved or non-existent battles
+        return null;
+    }
+
     async getCurrentBlockTimestamp() {
         const contract = await this.getContract();
         const provider = contract.provider;

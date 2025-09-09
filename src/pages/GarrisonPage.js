@@ -55,7 +55,7 @@ export class GarrisonPage extends BasePage {
                 this.contracts.battleSystem.playerTroops(address, 1), // CAVALRY
                 this.contracts.battleSystem.playerTroops(address, 2),  // SIEGE
                 this.contracts.districtBuildings.getBuildingLevel('Defense Tower'),
-                this.contracts.battleSystem.activeBattles(address),
+                this.contracts.battleSystem.getActiveBattle(address), // Only returns truly active battles
                 this.contracts.battleSystem.battleDuration()
             ]);
 
@@ -67,6 +67,19 @@ export class GarrisonPage extends BasePage {
             Logger.info('Owned tactics loaded:', ownedTactics);
 
             Logger.info('Garrison data loaded:', { infantryCount, cavalryCount, siegeCount, defenseTowerLevel, activeBattle, battleDuration });
+            
+            // Log battle status for debugging
+            if (activeBattle) {
+                Logger.info('Active battle found:', { 
+                    startTime: activeBattle.startTime.toString(), 
+                    attacker: activeBattle.attacker,
+                    defender: activeBattle.defender,
+                    currentTime: Math.floor(Date.now() / 1000),
+                    battleAge: Math.floor(Date.now() / 1000) - Number(activeBattle.startTime)
+                });
+            } else {
+                Logger.info('No active battle found');
+            }
 
             // Update troop displays
             this.element.querySelector('#infantry-count').textContent = infantryCount.toString();
@@ -87,18 +100,20 @@ export class GarrisonPage extends BasePage {
             await this.updateHeroSelectionDropdown(address);
 
             // Start battle timer if there's an active battle
-            if (activeBattle.startTime > 0n) {
+            if (activeBattle) {
                 await this.startBattleTimer(Number(activeBattle.startTime), Number(battleDuration));
             }
 
             // Load battle history
             await this.loadBattleHistory();
 
-                    // Render Battle Progress Bar
-        await this.renderBattleProgressBar(activeBattle, address);
+            // Render Battle Progress Bar only if battle is active
+            if (activeBattle) {
+                await this.renderBattleProgressBar(activeBattle, address);
+            }
 
             // Load and update tactics deployment section if in battle
-            if (activeBattle.startTime > 0n) {
+            if (activeBattle) {
                 Logger.info('Active battle detected, loading tactics deployment section');
                 await this.loadTacticsDeploymentSection(ownedTactics, activeBattle);
             } else {
@@ -135,7 +150,7 @@ export class GarrisonPage extends BasePage {
         const deployedSection = this.element.querySelector('.deployed-troops-section');
         const tacticsSection = this.element.querySelector('.tactics-deployment-section');
 
-        if (activeBattle.startTime > 0n) {
+        if (activeBattle) {
             Logger.info('Garrison: Active battle detected');
             
             // Check if player is attacker or defender
@@ -208,7 +223,7 @@ export class GarrisonPage extends BasePage {
         const battleTimer = statusSection.querySelector('.battle-timer');
         const resolveBattleBtn = statusSection.querySelector('.resolve-battle-btn');
 
-        if (activeBattle.startTime > 0n) {
+        if (activeBattle) {
             statusText.textContent = 'Battle in Progress!';
             const battleTime = new Date(Number(activeBattle.startTime) * 1000);
             statusDetails.textContent = `Battle started at: ${battleTime.toLocaleString()}`;
@@ -268,7 +283,7 @@ export class GarrisonPage extends BasePage {
 
         // Enable/disable deployment section based on active battle and defender status
         const playerAddress = await this.contracts.gameState.getAddress();
-        if (activeBattle.startTime > 0n && activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
+        if (activeBattle && activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
             // Player is defender in active battle
             deploymentSection.style.display = 'block';
             
