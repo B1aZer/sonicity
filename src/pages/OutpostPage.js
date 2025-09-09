@@ -145,9 +145,11 @@ export class OutpostPage extends BasePage {
 
         if (this.state.threats.length === 0) {
             threatList.innerHTML = `
-                <div class="status-display">
-                    <div class="status-text">All Clear</div>
-                    <div class="status-details">No potential attackers detected. Your district appears secure.</div>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Status:</span>
+                        <span class="status-value">All Clear</span>
+                    </div>
                 </div>
             `;
             return;
