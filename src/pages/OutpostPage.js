@@ -90,8 +90,13 @@ export class OutpostPage extends BasePage {
             Logger.info(`Found ${events.length} SearchCompleted events for this player`);
             
             // Process events to get recent threats (last 24 hours)
-            const currentTime = Math.floor(Date.now() / 1000);
+            // Use blockchain time consistently (like CommandCenter/Garrison pages)
+            const currentTime = currentBlock.timestamp;
             const oneDayAgo = currentTime - (24 * 60 * 60);
+            
+            Logger.info('Time filtering debug (blockchain time):');
+            Logger.info('Current blockchain time:', currentTime, new Date(currentTime * 1000).toISOString());
+            Logger.info('24h ago threshold:', oneDayAgo, new Date(oneDayAgo * 1000).toISOString());
             
             const threats = [];
             const seenAttackers = new Set(); // Avoid duplicates
@@ -101,8 +106,11 @@ export class OutpostPage extends BasePage {
                 const event = events[i];
                 const block = await event.getBlock();
                 
+                Logger.info(`Event ${i}: block.timestamp = ${block.timestamp} (${new Date(block.timestamp * 1000).toISOString()}), age = ${currentTime - block.timestamp}s`);
+                
                 // Skip if too old
                 if (block.timestamp < oneDayAgo) {
+                    Logger.info(`Skipping event ${i}: too old (${block.timestamp} < ${oneDayAgo})`);
                     continue;
                 }
                 
@@ -126,10 +134,23 @@ export class OutpostPage extends BasePage {
                 
                 const shortAddress = attacker.substring(0, 6) + '...' + attacker.substring(attacker.length - 4);
                 
+                // Calculate time ago using blockchain time  
+                const diff = currentTime - block.timestamp;
+                let timeAgo, color;
+                if (diff <= 3600) { // 1 hour or less - immediate threat
+                    timeAgo = 'Just Now';
+                    color = '#ff4444'; // Red
+                } else { // 1-24 hours - recent threat
+                    timeAgo = 'Recently';
+                    color = '#ffaa00'; // Yellow
+                }
+                
                 const threat = {
                     attacker,
                     shortAddress,
-                    foundTime: block.timestamp
+                    foundTime: block.timestamp,
+                    timeAgo, // Pre-calculated time string
+                    color // Color for display
                 };
                 
                 threats.push(threat);
@@ -182,8 +203,8 @@ export class OutpostPage extends BasePage {
                         <span class="status-label">
                             ${threat.shortAddress}
                         </span>
-                        <span class="status-value">
-                            Found ${this.formatTimeAgo(threat.foundTime)}
+                        <span class="status-value" style="color: ${threat.color};">
+                            Found ${threat.timeAgo}
                         </span>
                     </div>
                 `).join('')}
@@ -192,15 +213,6 @@ export class OutpostPage extends BasePage {
     }
 
 
-    formatTimeAgo(timestamp) {
-        const now = Date.now() / 1000;
-        const diff = now - timestamp;
-        
-        if (diff < 60) return 'Just now';
-        if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-        if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-        return `${Math.floor(diff / 86400)}d ago`;
-    }
 
     setupEventListeners() {
         // Auto-refresh every 30 seconds
