@@ -569,6 +569,29 @@ export class CommandCenterPage extends BasePage {
                     return;
                 }
 
+                // Check if search result has expired (using blockchain time)
+                const playerAddress = await this.contracts.battleSystem.getAddress();
+                const playerSearch = await this.contracts.battleSystem.getPlayerSearch(playerAddress);
+                
+                if (playerSearch.foundOpponent !== '0x0000000000000000000000000000000000000000') {
+                    const searchDuration = await this.contracts.battleSystem.searchDuration();
+                    const searchExpiration = 24 * 60 * 60; // 24 hours in seconds
+                    const currentBlock = await this.contracts.battleSystem.provider.getBlock("latest");
+                    const currentTime = currentBlock.timestamp;
+                    
+                    // Calculate when search expires: search start + duration + 24h expiration
+                    const searchStartTime = Number(playerSearch.startTime);
+                    const searchCompleteTime = searchStartTime + Number(searchDuration);
+                    const searchExpiresAt = searchCompleteTime + searchExpiration;
+                    
+                    if (currentTime > searchExpiresAt) {
+                        this.modal.error('Your search result has expired. Please start a new search to find a fresh opponent.', { 
+                            title: 'Search Expired' 
+                        });
+                        return;
+                    }
+                }
+
                 // Use combined function for troops and hero deployment
                 await this.contracts.battleSystem.startBattleWithHero(
                     infantryCount,

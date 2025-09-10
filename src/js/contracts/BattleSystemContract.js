@@ -64,6 +64,11 @@ export class BattleSystemContract extends BaseContract {
         }
     }
 
+    async getPlayerSearch(player) {
+        const contract = await this.getContract();
+        return contract.playerSearches(player);
+    }
+
     async startBattle(infantry, cavalry, siege) {
         return this.transact('startBattle', infantry, cavalry, siege);
     }
