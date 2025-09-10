@@ -206,12 +206,8 @@ export class ScoutGuildPage extends BasePage {
                 
                 
                 Logger.info('Calling findRandomOpponent...');
-                const tx = await this.contracts.battleSystem.findRandomOpponent();
-                Logger.info('Transaction sent:', tx.hash);
-                
-                Logger.info('Waiting for transaction to be mined...');
-                await tx.wait();
-                Logger.info('Transaction mined');
+                const receipt = await this.contracts.battleSystem.findRandomOpponent();
+                Logger.info('Transaction mined:', receipt.hash);
                 
                 Logger.info('Reloading scout guild data...');
                 await this.loadScoutGuildData();
