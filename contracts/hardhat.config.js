@@ -23,7 +23,8 @@ module.exports = {
     },
     localhost: {
       url: "http://127.0.0.1:8545",
-      chainId: 146, // Sonic chain ID when using Anvil fork
+      // chainId: 146, // Sonic chain ID when using Anvil fork
+      chainId: 31337, // Localhost chain ID when using Anvil fork
       timeout: 20000,
       gas: "auto",
       gasPrice: "auto"
