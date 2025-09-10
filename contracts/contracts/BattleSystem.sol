@@ -292,7 +292,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 siegeCount
     ) internal {
         require(playerSearches[msg.sender].active, "No active search");
-        require(block.timestamp >= playerSearches[msg.sender].startTime + searchDuration, "Search not complete");
+        require(block.timestamp >= playerSearches[msg.sender].startTime + searchDuration, "Search pending");
         address defender = playerSearches[msg.sender].foundOpponent;
         require(defender != address(0), "No opponent found");
         require(defender != msg.sender, "Cannot attack yourself");
@@ -301,9 +301,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         autoResolveExpiredBattle(msg.sender);
         autoResolveExpiredBattle(defender);
         
-        require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
-        require(activeBattles[defender].startTime == 0, "Defender already in a battle");
-        require(infantryCount > 0 || cavalryCount > 0 || siegeCount > 0, "Must deploy at least one troop");
+        require(!_isActive(msg.sender), "Already in a battle");
+        require(!_isActive(defender), "Defender busy");
+        require(infantryCount > 0 || cavalryCount > 0 || siegeCount > 0, "Deploy troops");
 
         // Clear search state for both attacker and defender
         playerSearches[msg.sender].active = false;
@@ -449,9 +449,9 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      */
     function resolveBattle(address battleId) external nonReentrant {
         Battle storage battle = activeBattles[battleId];
-        require(battle.startTime > 0, "Battle does not exist");
+        require(battle.attacker != address(0) && !battle.resolved, "Battle does not exist");
         require(!battle.resolved, "Battle already resolved");
-        require(block.timestamp >= battle.startTime + BATTLE_DURATION, "Battle duration not elapsed");
+        require(block.timestamp >= battle.startTime + BATTLE_DURATION, "Too early");
         
         // Check opponent's battle state to prevent duplicate resolution
         address opponent = (battleId == battle.attacker) ? battle.defender : battle.attacker;
@@ -610,6 +610,10 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 powerBonus = (powerDiff * 5) / 100; // 5 REP per 100 power difference
         uint256 maxBonus = 3; // Cap bonus at 3 REP (total max: 4 REP)
         return baseReward + (powerBonus > maxBonus ? maxBonus : powerBonus);
+    }
+
+    function _isActive(address p) internal view returns (bool) {
+        return activeBattles[p].attacker != address(0) && !activeBattles[p].resolved;
     }
 
     function applyBattleEffects(
@@ -788,7 +792,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         for (uint256 i = 0; i < registeredPlayers.length; i++) {
             address potentialOpponent = registeredPlayers[i];
             if (potentialOpponent != msg.sender && 
-                activeBattles[potentialOpponent].startTime == 0 &&
+                !_isActive(potentialOpponent) &&
                 block.timestamp >= lastBattleTime[potentialOpponent] + BATTLE_DURATION) {
                 count++;
             }
@@ -800,7 +804,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         for (uint256 i = 0; i < registeredPlayers.length; i++) {
             address potentialOpponent = registeredPlayers[i];
             if (potentialOpponent != msg.sender && 
-                activeBattles[potentialOpponent].startTime == 0 &&
+                !_isActive(potentialOpponent) &&
                 block.timestamp >= lastBattleTime[potentialOpponent] + BATTLE_DURATION) {
                 opponents[index] = potentialOpponent;
                 index++;
@@ -850,7 +854,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         autoResolveExpiredBattle(msg.sender);
         
         // Only check if player is in battle
-        require(activeBattles[msg.sender].startTime == 0, "Already in a battle");
+        require(!_isActive(msg.sender), "Already in a battle");
 
         // Deduct search cost
         (bool success, bytes memory returnData) = gameStateAddress.call(
@@ -911,7 +915,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     function findRandomOpponent() external returns (address) {
         SearchState memory search = playerSearches[msg.sender];
         require(search.startTime > 0, "No search in progress");
-        require(block.timestamp >= search.startTime + searchDuration, "Search not complete");
+        require(block.timestamp >= search.startTime + searchDuration, "Search pending");
         require(!search.hasAttemptedFind, "Already attempted to find opponent");
         
         // Get all potential opponents
@@ -1218,7 +1222,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      * @param heroClass Hero class to deploy
      */
     function deployHeroToBattleByClass(uint8 heroClass) external {
-        require(activeBattles[msg.sender].startTime > 0, "No active battle");
+        require(_isActive(msg.sender), "No active battle");
         require(!activeBattles[msg.sender].resolved, "Battle already resolved");
         require(heroNFTAddress != address(0), "HeroNFT not configured");
         
@@ -1245,7 +1249,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      * @param heroId Hero ID to deploy
      */
     function deployHeroToBattle(uint256 heroId) external {
-        require(activeBattles[msg.sender].startTime > 0, "No active battle");
+        require(_isActive(msg.sender), "No active battle");
         require(!activeBattles[msg.sender].resolved, "Battle already resolved");
         require(heroNFTAddress != address(0), "HeroNFT not configured");
         
@@ -1312,7 +1316,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      * @param tacticId The tactic ID to deploy
      */
     function deployTacticToBattle(uint8 tacticId) external {
-        require(activeBattles[msg.sender].startTime > 0, "No active battle");
+        require(_isActive(msg.sender), "No active battle");
         require(!activeBattles[msg.sender].resolved, "Battle already resolved");
         require(tacticsNFTAddress != address(0), "TacticsNFT not configured");
         require(tacticId > 0 && tacticId <= 9, "Invalid tactic ID");
@@ -1430,7 +1434,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 cavalryCount,
         uint256 siegeCount
     ) external nonReentrant {
-        require(activeBattles[msg.sender].startTime > 0, "Not in battle");
+        require(_isActive(msg.sender), "Not in battle");
         require(activeBattles[msg.sender].defender == msg.sender, "Not the defender");
         require(!activeBattles[msg.sender].resolved, "Battle already resolved");
         
@@ -1450,7 +1454,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 siegeCount,
         uint8 heroClass
     ) external nonReentrant {
-        require(activeBattles[msg.sender].startTime > 0, "Not in battle");
+        require(_isActive(msg.sender), "Not in battle");
         require(activeBattles[msg.sender].defender == msg.sender, "Not the defender");
         require(!activeBattles[msg.sender].resolved, "Battle already resolved");
         
@@ -1502,7 +1506,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      * @dev Confirm outpost warning - called by defender to acknowledge the attack warning
      */
     function confirmOutpostWarning() external {
-        require(activeBattles[msg.sender].startTime > 0, "Not in battle");
+        require(_isActive(msg.sender), "Not in battle");
         require(activeBattles[msg.sender].defender == msg.sender, "Not the defender");
         require(!activeBattles[msg.sender].outpostWarningShown, "Warning already confirmed");
         
@@ -1675,7 +1679,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
      */
     function getBattlePower(address battleId, bool isAttacker) public view returns (uint256) {
         Battle storage battle = activeBattles[battleId];
-        require(battle.startTime > 0, "Battle does not exist");
+        require(battle.attacker != address(0) && !battle.resolved, "Battle does not exist");
         
         HeroTacticsDeployment storage attackerDeployment = battleHeroTactics[battle.attacker];
         HeroTacticsDeployment storage defenderDeployment = battleHeroTactics[battle.defender];
