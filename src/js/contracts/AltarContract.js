@@ -89,10 +89,29 @@ export class AltarContract extends BaseContract {
      * Get the building ID for a staked NFT
      * @param {string} collection - The NFT collection address
      * @param {number|string} tokenId - The token ID
-     * @returns {Promise<number>} - The building ID
+     * @returns {Promise<number>} - The building ID (0 if not staked or deleted)
      */
     async getStakedBuilding(collection, tokenId) {
         return await this.call('stakedBuilding', collection, tokenId);
+    }
+
+    /**
+     * Check if an NFT is staked to a specific building
+     * @param {string} collection - The NFT collection address
+     * @param {number|string} tokenId - The token ID
+     * @param {number|string} buildingId - The building ID to check against
+     * @returns {Promise<boolean>} - Whether the NFT is staked to the specified building
+     */
+    async isStakedToBuilding(collection, tokenId, buildingId) {
+        // First check if the NFT is actively staked
+        const stakeData = await this.getStakeDataWithCollection(collection, tokenId);
+        if (!stakeData.isActive) {
+            return false; // Not staked at all
+        }
+        
+        // Then check if it's staked to the specific building (including building ID 0)
+        const stakedBuildingId = await this.getStakedBuilding(collection, tokenId);
+        return Number(stakedBuildingId) === Number(buildingId);
     }
 
     /**

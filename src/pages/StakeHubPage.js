@@ -939,12 +939,10 @@ export class StakePage extends BasePage {
                 // console.log(`[DEBUG] User stakes for ${contractAddress}:`, userStakes);
                 
                 for (const tokenId of userStakes) {
-                    const stakedBuildingId = await this.contracts.altar.getStakedBuilding(contractAddress, tokenId);
-                    // console.log(`[DEBUG] Token ${tokenId} is staked to building ${stakedBuildingId}`);
-                    // console.log(`[DEBUG] Comparing: Number(${stakedBuildingId}) === Number(${buildingId})`);
-                    // console.log(`[DEBUG] Values: ${Number(stakedBuildingId)} === ${Number(buildingId)}`);
+                    // Use the new helper method that properly validates stakedBuildingId > 0
+                    const isStakedToThisBuilding = await this.contracts.altar.isStakedToBuilding(contractAddress, tokenId, buildingId);
                     
-                    if (Number(stakedBuildingId) === Number(buildingId)) {
+                    if (isStakedToThisBuilding) {
                         // console.log(`[DEBUG] Found NFT! Token ${tokenId} from ${contractAddress} is staked to building ${buildingId}`);
                         return {
                             contractAddress,
