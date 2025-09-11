@@ -36,6 +36,7 @@ export class PatrolManager {
     
     /**
      * Setup predefined patrol routes based on building positions
+     * Y coordinates will be updated to terrain height when units spawn
      */
     setupPatrolRoutes() {
         // City Center Patrol - around main buildings
@@ -71,6 +72,51 @@ export class PatrolManager {
         ]);
         
         Logger.info(`Setup ${this.patrolRoutes.size} patrol routes`);
+    }
+    
+    /**
+     * Get terrain height at a given world position
+     * Same logic as BuildingManager.getTerrainHeightAt()
+     */
+    getTerrainHeightAt(x, z) {
+        // Find the ground plane in the scene
+        let groundPlane = null;
+        this.scene.traverse((child) => {
+            if (child.name === "groundPlane" && child.isMesh) {
+                groundPlane = child;
+            }
+        });
+
+        if (!groundPlane || !groundPlane.geometry) {
+            Logger.debug(`No ground plane found, using fallback height for position (${x}, ${z})`);
+            return 0; // Fallback height
+        }
+
+        // Create a raycaster to find terrain height
+        const raycaster = new THREE.Raycaster();
+        const rayStart = new THREE.Vector3(x, 100, z); // Start high above
+        const rayEnd = new THREE.Vector3(x, -100, z);  // End below terrain
+        raycaster.set(rayStart, rayEnd.sub(rayStart).normalize());
+
+        const intersects = raycaster.intersectObject(groundPlane);
+        if (intersects.length > 0) {
+            const terrainHeight = intersects[0].point.y + 0.1; // Slightly above terrain
+            Logger.debug(`Terrain height at (${x}, ${z}): ${terrainHeight}`);
+            return terrainHeight;
+        }
+
+        Logger.debug(`No terrain intersection found at (${x}, ${z}), using fallback`);
+        return 0; // Fallback height
+    }
+    
+    /**
+     * Update patrol route waypoints to follow terrain height
+     */
+    updateRouteToTerrain(route) {
+        return route.map(waypoint => {
+            const terrainHeight = this.getTerrainHeightAt(waypoint.x, waypoint.z);
+            return new THREE.Vector3(waypoint.x, terrainHeight, waypoint.z);
+        });
     }
     
     /**
@@ -143,14 +189,18 @@ export class PatrolManager {
             const unitId = `${unitType}_patrol_${this.unitIdCounter++}`;
             unit.name = unitId;
             
-            // Set initial position
-            const route = this.patrolRoutes.get(routeId);
-            if (!route || route.length === 0) {
+            // Set initial position with terrain adjustment
+            const baseRoute = this.patrolRoutes.get(routeId);
+            if (!baseRoute || baseRoute.length === 0) {
                 Logger.error(`Invalid route: ${routeId}`);
                 return null;
             }
+
+            // Update route to follow terrain height
+            const terrainRoute = this.updateRouteToTerrain(baseRoute);
+            const startPosition = position || terrainRoute[0].clone();
             
-            const startPosition = position || route[0].clone();
+            Logger.info(`Spawning unit at terrain-adjusted position: (${startPosition.x}, ${startPosition.y}, ${startPosition.z})`);
             unit.position.copy(startPosition);
             
             // Scale unit appropriately
@@ -160,7 +210,7 @@ export class PatrolManager {
             unit.userData = {
                 id: unitId,
                 type: unitType,
-                route: route,
+                route: terrainRoute, // Use terrain-adjusted route
                 currentWaypoint: 0,
                 isPaused: false,
                 pauseTimer: 0,
@@ -315,8 +365,9 @@ export class PatrolManager {
             return;
         }
         
-        // Spawn infantry patrols (1 patrol per 3 infantry, max 4 patrols)
-        const infantryPatrols = Math.min(Math.floor(troopCounts.infantry / 3), 4);
+        // Spawn infantry patrols (1 patrol per 1 infantry, max 4 patrols)
+        const infantryPatrols = Math.min(troopCounts.infantry, 4);
+        Logger.info(`Calculating patrols: ${troopCounts.infantry} infantry = ${infantryPatrols} patrols (max 4)`);
         
         for (let i = 0; i < infantryPatrols; i++) {
             const routes = ['city_center', 'perimeter', 'military_corridor', 'scout_route'];
@@ -371,8 +422,13 @@ export class PatrolManager {
         const moveDistance = userData.speed * deltaTime;
         unit.position.add(direction.multiplyScalar(moveDistance));
         
+        // Adjust Y position to follow terrain
+        const terrainHeight = this.getTerrainHeightAt(unit.position.x, unit.position.z);
+        unit.position.y = terrainHeight;
+        
         // Rotate to face movement direction
         const lookTarget = unit.position.clone().add(direction);
+        lookTarget.y = unit.position.y; // Keep same height for look target
         unit.lookAt(lookTarget);
     }
     
