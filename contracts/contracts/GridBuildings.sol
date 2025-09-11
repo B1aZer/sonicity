@@ -74,6 +74,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     // Revenue pool management (time-based system)
     uint256 public revenuePool;                                 // Total accumulated SONIC for distribution
     uint256 public poolLastUpdateTime;                          // Track when pool was last updated
+    uint256 public reservedRevenue;                            // Revenue that has been allocated but not yet collected
     
     // Dynamic rate yield station system
     mapping(address => mapping(uint256 => uint256)) public stationActivationTime;
@@ -537,7 +538,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     }
 
     /**
-     * @dev Calculate dynamic rate for a yield station
+* @dev Calculate dynamic rate for a yield station
      */
     function _calculateStationRate(address player, uint256 buildingId) internal view returns (uint256) {
         uint256 stationWeight = _getStationWeight(player, buildingId);
@@ -559,8 +560,11 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         if (totalWeight == 0) return 0;
         
-        // Calculate rate based on pool and station weight
-        uint256 poolPerSecond = revenuePool / yieldStationDuration;
+        // Calculate rate based on available pool (total - reserved) and station weight
+        uint256 availablePool = revenuePool > reservedRevenue ? revenuePool - reservedRevenue : 0;
+        if (availablePool == 0) return 0;
+        
+        uint256 poolPerSecond = availablePool / yieldStationDuration;
         uint256 finalRate = (poolPerSecond * stationWeight) / totalWeight;
         
         return finalRate;
@@ -588,47 +592,6 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         return totalWeight;
     }
 
-    /**
-     * @dev Calculate yield revenue for a station
-     */
-    function _calculateYieldRevenue(address player, uint256 buildingId, Building storage building, uint256 currentTime) internal view returns (uint256) {
-        if (building.lastRechargeTime == 0 || building.damaged) {
-            return 0;
-        }
-        
-        // Check if station is still active
-        if (currentTime > building.lastRechargeTime + yieldStationDuration) {
-            // Station has expired, calculate final earnings up to expiration
-            uint256 expiredLastUpdate = lastRateUpdateTime[player][buildingId];
-            uint256 expiredTimeElapsed = 0;
-            
-            if (expiredLastUpdate > 0) {
-                uint256 expirationTime = building.lastRechargeTime + yieldStationDuration;
-                expiredTimeElapsed = expirationTime - expiredLastUpdate;
-            } else {
-                // If lastUpdate is 0, use time since recharge up to expiration
-                expiredTimeElapsed = yieldStationDuration;
-            }
-            
-            uint256 finalEarnings = currentRate[player][buildingId] * expiredTimeElapsed;
-            return accumulatedRevenue[player][buildingId] + finalEarnings;
-        }
-        
-        // Calculate current earnings
-        uint256 lastUpdate = lastRateUpdateTime[player][buildingId];
-        uint256 timeElapsed = 0;
-        
-        if (lastUpdate > 0) {
-            timeElapsed = currentTime - lastUpdate;
-        } else {
-            // If lastUpdate is 0, use time since recharge
-            timeElapsed = currentTime - building.lastRechargeTime;
-        }
-        
-        uint256 currentEarnings = currentRate[player][buildingId] * timeElapsed;
-        
-        return accumulatedRevenue[player][buildingId] + currentEarnings;
-    }
 
     /**
      * @dev Update accumulated revenue for a station
@@ -637,10 +600,33 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 lastUpdate = lastRateUpdateTime[player][buildingId];
         if (lastUpdate == 0) return; // First time
         
-        uint256 timeElapsed = block.timestamp - lastUpdate;
+        Building storage building = buildings[player][buildingId];
+        if (building.lastRechargeTime == 0) return; // Not recharged yet
+        
+        // Calculate time elapsed, but cap at station expiration
+        uint256 endTime = block.timestamp;
+        uint256 expirationTime = building.lastRechargeTime + yieldStationDuration;
+        
+        // Don't accumulate beyond expiration time
+        if (endTime > expirationTime) {
+            endTime = expirationTime;
+        }
+        
+        // Don't accumulate if we're already past expiration from last update
+        if (lastUpdate >= endTime) {
+            return;
+        }
+        
+        
+        uint256 timeElapsed = endTime - lastUpdate;
         uint256 stationRate = currentRate[player][buildingId];
         
-        accumulatedRevenue[player][buildingId] += stationRate * timeElapsed;
+        uint256 newRevenue = stationRate * timeElapsed;
+        accumulatedRevenue[player][buildingId] += newRevenue;
+        
+        // Reserve this revenue from the pool
+        reservedRevenue += newRevenue;
+        
     }
 
     /**
@@ -753,7 +739,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         
         // Special handling for yield stations - use the yield revenue calculation
         if (building.buildingType == GridBuildingType.YIELD_STATION) {
-            return _calculateYieldRevenue(player, buildingId, building, block.timestamp);
+            return _calculateActualClaimableRevenue(player, buildingId, building, block.timestamp);
         }
         
         return _calculateClaimable(building, block.timestamp);
@@ -1332,8 +1318,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             // Reset accumulated revenue
             accumulatedRevenue[msg.sender][buildingId] = 0;
             
-            // Reduce revenue pool
+            // Reduce both revenue pool and reserved amount
             revenuePool -= claimableAmount;
+            if (reservedRevenue >= claimableAmount) {
+                reservedRevenue -= claimableAmount;
+            } else {
+                reservedRevenue = 0;
+            }
             
             // Transfer SONIC to player
             (bool success, ) = payable(msg.sender).call{value: claimableAmount}("");
@@ -1370,7 +1361,63 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     function calculateYieldStationRevenue(address player, uint256 buildingId) external view returns (uint256) {
         Building storage building = buildings[player][buildingId];
         require(building.buildingType == GridBuildingType.YIELD_STATION, "Not a yield station");
-        return _calculateYieldRevenue(player, buildingId, building, block.timestamp);
+        
+        // For consistency with collection, return what would actually be claimable
+        // This includes accumulated revenue plus any additional earnings limited by available pool
+        return _calculateActualClaimableRevenue(player, buildingId, building, block.timestamp);
+    }
+    
+    /**
+     * @dev Calculate what can actually be claimed (same logic as collection)
+     */
+    function _calculateActualClaimableRevenue(address player, uint256 buildingId, Building storage building, uint256 currentTime) internal view returns (uint256) {
+        if (building.lastRechargeTime == 0 || building.damaged) {
+            return 0;
+        }
+        
+        // Start with what's already accumulated (reserved)
+        uint256 baseAccumulated = accumulatedRevenue[player][buildingId];
+        
+        // For expired stations, calculate final earnings up to expiration time
+        if (currentTime > building.lastRechargeTime + yieldStationDuration) {
+            uint256 expirationTime = building.lastRechargeTime + yieldStationDuration;
+            uint256 expiredLastUpdate = lastRateUpdateTime[player][buildingId];
+            
+            if (expiredLastUpdate > 0 && expiredLastUpdate < expirationTime) {
+                // Calculate remaining earnings from last update to expiration
+                uint256 timeToExpiration = expirationTime - expiredLastUpdate;
+                uint256 finalEarnings = currentRate[player][buildingId] * timeToExpiration;
+                
+                // Limit to available pool
+                uint256 availablePoolForExpired = revenuePool > reservedRevenue ? revenuePool - reservedRevenue : 0;
+                if (finalEarnings > availablePoolForExpired) {
+                    finalEarnings = availablePoolForExpired;
+                }
+                
+                return baseAccumulated + finalEarnings;
+            }
+            
+            return baseAccumulated;
+        }
+        
+        // For active stations, add potential new earnings limited by available pool
+        uint256 lastUpdate = lastRateUpdateTime[player][buildingId];
+        if (lastUpdate == 0) {
+            // If never updated, calculate from recharge time
+            lastUpdate = building.lastRechargeTime;
+        }
+        
+        uint256 timeElapsed = currentTime - lastUpdate;
+        uint256 potentialNewEarnings = currentRate[player][buildingId] * timeElapsed;
+        
+        // Limit new earnings to available pool
+        uint256 availablePool = revenuePool > reservedRevenue ? revenuePool - reservedRevenue : 0;
+        uint256 actualNewEarnings = potentialNewEarnings;
+        if (potentialNewEarnings > availablePool) {
+            actualNewEarnings = availablePool;
+        }
+        
+        return baseAccumulated + actualNewEarnings;
     }
 
     /**
@@ -1381,18 +1428,31 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         require(building.buildingType == GridBuildingType.YIELD_STATION, "Not a yield station");
         require(!building.damaged, "Building is damaged");
         
-        // Update accumulated revenue
-        _updateAccumulatedRevenue(msg.sender, buildingId);
+        // Use the same calculation as the view function for consistency
+        uint256 claimableAmount = _calculateActualClaimableRevenue(msg.sender, buildingId, building, block.timestamp);
         
-        uint256 claimableAmount = accumulatedRevenue[msg.sender][buildingId];
         require(claimableAmount > 0, "No revenue to claim");
+        
+        // Handle potential rounding differences - if claimable is very close to pool, use pool amount
+        if (claimableAmount > revenuePool) {
+            // If the difference is small (likely rounding), cap at pool amount
+            if (claimableAmount - revenuePool <= revenuePool / 1000000) { // Allow 0.0001% difference
+                claimableAmount = revenuePool;
+            }
+        }
+        
         require(claimableAmount <= revenuePool, "Insufficient pool balance");
         
         // Reset accumulated revenue
         accumulatedRevenue[msg.sender][buildingId] = 0;
         
-        // Reduce revenue pool
+        // Reduce both revenue pool and reserved amount
         revenuePool -= claimableAmount;
+        if (reservedRevenue >= claimableAmount) {
+            reservedRevenue -= claimableAmount;
+        } else {
+            reservedRevenue = 0;
+        }
         
         // Transfer SONIC to player
         (bool success, ) = payable(msg.sender).call{value: claimableAmount}("");
@@ -1413,7 +1473,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             if (station.player == player) {
                 Building storage building = buildings[player][station.buildingId];
                 if (building.buildingType == GridBuildingType.YIELD_STATION && !building.damaged) {
-                    totalClaimable += _calculateYieldRevenue(player, station.buildingId, building, block.timestamp);
+                    totalClaimable += _calculateActualClaimableRevenue(player, station.buildingId, building, block.timestamp);
                 }
             }
         }
@@ -1435,7 +1495,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             if (station.player == msg.sender) {
                 Building storage building = buildings[msg.sender][station.buildingId];
                 if (building.buildingType == GridBuildingType.YIELD_STATION && !building.damaged) {
-                    uint256 claimable = _calculateYieldRevenue(msg.sender, station.buildingId, building, block.timestamp);
+                    uint256 claimable = _calculateActualClaimableRevenue(msg.sender, station.buildingId, building, block.timestamp);
                     if (claimable > 0) {
                         totalClaimable += claimable;
                         buildingIds[buildingCount] = station.buildingId;
@@ -1453,8 +1513,13 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             accumulatedRevenue[msg.sender][buildingIds[i]] = 0;
         }
         
-        // Reduce revenue pool
+        // Reduce both revenue pool and reserved amount
         revenuePool -= totalClaimable;
+        if (reservedRevenue >= totalClaimable) {
+            reservedRevenue -= totalClaimable;
+        } else {
+            reservedRevenue = 0;
+        }
         
         // Transfer SONIC to player
         (bool success, ) = payable(msg.sender).call{value: totalClaimable}("");
@@ -1475,7 +1540,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Building storage building = buildings[player][buildingId];
         require(building.buildingType == GridBuildingType.YIELD_STATION, "Not a yield station");
         
-        claimableRevenue = _calculateYieldRevenue(player, buildingId, building, block.timestamp);
+        claimableRevenue = _calculateActualClaimableRevenue(player, buildingId, building, block.timestamp);
         
         if (building.lastRechargeTime > 0 && !building.damaged) {
             uint256 endTime = building.lastRechargeTime + yieldStationDuration;
@@ -1500,6 +1565,20 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
      */
     function getRevenuePool() external view returns (uint256) {
         return revenuePool;
+    }
+
+    /**
+     * @dev Get available revenue pool (total - reserved)
+     */
+    function getAvailableRevenuePool() external view returns (uint256) {
+        return revenuePool > reservedRevenue ? revenuePool - reservedRevenue : 0;
+    }
+
+    /**
+     * @dev Get reserved revenue amount
+     */
+    function getReservedRevenue() external view returns (uint256) {
+        return reservedRevenue;
     }
 
     // ============ REVENUE DISTRIBUTION FUNCTIONS ============
