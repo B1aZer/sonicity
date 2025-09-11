@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { BattleSystemContract } from '../contracts/BattleSystemContract.js';
+import { PATROL_CONFIG } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
 
 export class PatrolManager {
@@ -20,14 +21,13 @@ export class PatrolManager {
         // Unit templates cache
         this.unitTemplates = new Map();
         
-        // Patrol settings
-        this.patrolSpeed = 2.0; // units per second
-        this.waypointPauseTime = 2.0; // seconds to pause at waypoints
+        // Patrol settings from constants
+        this.waypointPauseTime = PATROL_CONFIG.WAYPOINT_PAUSE_TIME;
         this.unitIdCounter = 0;
         
         // Update tracking (like other managers)
         this.updateTimer = 0;
-        this.updateInterval = 5.0; // Update patrols every 5 seconds
+        this.updateInterval = PATROL_CONFIG.UPDATE_INTERVAL;
         this.lastTroopCounts = { infantry: 0, cavalry: 0, siege: 0 };
         
         this.setupPatrolRoutes();
@@ -100,7 +100,7 @@ export class PatrolManager {
 
         const intersects = raycaster.intersectObject(groundPlane);
         if (intersects.length > 0) {
-            const terrainHeight = intersects[0].point.y + 0.1; // Slightly above terrain
+            const terrainHeight = intersects[0].point.y + PATROL_CONFIG.TERRAIN_OFFSET;
             Logger.debug(`Terrain height at (${x}, ${z}): ${terrainHeight}`);
             return terrainHeight;
         }
@@ -173,6 +173,19 @@ export class PatrolManager {
     }
     
     /**
+     * Get patrol speed for unit type from configuration
+     */
+    getUnitSpeed(unitType) {
+        const speeds = {
+            'infantry': PATROL_CONFIG.INFANTRY_SPEED,
+            'cavalry': PATROL_CONFIG.CAVALRY_SPEED,
+            'siege': PATROL_CONFIG.SIEGE_SPEED
+        };
+        
+        return speeds[unitType] || PATROL_CONFIG.INFANTRY_SPEED;
+    }
+    
+    /**
      * Spawn a patrol unit
      */
     async spawnPatrolUnit(unitType, routeId, position = null) {
@@ -204,7 +217,7 @@ export class PatrolManager {
             unit.position.copy(startPosition);
             
             // Scale unit appropriately
-            unit.scale.setScalar(0.8); // Adjust based on your scene scale
+            unit.scale.setScalar(PATROL_CONFIG.UNIT_SCALE);
             
             // Setup unit data
             unit.userData = {
@@ -214,7 +227,7 @@ export class PatrolManager {
                 currentWaypoint: 0,
                 isPaused: false,
                 pauseTimer: 0,
-                speed: this.patrolSpeed,
+                speed: this.getUnitSpeed(unitType), // Use configurable speed per unit type
                 state: 'walking' // walking, paused, idle
             };
             
@@ -365,9 +378,12 @@ export class PatrolManager {
             return;
         }
         
-        // Spawn infantry patrols (1 patrol per 1 infantry, max 4 patrols)
-        const infantryPatrols = Math.min(troopCounts.infantry, 4);
-        Logger.info(`Calculating patrols: ${troopCounts.infantry} infantry = ${infantryPatrols} patrols (max 4)`);
+        // Spawn infantry patrols using configurable ratio
+        const infantryPatrols = Math.min(
+            Math.floor(troopCounts.infantry / PATROL_CONFIG.INFANTRY_PER_PATROL), 
+            PATROL_CONFIG.MAX_PATROLS_PER_TYPE
+        );
+        Logger.info(`Calculating patrols: ${troopCounts.infantry} infantry ÷ ${PATROL_CONFIG.INFANTRY_PER_PATROL} = ${infantryPatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS_PER_TYPE})`);
         
         for (let i = 0; i < infantryPatrols; i++) {
             const routes = ['city_center', 'perimeter', 'military_corridor', 'scout_route'];
@@ -437,8 +453,8 @@ export class PatrolManager {
      */
     switchToWalkAnimation(unit) {
         if (unit.userData.walkAction && unit.userData.idleAction) {
-            unit.userData.idleAction.fadeOut(0.3);
-            unit.userData.walkAction.reset().fadeIn(0.3).play();
+            unit.userData.idleAction.fadeOut(PATROL_CONFIG.ANIMATION_FADE_TIME);
+            unit.userData.walkAction.reset().fadeIn(PATROL_CONFIG.ANIMATION_FADE_TIME).play();
         }
     }
     
@@ -447,8 +463,8 @@ export class PatrolManager {
      */
     switchToIdleAnimation(unit) {
         if (unit.userData.walkAction && unit.userData.idleAction) {
-            unit.userData.walkAction.fadeOut(0.3);
-            unit.userData.idleAction.reset().fadeIn(0.3).play();
+            unit.userData.walkAction.fadeOut(PATROL_CONFIG.ANIMATION_FADE_TIME);
+            unit.userData.idleAction.reset().fadeIn(PATROL_CONFIG.ANIMATION_FADE_TIME).play();
         }
     }
     

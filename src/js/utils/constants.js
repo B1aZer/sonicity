@@ -1065,6 +1065,31 @@ export const SCOUT_GUILD_MESSAGES = [
     "They wandered far, but no city dared reveal itself."
 ];
 
+// Patrol system configuration
+export const PATROL_CONFIG = {
+    // Movement speeds (units per second)
+    INFANTRY_SPEED: 2.0,      // Standard patrol speed
+    CAVALRY_SPEED: 3.5,       // Faster for mounted units
+    SIEGE_SPEED: 1.2,         // Slower for heavy equipment
+    
+    // Behavior settings
+    WAYPOINT_PAUSE_TIME: 2.0, // Seconds to pause at each waypoint
+    UPDATE_INTERVAL: 5.0,     // Seconds between troop count checks
+    
+    // Spawn ratios (troops needed per patrol unit)
+    INFANTRY_PER_PATROL: 1,   // 1 patrol per infantry
+    CAVALRY_PER_PATROL: 2,    // 1 patrol per 2 cavalry  
+    SIEGE_PER_PATROL: 3,      // 1 patrol per 3 siege units
+    
+    // Limits
+    MAX_PATROLS_PER_TYPE: 4,  // Maximum patrol units of each type
+    TERRAIN_OFFSET: 0.1,      // Height above terrain to prevent clipping
+    
+    // Animation settings
+    ANIMATION_FADE_TIME: 0.3, // Seconds for animation transitions
+    UNIT_SCALE: 0.8          // Scale factor for patrol units
+};
+
 // Validation function to ensure building constants are in sync with smart contract
 export function validateBuildingConstants() {
     const expectedDistrictBuildings = [
