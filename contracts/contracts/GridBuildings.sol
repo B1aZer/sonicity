@@ -1357,6 +1357,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
 
     /**
      * @dev Calculate claimable revenue for a specific yield station
+     *
+     * TODO: might want toremove to save on gas
      */
     function calculateYieldStationRevenue(address player, uint256 buildingId) external view returns (uint256) {
         Building storage building = buildings[player][buildingId];
