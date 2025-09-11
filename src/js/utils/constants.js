@@ -716,9 +716,9 @@ export const BUILDINGS = {
     },
     GARRISON: {
         name: 'Garrison',
-        size: new THREE.Vector3(4, 4, 4),
+        size: new THREE.Vector3(5, 5, 5),
         color: 0x8B4513, // Saddle Brown
-        position: { x: 7, y: 2, z: -35 },
+        position: { x: 7, y: 1.8, z: -35 },
         rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 1,
         description: "Provides secure quarters for defensive troops to protect the district.",
