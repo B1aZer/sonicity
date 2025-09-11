@@ -768,7 +768,9 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
      */
     function getDefenseTowerPower(address player) external view returns (uint256) {
         Building memory defenseTower = buildings[player][DistrictBuildingType.DEFENSE_TOWER];
-        if (!defenseTower.active) return 0;
+        if (!defenseTower.active) {
+            return 10;  // Minimal protection for players without Defense Tower
+        }
         
         // Base power of 100 per level
         return defenseTower.level * 100;
