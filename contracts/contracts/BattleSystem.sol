@@ -463,17 +463,19 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
 
         bool attackerWon = finalAttackerPower > finalDefenderPower;
         
+        // Award REP to winner and store points
         if (attackerWon) {
-            // Apply effects
+            // Apply damage effects for attacker victory
             applyBattleEffects(
                 battle.attacker,
                 battle.defender,
                 finalAttackerPower,
                 finalDefenderPower
             );
-
-            // Update battle state
-            battle.repPoints = calculateRepPoints(finalAttackerPower, finalDefenderPower);
+            battle.repPoints = _awardRep(battle.attacker, finalAttackerPower, finalDefenderPower);
+        } else {
+            // Defender won - award REP
+            battle.repPoints = _awardRep(battle.defender, finalDefenderPower, finalAttackerPower);
         }
 
         // Mark battle as resolved FIRST to prevent race conditions
@@ -537,10 +539,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(msg.sender == owner(), "Only owner can call this function");
         
         // Call GridBuildings contract directly to damage buildings
-        (bool success, bytes memory returnData) = gridBuildingsAddress.call(
-            abi.encodeWithSignature("damageBuildings(address,uint256)", defender, amount)
-        );
-        _revertWithReason(success, returnData, "Failed to damage grid building");
+        bytes memory returnData = _damageGridBuildings(defender, amount);
         
         // Decode and return the number of buildings damaged
         return abi.decode(returnData, (uint256));
@@ -556,10 +555,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         require(msg.sender == owner(), "Only owner can call this function");
         
         // Call DistrictBuildings contract directly to damage buildings
-        (bool success, bytes memory returnData) = districtBuildingsAddress.call(
-            abi.encodeWithSignature("damageBuildings(address,uint256)", defender, amount)
-        );
-        _revertWithReason(success, returnData, "Failed to damage district building");
+        bytes memory returnData = _damageDistrictBuildings(defender, amount);
         
         // Decode and return the number of buildings damaged
         return abi.decode(returnData, (uint256));
@@ -641,12 +637,6 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         battle.districtBuildingsDamaged += effects.districtBuildingsDamaged;
         battle.treasuryBurned = effects.treasuryBurned;
 
-        // Award REP points for winning the battle
-        effects.repPoints = calculateRepPoints(attackerPower, defenderPower);
-        (bool success, bytes memory returnData) = gameStateAddress.call(
-            abi.encodeWithSignature("earnRep(address,uint256)", attacker, effects.repPoints)
-        );
-        _revertWithReason(success, returnData, "Failed to award REP points");
     }
 
     function applyCavalryEffects(address attacker, address defender) internal returns (uint256) {
@@ -669,10 +659,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 buildingsToDamage = (cavalryCount / 5) + 1;
         if (buildingsToDamage > 3) buildingsToDamage = 3;
 
-        (bool success, bytes memory returnData) = gridBuildingsAddress.call(
-            abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
-        );
-        _revertWithReason(success, returnData, "Failed to damage grid building");
+        bytes memory returnData = _damageGridBuildings(defender, buildingsToDamage);
 
         return abi.decode(returnData, (uint256));
     }
@@ -720,10 +707,7 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
         uint256 buildingsToDamage = (siegeCount / 3) + 1;
         if (buildingsToDamage > 2) buildingsToDamage = 2;
 
-        (bool success, bytes memory returnData) = districtBuildingsAddress.call(
-            abi.encodeWithSignature("damageBuildings(address,uint256)", defender, buildingsToDamage)
-        );
-        _revertWithReason(success, returnData, "Failed to damage district building");
+        bytes memory returnData = _damageDistrictBuildings(defender, buildingsToDamage);
 
         return abi.decode(returnData, (uint256));
     }
@@ -1526,12 +1510,8 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     function applyBattleEffect(BattleEffect memory effect) internal {
         if (effect.effectType == EffectType.STRIKE_DAMAGE) {
             // Damage grid buildings
-            (bool success,) = gridBuildingsAddress.call(
-                abi.encodeWithSignature("damageBuildings(address,uint256)", effect.target, effect.magnitude)
-            );
-            if (success) {
-                activeBattles[msg.sender].gridBuildingsDamaged += effect.magnitude;
-            }
+            _damageGridBuildings(effect.target, effect.magnitude);
+            activeBattles[msg.sender].gridBuildingsDamaged += effect.magnitude;
         } else if (effect.effectType == EffectType.SHIELD_PROTECTION) {
             // Reduce troop losses (implemented in battle resolution)
             // This is a placeholder - actual implementation would track troop protection
@@ -1577,6 +1557,32 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
+
+    // DRY helper functions to reduce contract size
+    function _damageGridBuildings(address target, uint256 amount) internal returns (bytes memory) {
+        (bool success, bytes memory returnData) = gridBuildingsAddress.call(
+            abi.encodeWithSignature("damageBuildings(address,uint256)", target, amount)
+        );
+        _revertWithReason(success, returnData, "Failed to damage grid building");
+        return returnData;
+    }
+
+    function _damageDistrictBuildings(address target, uint256 amount) internal returns (bytes memory) {
+        (bool success, bytes memory returnData) = districtBuildingsAddress.call(
+            abi.encodeWithSignature("damageBuildings(address,uint256)", target, amount)
+        );
+        _revertWithReason(success, returnData, "Failed to damage district building");
+        return returnData;
+    }
+
+    function _awardRep(address player, uint256 winnerPower, uint256 loserPower) internal returns (uint256) {
+        uint256 repPoints = calculateRepPoints(winnerPower, loserPower);
+        (bool success, bytes memory data) = gameStateAddress.call(
+            abi.encodeWithSignature("earnRep(address,uint256)", player, repPoints)
+        );
+        _revertWithReason(success, data, "REP award failed");
+        return repPoints;
+    }
 
     // Add setter function for the chance
     function setNoOpponentFoundChance(uint256 _chance) external onlyOwner {

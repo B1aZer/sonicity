@@ -434,7 +434,7 @@ describe("BattleSystem", function () {
             // Try to start battle with 0 troops
             await expect(
                 battleSystem.connect(player1).startBattle(0, 0, 0)
-            ).to.be.revertedWith("Must deploy at least one troop");
+            ).to.be.revertedWith("Deploy troops");
         });
     });
 
@@ -645,7 +645,7 @@ describe("BattleSystem", function () {
 
             await expect(
                 battleSystem.connect(player1).resolveBattle(player1.address)
-            ).to.be.revertedWith("Battle duration not elapsed");
+            ).to.be.revertedWith("Too early");
         });
 
         it("should apply battle effects (treasury burn, building damage)", async function () {
@@ -1192,7 +1192,7 @@ describe("BattleSystem", function () {
             
             await expect(
                 battleSystem.connect(player1).findRandomOpponent()
-            ).to.be.revertedWith("Search not complete");
+            ).to.be.revertedWith("Search pending");
         });
 
         it("Should find opponent after search duration", async function () {
