@@ -85,7 +85,7 @@ export class RepForgePage extends BasePage {
             this.setState({
                 forgeCount: forges.length,
                 claimableRep: totalClaimableRep.toString(),
-                productionRate: `${forges.length} REP point(s) per 168 hours`,
+                productionRate: `${forges.length} REP point(s) per 48 hours`,
                 canClaim: totalClaimableRep > BigInt(0)
             });
 

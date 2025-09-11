@@ -623,7 +623,7 @@ export class StakePage extends BasePage {
             let productionRateDisplay = '';
             if (item.buildingType === 2 || item.buildingType === 3) {
                 // For Diamond Stations and REP Forges, show as "X per Y hours"
-                const hoursPerUnit = item.buildingType === 2 ? 24 : 168;  // Diamond stations: 24h, REP forges: 168h
+                const hoursPerUnit = item.buildingType === 2 ? 24 : 48;   // Diamond stations: 24h, REP forges: 48h
                 const unitsPerCycle = item.buildingType === 2 ? (item.level * 8) : item.level;  // Diamond stations: level * 8, REP forges: level * 1
                 productionRateDisplay = `${unitsPerCycle} per ${hoursPerUnit}h`;
             } else if (item.buildingType === 4) {
