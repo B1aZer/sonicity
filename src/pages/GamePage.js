@@ -532,7 +532,7 @@ export class GamePage extends BasePage {
                         window.history.pushState({}, '', '/tavern');
                         window.dispatchEvent(new PopStateEvent('popstate'));
                     }, BUILDING_ENTER_DELAY);
-                } else if (clickedObject.userData.isTacticsCenter) {
+                } else if (clickedObject.userData.isTacticscenter) {
                     Logger.info('Tactics Center clicked');
                     this.audioManager.playBuildingEnter();
                     this.preloadPage('/tactics-center');
@@ -568,7 +568,7 @@ export class GamePage extends BasePage {
         const buildingTypes = [
             'isMine', 'isCityhall', 'isAltar', 'isHouse', 'isFarm', 'isDiamondstation',
             'isRepforge', 'isYieldstation', 'isArcanumofnames', 'isShop', 'isWorkshop',
-            'isBarracks', 'isScoutguild', 'isCommandcenter', 'isGarrison', 'isOutpost', 'isTavern', 'isTacticsCenter'
+            'isBarracks', 'isScoutguild', 'isCommandcenter', 'isGarrison', 'isOutpost', 'isTavern', 'isTacticscenter'
         ];
         
         return buildingTypes.some(type => userData[type] === true);

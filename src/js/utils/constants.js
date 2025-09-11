@@ -748,7 +748,7 @@ export const BUILDINGS = {
         name: 'Tavern',
         size: new THREE.Vector3(4, 4, 4),
         color: 0xD2691E, // Chocolate
-        position: { x: 50, y: 0, z: -75 },
+        position: { x: -5.5, y: 0, z: -25 },
         rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
         tier: 2,
         description: "A gathering place where you can hire powerful heroes to lead your armies.",
@@ -783,8 +783,8 @@ export const BUILDINGS = {
         name: 'Tactics Center',
         size: new THREE.Vector3(4, 4, 4),
         color: 0x2F4F4F, // Dark Slate Gray
-        position: { x: -75, y: 0, z: -115 },
-        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
+        position: { x: -10, y: 0, z: -5 },
+        rotation: { x: 0, y: Math.PI / 2 + 0.1, z: 0 }, // Converted to Vector3 format
         tier: 2,
         description: "Advanced training facility for developing military strategies and tactics.",
         assets: {
