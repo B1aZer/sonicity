@@ -72,19 +72,29 @@ export class CommandCenterPage extends BasePage {
 
             Logger.info('Command center data loaded:', { gold, commandCenterLevel, infantryCount, cavalryCount, siegeCount, searchStatus, activeBattle, battleDuration });
 
+            // Determine player role in battle
+            let playerRole = 'none';
+            if (activeBattle) {
+                if (activeBattle.attacker.toLowerCase() === address.toLowerCase()) {
+                    playerRole = 'attacker';
+                } else if (activeBattle.defender.toLowerCase() === address.toLowerCase()) {
+                    playerRole = 'defender';
+                }
+            }
+
             // Update troop displays
             this.element.querySelector('#infantry-count').textContent = infantryCount.toString();
             this.element.querySelector('#cavalry-count').textContent = cavalryCount.toString();
             this.element.querySelector('#siege-count').textContent = siegeCount.toString();
 
-            // Update opponent status section
-            this.updateOpponentStatus(searchStatus, activeBattle);
+            // Update opponent status section (with defender message if applicable)
+            this.updateOpponentStatus(searchStatus, activeBattle, playerRole);
 
             // Update troop deployment section
-            this.updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount, activeBattle);
+            this.updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount, activeBattle, playerRole);
 
             // Update deployed troops display
-            await this.updateDeployedTroopsDisplay(activeBattle);
+            await this.updateDeployedTroopsDisplay(activeBattle, playerRole);
 
             // Load and update hero selection dropdown
             await this.updateHeroSelectionDropdown(address);
@@ -105,7 +115,7 @@ export class CommandCenterPage extends BasePage {
             // Load and update tactics deployment section if in battle
             if (activeBattle) {
                 Logger.info('Active battle detected, loading tactics deployment section');
-                await this.loadTacticsDeploymentSection(ownedTactics, activeBattle);
+                await this.loadTacticsDeploymentSection(ownedTactics, activeBattle, playerRole);
             } else {
                 Logger.info('No active battle, tactics deployment section will be hidden');
             }
@@ -115,7 +125,7 @@ export class CommandCenterPage extends BasePage {
         }
     }
 
-    updateOpponentStatus(searchStatus, activeBattle) {
+    updateOpponentStatus(searchStatus, activeBattle, playerRole = 'none') {
         const statusSection = this.element.querySelector('.opponent-status-section');
         const statusText = statusSection.querySelector('.status-text');
         const statusDetails = statusSection.querySelector('.status-details');
@@ -123,9 +133,14 @@ export class CommandCenterPage extends BasePage {
         const resolveBattleBtn = statusSection.querySelector('.resolve-battle-btn');
 
         if (activeBattle) {
-            statusText.textContent = 'Battle in Progress!';
-            const battleTime = new Date(Number(activeBattle.startTime) * 1000);
-            statusDetails.textContent = `Battle started at: ${battleTime.toLocaleString()}`;
+            if (playerRole === 'defender') {
+                statusText.textContent = 'Your District Is Under Attack!';
+                statusDetails.textContent = 'Deploy troops and tactics at the Garrison to defend your territory.';
+            } else {
+                statusText.textContent = 'Battle in Progress!';
+                const battleTime = new Date(Number(activeBattle.startTime) * 1000);
+                statusDetails.textContent = `Battle started at: ${battleTime.toLocaleString()}`;
+            }
             battleTimer.style.display = 'block';
             resolveBattleBtn.style.display = 'none';
         } else if (searchStatus.completed && searchStatus.foundOpponent !== '0x0000000000000000000000000000000000000000') {
@@ -178,7 +193,7 @@ export class CommandCenterPage extends BasePage {
         this.battleTimerInterval = setInterval(updateTimer, 5000);
     }
 
-    updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount, activeBattle) {
+    updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount, activeBattle, playerRole = 'none') {
         const deploymentSection = this.element.querySelector('.troop-deployment-section');
         const deployButton = deploymentSection.querySelector('.deploy-troops-btn');
         const infantryInput = deploymentSection.querySelector('#deploy-infantry');
@@ -187,6 +202,11 @@ export class CommandCenterPage extends BasePage {
 
         // Enable/disable deployment section based on search status and active battle
         if (activeBattle) {
+            // Hide deployment section for defenders
+            if (playerRole === 'defender') {
+                deploymentSection.style.display = 'none';
+                return;
+            }
             // Battle is active - check if troops are already deployed
             const deployedInfantry = Number(activeBattle.attackerTroops?.infantry || 0);
             const deployedCavalry = Number(activeBattle.attackerTroops?.cavalry || 0);
@@ -258,7 +278,7 @@ export class CommandCenterPage extends BasePage {
         container.appendChild(progressBarElement);
     }
 
-    async updateDeployedTroopsDisplay(activeBattle) {
+    async updateDeployedTroopsDisplay(activeBattle, playerRole = 'none') {
         Logger.info('Updating deployed troops display...');
         Logger.info('Active battle data:', {
             startTime: activeBattle?.startTime?.toString(),
@@ -345,8 +365,15 @@ export class CommandCenterPage extends BasePage {
             }
             
             deployedSection.style.display = 'block';
-            tacticsSection.style.display = 'block';
-            Logger.info('Deployed troops and tactics sections are now visible');
+            
+            // Hide tactics section for defenders
+            if (playerRole === 'defender') {
+                tacticsSection.style.display = 'none';
+                Logger.info('Player is defender - hiding tactics section');
+            } else {
+                tacticsSection.style.display = 'block';
+                Logger.info('Player is attacker - showing tactics section');
+            }
         } else {
             Logger.info('No active battle, hiding deployed troops and tactics sections');
             deployedSection.style.display = 'none';
@@ -680,7 +707,13 @@ export class CommandCenterPage extends BasePage {
         });
     }
 
-    async loadTacticsDeploymentSection(ownedTactics, activeBattle) {
+    async loadTacticsDeploymentSection(ownedTactics, activeBattle, playerRole = 'none') {
+        // Don't load tactics for defenders
+        if (playerRole === 'defender') {
+            Logger.info('Player is defender - skipping tactics deployment section');
+            return;
+        }
+        
         Logger.info('Loading tactics deployment section...');
         const tacticsSection = this.element.querySelector('.tactics-deployment-section');
         if (!tacticsSection) {

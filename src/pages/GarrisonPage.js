@@ -68,12 +68,20 @@ export class GarrisonPage extends BasePage {
 
             Logger.info('Garrison data loaded:', { infantryCount, cavalryCount, siegeCount, defenseTowerLevel, activeBattle, battleDuration });
             
-            // Log battle status for debugging
+            // Determine player role in battle
+            let playerRole = 'none';
             if (activeBattle) {
+                if (activeBattle.attacker.toLowerCase() === address.toLowerCase()) {
+                    playerRole = 'attacker';
+                } else if (activeBattle.defender.toLowerCase() === address.toLowerCase()) {
+                    playerRole = 'defender';
+                }
+                
                 Logger.info('Active battle found:', { 
                     startTime: activeBattle.startTime.toString(), 
                     attacker: activeBattle.attacker,
                     defender: activeBattle.defender,
+                    playerRole: playerRole,
                     currentTime: Math.floor(Date.now() / 1000),
                     battleAge: Math.floor(Date.now() / 1000) - Number(activeBattle.startTime)
                 });
@@ -88,13 +96,13 @@ export class GarrisonPage extends BasePage {
             this.element.querySelector('#defense-tower-level').textContent = `Level ${defenseTowerLevel}`;
 
             // Update deployed troops display
-            await this.updateDeployedTroopsDisplay(activeBattle);
+            await this.updateDeployedTroopsDisplay(activeBattle, playerRole);
 
             // Update battle status section
-            this.updateBattleStatus(activeBattle);
+            this.updateBattleStatus(activeBattle, playerRole);
 
             // Update troop deployment section
-            await this.updateTroopDeploymentSection(infantryCount, cavalryCount, siegeCount, activeBattle);
+            await this.updateTroopDeploymentSection(infantryCount, cavalryCount, siegeCount, activeBattle, playerRole);
 
             // Load and update hero selection dropdown
             await this.updateHeroSelectionDropdown(address);
@@ -115,7 +123,7 @@ export class GarrisonPage extends BasePage {
             // Load and update tactics deployment section if in battle
             if (activeBattle) {
                 Logger.info('Active battle detected, loading tactics deployment section');
-                await this.loadTacticsDeploymentSection(ownedTactics, activeBattle);
+                await this.loadTacticsDeploymentSection(ownedTactics, activeBattle, playerRole);
             } else {
                 Logger.info('No active battle, tactics deployment section will be hidden');
             }
@@ -125,7 +133,7 @@ export class GarrisonPage extends BasePage {
         }
     }
 
-    async updateDeployedTroopsDisplay(activeBattle) {
+    async updateDeployedTroopsDisplay(activeBattle, playerRole = 'none') {
         Logger.info('Garrison: Updating deployed troops display...');
         Logger.info('Garrison: Active battle data:', {
             startTime: activeBattle?.startTime?.toString(),
@@ -202,8 +210,15 @@ export class GarrisonPage extends BasePage {
             }
             
             deployedSection.style.display = 'block';
-            tacticsSection.style.display = 'block';
-            Logger.info('Garrison: Deployed troops and tactics sections are now visible');
+            
+            // Hide tactics section for attackers
+            if (playerRole === 'attacker') {
+                tacticsSection.style.display = 'none';
+                Logger.info('Garrison: Player is attacker - hiding tactics section');
+            } else {
+                tacticsSection.style.display = 'block';
+                Logger.info('Garrison: Player is defender - showing tactics section');
+            }
         } else {
             Logger.info('Garrison: No active battle, hiding deployed troops and tactics sections');
             // No active battle, no deployed troops
@@ -216,7 +231,7 @@ export class GarrisonPage extends BasePage {
         }
     }
 
-    updateBattleStatus(activeBattle) {
+    updateBattleStatus(activeBattle, playerRole = 'none') {
         const statusSection = this.element.querySelector('.battle-status-section');
         const statusText = statusSection.querySelector('.status-text');
         const statusDetails = statusSection.querySelector('.status-details');
@@ -224,9 +239,14 @@ export class GarrisonPage extends BasePage {
         const resolveBattleBtn = statusSection.querySelector('.resolve-battle-btn');
 
         if (activeBattle) {
-            statusText.textContent = 'Battle in Progress!';
-            const battleTime = new Date(Number(activeBattle.startTime) * 1000);
-            statusDetails.textContent = `Battle started at: ${battleTime.toLocaleString()}`;
+            if (playerRole === 'attacker') {
+                statusText.textContent = 'Attack in Progress!';
+                statusDetails.textContent = 'Command your attack from the Command Center.';
+            } else {
+                statusText.textContent = 'Battle in Progress!';
+                const battleTime = new Date(Number(activeBattle.startTime) * 1000);
+                statusDetails.textContent = `Battle started at: ${battleTime.toLocaleString()}`;
+            }
             battleTimer.style.display = 'block';
             resolveBattleBtn.style.display = 'none';
         } else {
@@ -274,7 +294,7 @@ export class GarrisonPage extends BasePage {
         this.battleTimerInterval = setInterval(updateTimer, 5000);
     }
 
-    async updateTroopDeploymentSection(infantryCount, cavalryCount, siegeCount, activeBattle) {
+    async updateTroopDeploymentSection(infantryCount, cavalryCount, siegeCount, activeBattle, playerRole = 'none') {
         const deploymentSection = this.element.querySelector('.troop-deployment-section');
         const deployButton = deploymentSection.querySelector('.deploy-troops-btn');
         const infantryInput = deploymentSection.querySelector('#deploy-infantry');
@@ -282,8 +302,11 @@ export class GarrisonPage extends BasePage {
         const siegeInput = deploymentSection.querySelector('#deploy-siege');
 
         // Enable/disable deployment section based on active battle and defender status
-        const playerAddress = await this.contracts.gameState.getAddress();
-        if (activeBattle && activeBattle.defender.toLowerCase() === playerAddress.toLowerCase()) {
+        if (activeBattle && playerRole === 'attacker') {
+            // Player is attacker - hide deployment section (attackers use Command Center)
+            deploymentSection.style.display = 'none';
+            return;
+        } else if (activeBattle && playerRole === 'defender') {
             // Player is defender in active battle
             deploymentSection.style.display = 'block';
             
@@ -659,7 +682,13 @@ export class GarrisonPage extends BasePage {
         });
     }
 
-    async loadTacticsDeploymentSection(ownedTactics, activeBattle) {
+    async loadTacticsDeploymentSection(ownedTactics, activeBattle, playerRole = 'none') {
+        // Don't load tactics for attackers
+        if (playerRole === 'attacker') {
+            Logger.info('Garrison: Player is attacker - skipping tactics deployment section');
+            return;
+        }
+        
         const tacticsSection = this.element.querySelector('.tactics-deployment-section');
         if (!tacticsSection) return;
 
