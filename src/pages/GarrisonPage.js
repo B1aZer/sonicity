@@ -827,8 +827,7 @@ export class GarrisonPage extends BasePage {
             const address = WalletManager.getCurrentWallet();
             Logger.info(`Deploying tactic ${tacticId} (${TacticsNFTContract.getTacticName(tacticId)})`);
             
-            const tx = await this.contracts.battleSystem.deployTacticToBattle(tacticId);
-            await tx.wait();
+            await this.contracts.battleSystem.deployTacticToBattle(tacticId);
             
             this.modal.success(`${TacticsNFTContract.getTacticName(tacticId)} deployed successfully!`);
             
