@@ -645,4 +645,159 @@ describe("YieldStation Revenue System", function () {
       }
     });
   });
+
+  describe("Multi-Player Timing and Pool Depletion", function () {
+    it("should test exact scenario: 3 players joining at hours 0, 6, and 18", async function () {
+      const HOUR = 3600; // 1 hour in seconds
+      
+      // Setup all three players with tier 4 and REP first
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
+      await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 10000); 
+      await donateGoldForTier(player3, gameState, gridBuildings, altar, sonicityNFT, 10000);
+      
+      // Check what pool size we have from setup activities
+      const existingPool = await gridBuildings.getRevenuePool();
+      console.log("Pool from setup activities:", ethers.formatEther(existingPool));
+      
+      // Round up to a nice number for clean calculations
+      const targetPool = ethers.parseEther("100");
+      if (existingPool < targetPool) {
+        const needed = targetPool - existingPool;
+        await gridBuildings.addRevenuePool({ value: needed });
+        console.log("Added", ethers.formatEther(needed), "to reach 100 SONIC pool");
+      }
+      
+      const startingPool = await gridBuildings.getRevenuePool();
+      console.log("Final revenue pool:", ethers.formatEther(startingPool));
+      
+      await gameState.testEarnRep(player1.address, 50);
+      await gameState.testEarnRep(player2.address, 50);
+      await gameState.testEarnRep(player3.address, 50);
+      
+      // Create yield NFTs with equal REP (10 each for equal weights)
+      await altar.connect(player1).mintYieldNFT(10);
+      await altar.connect(player2).mintYieldNFT(10);
+      await altar.connect(player3).mintYieldNFT(10);
+      
+      const tokenId1 = await sonicityYieldNFT.tokenOfOwnerByIndex(player1.address, 0);
+      const tokenId2 = await sonicityYieldNFT.tokenOfOwnerByIndex(player2.address, 0);
+      const tokenId3 = await sonicityYieldNFT.tokenOfOwnerByIndex(player3.address, 0);
+      
+      await sonicityYieldNFT.connect(player1).approve(altar.getAddress(), tokenId1);
+      await sonicityYieldNFT.connect(player2).approve(altar.getAddress(), tokenId2);
+      await sonicityYieldNFT.connect(player3).approve(altar.getAddress(), tokenId3);
+      
+      await altar.connect(player1).stakeYieldNFT(tokenId1);
+      await altar.connect(player2).stakeYieldNFT(tokenId2);
+      await altar.connect(player3).stakeYieldNFT(tokenId3);
+      
+      const yieldStationId1 = await findBuildingOfType(gridBuildings, player1, GridBuildingType.YIELD_STATION);
+      const yieldStationId2 = await findBuildingOfType(gridBuildings, player2, GridBuildingType.YIELD_STATION);
+      const yieldStationId3 = await findBuildingOfType(gridBuildings, player3, GridBuildingType.YIELD_STATION);
+      
+      const yieldRechargeCost = await getRechargeCost(gridBuildings, GridBuildingType.YIELD_STATION);
+      
+      // === HOUR 0: Player 1 activates yield station ===
+      const startTime = await ethers.provider.send("eth_getBlockByNumber", ["latest", false]);
+      console.log("\n=== HOUR 0: Player 1 activates ===");
+      
+      await gridBuildings.connect(player1).rechargeBuilding(yieldStationId1, { value: yieldRechargeCost });
+      
+      let poolSize = await gridBuildings.getRevenuePool();
+      let player1Info = await gridBuildings.getYieldStationInfo(player1.address, yieldStationId1);
+      console.log("Pool size:", ethers.formatEther(poolSize));
+      console.log("Player 1 rate:", ethers.formatEther(player1Info.revenueRate * BigInt(3600)), "SONIC/hour");
+      
+      // === HOUR 6: Player 2 activates ===
+      await ethers.provider.send("evm_increaseTime", [6 * HOUR]);
+      await ethers.provider.send("evm_mine");
+      console.log("\n=== HOUR 6: Player 2 activates ===");
+      
+      // Check Player 1 earnings after 6 hours alone
+      let player1Revenue = await gridBuildings.calculateYieldStationRevenue(player1.address, yieldStationId1);
+      console.log("Player 1 earnings after 6h:", ethers.formatEther(player1Revenue));
+      
+      // Player 2 activates
+      await gridBuildings.connect(player2).rechargeBuilding(yieldStationId2, { value: yieldRechargeCost });
+      
+      poolSize = await gridBuildings.getRevenuePool();
+      player1Info = await gridBuildings.getYieldStationInfo(player1.address, yieldStationId1);
+      let player2Info = await gridBuildings.getYieldStationInfo(player2.address, yieldStationId2);
+      console.log("Pool size:", ethers.formatEther(poolSize));
+      console.log("Player 1 new rate:", ethers.formatEther(player1Info.revenueRate * BigInt(3600)), "SONIC/hour");
+      console.log("Player 2 rate:", ethers.formatEther(player2Info.revenueRate * BigInt(3600)), "SONIC/hour");
+      
+      // === HOUR 18: Player 3 activates ===
+      await ethers.provider.send("evm_increaseTime", [12 * HOUR]);
+      await ethers.provider.send("evm_mine");
+      console.log("\n=== HOUR 18: Player 3 activates ===");
+      
+      // Check earnings before Player 3 joins
+      player1Revenue = await gridBuildings.calculateYieldStationRevenue(player1.address, yieldStationId1);
+      let player2Revenue = await gridBuildings.calculateYieldStationRevenue(player2.address, yieldStationId2);
+      console.log("Player 1 earnings after 18h:", ethers.formatEther(player1Revenue));
+      console.log("Player 2 earnings after 12h:", ethers.formatEther(player2Revenue));
+      
+      // Player 3 activates
+      await gridBuildings.connect(player3).rechargeBuilding(yieldStationId3, { value: yieldRechargeCost });
+      
+      poolSize = await gridBuildings.getRevenuePool();
+      player1Info = await gridBuildings.getYieldStationInfo(player1.address, yieldStationId1);
+      player2Info = await gridBuildings.getYieldStationInfo(player2.address, yieldStationId2);
+      let player3Info = await gridBuildings.getYieldStationInfo(player3.address, yieldStationId3);
+      console.log("Pool size:", ethers.formatEther(poolSize));
+      console.log("Player 1 new rate:", ethers.formatEther(player1Info.revenueRate * BigInt(3600)), "SONIC/hour");
+      console.log("Player 2 new rate:", ethers.formatEther(player2Info.revenueRate * BigInt(3600)), "SONIC/hour");
+      console.log("Player 3 rate:", ethers.formatEther(player3Info.revenueRate * BigInt(3600)), "SONIC/hour");
+      
+      // === HOUR 24: Player 1 expires ===
+      await ethers.provider.send("evm_increaseTime", [6 * HOUR]);
+      await ethers.provider.send("evm_mine");
+      console.log("\n=== HOUR 24: Player 1 expires ===");
+      
+      // Check final earnings for all players at 24h mark
+      player1Revenue = await gridBuildings.calculateYieldStationRevenue(player1.address, yieldStationId1);
+      player2Revenue = await gridBuildings.calculateYieldStationRevenue(player2.address, yieldStationId2);
+      let player3Revenue = await gridBuildings.calculateYieldStationRevenue(player3.address, yieldStationId3);
+      
+      console.log("Player 1 final earnings (24h):", ethers.formatEther(player1Revenue));
+      console.log("Player 2 earnings (18h active):", ethers.formatEther(player2Revenue));
+      console.log("Player 3 earnings (6h active):", ethers.formatEther(player3Revenue));
+      
+      // === HOUR 30: Player 2 expires ===
+      await ethers.provider.send("evm_increaseTime", [6 * HOUR]);
+      await ethers.provider.send("evm_mine");
+      console.log("\n=== HOUR 30: Player 2 expires ===");
+      
+      player2Revenue = await gridBuildings.calculateYieldStationRevenue(player2.address, yieldStationId2);
+      player3Revenue = await gridBuildings.calculateYieldStationRevenue(player3.address, yieldStationId3);
+      
+      console.log("Player 2 final earnings (24h):", ethers.formatEther(player2Revenue));
+      console.log("Player 3 earnings (12h active):", ethers.formatEther(player3Revenue));
+      
+      // === HOUR 42: Player 3 expires ===
+      await ethers.provider.send("evm_increaseTime", [12 * HOUR]);
+      await ethers.provider.send("evm_mine");
+      console.log("\n=== HOUR 42: Player 3 expires ===");
+      
+      player3Revenue = await gridBuildings.calculateYieldStationRevenue(player3.address, yieldStationId3);
+      console.log("Player 3 final earnings (24h):", ethers.formatEther(player3Revenue));
+      
+      // === FINAL SUMMARY ===
+      const finalPool = await gridBuildings.getRevenuePool();
+      const totalDistributed = player1Revenue + player2Revenue + player3Revenue;
+      
+      console.log("\n=== FINAL SUMMARY ===");
+      console.log("Player 1 total:", ethers.formatEther(player1Revenue));
+      console.log("Player 2 total:", ethers.formatEther(player2Revenue));
+      console.log("Player 3 total:", ethers.formatEther(player3Revenue));
+      console.log("Total distributed:", ethers.formatEther(totalDistributed));
+      console.log("Remaining pool:", ethers.formatEther(finalPool));
+      console.log("Original pool: 100.0");
+      
+      // Verify our understanding - total should equal starting pool
+      const startingPoolSize = Number(ethers.formatEther(targetPool));
+      expect(Number(ethers.formatEther(totalDistributed)) + Number(ethers.formatEther(finalPool))).to.be.closeTo(startingPoolSize, 0.1);
+    });
+  });
 }); 
