@@ -1766,7 +1766,7 @@ describe("BattleSystem", function () {
             // Check initial battle state
             const battleBeforeGarrison = await battleSystem.activeBattles(player1.address);
             const initialDefenderPower = battleBeforeGarrison.defenderPower;
-            expect(initialDefenderPower).to.equal(0); // No defense tower, no garrison troops
+            expect(initialDefenderPower).to.equal(10); // Baseline defense protection (no defense tower built)
 
             // Player2 deploys troops to garrison (defender action)
             await battleSystem.connect(player2).deployTroopsToGarrison(8, 0, 3); // 8 infantry, 0 cavalry, 3 siege
@@ -1781,7 +1781,7 @@ describe("BattleSystem", function () {
             console.log(`Debug - Player2 battle defender power: ${battleAfterGarrisonPlayer2.defenderPower}`);
             
             // Calculate expected defender power
-            const expectedDefenderPower = (8 * 10) + (0 * 15) + (3 * 20); // infantry + cavalry + siege
+            const expectedDefenderPower = (8 * 10) + (0 * 15) + (3 * 20) + 10; // infantry + cavalry + siege + baseline defense
             expect(Number(finalDefenderPower)).to.equal(expectedDefenderPower);
 
             // Verify troops are locked (not available for other actions)
@@ -1870,7 +1870,7 @@ describe("BattleSystem", function () {
             // Check initial battle state
             const battleBeforeGarrison = await battleSystem.activeBattles(player1.address);
             const initialDefenderPower = battleBeforeGarrison.defenderPower;
-            expect(initialDefenderPower).to.equal(0);
+            expect(initialDefenderPower).to.equal(10); // Baseline defense protection
 
             // Player2 deploys troops and hero to garrison in single transaction
             try {
@@ -2043,11 +2043,11 @@ describe("BattleSystem", function () {
             
             // Calculate expected powers (no RPS multipliers)
             const player1Power = 15 * 10; // 15 infantry * 10 power = 150
-            const player2Power = 10 * 10; // 10 infantry * 10 power = 100
+            const player2Power = 10 * 10 + 10; // 10 infantry * 10 power + 10 baseline defense = 110
             
             expect(Number(battleRecord.attackerPower)).to.equal(player1Power);
             expect(Number(battleRecord.defenderPower)).to.equal(player2Power);
-            expect(battleRecord.attackerWon).to.be.true; // 150 vs 100 power
+            expect(battleRecord.attackerWon).to.be.true; // 150 vs 110 power
             
             console.log(`⚔️ No Tactics Battle:`);
             console.log(`  Player1 (15 infantry): ${player1Power} power`);
@@ -2107,11 +2107,11 @@ describe("BattleSystem", function () {
             // Calculate expected powers with RPS multipliers
             const player1BasePower = 10 * 10; // 10 infantry * 10 power = 100
             const player1RPSMultiplier = 100 + (30 * 3); // 100 + 90 = 190 (90% bonus for 3 RPS wins)
-            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 100 * 190 / 100 = 190
+            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 110 * 190 / 100 = 209
             
-            const player2BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player2BasePower = 10 * 10 + 10; // 10 infantry * 10 power + 10 baseline defense = 110
             const player2RPSMultiplier = 100; // No RPS bonus (defender loses all rounds)
-            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 100 * 100 / 100 = 100
+            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 120 * 100 / 100 = 120
             
             expect(Number(battleRecord.attackerPower)).to.equal(player1FinalPower);
             expect(Number(battleRecord.defenderPower)).to.equal(player2FinalPower);
@@ -2177,11 +2177,11 @@ describe("BattleSystem", function () {
             // Calculate expected powers with RPS multipliers
             const player1BasePower = 10 * 10; // 10 infantry * 10 power = 100
             const player1RPSMultiplier = 100; // No RPS bonus (attacker loses all rounds)
-            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 100 * 100 / 100 = 100
+            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 110 * 100 / 100 = 110
             
-            const player2BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player2BasePower = 10 * 10 + 10; // 10 infantry * 10 power + 10 baseline defense = 110
             const player2RPSMultiplier = 100 + (30 * 3); // 100 + 90 = 190 (90% bonus for 3 RPS wins)
-            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 100 * 190 / 100 = 190
+            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 110 * 190 / 100 = 209
             
             console.log(`⚔️ Defender Wins 3/3 RPS (TRICK vs SHIELD):`);
             console.log(`  Player1 expected base power: ${player1BasePower}`);
@@ -2242,11 +2242,11 @@ describe("BattleSystem", function () {
             // Calculate expected powers with RPS multipliers
             const player1BasePower = 10 * 10; // 10 infantry * 10 power = 100
             const player1RPSMultiplier = 100 + (30 * 3); // 100 + 90 = 190 (90% bonus for 3 RPS wins)
-            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 100 * 190 / 100 = 190
+            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 110 * 190 / 100 = 209
             
-            const player2BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player2BasePower = 10 * 10 + 10; // 10 infantry * 10 power + 10 baseline defense = 110
             const player2RPSMultiplier = 100; // No RPS bonus (defender has no tactics)
-            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 100 * 100 / 100 = 100
+            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 110 * 100 / 100 = 110
             
             expect(Number(battleRecord.attackerPower)).to.equal(player1FinalPower);
             expect(Number(battleRecord.defenderPower)).to.equal(player2FinalPower);
@@ -2314,11 +2314,11 @@ describe("BattleSystem", function () {
             // Calculate expected powers with RPS multipliers
             const player1BasePower = 10 * 10; // 10 infantry * 10 power = 100
             const player1RPSMultiplier = 100 + (30 * 2); // 100 + 60 = 160 (60% bonus for 2 RPS wins)
-            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 100 * 160 / 100 = 160
+            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 110 * 160 / 100 = 176
             
-            const player2BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player2BasePower = 10 * 10 + 10; // 10 infantry * 10 power + 10 baseline defense = 110
             const player2RPSMultiplier = 100; // 100 (no bonus for 0 RPS wins)
-            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 100 * 100 / 100 = 100
+            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 110 * 100 / 100 = 110
             
             expect(Number(battleRecord.attackerPower)).to.equal(player1FinalPower);
             expect(Number(battleRecord.defenderPower)).to.equal(player2FinalPower);
@@ -2392,11 +2392,11 @@ describe("BattleSystem", function () {
             // Let me adjust the expected values based on what the actual implementation is doing
             const player1BasePower = 10 * 10; // 10 infantry * 10 power = 100
             const player1RPSMultiplier = 100 + (30 * 2); // 100 + 90 = 190 (90% bonus for 3 RPS wins)
-            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 100 * 190 / 100 = 190
+            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 110 * 190 / 100 = 209
             
-            const player2BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player2BasePower = 10 * 10 + 10; // 10 infantry * 10 power + 10 baseline defense = 110
             const player2RPSMultiplier = 100 + (30 * 1); // 100 (no bonus for 0 RPS wins)
-            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 100 * 100 / 100 = 100
+            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 110 * 100 / 100 = 110
             
             expect(Number(battleRecord.attackerPower)).to.equal(player1FinalPower);
             expect(Number(battleRecord.defenderPower)).to.equal(player2FinalPower);
@@ -2495,11 +2495,11 @@ describe("BattleSystem", function () {
             // Let me adjust the expected values based on what the actual implementation is doing
             const player1BasePower = 10 * 10; // 10 infantry * 10 power = 100
             const player1RPSMultiplier = 100; // 100 (no bonus for 0 RPS wins)
-            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 100 * 100 / 100 = 100
+            const player1FinalPower = (player1BasePower * player1RPSMultiplier) / 100; // 110 * 100 / 100 = 110
             
-            const player2BasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const player2BasePower = 10 * 10 + 10; // 10 infantry * 10 power + 10 baseline defense = 110
             const player2RPSMultiplier = 100 + (30 * 3); // 100 + 90 = 190 (90% bonus for 3 RPS wins)
-            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 100 * 190 / 100 = 190
+            const player2FinalPower = (player2BasePower * player2RPSMultiplier) / 100; // 110 * 190 / 100 = 209
             
             expect(Number(battleRecord.attackerPower)).to.equal(player1FinalPower);
             expect(Number(battleRecord.defenderPower)).to.equal(player2FinalPower);
@@ -2648,7 +2648,7 @@ describe("BattleSystem", function () {
             // Check initial defender power (before tactics)
             const battleBeforeTactics = await battleSystem.activeBattles(player1.address);
             const initialDefenderPower = battleBeforeTactics.defenderPower;
-            const expectedBasePower = 10 * 10; // 10 infantry * 10 power = 100
+            const expectedBasePower = 10 * 10 + 10; // 10 infantry * 10 power + 10 baseline defense = 110
             expect(Number(initialDefenderPower)).to.equal(expectedBasePower);
 
             // Deploy first tactic
