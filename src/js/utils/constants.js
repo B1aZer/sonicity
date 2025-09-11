@@ -816,10 +816,10 @@ export const BUILDINGS = {
     },
     ARCANUM_OF_NAMES: {
         name: 'Arcanum of Names',
-        size: new THREE.Vector3(4, 4, 4),
+        size: new THREE.Vector3(8, 8, 8),
         color: 0x8A2BE2, // Blue Violet
-        position: { x: 85, y: 0, z: -135 },
-        rotation: { x: 0, y: 0, z: 0 }, // Converted to Vector3 format
+        position: { x: -12, y: 1, z: -34 },
+        rotation: { x: 0, y: 0.2, z: 0 }, // Converted to Vector3 format
         tier: 3,
         description: "Mystical archive for storing reputation and minting unique NFTs.",
         assets: {
