@@ -5,10 +5,12 @@ import { AssetLoader } from '../managers/assetLoader.js';
 import { GridManager } from '../managers/gridManager.js';
 import { SceneManager } from '../managers/sceneManager.js';
 import { CosmeticManager } from '../managers/cosmeticManager.js';
+import { PatrolManager } from '../managers/patrolManager.js';
 import { GameStateContract } from '../contracts/GameStateContract.js';
 import { GridBuildingsContract } from '../contracts/GridBuildingsContract.js';
 import { DistrictBuildingsContract } from '../contracts/DistrictBuildingsContract.js';
 import { CosmeticItemsContract } from '../contracts/CosmeticItemsContract.js';
+import { BattleSystemContract } from '../contracts/BattleSystemContract.js';
 import Logger from '../utils/logger.js';
 import { musicManager } from '../managers/musicManager.js';
 
@@ -33,6 +35,7 @@ export class Game {
         this.assetLoader = new AssetLoader();
         this.buildingManager = null; // Will be initialized after assets are loaded
         this.cosmeticManager = null; // Will be initialized after scene is ready
+        this.patrolManager = null; // Will be initialized after scene is ready
         this.inputHandler = new InputHandler(this);
         
         // Use provided contracts or create new ones
@@ -41,12 +44,14 @@ export class Game {
             this.gridBuildingsContract = contracts.gridBuildings;
             this.districtBuildingsContract = contracts.districtBuildings;
             this.cosmeticItemsContract = contracts.cosmeticItems;
+            this.battleSystemContract = contracts.battleSystem;
         } else {
             // Fallback: Initialize contracts (for standalone usage)
             this.gameStateContract = new GameStateContract();
             this.gridBuildingsContract = new GridBuildingsContract();
             this.districtBuildingsContract = new DistrictBuildingsContract();
             this.cosmeticItemsContract = new CosmeticItemsContract();
+            this.battleSystemContract = new BattleSystemContract();
         }
 
         // Game initialization complete
@@ -89,6 +94,9 @@ export class Game {
         
         // Initialize cosmetic manager
         this.cosmeticManager = new CosmeticManager(this.scene, this.cosmeticItemsContract);
+        
+        // Initialize patrol manager
+        this.patrolManager = new PatrolManager(this.scene, this.assetLoader, this.battleSystemContract);
         
         // Set up input handlers
         Logger.info("Game: Setting up input handlers");
@@ -152,6 +160,11 @@ export class Game {
         if (this.buildingManager) {
             this.buildingManager.update(deltaTime);
         }
+        
+        // Update patrol manager
+        if (this.patrolManager) {
+            this.patrolManager.update(deltaTime);
+        }
     }
 
     render() {
@@ -211,6 +224,12 @@ export class Game {
             this.cosmeticManager = null;
         }
         
+        // Dispose of patrol manager
+        if (this.patrolManager) {
+            this.patrolManager.dispose();
+            this.patrolManager = null;
+        }
+        
         // Dispose of scene manager (includes THREE.js cleanup)
         if (this.sceneManager) {
             this.sceneManager.dispose();
@@ -235,6 +254,7 @@ export class Game {
         this.gridBuildingsContract = null;
         this.districtBuildingsContract = null;
         this.cosmeticItemsContract = null;
+        this.battleSystemContract = null;
         
         Logger.info("Game: dispose() method completed");
     }
