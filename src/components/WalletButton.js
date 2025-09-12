@@ -1,5 +1,6 @@
 import { WalletManager, formatAddress } from '../js/utils/wallet.js';
 import Logger from '../js/utils/logger.js';
+import { getBlockExplorerUrl } from '../js/utils/config.js';
 
 export class WalletButton {
     constructor() {
@@ -148,8 +149,8 @@ export class WalletButton {
             if (viewOnExplorerBtn) {
                 viewOnExplorerBtn.addEventListener('click', () => {
                     const address = viewOnExplorerBtn.getAttribute('data-address');
-                    // This should be updated based on your network
-                    window.open(`http://localhost:8545/address/${address}`, '_blank');
+                    // Use environment-based block explorer URL
+                    window.open(getBlockExplorerUrl(address), '_blank');
                 });
             }
             
