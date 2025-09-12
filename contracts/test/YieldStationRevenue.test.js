@@ -26,6 +26,11 @@ describe("YieldStation Revenue System", function () {
 
   beforeEach(async function () {
     [owner, player1, player2, player3] = await ethers.getSigners();
+    
+    // Fund players with SONIC for recharging buildings
+    await owner.sendTransaction({ to: player1.address, value: ethers.parseEther("50") });
+    await owner.sendTransaction({ to: player2.address, value: ethers.parseEther("50") });
+    await owner.sendTransaction({ to: player3.address, value: ethers.parseEther("50") });
 
     // Deploy SonicityNFT
     const SonicityNFT = await ethers.getContractFactory("SonicityNFT");

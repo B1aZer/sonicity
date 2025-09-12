@@ -154,8 +154,8 @@ describe("Hero & Tactics System", function () {
             // All tactics cost the same
             for (let i = 1; i <= 9; i++) {
                 const cost = await tacticsNFT.getTacticCost(i);
-                expect(cost.goldCost).to.equal(800);
-                expect(cost.diamondCost).to.equal(8);
+                expect(cost.goldCost).to.equal(100);
+                expect(cost.diamondCost).to.equal(16);
             }
         });
 
