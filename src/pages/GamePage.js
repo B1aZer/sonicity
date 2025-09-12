@@ -471,9 +471,9 @@ export class GamePage extends BasePage {
                 } else if (clickedObject.userData.isYieldstation) {
                     Logger.info('Yield Station clicked');
                     this.audioManager.playBuildingEnter();
-                    this.preloadPage('/stake');
+                    this.preloadPage('/yield-station');
                     setTimeout(() => {
-                        window.history.pushState({}, '', '/stake');
+                        window.history.pushState({}, '', '/yield-station');
                         window.dispatchEvent(new PopStateEvent('popstate'));
                     }, BUILDING_ENTER_DELAY);
                 } else if (clickedObject.userData.isArcanumofnames) {

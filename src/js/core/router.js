@@ -19,6 +19,7 @@ import { OutpostPage } from '../../pages/OutpostPage.js';
 import { RevenueHubPage } from '../../pages/RevenueHubPage.js';
 import { TavernPage } from '../../pages/TavernPage.js';
 import { TacticsCenterPage } from '../../pages/TacticsCenterPage.js';
+import { YieldStationPage } from '../../pages/YieldStationPage.js';
 import Logger from '../utils/logger.js';
 
 export class Router {
@@ -59,7 +60,8 @@ export class Router {
             'outpost': OutpostPage,
             'revenue-hub': RevenueHubPage,
             'tavern': TavernPage,
-            'tactics-center': TacticsCenterPage
+            'tactics-center': TacticsCenterPage,
+            'yield-station': YieldStationPage
         };
     }
 
@@ -238,7 +240,8 @@ export class Router {
             'revenue-hub': () => import('../../pages/RevenueHubPage.js').then(m => m.RevenueHubPage),
             'stake': () => import('../../pages/StakeHubPage.js').then(m => m.StakePage),
             'tavern': () => import('../../pages/TavernPage.js').then(m => m.TavernPage),
-            'tactics-center': () => import('../../pages/TacticsCenterPage.js').then(m => m.TacticsCenterPage)
+            'tactics-center': () => import('../../pages/TacticsCenterPage.js').then(m => m.TacticsCenterPage),
+            'yield-station': () => import('../../pages/YieldStationPage.js').then(m => m.YieldStationPage)
         };
     }
 
