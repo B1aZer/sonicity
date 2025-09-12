@@ -1,4 +1,6 @@
 const { ethers, upgrades } = require("hardhat");
+// Import the reusable grid deployment function
+const { deployGridBuildings } = require("./deploy-grid");
 
 async function main() {
   console.log("Starting deployment...");
@@ -71,14 +73,7 @@ async function main() {
   const districtBuildingsImplAddress = await districtBuildingsImpl.getAddress();
   console.log("DistrictBuildings implementation deployed to:", districtBuildingsImplAddress);
 
-  // Deploy GridBuildings implementation
-  console.log("Deploying GridBuildings implementation...");
-  const GridBuildings = await ethers.getContractFactory("GridBuildings");
-  const gridBuildingsImpl = await GridBuildings.deploy();
-  console.log("Waiting for GridBuildings implementation deployment...");
-  await gridBuildingsImpl.waitForDeployment();
-  const gridBuildingsImplAddress = await gridBuildingsImpl.getAddress();
-  console.log("GridBuildings implementation deployed to:", gridBuildingsImplAddress);
+  // GridBuildings will be deployed later using the reusable function
 
   // Deploy Altar implementation
   console.log("Deploying Altar implementation...");
@@ -147,16 +142,15 @@ async function main() {
   const districtBuildingsProxyAddress = await districtBuildingsProxy.getAddress();
   console.log("DistrictBuildings proxy deployed to:", districtBuildingsProxyAddress);
 
-  // Deploy GridBuildings proxy
-  console.log("Deploying GridBuildings proxy...");
-  const gridBuildingsProxy = await upgrades.deployProxy(GridBuildings, [], {
-    kind: 'uups',
-    initializer: 'initialize',
+  // Deploy GridBuildings using the reusable function
+  const gridAddresses = await deployGridBuildings({
+    gameStateProxy: gameStateProxyAddress,
+    altarProxy: altarProxyAddress,
+    battleSystemProxy: battleSystemProxyAddress,
+    districtBuildingsProxy: districtBuildingsProxyAddress
   });
-  console.log("Waiting for GridBuildings proxy deployment...");
-  await gridBuildingsProxy.waitForDeployment();
-  const gridBuildingsProxyAddress = await gridBuildingsProxy.getAddress();
-  console.log("GridBuildings proxy deployed to:", gridBuildingsProxyAddress);
+  const gridBuildingsImplAddress = gridAddresses.gridBuildingsImpl;
+  const gridBuildingsProxyAddress = gridAddresses.gridBuildingsProxy;
 
   // Deploy Altar proxy with initialization parameters
   console.log("Deploying Altar proxy...");
@@ -256,25 +250,7 @@ async function main() {
   console.log("Setting DistrictBuildings address in GameState...");
   await gameStateProxy.setDistrictBuildingsAddress(districtBuildingsProxyAddress);
 
-  // Set GridBuildings address in GameState
-  console.log("Setting GridBuildings address in GameState...");
-  await gameStateProxy.setGridBuildingsAddress(gridBuildingsProxyAddress);
-
-  // Set GameState address in GridBuildings
-  console.log("Setting GameState address in GridBuildings...");
-  await gridBuildingsProxy.setGameStateAddress(gameStateProxyAddress);
-
-  // Set Altar address in GridBuildings
-  console.log("Setting Altar address in GridBuildings...");
-  await gridBuildingsProxy.setAltarAddress(altarProxyAddress);
-
-  // Set BattleSystem address in GridBuildings
-  console.log("Setting BattleSystem address in GridBuildings...");
-  await gridBuildingsProxy.setBattleSystemAddress(battleSystemProxyAddress);
-
-  // Set DistrictBuildings address in GridBuildings
-  console.log("Setting DistrictBuildings address in GridBuildings...");
-  await gridBuildingsProxy.setDistrictBuildingsAddress(districtBuildingsProxyAddress);
+  // GridBuildings setup is handled by the deployGridBuildings function
 
   // Set GameState address in BattleSystem
   console.log("Setting GameState address in BattleSystem...");
@@ -284,7 +260,7 @@ async function main() {
   console.log("Setting DistrictBuildings address in BattleSystem...");
   await battleSystemProxy.setDistrictBuildingsAddress(districtBuildingsProxyAddress);
 
-  // Set GridBuildings address in BattleSystem
+  // Set GridBuildings address in BattleSystem (must happen after GridBuildings deployment)
   console.log("Setting GridBuildings address in BattleSystem...");
   await battleSystemProxy.setGridBuildingsAddress(gridBuildingsProxyAddress);
 

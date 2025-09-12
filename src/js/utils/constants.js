@@ -11,7 +11,7 @@ export const CONTRACT_ADDRESSES = {
     ALTAR: "0x59b670e9fA9D0A427751Af201D676719a970857b", // Will be updated by update-addresses.sh
     GAME_STATE: "0x0B306BF915C4d645ff596e518fAf3F9669b97016", // Will be updated by update-addresses.sh
     DISTRICT_BUILDINGS: "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0xB9d9e972100a1dD01cd441774b45b5821e136043", // Will be updated by update-addresses.sh
     BATTLE_SYSTEM: "0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44", // Will be updated by update-addresses.sh
     HERO_NFT: "0x4A679253410272dd5232B3Ff7cF5dbB88f295319", // Will be updated by update-addresses.sh
     TACTICS_NFT: "0x09635F643e140090A9A8Dcd712eD6285858ceBef", // Will be updated by update-addresses.sh
