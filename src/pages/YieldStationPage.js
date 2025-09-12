@@ -63,7 +63,7 @@ export class YieldStationPage extends BasePage {
             // Get building details for each ID and filter for yield stations
             const stations = [];
             let totalClaimableYield = BigInt(0);
-            let totalRevenueRate = BigInt(0);
+            let totalProjectedRate = BigInt(0);
             let activeStations = 0;
 
             for (const buildingId of activeBuildingIds) {
@@ -77,8 +77,18 @@ export class YieldStationPage extends BasePage {
                         totalClaimableYield += BigInt(stationInfo.claimableRevenue);
                         
                         if (stationInfo.isActive) {
-                            totalRevenueRate += BigInt(stationInfo.revenueRate);
+                            // Use actual rate for active stations
+                            totalProjectedRate += BigInt(stationInfo.revenueRate);
                             activeStations++;
+                        } else {
+                            // Use projected rate for inactive stations to show potential
+                            try {
+                                const projectedRate = await this.contracts.gridBuildings.calculateProjectedYieldRate(playerAddress, buildingId);
+                                totalProjectedRate += BigInt(projectedRate);
+                                Logger.info(`Station ${buildingId} projected rate:`, projectedRate.toString());
+                            } catch (error) {
+                                Logger.warn(`Could not get projected rate for station ${buildingId}:`, error);
+                            }
                         }
                         
                         Logger.info(`Station ${buildingId} info:`, stationInfo);
@@ -101,12 +111,26 @@ export class YieldStationPage extends BasePage {
             });
 
             // Calculate production rate display
-            let productionRateDisplay = 'No active stations';
-            if (activeStations > 0) {
+            let productionRateDisplay;
+            if (stations.length === 0) {
+                productionRateDisplay = 'No stations built';
+            } else if (totalProjectedRate === BigInt(0)) {
+                productionRateDisplay = 'No revenue pool available';
+            } else {
                 // Convert from wei per second to more readable format
-                const ratePerHour = totalRevenueRate * BigInt(3600);
+                const ratePerHour = totalProjectedRate * BigInt(3600);
                 const rateInEther = Number(ratePerHour) / 1e18;
-                productionRateDisplay = `${rateInEther.toFixed(6)} SONIC/hour (${activeStations} active)`;
+                
+                if (activeStations === stations.length) {
+                    // All stations active
+                    productionRateDisplay = `${rateInEther.toFixed(4)} SONIC/hour`;
+                } else if (activeStations === 0) {
+                    // Show projected rate to incentivize recharging
+                    productionRateDisplay = `${rateInEther.toFixed(4)} SONIC/hour`;
+                } else {
+                    // Mixed active/inactive
+                    productionRateDisplay = `${rateInEther.toFixed(4)} SONIC/hour`;
+                }
             }
 
             // Format values for display (convert from wei to ether)
@@ -235,10 +259,6 @@ export class YieldStationPage extends BasePage {
                                 <div class="detail-item">
                                     <span class="detail-label">Max Collection:</span>
                                     <span class="detail-value">24 hours</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Collection Cooldown:</span>
-                                    <span class="detail-value">None</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Yield Source:</span>

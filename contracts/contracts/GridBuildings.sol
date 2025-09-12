@@ -1583,6 +1583,20 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         return reservedRevenue;
     }
 
+    /**
+     * @dev Calculate projected revenue rate for a yield station if it were recharged
+     * This gives players an idea of potential earnings to incentivize recharging
+     */
+    function calculateProjectedYieldRate(address player, uint256 buildingId) external view returns (uint256) {
+        Building storage building = buildings[player][buildingId];
+        require(building.buildingType == GridBuildingType.YIELD_STATION, "Not a yield station");
+        require(!building.damaged, "Building is damaged");
+        
+        // Use the internal rate calculation which already handles inactive stations
+        // by adding their weight to the total for projection
+        return _calculateStationRate(player, buildingId);
+    }
+
     // ============ REVENUE DISTRIBUTION FUNCTIONS ============
 
     /**

@@ -318,6 +318,10 @@ export class GridBuildingsContract extends BaseContract {
         return await this.call('getReservedRevenue');
     }
 
+    async calculateProjectedYieldRate(address, buildingId) {
+        return await this.call('calculateProjectedYieldRate', address, buildingId);
+    }
+
     // Helper function to get GameState contract reference
     async getGameStateContract() {
         const { GameStateContract } = await import('./GameStateContract.js');
