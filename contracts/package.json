@@ -23,7 +23,10 @@
     "deploy:grid:mainnet": "npx hardhat run scripts/deploy-grid.js --network mainnet && ../scripts/update-addresses.sh",
     "upgrade": "npx hardhat run scripts/upgrade.js --network localhost && ../scripts/update-addresses.sh",
     "upgrade:testnet": "npx hardhat run scripts/upgrade.js --network testnet && ../scripts/update-addresses.sh",
-    "upgrade:mainnet": "npx hardhat run scripts/upgrade.js --network mainnet && ../scripts/update-addresses.sh"
+    "upgrade:mainnet": "npx hardhat run scripts/upgrade.js --network mainnet && ../scripts/update-addresses.sh",
+    "test:yield-rates": "npx hardhat run scripts/test-yield-rates.js --network localhost",
+    "test:yield-actual": "npx hardhat run scripts/test-actual-yield-rates.js --network localhost",
+    "test:yield-all": "npm run test:yield-rates && npm run test:yield-actual"
   },
   "keywords": [],
   "author": "",
