@@ -564,7 +564,7 @@ export class GarrisonPage extends BasePage {
                     <div class="battle-details">
                         <div>Power: ${attackerPower} vs ${defenderPower}</div>
                         ${battle.treasuryBurned > 0 ? `<div>Gold Stolen: ${battle.treasuryBurned}</div>` : ''}
-                        ${battle.repPoints > 0 ? `<div>REP Earned: ${battle.repPoints}</div>` : ''}
+                        ${(battle.repPoints > 0 && won) ? `<div>REP Earned: ${battle.repPoints}</div>` : ''}
                         ${battle.gridBuildingsDamaged > 0 ? `<div>Grid Buildings Damaged: ${battle.gridBuildingsDamaged}</div>` : ''}
                         ${battle.districtBuildingsDamaged > 0 ? `<div>District Buildings Damaged: ${battle.districtBuildingsDamaged}</div>` : ''}
                     </div>
@@ -653,7 +653,7 @@ export class GarrisonPage extends BasePage {
                 if (lastBattle.districtBuildingsDamaged > 0) {
                     message += `🏛️ District Buildings Damaged: ${lastBattle.districtBuildingsDamaged}\n`;
                 }
-                if (lastBattle.repPoints > 0) {
+                if (lastBattle.repPoints > 0 && won) {
                     message += `⭐ REP Earned: ${lastBattle.repPoints}\n`;
                 }
                 
