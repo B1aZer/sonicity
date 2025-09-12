@@ -1,0 +1,15 @@
+/* Access Page Specific Styles */
+
+/* Minimal additions - using existing status-grid, status-item, etc. */
+
+.access-page .network-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.access-page .network-actions .btn {
+    flex: 1;
+    min-width: 200px;
+}
