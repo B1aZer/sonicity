@@ -629,14 +629,7 @@ export class StakePage extends BasePage {
                 // For Yield Stations, show dynamic rate in SONIC per hour
                 if (productionRate > 0) {
                     const ratePerHour = productionRate * 3600; // Convert per-second to per-hour
-                    if (item.isActivelyProducing) {
-                        // Active station showing actual rate
-                        productionRateDisplay = `${ratePerHour.toFixed(4)} SONIC/hr`;
-                    } else {
-                        // Inactive station showing projected rate
-                        productionRateDisplay = `${ratePerHour.toFixed(4)} SONIC/hr (projected)`;
-                    }
-                    console.log(`[DEBUG] Yield Station productionRate: ${productionRate} SONIC/sec, ratePerHour: ${ratePerHour}, display: ${productionRateDisplay}`);
+                    productionRateDisplay = `${ratePerHour.toFixed(4)} SONIC/hr`;
                 } else {
                     productionRateDisplay = '0.0000 SONIC/hr';
                 }
