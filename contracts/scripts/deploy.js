@@ -1,6 +1,7 @@
 const { ethers, upgrades } = require("hardhat");
-// Import the reusable grid deployment function
+// Import the reusable deployment functions
 const { deployGridBuildings } = require("./deploy-grid");
+const { deployAltar } = require("./deploy-altar");
 
 async function main() {
   console.log("Starting deployment...");
@@ -75,14 +76,7 @@ async function main() {
 
   // GridBuildings will be deployed later using the reusable function
 
-  // Deploy Altar implementation
-  console.log("Deploying Altar implementation...");
-  const Altar = await ethers.getContractFactory("Altar");
-  const altarImpl = await Altar.deploy();
-  console.log("Waiting for Altar implementation deployment...");
-  await altarImpl.waitForDeployment();
-  const altarImplAddress = await altarImpl.getAddress();
-  console.log("Altar implementation deployed to:", altarImplAddress);
+  // Altar will be deployed later using the reusable function
 
   // Deploy BattleSystem implementation
   console.log("Deploying BattleSystem implementation...");
@@ -152,16 +146,20 @@ async function main() {
   const gridBuildingsImplAddress = gridAddresses.gridBuildingsImpl;
   const gridBuildingsProxyAddress = gridAddresses.gridBuildingsProxy;
 
-  // Deploy Altar proxy with initialization parameters
-  console.log("Deploying Altar proxy...");
-  const altarProxy = await upgrades.deployProxy(Altar, [gameStateProxyAddress, gridBuildingsProxyAddress], {
-    kind: 'uups',
-    initializer: 'initialize',
+  // Deploy Altar using the reusable function
+  const altarAddresses = await deployAltar({
+    gameStateProxy: gameStateProxyAddress,
+    gridBuildingsProxy: gridBuildingsProxyAddress,
+    battleSystemProxy: battleSystemProxyAddress,
+    sonicityNFT: sonicityNFTAddress,
+    sonicityFarm: sonicityFarmAddress,
+    sonicityDiamond: sonicityDiamondAddress,
+    sonicityRep: sonicityRepAddress,
+    sonicityYieldNFT: sonicityYieldNFTAddress,
+    sonicityArtProxy: sonicityArtProxyAddress
   });
-  console.log("Waiting for Altar proxy deployment...");
-  await altarProxy.waitForDeployment();
-  const altarProxyAddress = await altarProxy.getAddress();
-  console.log("Altar proxy deployed to:", altarProxyAddress);
+  const altarImplAddress = altarAddresses.altarImpl;
+  const altarProxyAddress = altarAddresses.altarProxy;
 
   // Deploy BattleSystem proxy
   console.log("Deploying BattleSystem proxy...");
@@ -210,37 +208,11 @@ async function main() {
   // Set up contract interactions
   console.log("Setting up contract interactions...");
   
-  // Set Altar address in GameState
-  console.log("Setting Altar address in GameState...");
-  await gameStateProxy.setAltarAddress(altarProxyAddress);
+  // Altar setup is handled by the deployAltar function
   
-  // Set BattleSystem address in GameState
+  // Set BattleSystem address in GameState (if not already set by deployAltar)
   console.log("Setting BattleSystem address in GameState...");
   await gameStateProxy.setBattleSystemAddress(battleSystemProxyAddress);
-  
-  // Approve NFT collections in Altar
-  console.log("Approving NFT collections in Altar...");
-  await altarProxy.approveCollection(sonicityNFTAddress);
-  await altarProxy.approveCollection(sonicityFarmAddress);
-  await altarProxy.approveCollection(sonicityDiamondAddress);
-  await altarProxy.approveCollection(sonicityRepAddress);
-  await altarProxy.approveCollection(sonicityYieldNFTAddress);
-  
-  // Set Altar contract address on all NFT contracts
-  console.log("Setting Altar contract address on NFT contracts...");
-  await sonicityNFT.setAltarContract(altarProxyAddress);
-  await sonicityFarm.setAltarContract(altarProxyAddress);
-  await sonicityDiamond.setAltarContract(altarProxyAddress);
-  await sonicityRep.setAltarContract(altarProxyAddress);
-  await sonicityYieldNFT.setAltarContract(altarProxyAddress);
-  
-  // Set Art Proxy address in SonicityYieldNFT
-  console.log("Setting Art Proxy address in SonicityYieldNFT...");
-  await sonicityYieldNFT.setArtProxy(sonicityArtProxyAddress);
-  
-  // Set Yield NFT address in Altar
-  console.log("Setting Yield NFT address in Altar...");
-  await altarProxy.setYieldNFT(sonicityYieldNFTAddress);
   
   // Set GameState address in DistrictBuildings
   console.log("Setting GameState address in DistrictBuildings...");
