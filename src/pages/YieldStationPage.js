@@ -120,17 +120,7 @@ export class YieldStationPage extends BasePage {
                 // Convert from wei per second to more readable format
                 const ratePerHour = totalProjectedRate * BigInt(3600);
                 const rateInEther = Number(ratePerHour) / 1e18;
-                
-                if (activeStations === stations.length) {
-                    // All stations active
-                    productionRateDisplay = `${rateInEther.toFixed(4)} SONIC/hour`;
-                } else if (activeStations === 0) {
-                    // Show projected rate to incentivize recharging
-                    productionRateDisplay = `${rateInEther.toFixed(4)} SONIC/hour`;
-                } else {
-                    // Mixed active/inactive
-                    productionRateDisplay = `${rateInEther.toFixed(4)} SONIC/hour`;
-                }
+                productionRateDisplay = `${rateInEther.toFixed(4)} SONIC/hour`;
             }
 
             // Format values for display (convert from wei to ether)
