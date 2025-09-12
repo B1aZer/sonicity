@@ -307,7 +307,7 @@ export class StakePage extends BasePage {
         
         // --- Per-Tier Section ---
         const tierStatus = this.getTierStatus(tier, staked);
-        const claimable = tierStatus.claimable.toLocaleString();
+        const claimable = this.formatClaimableAmount(tierStatus.claimable, tier);
         const buildingCount = tierStatus.count;
         
         // Recharge input default
@@ -519,6 +519,20 @@ export class StakePage extends BasePage {
         return { count: staked.length, claimable };
     }
 
+    // Format claimable amount based on building type
+    formatClaimableAmount(amount, buildingType) {
+        if (!amount || amount === 0) return '0';
+        
+        // For yield stations, format as SONIC (convert from wei)
+        if (buildingType === 4) { // YIELD_STATION
+            const sonicValue = Number(amount) / 1e18;
+            return sonicValue.toFixed(4) + ' SONIC';
+        }
+        
+        // For other building types, format as whole numbers with commas
+        return Number(amount).toLocaleString();
+    }
+
     async claimAllInTier(tier) {
         try {
             // Show loading modal
@@ -703,7 +717,7 @@ export class StakePage extends BasePage {
                         <div class="detail-item"><span class="detail-label">Level:</span><span class="detail-value">${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}</span></div>
                         <div class="detail-item"><span class="detail-label">Production Rate:</span><span class="detail-value">${productionRateDisplay}</span></div>
                         <div class="detail-item"><span class="detail-label">Charge Price:</span><span class="detail-value">${item.formattedRechargeCost || '0'}<span class="mint-resource-icon">${this.getResourceIcon(4n)}</span></span></div>
-                        <div class="detail-item"><span class="detail-label">Claimable:</span><span class="detail-value">${item.claimable || 0}</span></div>
+                        <div class="detail-item"><span class="detail-label">Claimable:</span><span class="detail-value">${this.formatClaimableAmount(item.claimable, item.buildingType)}</span></div>
                         <div class="building-progress">
                             <div class="progress-info">
                                 <span class="progress-label">Production Progress</span>
@@ -716,7 +730,7 @@ export class StakePage extends BasePage {
                     </div>
                     <div class="building-actions">
                         <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''} title="Charge building for ${item.formattedRechargeCost || '0'} SONIC"><i class="fas fa-bolt"></i> Charge</button>
-                        <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''} title="Claim ${item.claimable || 0} resources"><i class="fas fa-coins"></i> Claim</button>
+                        <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''} title="Claim ${this.formatClaimableAmount(item.claimable, item.buildingType)}"><i class="fas fa-coins"></i> Claim</button>
                         <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''} title="${upgradeTooltip}"><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
                         <button class="btn btn-full btn-warning destroy-btn" title="Unstake building (unclaimed resources will be lost)"><i class="fas fa-undo"></i> Unstake</button>
                     </div>
