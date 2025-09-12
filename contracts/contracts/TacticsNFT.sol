@@ -70,7 +70,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
             name: "Iron Strike",
             tacticType: TacticType.STRIKE,
             effectMagnitude: 3,  // +3 buildings damaged
-            cost: 800
+            cost: 100
         });
         
         tactics[2] = Tactic({
@@ -78,7 +78,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
             name: "Guardian Wall",
             tacticType: TacticType.SHIELD,
             effectMagnitude: 75,  // Lose 75% fewer troops
-            cost: 800
+            cost: 100
         });
         
         tactics[3] = Tactic({
@@ -86,7 +86,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
             name: "Battle Rage",
             tacticType: TacticType.TRICK,
             effectMagnitude: 30,  // +30 REP points
-            cost: 800
+            cost: 100
         });
         
         tactics[4] = Tactic({
@@ -94,7 +94,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
             name: "Cavalry Rush",
             tacticType: TacticType.STRIKE,
             effectMagnitude: 2,  // +2 buildings damaged
-            cost: 800
+            cost: 100
         });
         
         tactics[5] = Tactic({
@@ -102,7 +102,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
             name: "Defensive Circle",
             tacticType: TacticType.SHIELD,
             effectMagnitude: 50,  // Lose 50% fewer troops
-            cost: 800
+            cost: 100
         });
         
         tactics[6] = Tactic({
@@ -110,7 +110,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
             name: "Tactical Feint",
             tacticType: TacticType.TRICK,
             effectMagnitude: 20,  // +20 REP points
-            cost: 800
+            cost: 100
         });
         
         tactics[7] = Tactic({
@@ -118,7 +118,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
             name: "Swift Strike",
             tacticType: TacticType.STRIKE,
             effectMagnitude: 1,  // +1 building damaged
-            cost: 800
+            cost: 100
         });
         
         tactics[8] = Tactic({
@@ -126,7 +126,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
             name: "Shadow Guard",
             tacticType: TacticType.SHIELD,
             effectMagnitude: 25,  // Lose 25% fewer troops
-            cost: 800
+            cost: 100
         });
         
         tactics[9] = Tactic({
@@ -134,7 +134,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
             name: "Stealth Trap",
             tacticType: TacticType.TRICK,
             effectMagnitude: 15,  // +15 REP points
-            cost: 800
+            cost: 100
         });
     }
     
@@ -145,8 +145,8 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
         // All tactics cost the same
         for (uint8 i = 1; i <= 9; i++) {
             tacticCosts[i] = TacticCost({
-                goldCost: 800,
-                diamondCost: 8
+                goldCost: 100,
+                diamondCost: 16
             });
         }
     }
