@@ -1,0 +1,16 @@
+[build]
+  # Build command that compiles contracts first, then builds frontend
+  command = "cd contracts && npm install && npx hardhat compile && cd .. && npm install && npm run build"
+  
+  # Directory to publish
+  publish = "dist"
+  
+  # Environment variables
+  [build.environment]
+    NODE_VERSION = "18"
+    
+# Redirect rules for SPA
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
