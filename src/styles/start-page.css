@@ -29,6 +29,18 @@
     box-shadow: var(--shadow-lg);
 }
 
+.start-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.start-buttons .btn {
+    min-width: 180px;
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
