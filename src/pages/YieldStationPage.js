@@ -247,8 +247,8 @@ export class YieldStationPage extends BasePage {
                             <p>Collect SONIC yield from your stations</p>
                             <div class="building-details">
                                 <div class="detail-item">
-                                    <span class="detail-label">Max Collection:</span>
-                                    <span class="detail-value">24 hours</span>
+                                    <span class="detail-label">Distribution Duration:</span>
+                                    <span class="detail-value">7 days</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Yield Source:</span>
