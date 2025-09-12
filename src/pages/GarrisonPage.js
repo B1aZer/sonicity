@@ -118,6 +118,12 @@ export class GarrisonPage extends BasePage {
             // Render Battle Progress Bar only if battle is active
             if (activeBattle) {
                 await this.renderBattleProgressBar(activeBattle, address);
+            } else {
+                // Clear battle progress bar when no active battle
+                const container = this.element.querySelector('#battle-progress-container');
+                if (container) {
+                    container.innerHTML = '';
+                }
             }
 
             // Load and update tactics deployment section if in battle
