@@ -6,6 +6,7 @@ import { GrassBlades } from '../objects/GrassBlades.js';
 import { River } from '../objects/River.js';
 import { Trees } from '../objects/Trees.js';
 import { SHOW_PERFORMANCE_MONITOR } from '../utils/constants.js';
+import { config } from '../utils/config.js';
 import GUI from 'lil-gui';
 import { BillboardManager } from './billboardManager.js';
 import { PropsManager } from './propsManager.js';
@@ -1144,7 +1145,7 @@ export class SceneManager {
         //     this.trees.update();
         // }
 
-        if (SHOW_PERFORMANCE_MONITOR) {
+        if (config.features.performanceMonitor) {
             this.updatePerformanceMonitor();
         }
     }

@@ -1,4 +1,6 @@
 import { ethers, JsonRpcProvider, Contract } from 'ethers';
+import { config, getCurrentNetworkConfig } from '../utils/config.js';
+import { NetworkManager } from '../utils/networkManager.js';
 
 export class BaseContract {
     constructor(contractAddress, abi) {
@@ -14,6 +16,9 @@ export class BaseContract {
         if (!window.ethereum) {
             throw new Error('MetaMask not detected');
         }
+
+        // Validate network before initializing
+        await NetworkManager.validateNetwork();
 
         this.provider = new ethers.BrowserProvider(window.ethereum);
         this.signer = await this.provider.getSigner();
