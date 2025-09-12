@@ -14,8 +14,11 @@
     "estimate:testnet": "npx hardhat run scripts/estimate-deployment-cost.js --network testnet",
     "estimate:mainnet": "npx hardhat run scripts/estimate-deployment-cost.js --network mainnet",
     "deploy": "npx hardhat run scripts/deploy.js --network localhost && npx hardhat run scripts/approveCollection.js --network localhost && ../scripts/update-addresses.sh",
+    "deploy:grid": "npx hardhat run scripts/deploy-grid.js --network localhost && ../scripts/update-addresses.sh",
     "deploy:testnet": "npx hardhat run scripts/deploy.js --network testnet && npx hardhat run scripts/approveCollection.js --network testnet && ../scripts/update-addresses.sh",
+    "deploy:grid:testnet": "npx hardhat run scripts/deploy-grid.js --network testnet && ../scripts/update-addresses.sh",
     "deploy:mainnet": "npx hardhat run scripts/deploy.js --network mainnet && npx hardhat run scripts/approveCollection.js --network mainnet && ../scripts/update-addresses.sh",
+    "deploy:grid:mainnet": "npx hardhat run scripts/deploy-grid.js --network mainnet && ../scripts/update-addresses.sh",
     "upgrade": "npx hardhat run scripts/upgrade.js --network localhost && ../scripts/update-addresses.sh",
     "upgrade:testnet": "npx hardhat run scripts/upgrade.js --network testnet && ../scripts/update-addresses.sh",
     "upgrade:mainnet": "npx hardhat run scripts/upgrade.js --network mainnet && ../scripts/update-addresses.sh"
