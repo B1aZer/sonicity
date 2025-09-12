@@ -911,24 +911,8 @@ export class CommandCenterPage extends BasePage {
             
             this.modal.success(`${TacticsNFTContract.getTacticName(tacticId)} deployed successfully!`);
             
-            // Reload tactics section with proper player role
-            const activeBattle = await this.contracts.battleSystem.getActiveBattle(address);
-            const ownedTactics = {};
-            for (let id = 1; id <= 9; id++) {
-                ownedTactics[id] = await this.contracts.tacticsNFT.hasTactic(address, id);
-            }
-            
-            // Determine player role
-            let playerRole = 'none';
-            if (activeBattle) {
-                if (activeBattle.attacker.toLowerCase() === address.toLowerCase()) {
-                    playerRole = 'attacker';
-                } else if (activeBattle.defender.toLowerCase() === address.toLowerCase()) {
-                    playerRole = 'defender';
-                }
-            }
-            
-            await this.loadTacticsDeploymentSection(ownedTactics, activeBattle, playerRole);
+            // Reload full page data to update battle progress bar and all sections
+            await this.loadCommandCenterData();
             
         } catch (error) {
             Logger.error('Error deploying tactic:', error);
