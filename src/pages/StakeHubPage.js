@@ -766,6 +766,7 @@ export class StakePage extends BasePage {
                         <div class="detail-item"><span class="detail-label">Token ID:</span><span class="detail-value">${tokenId}</span></div>
                         <div class="detail-item"><span class="detail-label">Contract:</span><span class="detail-value">${contractShort}</span></div>
                         <div class="detail-item"><span class="detail-label">Tier:</span><span class="detail-value">${tierName}</span></div>
+                        ${item.tier === 4 && item.repStaked ? `<div class="detail-item"><span class="detail-label">REP Points:</span><span class="detail-value">${item.repStaked.toLocaleString()} REP</span></div>` : ''}
                     </div>
                     <div class="building-actions">
                         <button class="btn btn-full btn-primary stake-btn" title="Stake NFT to create building">Stake</button>
@@ -1020,12 +1021,25 @@ export class StakePage extends BasePage {
                 else if (contract === this.contracts.repNft) tier = 3;
                 else if (contract === this.contracts.yieldNft) tier = 4;
                 
+                // For yield NFTs, get REP staked information
+                let repStaked = 0;
+                if (contract === this.contracts.yieldNft) {
+                    try {
+                        const stakeInfo = await this.contracts.yieldNft.getStakeInfo(tokenId);
+                        repStaked = Number(stakeInfo.repStaked);
+                    } catch (error) {
+                        console.warn(`Failed to get REP staked info for yield NFT ${tokenId}:`, error);
+                        repStaked = 0;
+                    }
+                }
+                
                 available.push({
                     tokenId,
                     tier,
                     metadata,
                     contractAddress: await contract.getContractAddress(),
-                    isStaked: false
+                    isStaked: false,
+                    repStaked: repStaked
                 });
             }
         }
