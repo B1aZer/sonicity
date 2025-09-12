@@ -1,5 +1,4 @@
 import { BasePage } from './BasePage.js';
-import { StatusComponent } from '../components/StatusComponent.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
@@ -7,18 +6,20 @@ import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js'
 export class YieldStationPage extends BasePage {
     constructor() {
         super();
-        this.element.className = 'base-page yield-station-page';
-        this.statusComponent = new StatusComponent();
-        this.modal = new Modal();
+        Logger.info('YieldStationPage constructor called');
+        
+        this.element.className = 'base-page';
         
         // Initialize state
-        this.state = {
+        this.setState({
             stationCount: 0,
             claimableYield: '0',
             productionRate: 'Loading...',
             canClaim: false,
-            treasuryPool: '0'
-        };
+            revenuePool: '0',
+            availablePool: '0',
+            reservedRevenue: '0'
+        });
         
         this.render();
     }
@@ -61,45 +62,62 @@ export class YieldStationPage extends BasePage {
 
             // Get building details for each ID and filter for yield stations
             const stations = [];
+            let totalClaimableYield = BigInt(0);
+            let totalRevenueRate = BigInt(0);
+            let activeStations = 0;
+
             for (const buildingId of activeBuildingIds) {
                 const building = await this.contracts.gridBuildings.getBuilding(buildingId);
                 if (building.buildingType === GridBuildingsContract.BuildingType.YIELD_STATION) {
-                    stations.push(building);
+                    stations.push({ ...building, buildingId });
+                    
+                    // Get yield station specific info
+                    try {
+                        const stationInfo = await this.contracts.gridBuildings.getYieldStationInfo(playerAddress, buildingId);
+                        totalClaimableYield += BigInt(stationInfo.claimableRevenue);
+                        
+                        if (stationInfo.isActive) {
+                            totalRevenueRate += BigInt(stationInfo.revenueRate);
+                            activeStations++;
+                        }
+                        
+                        Logger.info(`Station ${buildingId} info:`, stationInfo);
+                    } catch (error) {
+                        Logger.warn(`Could not get info for station ${buildingId}:`, error);
+                    }
                 }
             }
             Logger.info('Filtered Yield Stations:', stations);
 
-            // Get the current production rate from contract
-            const buildingConfig = await this.contracts.gridBuildings.getBuildingConfig(
-                GridBuildingsContract.BuildingType.YIELD_STATION
-            );
-            const baseProductionRate = buildingConfig.baseProductionRate;
-            Logger.info('Current Yield Station production rate:', baseProductionRate.toString());
+            // Get revenue pool information from contract
+            const revenuePool = await this.contracts.gridBuildings.getRevenuePool();
+            const availablePool = await this.contracts.gridBuildings.getAvailableRevenuePool();
+            const reservedRevenue = await this.contracts.gridBuildings.getReservedRevenue();
+            
+            Logger.info('Revenue pool data:', {
+                total: revenuePool.toString(),
+                available: availablePool.toString(),
+                reserved: reservedRevenue.toString()
+            });
 
-            // Get total claimable yield directly from contract
-            const totalClaimableYield = await this.contracts.gridBuildings.calculateTotalClaimableResources(
-                GridBuildingsContract.BuildingType.YIELD_STATION
-            );
-            Logger.info('Total claimable yield from contract:', totalClaimableYield.toString());
-
-            // Get treasury pool information
-            let treasuryPool = '0';
-            try {
-                // Try to get treasury pool from yield contract if available
-                if (this.contracts.yieldNft && this.contracts.yieldNft.getTreasuryPool) {
-                    treasuryPool = await this.contracts.yieldNft.getTreasuryPool();
-                }
-            } catch (error) {
-                Logger.warn('Could not get treasury pool:', error);
+            // Calculate production rate display
+            let productionRateDisplay = 'No active stations';
+            if (activeStations > 0) {
+                // Convert from wei per second to more readable format
+                const ratePerHour = totalRevenueRate * BigInt(3600);
+                const rateInEther = Number(ratePerHour) / 1e18;
+                productionRateDisplay = `${rateInEther.toFixed(6)} SONIC/hour (${activeStations} active)`;
             }
 
             // Update state (this will automatically update UI)
             this.setState({
                 stationCount: stations.length,
                 claimableYield: totalClaimableYield.toString(),
-                productionRate: `Treasury-based yield per station`,
+                productionRate: productionRateDisplay,
                 canClaim: totalClaimableYield > BigInt(0),
-                treasuryPool: treasuryPool.toString()
+                revenuePool: revenuePool.toString(),
+                availablePool: availablePool.toString(),
+                reservedRevenue: reservedRevenue.toString()
             });
 
         } catch (error) {
@@ -113,9 +131,10 @@ export class YieldStationPage extends BasePage {
             Logger.info('Starting yield collection...');
             
             // Show loading modal
-            const loadingModal = this.modal.loading('Collecting yield...');
+            const loadingModal = this.modal.loading('Collecting SONIC yield...');
             
             // Collect yield from all stations in a single transaction
+            // Note: For yield stations, we use the specific yield collection method
             await this.contracts.gridBuildings.collectResourcesByType(
                 GridBuildingsContract.BuildingType.YIELD_STATION
             );
@@ -127,7 +146,7 @@ export class YieldStationPage extends BasePage {
             await this.loadStationData();
             
             // Show success message
-            this.modal.success('Successfully collected yield from all stations!');
+            this.modal.success('Successfully collected SONIC yield from all stations!');
             
         } catch (error) {
             Logger.error('Error collecting yield:', error);
@@ -151,8 +170,8 @@ export class YieldStationPage extends BasePage {
             <div class="page-container">
                 <h1>Yield Station Management</h1>
                 <p class="page-description">
-                    <strong>Yield Stations provide passive income from the treasury pool.</strong> These advanced buildings earn yield from all grid building operations across the game. 
-                    <em>Yield is distributed proportionally to staked NFT value from the global treasury pool.</em>
+                    <strong><em>SONIC</em> yield is distributed from the revenue pool generated by building operations.</strong> 
+                    Yield stations earn SONIC tokens proportionally to staked NFT value from recharge fees paid by all players.
                 </p>
                 
                 <!-- Status Section -->
@@ -164,12 +183,16 @@ export class YieldStationPage extends BasePage {
                             <span class="status-value" data-state="stationCount">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Claimable Yield:</span>
+                            <span class="status-label">Claimable SONIC:</span>
                             <span class="status-value" data-state="claimableYield">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Treasury Pool:</span>
-                            <span class="status-value" data-state="treasuryPool">0</span>
+                            <span class="status-label">Revenue Pool:</span>
+                            <span class="status-value" data-state="revenuePool">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Available Pool:</span>
+                            <span class="status-value" data-state="availablePool">0</span>
                         </div>
                     </div>
                 </div>
@@ -179,56 +202,34 @@ export class YieldStationPage extends BasePage {
                     <h2>Station Details</h2>
                     <div class="buildings-grid">
                         <div class="building-card">
-                            <h3>Yield Source</h3>
-                            <p>How yield stations generate income</p>
+                            <h3>Production Rate</h3>
+                            <p>Current production rate per station</p>
                             <div class="building-details">
                                 <div class="detail-item">
-                                    <span class="detail-label">Source:</span>
-                                    <span class="detail-value">Global treasury pool</span>
+                                    <span class="detail-label">Base Rate:</span>
+                                    <span class="detail-value" data-state="productionRate">Loading...</span>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">Distribution:</span>
-                                    <span class="detail-value">Proportional to NFT value</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Pool Funding:</span>
-                                    <span class="detail-value">Grid building upgrade fees</span>
+                                    <span class="detail-label">Level Bonus:</span>
+                                    <span class="detail-value">Based on staked NFT value</span>
                                 </div>
                             </div>
                         </div>
                         <div class="building-card">
                             <h3>Collection Rules</h3>
-                            <p>Collect yield from your stations</p>
+                            <p>Collect SONIC yield from your stations</p>
                             <div class="building-details">
                                 <div class="detail-item">
-                                    <span class="detail-label">Yield Type:</span>
-                                    <span class="detail-value">Gold from treasury</span>
+                                    <span class="detail-label">Max Collection:</span>
+                                    <span class="detail-value">24 hours</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label">Collection Cooldown:</span>
                                     <span class="detail-value">None</span>
                                 </div>
                                 <div class="detail-item">
-                                    <span class="detail-label">Max Accumulation:</span>
-                                    <span class="detail-value">Based on pool size</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="building-card">
-                            <h3>Requirements</h3>
-                            <p>Prerequisites for yield stations</p>
-                            <div class="building-details">
-                                <div class="detail-item">
-                                    <span class="detail-label">Min Treasury:</span>
-                                    <span class="detail-value">10,000 Gold</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Building Slots:</span>
-                                    <span class="detail-value">16 (4x4 grid)</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">NFT Required:</span>
-                                    <span class="detail-value">Yield Station NFT</span>
+                                    <span class="detail-label">Yield Source:</span>
+                                    <span class="detail-value">Revenue pool from recharges</span>
                                 </div>
                             </div>
                         </div>
@@ -240,7 +241,7 @@ export class YieldStationPage extends BasePage {
                     <h2>Actions</h2>
                     <div class="building-actions">
                         <button class="claim-button btn btn-primary btn-lg" data-state="canClaim" disabled>
-                            <span class="button-text">Claim Yield</span>
+                            <span class="button-text">Claim SONIC Yield</span>
                         </button>
                     </div>
                 </div>

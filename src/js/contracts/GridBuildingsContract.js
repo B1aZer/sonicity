@@ -310,6 +310,14 @@ export class GridBuildingsContract extends BaseContract {
         return await this.call('getRevenuePool');
     }
 
+    async getAvailableRevenuePool() {
+        return await this.call('getAvailableRevenuePool');
+    }
+
+    async getReservedRevenue() {
+        return await this.call('getReservedRevenue');
+    }
+
     // Helper function to get GameState contract reference
     async getGameStateContract() {
         const { GameStateContract } = await import('./GameStateContract.js');
