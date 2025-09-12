@@ -531,8 +531,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             }
         }
         
-        // Convert to reasonable bonus: 1 bonus point per 0.1 SONIC spent
-        uint256 historicalBonus = totalSpent / (0.1 ether);
+        // Convert to subtle bonus: 1 bonus point per 100 SONIC spent (very subtle)
+        uint256 historicalBonus = totalSpent / (100 ether);
         
         return historicalBonus;
     }
