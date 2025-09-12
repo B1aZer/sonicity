@@ -269,11 +269,11 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">800</span>
+                                        <span class="cost-value">100</span>
                                     </div>
                                     <div class="cost-item">
                                         <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">8</span>
+                                        <span class="cost-value">16</span>
                                     </div>
                                 </div>
                             </div>
@@ -299,11 +299,11 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">800</span>
+                                        <span class="cost-value">100</span>
                                     </div>
                                     <div class="cost-item">
                                         <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">8</span>
+                                        <span class="cost-value">16</span>
                                     </div>
                                 </div>
                             </div>
@@ -329,11 +329,11 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">800</span>
+                                        <span class="cost-value">100</span>
                                     </div>
                                     <div class="cost-item">
                                         <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">8</span>
+                                        <span class="cost-value">16</span>
                                     </div>
                                 </div>
                             </div>
@@ -359,11 +359,11 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">800</span>
+                                        <span class="cost-value">100</span>
                                     </div>
                                     <div class="cost-item">
                                         <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">8</span>
+                                        <span class="cost-value">16</span>
                                     </div>
                                 </div>
                             </div>
@@ -389,11 +389,11 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">800</span>
+                                        <span class="cost-value">100</span>
                                     </div>
                                     <div class="cost-item">
                                         <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">8</span>
+                                        <span class="cost-value">16</span>
                                     </div>
                                 </div>
                             </div>
@@ -419,11 +419,11 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">800</span>
+                                        <span class="cost-value">100</span>
                                     </div>
                                     <div class="cost-item">
                                         <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">8</span>
+                                        <span class="cost-value">16</span>
                                     </div>
                                 </div>
                             </div>
@@ -449,11 +449,11 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">800</span>
+                                        <span class="cost-value">100</span>
                                     </div>
                                     <div class="cost-item">
                                         <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">8</span>
+                                        <span class="cost-value">16</span>
                                     </div>
                                 </div>
                             </div>
@@ -479,11 +479,11 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">800</span>
+                                        <span class="cost-value">100</span>
                                     </div>
                                     <div class="cost-item">
                                         <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">8</span>
+                                        <span class="cost-value">16</span>
                                     </div>
                                 </div>
                             </div>
@@ -509,11 +509,11 @@ export class TacticsCenterPage extends BasePage {
                                 <div class="cost-component">
                                     <div class="cost-item">
                                         <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">800</span>
+                                        <span class="cost-value">100</span>
                                     </div>
                                     <div class="cost-item">
                                         <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">8</span>
+                                        <span class="cost-value">16</span>
                                     </div>
                                 </div>
                             </div>
