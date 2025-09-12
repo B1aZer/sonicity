@@ -322,6 +322,22 @@ export class GridBuildingsContract extends BaseContract {
         return await this.call('calculateProjectedYieldRate', address, buildingId);
     }
 
+    async getProductionState(address, buildingId) {
+        return await this.call('getProductionState', address, buildingId);
+    }
+
+    // Helper method to check if building is actively producing
+    async isBuildingActivelyProducing(address, buildingId) {
+        // Check if building is damaged first
+        const isDamaged = await this.isBuildingDamaged(address, buildingId);
+        if (isDamaged) return false;
+        
+        const productionState = await this.getProductionState(address, buildingId);
+        // ProductionState enum: 0=INACTIVE, 1=ACTIVE, 2=AT_CAP
+        // A building is actively producing if it's in ACTIVE state (1) and not damaged
+        return productionState === 1;
+    }
+
     // Helper function to get GameState contract reference
     async getGameStateContract() {
         const { GameStateContract } = await import('./GameStateContract.js');

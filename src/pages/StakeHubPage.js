@@ -575,9 +575,8 @@ export class StakePage extends BasePage {
             let statusClass = item.damaged ? 'damaged' : item.isAtCap ? 'at-cap' : 'normal';
             let statusText = item.damaged ? 'Damaged' : item.isAtCap ? 'At Cap' : 'Operating';
             
-            // Check if building has been charged (lastRechargeTime > 0)
-            const hasBeenCharged = item.lastRechargeTime && item.lastRechargeTime > 0;
-            if (!item.damaged && !item.isAtCap && !hasBeenCharged) {
+            // Check for idle state (not actively producing, but also not damaged or at cap)
+            if (!item.isActivelyProducing && !item.damaged && !item.isAtCap) {
                 statusText = 'Idle';
                 statusClass = 'not-charged';
             }
@@ -630,10 +629,16 @@ export class StakePage extends BasePage {
                 // For Yield Stations, show dynamic rate in SONIC per hour
                 if (productionRate > 0) {
                     const ratePerHour = productionRate * 3600; // Convert per-second to per-hour
-                    productionRateDisplay = `${ratePerHour.toFixed(2)} SONIC/hr`;
+                    if (item.isActivelyProducing) {
+                        // Active station showing actual rate
+                        productionRateDisplay = `${ratePerHour.toFixed(4)} SONIC/hr`;
+                    } else {
+                        // Inactive station showing projected rate
+                        productionRateDisplay = `${ratePerHour.toFixed(4)} SONIC/hr (projected)`;
+                    }
                     console.log(`[DEBUG] Yield Station productionRate: ${productionRate} SONIC/sec, ratePerHour: ${ratePerHour}, display: ${productionRateDisplay}`);
                 } else {
-                    productionRateDisplay = '0.00 SONIC/hr';
+                    productionRateDisplay = '0.0000 SONIC/hr';
                 }
             } else {
                 // For Houses and Farms, show as "X per hour"
@@ -649,7 +654,7 @@ export class StakePage extends BasePage {
             let progressText = 'At Cap';
             
             if (!item.isAtCap) {
-                if (hasBeenCharged && item.progressCurrent !== undefined && item.progressMax !== undefined && item.progressMax > 0) {
+                if (item.isActivelyProducing && item.progressCurrent !== undefined && item.progressMax !== undefined && item.progressMax > 0) {
                     const timeRemaining = Math.max(0, item.progressMax - item.progressCurrent);
                     hoursRemaining = Math.floor(timeRemaining / 3600);
                     minutesRemaining = Math.floor((timeRemaining % 3600) / 60);
@@ -884,6 +889,7 @@ export class StakePage extends BasePage {
             // Add extra info for UI
             building.isAtCap = await this.contracts.gridBuildings.isBuildingAtCap(building.id);
             building.claimable = Number(await this.contracts.gridBuildings.calculateClaimableResources(building.id));
+            building.isActivelyProducing = await this.contracts.gridBuildings.isBuildingActivelyProducing(userAddress, building.id);
 
             // Use contract method for production progress
             const [progressCurrent, progressMax, progressPercent] = await this.contracts.gridBuildings.calculateProductionProgress(building.id);
@@ -908,13 +914,26 @@ export class StakePage extends BasePage {
                 };
             }
 
-            // For Yield Stations, get the actual revenue rate
+            // For Yield Stations, get the actual or projected revenue rate
             if (building.buildingType === 4) {
                 try {
                     const yieldInfo = await this.contracts.gridBuildings.getYieldStationInfo(userAddress, building.id);
-                    // Convert from wei per second to SONIC per second
-                    building.yieldRate = Number(yieldInfo.revenueRate) / 1e18;
-                    console.log(`[DEBUG] Building ${building.id} yieldRate: ${building.yieldRate} SONIC/sec, ${building.yieldRate * 3600} SONIC/hr`);
+                    
+                    if (yieldInfo.isActive && yieldInfo.revenueRate > 0) {
+                        // Station is active, use actual rate
+                        building.yieldRate = Number(yieldInfo.revenueRate) / 1e18;
+                        console.log(`[DEBUG] Building ${building.id} active yieldRate: ${building.yieldRate} SONIC/sec`);
+                    } else {
+                        // Station is inactive, try to get projected rate
+                        try {
+                            const projectedRate = await this.contracts.gridBuildings.calculateProjectedYieldRate(userAddress, building.id);
+                            building.yieldRate = Number(projectedRate) / 1e18;
+                            console.log(`[DEBUG] Building ${building.id} projected yieldRate: ${building.yieldRate} SONIC/sec`);
+                        } catch (projectedError) {
+                            console.warn(`[WARN] Failed to get projected rate for building ${building.id}:`, projectedError);
+                            building.yieldRate = 0; // Fallback to 0 if both fail
+                        }
+                    }
                 } catch (error) {
                     console.error(`[ERROR] Failed to get yield rate for building ${building.id}:`, error);
                     building.yieldRate = 0; // Fallback to 0 if error
