@@ -381,3 +381,48 @@
     margin: 0;
     border: 1px solid #221d0c;
 }
+
+/* Arcanum Page NFT Grid Layout - Max 2 per row */
+.arcanum-page .buildings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--card-min-width, 300px), 1fr));
+    gap: var(--spacing-lg, 1.5rem);
+    max-width: 100%;
+}
+
+/* Ensure max 2 columns */
+@media (min-width: var(--breakpoint-md, 700px)) {
+    .arcanum-page .buildings-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Arcanum Page NFT Image Styles */
+.arcanum-page .yield-nft-card .nft-image-container {
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: var(--border-radius-md, 8px) var(--border-radius-md, 8px) 0 0;
+    background: var(--color-bg-secondary, #1a1a1a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.arcanum-page .yield-nft-card .nft-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.arcanum-page .yield-nft-card .nft-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-3xl, 3rem);
+    background: linear-gradient(135deg, var(--color-bg-tertiary, #2a2a2a), var(--color-bg-secondary, #1a1a1a));
+    color: var(--color-text-muted, #777);
+}

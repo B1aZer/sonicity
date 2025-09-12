@@ -5,7 +5,6 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { ethers } from 'ethers';
 
-import('../styles/city-page.css');
 import('../styles/stake-hub-page.css');
 
 export class ArcanumPage extends BasePage {
@@ -275,58 +274,9 @@ export class ArcanumPage extends BasePage {
         const image = nft.metadata?.image || '';
         
         return `
-            <div class="building-card yield-nft-card" data-token-id="${nft.tokenId}" style="
-                ${image ? `background-image: url('${image}'); background-size: cover; background-position: center; background-repeat: no-repeat;` : ''}
-                position: relative;
-                overflow: hidden;
-            ">
-                ${image ? `
-                <div class="nft-artwork-overlay" style="
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: linear-gradient(
-                        135deg,
-                        rgba(0, 0, 0, 0.7) 0%,
-                        rgba(0, 0, 0, 0.5) 50%,
-                        rgba(0, 0, 0, 0.7) 100%
-                    );
-                    pointer-events: none;
-                    z-index: 1;
-                "></div>` : ''}
-                
-                <div class="building-header" style="position: relative; z-index: 2;">
-                    <div class="building-icon">
-                        ${icon}
-                    </div>
-                    <div class="building-info">
-                        <h3>${tierName} Yield NFT #${nft.tokenId}</h3>
-                        <p class="building-description">${tierName} Tier Yield NFT</p>
-                    </div>
-                    <div class="building-status tradeable">
-                        <span class="status-indicator"></span>
-                        <span class="status-text">Tradeable</span>
-                    </div>
-                </div>
-                <div class="building-details" style="position: relative; z-index: 2;">
-                    <div class="detail-item">
-                        <span class="detail-label">REP Staked:</span>
-                        <span class="detail-value">${nft.repStaked}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Tier:</span>
-                        <span class="detail-value">${tierName}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Minted:</span>
-                        <span class="detail-value">${mintDate}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Token ID:</span>
-                        <span class="detail-value">#${nft.tokenId}</span>
-                    </div>
+            <div class="building-card yield-nft-card" data-token-id="${nft.tokenId}">
+                <div class="nft-image-container">
+                    ${image ? `<img src="${image}" alt="${tierName} Yield NFT #${nft.tokenId}" class="nft-image" />` : `<div class="nft-placeholder">${icon}</div>`}
                 </div>
             </div>
         `;
