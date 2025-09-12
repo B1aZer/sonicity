@@ -109,15 +109,21 @@ export class YieldStationPage extends BasePage {
                 productionRateDisplay = `${rateInEther.toFixed(6)} SONIC/hour (${activeStations} active)`;
             }
 
+            // Format values for display (convert from wei to ether)
+            const formatSonic = (weiValue) => {
+                const etherValue = Number(weiValue) / 1e18;
+                return etherValue.toFixed(4) + ' SONIC';
+            };
+
             // Update state (this will automatically update UI)
             this.setState({
                 stationCount: stations.length,
-                claimableYield: totalClaimableYield.toString(),
+                claimableYield: formatSonic(totalClaimableYield),
                 productionRate: productionRateDisplay,
                 canClaim: totalClaimableYield > BigInt(0),
-                revenuePool: revenuePool.toString(),
-                availablePool: availablePool.toString(),
-                reservedRevenue: reservedRevenue.toString()
+                revenuePool: formatSonic(revenuePool),
+                availablePool: formatSonic(availablePool),
+                reservedRevenue: formatSonic(reservedRevenue)
             });
 
         } catch (error) {
@@ -186,13 +192,20 @@ export class YieldStationPage extends BasePage {
                             <span class="status-label">Claimable SONIC:</span>
                             <span class="status-value" data-state="claimableYield">0</span>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Pool Section -->
+                <div class="page-section">
+                    <h2>Revenue Pool Information</h2>
+                    <div class="status-grid">
                         <div class="status-item">
-                            <span class="status-label">Revenue Pool:</span>
-                            <span class="status-value" data-state="revenuePool">0</span>
+                            <span class="status-label">Total Pool:</span>
+                            <span class="status-value" data-state="revenuePool">0 SONIC</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Available Pool:</span>
-                            <span class="status-value" data-state="availablePool">0</span>
+                            <span class="status-value" data-state="availablePool">0 SONIC</span>
                         </div>
                     </div>
                 </div>
