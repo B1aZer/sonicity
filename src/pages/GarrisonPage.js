@@ -708,16 +708,45 @@ export class GarrisonPage extends BasePage {
             
             // Get deployed tactics from battle system
             const battleHeroTactics = await this.contracts.battleSystem.battleHeroTactics(address);
-
-            
             const deployedTactics = [];
             
-            // Check which tactics are deployed (defender tactics)
-            if (battleHeroTactics.defenderTactic1 > 0) deployedTactics.push(Number(battleHeroTactics.defenderTactic1));
-            if (battleHeroTactics.defenderTactic2 > 0) deployedTactics.push(Number(battleHeroTactics.defenderTactic2));
-            if (battleHeroTactics.defenderTactic3 > 0) deployedTactics.push(Number(battleHeroTactics.defenderTactic3));
+            Logger.info('Raw battleHeroTactics data:', battleHeroTactics);
             
-
+            // Determine if player is attacker or defender in this battle
+            const isAttacker = activeBattle && activeBattle.attacker.toLowerCase() === address.toLowerCase();
+            Logger.info('Player role check for tactics:', { isAttacker, address, attacker: activeBattle?.attacker });
+            
+            if (isAttacker) {
+                // Check attacker tactic slots
+                const tacticIds = [
+                    Number(battleHeroTactics.attackerTactic1),
+                    Number(battleHeroTactics.attackerTactic2), 
+                    Number(battleHeroTactics.attackerTactic3)
+                ];
+                
+                for (const tacticId of tacticIds) {
+                    if (tacticId > 0) {
+                        deployedTactics.push(tacticId);
+                        Logger.info(`Found deployed attacker tactic: ${tacticId}`);
+                    }
+                }
+            } else {
+                // Check defender tactic slots
+                const tacticIds = [
+                    Number(battleHeroTactics.defenderTactic1),
+                    Number(battleHeroTactics.defenderTactic2),
+                    Number(battleHeroTactics.defenderTactic3)
+                ];
+                
+                for (const tacticId of tacticIds) {
+                    if (tacticId > 0) {
+                        deployedTactics.push(tacticId);
+                        Logger.info(`Found deployed defender tactic: ${tacticId}`);
+                    }
+                }
+            }
+            
+            Logger.info('Final deployed tactics:', deployedTactics);
             return deployedTactics;
         } catch (error) {
             Logger.error('Error getting deployed tactics:', error);
@@ -831,13 +860,24 @@ export class GarrisonPage extends BasePage {
             
             this.modal.success(`${TacticsNFTContract.getTacticName(tacticId)} deployed successfully!`);
             
-            // Reload tactics section
-            const activeBattle = await this.contracts.battleSystem.activeBattles(address);
+            // Reload tactics section with proper player role
+            const activeBattle = await this.contracts.battleSystem.getActiveBattle(address);
             const ownedTactics = {};
             for (let id = 1; id <= 9; id++) {
                 ownedTactics[id] = await this.contracts.tacticsNFT.hasTactic(address, id);
             }
-            await this.loadTacticsDeploymentSection(ownedTactics, activeBattle);
+            
+            // Determine player role
+            let playerRole = 'none';
+            if (activeBattle) {
+                if (activeBattle.attacker.toLowerCase() === address.toLowerCase()) {
+                    playerRole = 'attacker';
+                } else if (activeBattle.defender.toLowerCase() === address.toLowerCase()) {
+                    playerRole = 'defender';
+                }
+            }
+            
+            await this.loadTacticsDeploymentSection(ownedTactics, activeBattle, playerRole);
             
         } catch (error) {
             Logger.error('Error deploying tactic:', error);
