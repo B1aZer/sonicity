@@ -92,7 +92,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
     mapping(address => mapping(uint256 => uint256)) public yieldStationIndex; // player -> buildingId -> array index
     
     // Configuration
-    uint256 public yieldStationDuration; // Configurable recharge duration
+    uint256 public yieldStationDuration; // How long revenue pool is distributed over (7 days)
 
     // Events
     event BuildingCreated(address indexed player, GridBuildingType buildingType, uint256 buildingId);
@@ -129,8 +129,10 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Initialize production cap duration to 24 hours
         productionCapDuration = 24 hours;
         
-        // Initialize yield station duration
-        yieldStationDuration = 24 hours;
+        // Initialize yield station duration - how long the revenue pool is distributed over
+        // This affects the rate calculation: poolPerSecond = availablePool / yieldStationDuration
+        // 7 days = 168 hours = 604,800 seconds - makes pool last 7x longer than before
+        yieldStationDuration = 7 days;
         
         // Initialize building configurations with resource-based costs and uniform 1 SONIC recharge
         buildingConfigs[GridBuildingType.HOUSE] = GridBuildingConfig({
@@ -187,7 +189,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             upgradeCost: 0,          // No upgrades for yield stations
             description: "Generates SONIC revenue from staked yield NFTs",
             tier: 4,                 // Require tier 4+
-            productionDuration: 24 hours, // 24 hours for yield stations
+            productionDuration: 24 hours, // How long building operates after recharge (unchanged)
             rechargeCost: 1.0 ether, // Uniform 1 SONIC recharge
             initialCost: 1000,       // 1000 Gold to build
             resourceType: 0          // Gold
@@ -550,7 +552,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // If this station is not yet in the active list, add its weight
         Building storage building = buildings[player][buildingId];
         if (building.lastRechargeTime > 0 && 
-            block.timestamp < building.lastRechargeTime + yieldStationDuration &&
+            block.timestamp < building.lastRechargeTime + buildingConfigs[GridBuildingType.YIELD_STATION].productionDuration &&
             !building.damaged) {
             // Station is active, weight is already included in totalWeight
         } else {
@@ -564,6 +566,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 availablePool = revenuePool > reservedRevenue ? revenuePool - reservedRevenue : 0;
         if (availablePool == 0) return 0;
         
+        // Calculate pool distribution rate: total pool divided by 7-day duration
+        // This makes the pool last 7x longer than the previous 24-hour duration
         uint256 poolPerSecond = availablePool / yieldStationDuration;
         uint256 finalRate = (poolPerSecond * stationWeight) / totalWeight;
         
@@ -583,7 +587,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             // Only count active (recharged and not damaged) stations
             if (!building.damaged && 
                 building.lastRechargeTime > 0 && 
-                block.timestamp < building.lastRechargeTime + yieldStationDuration) {
+                block.timestamp < building.lastRechargeTime + buildingConfigs[GridBuildingType.YIELD_STATION].productionDuration) {
                 
                 totalWeight += _getStationWeight(station.player, station.buildingId);
             }
@@ -603,9 +607,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         Building storage building = buildings[player][buildingId];
         if (building.lastRechargeTime == 0) return; // Not recharged yet
         
-        // Calculate time elapsed, but cap at station expiration
+        // Calculate time elapsed, but cap at station expiration (24 hours, not 7 days)
         uint256 endTime = block.timestamp;
-        uint256 expirationTime = building.lastRechargeTime + yieldStationDuration;
+        uint256 expirationTime = building.lastRechargeTime + buildingConfigs[GridBuildingType.YIELD_STATION].productionDuration;
         
         // Don't accumulate beyond expiration time
         if (endTime > expirationTime) {
@@ -640,7 +644,7 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             // Only update active stations
             if (!building.damaged && 
                 building.lastRechargeTime > 0 && 
-                block.timestamp < building.lastRechargeTime + yieldStationDuration) {
+                block.timestamp < building.lastRechargeTime + buildingConfigs[GridBuildingType.YIELD_STATION].productionDuration) {
                 
                 // Update accumulated revenue before rate change
                 _updateAccumulatedRevenue(station.player, station.buildingId);
@@ -1380,9 +1384,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Start with what's already accumulated (reserved)
         uint256 baseAccumulated = accumulatedRevenue[player][buildingId];
         
-        // For expired stations, calculate final earnings up to expiration time
-        if (currentTime > building.lastRechargeTime + yieldStationDuration) {
-            uint256 expirationTime = building.lastRechargeTime + yieldStationDuration;
+        // For expired stations, calculate final earnings up to expiration time (24 hours, not 7 days)
+        if (currentTime > building.lastRechargeTime + buildingConfigs[GridBuildingType.YIELD_STATION].productionDuration) {
+            uint256 expirationTime = building.lastRechargeTime + buildingConfigs[GridBuildingType.YIELD_STATION].productionDuration;
             uint256 expiredLastUpdate = lastRateUpdateTime[player][buildingId];
             
             if (expiredLastUpdate > 0 && expiredLastUpdate < expirationTime) {
@@ -1545,8 +1549,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         claimableRevenue = _calculateActualClaimableRevenue(player, buildingId, building, block.timestamp);
         
         if (building.lastRechargeTime > 0 && !building.damaged) {
-            uint256 endTime = building.lastRechargeTime + yieldStationDuration;
-            timeRemaining = block.timestamp < endTime ? endTime - block.timestamp : 0;
+            // Building operates for 24 hours (productionDuration), not 7 days (yieldStationDuration)
+            uint256 buildingEndTime = building.lastRechargeTime + buildingConfigs[GridBuildingType.YIELD_STATION].productionDuration;
+            timeRemaining = block.timestamp < buildingEndTime ? buildingEndTime - block.timestamp : 0;
             isActive = timeRemaining > 0;
             
             // Only calculate rate if station is active

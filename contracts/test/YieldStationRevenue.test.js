@@ -319,7 +319,8 @@ describe("YieldStation Revenue System", function () {
       
       // With only one station active, it should get the full pool rate
       const actualPool = await gridBuildings.getRevenuePool();
-      const poolPerSecond = actualPool / (24n * 3600n);
+      // Updated to 7 days (604,800 seconds) - pool now lasts 7x longer than before
+      const poolPerSecond = actualPool / (7n * 24n * 3600n); // 7 days in seconds
       const expectedRate = poolPerSecond; // Single station gets full pool rate
       
       expect(info.revenueRate).to.be.closeTo(expectedRate, expectedRate / 1000n); // Allow 0.1% tolerance
