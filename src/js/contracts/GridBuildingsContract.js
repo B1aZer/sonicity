@@ -335,7 +335,8 @@ export class GridBuildingsContract extends BaseContract {
         const productionState = await this.getProductionState(address, buildingId);
         // ProductionState enum: 0=INACTIVE, 1=ACTIVE, 2=AT_CAP
         // A building is actively producing if it's in ACTIVE state (1) and not damaged
-        return productionState === 1;
+        // Note: productionState is returned as BigInt, so we need to compare with BigInt
+        return productionState === 1n;
     }
 
     // Helper function to get GameState contract reference
