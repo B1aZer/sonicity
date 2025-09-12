@@ -547,8 +547,8 @@ export class SceneManager {
         // Set maxPolarAngle to current angle (no upward tilt allowed)
         controls.maxPolarAngle = currentPolarAngle;
         
-        // Allow downward tilt to completely vertical
-        const downConstraint = Math.PI / 4; // 90 degrees down (completely vertical)
+        // Allow downward tilt (more restrictive)
+        const downConstraint = Math.PI / 4; // 15 degrees down
         controls.minPolarAngle = currentPolarAngle - downConstraint;
         
         // Restrict horizontal rotation (left/right)
@@ -813,7 +813,7 @@ export class SceneManager {
                         this.camera.position.y
                     );
                     this.controls.maxPolarAngle = currentPolarAngle;
-                    this.controls.minPolarAngle = currentPolarAngle - Math.PI / 2;
+                    this.controls.minPolarAngle = currentPolarAngle - Math.PI / 4;
                     
                     // Restore azimuth constraints
                     this.controls.maxAzimuthAngle = Math.PI / 32;
