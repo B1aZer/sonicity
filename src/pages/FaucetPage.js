@@ -150,7 +150,7 @@ export class FaucetPage extends BasePage {
             const requestBtn = this.element.querySelector('.request-btn');
             if (requestBtn) {
                 requestBtn.disabled = false;
-                requestBtn.textContent = '💰 Request 10 SONIC';
+                requestBtn.textContent = 'Request 10 SONIC';
             }
         }
     }
@@ -189,10 +189,10 @@ export class FaucetPage extends BasePage {
                     
                     <div class="btn-container">
                         <button class="btn btn-primary request-btn" data-state="canRequest">
-                            💰 Request 10 SONIC
+                            Request 10 SONIC
                         </button>
                         <button class="btn btn-secondary refresh-btn">
-                            🔄 Refresh Balance
+                            Refresh Balance
                         </button>
                     </div>
                     
