@@ -1,21 +1,145 @@
 # Now
 
+## todo PRODUCTION
+
+1. switch to prod
+(2. replace nft urls)
+2. deploy to sonicFork
+3. push
+
 ## todo
 
-- no REPs for battles?
++ 24 h pool
+- change music when in battle
+- dmg for buidlings
+
+- rev error on sc
+- add blender units anim - run, idle
+
+## todo
+
+- metrics / sentry
+- you know the driss like, rt for wl
+
+## mobile
+
+- link in city for all buidlings for mobile
+- fix small aspects billboard etc
++ outpost page ?
+- responsive changes - check
+
+## polish
+
+- heroes . taxtics images
+- show upgrade price
+- proper event dispose on wallet change on game
+- bonus heroes
+- day night cycle
+- grass 
+- svanwars
+- restric buidlings (see sop)
+
+## imporvements (later)
+
+- add raycaster building lights overview (out) heroes
+- merge nft buidling
+- troop survival, add description garris, center
+- postprocessing / bokeh / depth of fieldq
+
+## configs 
+206.189.106.53
+anvil \
+  --fork-url https://rpc.soniclabs.com \
+  --host 127.0.0.1 \
+  --port 8545 \
+  --accounts 10 \
+  --mnemonic "test test test test test test test test test test test junk" \
+  --dump-state .anvil-state/sonic-fork.json \
+  --block-time 1 \
+  --gas-limit 12000000
+
+anvil --host 127.0.0.1 --port 8545 --accounts 10 --mnemonic "test test test test test test test test test test test junk" --dump-state .anvil-state/sonic-fork.json --block-time 1 --gas-limit 12000000 --chain-id 1337
+
+bash -lc 'cat >/etc/caddy/Caddyfile <<EOF
+rpc.sonicity.gg {
+  reverse_proxy 127.0.0.1:8545
+}
+EOF'
+systemctl reload caddy
+
+curl https://rpc.sonicity.gg -H 'content-type: application/json' \
+  --data '{"jsonrpc":"2.0","id":1,"method":"eth_chainId","params":[]}'
+
+docker run -d --name blockscout \
+  -p 4000:4000 \
+  -e ETHEREUM_JSONRPC_HTTP_URL=http://127.0.0.1:8545 \
+  -e ETHEREUM_JSONRPC_WS_URL=ws://127.0.0.1:8545 \
+  -e CHAIN_ID=146 \
+  -e NETWORK__NAME="Sonic Fork" \
+  ghcr.io/blockscout/blockscout:latest
+
+## todo
+
++ git
++ anvil deployemnt
++ update _baseTokenURI on nft contracts
+
+## peekas
+
+(0) 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (10000.000000000000000000 ETH)
+(1) 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (10000.000000000000000000 ETH)
+(2) 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC (10000.000000000000000000 ETH)
+(3) 0x90F79bf6EB2c4f870365E785982E1f101E93b906 (10000.000000000000000000 ETH)
+(4) 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65 (10000.000000000000000000 ETH)
+(5) 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc (10000.000000000000000000 ETH)
+(6) 0x976EA74026E726554dB657fA54763abd0C3a0aa9 (10000.000000000000000000 ETH)
+(7) 0x14dC79964da2C08b23698B3D3cc7Ca32193d9955 (10000.000000000000000000 ETH)
+(8) 0x23618e81E3f5cdF7f54C3d65f7FBc0aBf5B21E8f (10000.000000000000000000 ETH)
+(9) 0xa0Ee7A142d267C1f36714E4a8F75612F20a79720 (10000.000000000000000000 ETH)
+
+Private Keys
+==================
+    
+(0) <REDACTED-ANVIL-DEFAULT-KEY>
+(1) <REDACTED-ANVIL-DEFAULT-KEY>
+(2) <REDACTED-ANVIL-DEFAULT-KEY>
+(3) <REDACTED-ANVIL-DEFAULT-KEY>
+(4) <REDACTED-ANVIL-DEFAULT-KEY>
+(5) <REDACTED-ANVIL-DEFAULT-KEY>
+(6) <REDACTED-ANVIL-DEFAULT-KEY>
+(7) <REDACTED-ANVIL-DEFAULT-KEY>
+(8) <REDACTED-ANVIL-DEFAULT-KEY>
+(9) <REDACTED-ANVIL-DEFAULT-KEY>
+
+## todo
+
++ resolve button 
++ balance tactics gold
++ fix yiled view acranum view
++ idle fix
+
+# Prev
+
+## todo
+
++ for fornt we would need a function that will take yield station and returns calcualted rate for the next 24 hours, we need it so player can project possible earning before making a charge, do we have it ?
+
++ no REPs for battles?
+
++ hide deploy sectio from command center for defender
 
 1. Contract Issues
-Revenue Pool Calculation: Complex dynamic rate system needs simplification
-Production Edge Cases: Timestamp-based calculations can have timing issues
-Gas Estimation: Some functions may fail gas estimation in certain states
+ - Revenue Pool Calculation: Complex dynamic rate system needs simplification
+ - Production Edge Cases: Timestamp-based calculations can have timing issues
+- Gas Estimation: Some functions may fail gas estimation in certain states
 2. Frontend Issues
-Memory Leaks: Some pages don't properly clean up event listeners
-State Synchronization: Occasional sync issues between wallet state and page state
-Performance: Some pages load all data upfront instead of lazy loading
+ - Memory Leaks: Some pages don't properly clean up event listeners
+ - State Synchronization: Occasional sync issues between wallet state and page state
+ - Performance: Some pages load all data upfront instead of lazy loading
 3. Integration Issues
-Contract Addresses: Hardcoded addresses in some places
-ABI Management: Inconsistent ABI import patterns
-Error Propagation: Some errors don't bubble up properly to the UI
+ - Contract Addresses: Hardcoded addresses in some places
+ - ABI Management: Inconsistent ABI import patterns
+ - Error Propagation: Some errors don't bubble up properly to the UI
 📊 IMPLEMENTATION QUALITY SCORE: 7.5/10
 Breakdown:
 Architecture: 8/10 (Good patterns, some inconsistencies)
@@ -45,10 +169,10 @@ The codebase shows good engineering practices and is maintainable, but could ben
 
 ## todo
 
-- models 
-- show upgrade price
-- check revert messages and fix
-- continue playing and fix:
++ models 
+
++ check revert messages and fix
++ continue playing and fix:
 
 do not make any changes, lets think, we have 3 players with yiels statios, 100 sonic in rev pool
 
@@ -58,8 +182,14 @@ after 1 hour 3 charges yeild
 
 what happens to reveneue calculation ?
 
-- we need to calculate based on tier AND duration
-- fix upgrades/deployment of single scripts
+Player	0-6h	6-18h	18-24h	24-30h	30-42h	Total
+Player 1	25.0	18.75	3.125	0	0	46.875 SONIC
+Player 2	0	18.75	3.125	3.515	0	25.39 SONIC
+Player 3	0	0	3.125	3.515	10.548	17.188 SONIC
+TOTAL DISTRIBUTED	25.0	37.5	9.375	7.03
+
++ I think we need to calculate based on tier AND duration ?
++ fix upgrades/deployment of single scripts
 
 # anvil
 
@@ -94,7 +224,7 @@ npm run anvil:sonic
 - change fog color
 - loading for shop?
 
-- svanwars
+
 
 1 shop -> only banner (in diamonds), but how place ??
 2 damage system, new models, animation ??
@@ -102,7 +232,7 @@ npm run anvil:sonic
 - make garrison, remake command center, tactics_center, make tavern etc ...
 
 
-- change music when in battle
+
 
 + trees
 + fog
@@ -116,12 +246,7 @@ npm run anvil:sonic
 + all barracks levels redo,  scout guild, 
 + terrain mat + grass
 
-## mobile
 
-- link in city for all buidlings for mobile
-- fix small aspects billboard etc
-- outpost page ?
-- responsive changes
 
 ## todo
 
@@ -143,14 +268,7 @@ Weather System: Rain, snow effects
 + change charge label
 + change maybe price for rep stations to diamonds ?
 + update help page later
-
-## imporvements (later)
-
-- add raycaster building lights overview (out) heroes
-- merge nft buidling
-- troop survival, add description garris, center
-- postprocessing / bokeh / depth of fieldq
-- add this check for buildling to all pages:
++ form:
 if (!isArcanumBuilt) {
                 this.setState({
                     arcanumStatus: 'Not Built',
@@ -164,15 +282,9 @@ if (!isArcanumBuilt) {
             const buildingLevel = isArcanumBuilt ? 1 : 0; // Arcanum is maxLevel 1
 
 
-## todo PRODUCTION
++ build all buidlings and adjust 3d scene view
 
-- metrics / sentry
-- you know the driss like, rt for wl
-- update _baseTokenURI on nft contracts
-
-- build all buidlings and adjust 3d scene view
-
-- go through game ONLY using ffard
++ go through game ONLY using ffard
 
 + add detailed description to disctrict in js
 
@@ -240,6 +352,10 @@ OUTPOST ? sm outpost
 -ARCANUME ? mine ?
 
 ## fab
+
+udevstudio
+
+https://www.fab.com/listings/f9dbdf1d-06c8-4e81-8ecf-840505315a62
 
 https://www.fab.com/listings/4b44a80b-b57a-4e79-9d56-73db9defa8c0
 
