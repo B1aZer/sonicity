@@ -155,10 +155,10 @@ export class AccessPage extends BasePage {
                     
                     <div class="network-actions">
                         <button class="btn btn-primary add-network-btn">
-                            🔗 Add Network to MetaMask
+                            Add Network to MetaMask
                         </button>
                         <button class="btn btn-secondary refresh-btn">
-                            🔄 Check Status
+                            Check Status
                         </button>
                     </div>
                 </div>
@@ -168,20 +168,11 @@ export class AccessPage extends BasePage {
                     <ol>
                         <li><strong>Connect Wallet:</strong> Use the wallet button in the navbar</li>
                         <li><strong>Add Network:</strong> Click "Add Network to MetaMask" above</li>
-                        <li><strong>Get Testnet Tokens:</strong> <a href="/faucet" class="btn btn-small btn-secondary">Faucet</a></li>
+                        <li><strong>Get Testnet Tokens:</strong> Use the faucet button in the navbar</li>
                         <li><strong>Start Playing:</strong> Build your district and compete!</li>
                     </ol>
                 </div>
                 
-                <div class="page-section">
-                    <h2>What You Can Do</h2>
-                    <ul>
-                        <li>Build and manage your district</li>
-                        <li>Train troops and engage in battles</li>
-                        <li>Earn resources and upgrade buildings</li>
-                        <li>Compete with other players</li>
-                    </ul>
-                </div>
             </div>
         `;
         
