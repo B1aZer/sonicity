@@ -4,6 +4,7 @@ import { createNoise2D } from 'simplex-noise';
 import Logger from '../utils/logger.js';
 import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
+import { grassPlacementCache } from '../managers/grassPlacementCache.js';
 
 export class GrassBlades {
     constructor(scene, options = {}) {
@@ -155,6 +156,12 @@ export class GrassBlades {
      */
     async generateTerrainFollowingAttributes() {
         const { instances, density, slopeThreshold } = this.options;
+        
+        // Check cache first
+        if (grassPlacementCache.hasCachedPlacement(this.options)) {
+            Logger.info('GrassPlacementCache: Using cached placement data');
+            return grassPlacementCache.getCachedPlacement();
+        }
         
         Logger.info('Setting up MeshSurfaceSampler for terrain following...');
         
@@ -346,13 +353,18 @@ export class GrassBlades {
                 }
             }
             
-            return {
+            const placementData = {
                 offsets,
                 orientations,
                 stretches,
                 halfRootAngleCos,
                 halfRootAngleSin
             };
+            
+            // Cache the placement data for future use
+            grassPlacementCache.cachePlacement(this.options, placementData);
+            
+            return placementData;
             
         } catch (error) {
             Logger.error('Error with MeshSurfaceSampler, using fallback:', error);
@@ -495,13 +507,18 @@ export class GrassBlades {
         
         Logger.info(`✅ Fallback placement complete: ${instances} blades placed`);
         
-        return {
+        const fallbackData = {
             offsets,
             orientations,
             stretches,
             halfRootAngleCos,
             halfRootAngleSin
         };
+        
+        // Cache fallback data too
+        grassPlacementCache.cachePlacement(this.options, fallbackData);
+        
+        return fallbackData;
     }
     
     getAttributeData() {
