@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Logger from '../utils/logger.js';
 import { BUILDINGS } from '../utils/constants.js';
+import { getConfiguredGLTFLoader } from '../utils/gltfLoader.js';
 
 export class Trees {
     constructor(scene, options = {}) {
@@ -45,7 +45,7 @@ export class Trees {
     }
 
     async loadTrees() {
-        const loader = new GLTFLoader();
+        const loader = getConfiguredGLTFLoader();
         
         try {
             // Load all tree models

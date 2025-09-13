@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import Logger from '../utils/logger.js';
+import { getConfiguredGLTFLoader } from '../utils/gltfLoader.js';
 import { GrassBlades } from '../objects/GrassBlades.js';
 import { River } from '../objects/River.js';
 import { Trees } from '../objects/Trees.js';
@@ -118,7 +118,7 @@ export class SceneManager {
      * @returns {Promise<THREE.Mesh>} The ground plane mesh
      */
     async createGroundPlane() {
-        const gltfLoader = new GLTFLoader();
+        const gltfLoader = getConfiguredGLTFLoader();
         
         try {
             Logger.info('SceneManager: Loading GroundPlan geometry from Blender...');

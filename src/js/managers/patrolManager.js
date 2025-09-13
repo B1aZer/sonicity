@@ -1,16 +1,16 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { BattleSystemContract } from '../contracts/BattleSystemContract.js';
 import { PATROL_CONFIG, BUILDINGS } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
+import { getConfiguredGLTFLoader } from '../utils/gltfLoader.js';
 
 export class PatrolManager {
     constructor(scene, assetLoader, battleSystemContract) {
         this.scene = scene;
         this.assetLoader = assetLoader;
         this.battleSystemContract = battleSystemContract;
-        this.gltfLoader = new GLTFLoader();
+        this.gltfLoader = getConfiguredGLTFLoader();
         
         // Track patrol units and their states
         this.patrolUnits = new Map(); // unitId -> unit object

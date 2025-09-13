@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { PROPS } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
+import { getConfiguredGLTFLoader } from '../utils/gltfLoader.js';
 
 export class PropsManager {
     constructor(scene, assetLoader) {
@@ -9,7 +9,7 @@ export class PropsManager {
         this.assetLoader = assetLoader;
         this.props = new Map(); // Track all placed props
         this.propModels = new Map(); // Cache loaded models
-        this.loader = new GLTFLoader();
+        this.loader = getConfiguredGLTFLoader();
         
         Logger.info('PropsManager initialized');
     }

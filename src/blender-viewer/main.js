@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { getConfiguredGLTFLoader } from '../js/utils/gltfLoader.js';
 
 // Global variables for easy access
 let scene, camera, renderer, controls;
@@ -88,7 +88,7 @@ function setupGrid() {
 async function loadGroundPlane() {
     statusEl.textContent = 'Loading GroundPlan geometry...';
     
-    const gltfLoader = new GLTFLoader();
+    const gltfLoader = getConfiguredGLTFLoader();
     
     try {
         // Load the GroundPlan GLB file

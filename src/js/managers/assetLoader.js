@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { TextureLoader } from 'three/src/loaders/TextureLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { BUILDINGS } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
+import { getConfiguredGLTFLoader } from '../utils/gltfLoader.js';
 
 // Texture paths - using PNG format instead of TGA
 const textureMap = {
@@ -15,7 +15,9 @@ const textureMap = {
 
 export class AssetLoader {
     constructor() {
-        this.gltfLoader = new GLTFLoader();
+        // Use centralized GLTFLoader with DRACOLoader configured
+        this.gltfLoader = getConfiguredGLTFLoader();
+        
         this.textureLoader = new TextureLoader();
         this.loadedTemplates = {}; // Store original templates
         this.loadedAnimations = {}; // Store animations
