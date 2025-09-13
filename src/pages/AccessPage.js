@@ -96,8 +96,8 @@ export class AccessPage extends BasePage {
                     // Reload data after network switch
                     await this.loadAccessData();
                 } catch (error) {
-                    Logger.error('Error adding network:', error);
-                    this.modal.error('Failed to add network to MetaMask');
+                    Logger.error('Error changing network:', error);
+                    this.modal.error('Failed to change network in MetaMask. Please add the network manually in MetaMask.');
                 }
             });
         }
@@ -170,6 +170,17 @@ export class AccessPage extends BasePage {
                         <li><strong>Change Network:</strong> Click "Change Network in MetaMask" above</li>
                         <li><strong>Get Testnet Tokens:</strong> Use the faucet button in the navbar</li>
                         <li><strong>Start Playing:</strong> Build your district and compete!</li>
+                    </ol>
+                </div>
+                
+                <div class="page-section">
+                    <h2>Manual Network Setup</h2>
+                    <p class="section-description">If the automatic network switch fails, you can add the network manually:</p>
+                    <ol>
+                        <li>Open MetaMask</li>
+                        <li>Click the network dropdown at the top</li>
+                        <li>Click "Add Network" or "Custom RPC"</li>
+                        <li>Enter the network details above</li>
                     </ol>
                 </div>
                 
