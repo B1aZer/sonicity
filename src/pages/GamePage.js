@@ -208,7 +208,7 @@ export class GamePage extends BasePage {
             }, 10000); // Update every 10 seconds
             
             // Ensure scene and assets are initialized before placing buildings
-            if (!this.game.scene || !this.game.assetLoader.isLoadingComplete) {
+            if (!this.game.scene || !this.game.globalAssetCache.isAssetsLoaded()) {
                 throw new Error('Scene or assets not initialized');
             }
 

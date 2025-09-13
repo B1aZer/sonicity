@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { InputHandler } from '../utils/inputHandler.js';
 import { BuildingManager } from '../managers/buildingManager.js';
 import { AssetLoader } from '../managers/assetLoader.js';
+import { globalAssetCache } from '../managers/globalAssetCache.js';
 import { GridManager } from '../managers/gridManager.js';
 import { SceneManager } from '../managers/sceneManager.js';
 import { CosmeticManager } from '../managers/cosmeticManager.js';
@@ -33,7 +34,8 @@ export class Game {
         this.isRunning = false;
         
         // Managers
-        this.assetLoader = new AssetLoader();
+        this.assetLoader = new AssetLoader(); // Keep for compatibility
+        this.globalAssetCache = globalAssetCache; // Use global cache
         this.buildingManager = null; // Will be initialized after assets are loaded
         this.cosmeticManager = null; // Will be initialized after scene is ready
         this.patrolManager = null; // Will be initialized after scene is ready
@@ -80,29 +82,29 @@ export class Game {
         musicManager.init(this.camera);
         
         // Set up progress tracking for asset loading
-        this.assetLoader.onProgress((progress, loaded, total, status) => {
+        this.globalAssetCache.onProgress((progress, loaded, total, status) => {
             LoadingScreen.updateProgress(progress, loaded, total, status);
         });
         
-        // Load assets first
-        await this.assetLoader.loadAssets();
+        // Load assets first (will use global cache)
+        await this.globalAssetCache.loadAssets();
         
         // Now create building manager after assets are loaded
         this.buildingManager = new BuildingManager(
             this.gridManager, 
             this.gameStateContract, 
             0, 
-            this.assetLoader,
+            this.globalAssetCache, // Use global cache instead of assetLoader
             this.gridBuildingsContract,
             this.districtBuildingsContract
         );
-        this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.assetLoader);
+        this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.globalAssetCache);
         
         // Initialize cosmetic manager
         this.cosmeticManager = new CosmeticManager(this.scene, this.cosmeticItemsContract);
         
         // Initialize patrol manager
-        this.patrolManager = new PatrolManager(this.scene, this.assetLoader, this.battleSystemContract);
+        this.patrolManager = new PatrolManager(this.scene, this.globalAssetCache, this.battleSystemContract);
         
         // Set up input handlers
         Logger.info("Game: Setting up input handlers");
