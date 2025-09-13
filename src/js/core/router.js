@@ -1,4 +1,5 @@
 import { AccessControl } from '../utils/accessControl.js';
+import { NetworkManager } from '../utils/networkManager.js';
 import { StartPage } from '../../pages/StartPage.js';
 import { GamePage } from '../../pages/GamePage.js';
 import { AccessPage } from '../../pages/AccessPage.js';
@@ -126,6 +127,26 @@ export class Router {
                 allowed: false, 
                 redirectTo: 'access',
                 reason: 'wallet_not_connected'
+            };
+        }
+
+        // Check network connection
+        try {
+            const networkCheck = await NetworkManager.checkNetwork();
+            if (!networkCheck.isCorrect) {
+                Logger.info('Wrong network, redirecting to access');
+                return { 
+                    allowed: false, 
+                    redirectTo: 'access',
+                    reason: 'wrong_network'
+                };
+            }
+        } catch (error) {
+            Logger.warn('Network check failed, redirecting to access:', error);
+            return { 
+                allowed: false, 
+                redirectTo: 'access',
+                reason: 'network_check_failed'
             };
         }
 

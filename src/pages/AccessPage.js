@@ -155,7 +155,7 @@ export class AccessPage extends BasePage {
                     
                     <div class="network-actions">
                         <button class="btn btn-primary add-network-btn">
-                            Add Network to MetaMask
+                            Change Network in MetaMask
                         </button>
                         <button class="btn btn-secondary refresh-btn">
                             Check Status
@@ -167,7 +167,7 @@ export class AccessPage extends BasePage {
                     <h2>Getting Started</h2>
                     <ol>
                         <li><strong>Connect Wallet:</strong> Use the wallet button in the navbar</li>
-                        <li><strong>Add Network:</strong> Click "Add Network to MetaMask" above</li>
+                        <li><strong>Change Network:</strong> Click "Change Network in MetaMask" above</li>
                         <li><strong>Get Testnet Tokens:</strong> Use the faucet button in the navbar</li>
                         <li><strong>Start Playing:</strong> Build your district and compete!</li>
                     </ol>
