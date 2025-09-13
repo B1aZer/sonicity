@@ -25,7 +25,7 @@ exports.handler = async (event, context) => {
         }
 
         // Faucet configuration from environment variables
-        const RPC_URL = process.env.FAUCET_RPC_URL || 'https://api.testnet.sonic.game';
+        const RPC_URL = process.env.VITE_RPC_URL || 'https://api.testnet.sonic.game';
         const PRIVATE_KEY = process.env.FAUCET_PRIVATE_KEY; // Your test wallet private key
         const AMOUNT = process.env.FAUCET_AMOUNT || '10'; // 10 SONIC
 
