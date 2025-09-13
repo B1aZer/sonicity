@@ -20,7 +20,6 @@ export class FaucetPage extends BasePage {
         });
         
         this.render();
-        this.setupEventListeners();
         
         // Load initial data immediately (even without wallet)
         this.loadFaucetData();
@@ -30,6 +29,7 @@ export class FaucetPage extends BasePage {
         Logger.info('FaucetPage onInitialized called with wallet:', walletResult);
         try {
             await this.loadFaucetData();
+            this.setupEventListeners();
             Logger.info('Faucet page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing faucet page:', error);
@@ -212,7 +212,7 @@ export class FaucetPage extends BasePage {
                     <h2>Faucet Information</h2>
                     <ul>
                         <li><strong>Amount per request:</strong> ${faucetAmount} SONIC</li>
-                        <li><strong>Rate limit:</strong> Once per week per wallet address</li>
+                        <li><strong>Rate limit:</strong> Once per ${Math.floor(config.faucet.timeoutMinutes / (24 * 60))} day(s) per wallet address</li>
                         <li><strong>Network:</strong> ${networkConfig.name}</li>
                         <li><strong>Use case:</strong> Testing and playing the game</li>
                         <li><strong>Note:</strong> These are testnet tokens with no real value</li>
@@ -230,8 +230,5 @@ export class FaucetPage extends BasePage {
                 </div>
             </div>
         `;
-        
-        // Re-setup event listeners after render
-        setTimeout(() => this.setupEventListeners(), 0);
     }
 }

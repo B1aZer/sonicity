@@ -35,7 +35,8 @@ export const config = {
     // Faucet settings
     faucet: {
         amount: import.meta.env.VITE_FAUCET_AMOUNT || '10',
-        privateKey: import.meta.env.VITE_FAUCET_PRIVATE_KEY
+        privateKey: import.meta.env.VITE_FAUCET_PRIVATE_KEY,
+        timeoutMinutes: parseInt(import.meta.env.VITE_FAUCET_TIMEOUT) || 10080 // Default 7 days in minutes
     }
 };
 

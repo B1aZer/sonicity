@@ -27,17 +27,18 @@ async function saveRateLimitData(data) {
     }
 }
 
-function isWithinWeek(timestamp) {
-    const oneWeek = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-    return Date.now() - timestamp < oneWeek;
+function isWithinTimeout(timestamp, timeoutMinutes) {
+    const timeoutMs = timeoutMinutes * 60 * 1000; // Convert minutes to milliseconds
+    return Date.now() - timestamp < timeoutMs;
 }
 
-async function checkRateLimit(userAddress) {
+async function checkRateLimit(userAddress, timeoutMinutes) {
     const rateLimitData = await getRateLimitData();
     const lastRequest = rateLimitData[userAddress.toLowerCase()];
     
-    if (lastRequest && isWithinWeek(lastRequest)) {
-        const timeLeft = (lastRequest + 7 * 24 * 60 * 60 * 1000) - Date.now();
+    if (lastRequest && isWithinTimeout(lastRequest, timeoutMinutes)) {
+        const timeoutMs = timeoutMinutes * 60 * 1000;
+        const timeLeft = (lastRequest + timeoutMs) - Date.now();
         const daysLeft = Math.ceil(timeLeft / (24 * 60 * 60 * 1000));
         return {
             allowed: false,
@@ -74,8 +75,8 @@ exports.handler = async (event, context) => {
             };
         }
 
-        // Check rate limiting (once per week per address)
-        const rateLimitCheck = await checkRateLimit(userAddress);
+        // Check rate limiting (configurable timeout per address)
+        const rateLimitCheck = await checkRateLimit(userAddress, TIMEOUT_MINUTES);
         if (!rateLimitCheck.allowed) {
             return {
                 statusCode: 429,
@@ -90,6 +91,7 @@ exports.handler = async (event, context) => {
         const RPC_URL = process.env.VITE_RPC_URL || 'https://api.testnet.sonic.game';
         const PRIVATE_KEY = process.env.VITE_FAUCET_PRIVATE_KEY; // Your test wallet private key
         const AMOUNT = process.env.VITE_FAUCET_AMOUNT || '10'; // 10 SONIC
+        const TIMEOUT_MINUTES = parseInt(process.env.VITE_FAUCET_TIMEOUT) || 10080; // Default 7 days in minutes
 
         if (!PRIVATE_KEY) {
             throw new Error('Faucet private key not configured');
