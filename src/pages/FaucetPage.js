@@ -166,7 +166,7 @@ export class FaucetPage extends BasePage {
             <div class="page-container">
                 <h1>Testnet Faucet</h1>
                 <p class="page-description">
-                    Get free testnet SONIC tokens to start playing the game! You can request ${faucetAmount} SONIC tokens.
+                    Get free testnet SONIC tokens to start playing the game!
                 </p>
                 
                 <div class="page-section">
