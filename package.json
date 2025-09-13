@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "cd contracts && npm run compile && cd .. && vite build",
+    "build": "npm run optimize-assets && cd contracts && npm run compile && cd .. && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
