@@ -17,8 +17,7 @@ export class BaseContract {
             throw new Error('MetaMask not detected');
         }
 
-        // Validate network before initializing
-        await NetworkManager.validateNetwork();
+        // Network validation removed - allow any network
 
         this.provider = new ethers.BrowserProvider(window.ethereum);
         this.signer = await this.provider.getSigner();
