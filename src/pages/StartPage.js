@@ -36,46 +36,6 @@ export class StartPage extends BasePage {
 
     setupEventListeners() {
         const startButton = this.element.querySelector('.start-button');
-        const faucetButton = this.element.querySelector('.faucet-button');
-        
-        // Faucet button listener
-        if (faucetButton) {
-            faucetButton.addEventListener('click', async () => {
-                try {
-                    // Get user's wallet address
-                    const userAddress = await this.contracts.gameState.signer.getAddress();
-                    
-                    // Disable button and show loading
-                    faucetButton.disabled = true;
-                    faucetButton.textContent = 'Sending...';
-                    
-                    // Call Netlify function
-                    const response = await fetch('/.netlify/functions/faucet', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ userAddress })
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (response.ok && result.success) {
-                        this.modal.success(`Successfully sent ${result.amount} SONIC to your wallet!`);
-                    } else {
-                        this.modal.error(result.error || 'Faucet request failed');
-                    }
-                    
-                } catch (error) {
-                    console.error('Faucet error:', error);
-                    this.modal.error('Failed to request testnet SONIC');
-                } finally {
-                    // Reset button
-                    faucetButton.disabled = false;
-                    faucetButton.textContent = 'Get 10 $SONIC';
-                }
-            });
-        }
         
         // Start button listener
         if (startButton) {
@@ -129,14 +89,9 @@ export class StartPage extends BasePage {
         this.element.innerHTML = `
             <div class="start-container">
                 <img src="/images/Start.png" alt="Start Game" class="start-image" />
-                <div class="start-buttons">
-                    <button class="faucet-button btn btn-lg btn-primary">
-                        Get 10 $SONIC
-                    </button>
-                    <button class="start-button btn btn-lg btn-secondary" disabled>
-                        Connect Wallet
-                    </button>
-                </div>
+                <button class="start-button btn btn-lg btn-primary" disabled>
+                    Connect Wallet
+                </button>
             </div>
         `;
     }

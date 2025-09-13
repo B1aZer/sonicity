@@ -21,6 +21,9 @@ export class FaucetPage extends BasePage {
         
         this.render();
         this.setupEventListeners();
+        
+        // Load initial data immediately (even without wallet)
+        this.loadFaucetData();
     }
 
     async onInitialized(walletResult) {
@@ -185,7 +188,7 @@ export class FaucetPage extends BasePage {
                     <p class="section-description">Click the button below to receive 10 testnet SONIC tokens</p>
                     
                     <div class="btn-container">
-                        <button class="btn btn-primary btn-lg request-btn" ${!this.state.canRequest ? 'disabled' : ''}>
+                        <button class="btn btn-primary request-btn" data-state="canRequest">
                             💰 Request 10 SONIC
                         </button>
                         <button class="btn btn-secondary refresh-btn">

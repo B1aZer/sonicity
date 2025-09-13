@@ -18,6 +18,7 @@ export class Navbar {
                 <div class="nav-brand" id="logo">SoniCity</div>
                 <div class="nav-container">
                     <div class="nav-links">
+                        <a href="/faucet" class="nav-link" data-page="faucet">Faucet</a>
                         <a href="/overview" class="nav-link" data-page="overview">Overview</a>
                         <!-- <a href="/mint" class="nav-link" data-page="mint">Mint</a> -->
                     </div>
