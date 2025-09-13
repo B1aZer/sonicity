@@ -7,7 +7,11 @@ async function main() {
     const ALTAR_ADDRESS = addresses.altarProxy;
     const SONICITY_NFT_ADDRESS = addresses.sonicityNFT;
 
-    const [owner] = await hre.ethers.getSigners();
+    const signers = await hre.ethers.getSigners();
+    if (signers.length === 0) {
+        throw new Error("No signers available. Make sure PRIVATE_KEY is set in environment variables.");
+    }
+    const [owner] = signers;
     console.log("Owner address:", owner.address);
 
     // Get the Altar contract
