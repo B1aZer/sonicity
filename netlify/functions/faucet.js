@@ -75,6 +75,12 @@ exports.handler = async (event, context) => {
             };
         }
 
+        // Faucet configuration from environment variables
+        const RPC_URL = process.env.VITE_RPC_URL || 'https://api.testnet.sonic.game';
+        const PRIVATE_KEY = process.env.VITE_FAUCET_PRIVATE_KEY; // Your test wallet private key
+        const AMOUNT = process.env.VITE_FAUCET_AMOUNT || '10'; // 10 SONIC
+        const TIMEOUT_MINUTES = parseInt(process.env.VITE_FAUCET_TIMEOUT) || 10080; // Default 7 days in minutes
+
         // Check rate limiting (configurable timeout per address)
         const rateLimitCheck = await checkRateLimit(userAddress, TIMEOUT_MINUTES);
         if (!rateLimitCheck.allowed) {
@@ -86,12 +92,6 @@ exports.handler = async (event, context) => {
                 })
             };
         }
-
-        // Faucet configuration from environment variables
-        const RPC_URL = process.env.VITE_RPC_URL || 'https://api.testnet.sonic.game';
-        const PRIVATE_KEY = process.env.VITE_FAUCET_PRIVATE_KEY; // Your test wallet private key
-        const AMOUNT = process.env.VITE_FAUCET_AMOUNT || '10'; // 10 SONIC
-        const TIMEOUT_MINUTES = parseInt(process.env.VITE_FAUCET_TIMEOUT) || 10080; // Default 7 days in minutes
 
         if (!PRIVATE_KEY) {
             throw new Error('Faucet private key not configured');
