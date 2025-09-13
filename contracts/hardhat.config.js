@@ -45,6 +45,14 @@ module.exports = {
       gas: "auto",
       gasPrice: "auto"
     },
+    sonicFork: {
+      url: "https://rpc.sonicity.gg/",
+      chainId: 1337,
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      timeout: 20000,
+      gas: "auto",
+      gasPrice: "auto"
+    },
     // Legacy networks (keep for backward compatibility)
     testnet: {
       url: "https://api.testnet.sonic.game",
