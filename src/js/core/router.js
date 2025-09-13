@@ -33,7 +33,7 @@ export class Router {
         this.game = null;
         
         // Pages that don't require wallet connection
-        this.publicPages = new Set(['access', 'faucet']);
+        this.publicPages = new Set(['access']);
         
         // Pages that don't require player initialization
         this.uninitializedPages = new Set(['', 'access', 'faucet']);
