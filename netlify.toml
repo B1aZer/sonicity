@@ -8,6 +8,7 @@
   # Environment variables
   [build.environment]
     NODE_VERSION = "18"
+    NODE_ENV = "production"
     
 # Redirect rules for SPA
 [[redirects]]
