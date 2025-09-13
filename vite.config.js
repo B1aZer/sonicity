@@ -32,40 +32,7 @@ export default defineConfig({
         reduce_vars: true,
         passes: 3 // Multiple passes for better compression
       },
-        mangle: {
-          toplevel: false, // Disable toplevel mangling to prevent Three.js issues
-          properties: {
-            regex: /^_/
-          },
-          // Keep function names to prevent Three.js/GLTF loading issues
-          keep_fnames: true,
-          reserved: [
-            'THREE', 'ethers', 'window', 'document',
-            // Three.js core classes and methods
-            'Object3D', 'Mesh', 'Geometry', 'Material', 'Scene', 'Camera', 'Renderer',
-            'BufferGeometry', 'BufferAttribute', 'Float32Array', 'Uint16Array',
-            'GLTFLoader', 'DRACOLoader', 'TextureLoader', 'CubeTextureLoader',
-            'WebGLRenderer', 'PerspectiveCamera', 'OrthographicCamera',
-            'AmbientLight', 'DirectionalLight', 'PointLight', 'SpotLight',
-            'BoxGeometry', 'SphereGeometry', 'PlaneGeometry', 'CylinderGeometry',
-            'MeshBasicMaterial', 'MeshStandardMaterial', 'MeshPhongMaterial',
-            'Vector3', 'Vector2', 'Vector4', 'Matrix4', 'Matrix3', 'Quaternion',
-            'Euler', 'Color', 'Raycaster', 'Clock', 'AnimationMixer', 'AnimationClip',
-            // GLTF/GLB loading methods
-            '_i', '_j', '_k', '_l', '_m', '_n', '_o', '_p', '_q', '_r', '_s', '_t',
-            'parse', 'load', 'setPath', 'setDRACOLoader', 'setKTX2Loader',
-            'onLoad', 'onProgress', 'onError', 'onStart', 'onComplete',
-            // WebGL context methods
-            'createBuffer', 'bindBuffer', 'bufferData', 'createShader', 'shaderSource',
-            'compileShader', 'createProgram', 'attachShader', 'linkProgram', 'useProgram',
-            'getAttribLocation', 'getUniformLocation', 'enableVertexAttribArray',
-            'vertexAttribPointer', 'drawArrays', 'drawElements', 'createTexture',
-            'bindTexture', 'texImage2D', 'texParameteri', 'generateMipmap',
-            // Event handling
-            'addEventListener', 'removeEventListener', 'dispatchEvent',
-            'onmessage', 'postMessage', 'onerror', 'onload', 'onprogress'
-          ]
-        },
+        mangle: false, // Disable mangling entirely to prevent Three.js issues
       format: {
         comments: false, // Remove all comments
         beautify: false,
