@@ -1,14 +1,14 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { COSMETIC_METADATA, COSMETIC_TYPES } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
+import { getConfiguredGLTFLoader } from '../utils/gltfLoader.js';
 
 export class CosmeticManager {
     constructor(scene, cosmeticItemsContract) {
         this.scene = scene;
         this.cosmeticItemsContract = cosmeticItemsContract;
-        this.gltfLoader = new GLTFLoader();
+        this.gltfLoader = getConfiguredGLTFLoader();
         
         // Track loaded cosmetic models and instances
         this.cosmeticModels = new Map(); // cosmeticId -> template model
