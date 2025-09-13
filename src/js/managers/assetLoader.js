@@ -23,6 +23,25 @@ export class AssetLoader {
         this.loadingPromises = {};
         this.textures = {};
         this.loadPromise = null;
+        
+        // Progress tracking for enhanced loading screen
+        this.progressCallbacks = [];
+        this.totalAssets = 0;
+        this.loadedAssets = 0;
+    }
+    
+    // Add progress callback
+    onProgress(callback) {
+        this.progressCallbacks.push(callback);
+    }
+    
+    // Update progress and notify callbacks
+    updateProgress(loaded, total, status = '') {
+        this.loadedAssets = loaded;
+        this.totalAssets = total;
+        
+        const progress = total > 0 ? (loaded / total) * 100 : 0;
+        this.progressCallbacks.forEach(callback => callback(progress, loaded, total, status));
     }
 
     async loadAssets() {
@@ -38,6 +57,23 @@ export class AssetLoader {
             this.loadedTemplates = {};
             this.loadedAnimations = {};
             this.loadingPromises = {};
+            this.loadedAssets = 0;
+
+            // Count total assets first
+            const buildingTypes = Object.keys(BUILDINGS);
+            let totalAssets = 0;
+            
+            for (const type of buildingTypes) {
+                const buildingData = BUILDINGS[type];
+                const assetInfo = buildingData.assets;
+                
+                if (assetInfo) {
+                    totalAssets += Object.keys(assetInfo.levels).length;
+                }
+            }
+            
+            this.totalAssets = totalAssets;
+            this.updateProgress(0, totalAssets, 'Loading textures...');
 
             // Load textures first
             try {
@@ -48,7 +84,7 @@ export class AssetLoader {
                 // Continue loading models even if textures fail
             }
 
-            const buildingTypes = Object.keys(BUILDINGS);
+            this.updateProgress(0, totalAssets, 'Loading 3D models...');
             const allLoadPromises = [];
 
             for (const type of buildingTypes) {
@@ -75,11 +111,17 @@ export class AssetLoader {
                                 this.loadedAnimations[modelKey] = [];
                                 Logger.warn(`AssetLoader: Failed to load model for ${modelKey}, storing null.`);
                             }
+                            
+                            this.loadedAssets++;
+                            this.updateProgress(this.loadedAssets, totalAssets, `Loading ${modelKey}...`);
                         })
                         .catch(error => {
                             Logger.error(`AssetLoader: Error in loadAssets for ${modelKey}:`, error);
                             this.loadedTemplates[modelKey] = null;
                             this.loadedAnimations[modelKey] = [];
+                            
+                            this.loadedAssets++;
+                            this.updateProgress(this.loadedAssets, totalAssets, `Failed to load ${modelKey}`);
                         });
 
                     this.loadingPromises[modelKey] = loadPromise;
@@ -89,6 +131,7 @@ export class AssetLoader {
 
             try {
                 await Promise.all(allLoadPromises);
+                this.updateProgress(totalAssets, totalAssets, 'Loading complete!');
                 Logger.info("AssetLoader: All asset loading processes finished.");
                 this.isLoadingComplete = true;
                 Logger.debug("AssetLoader: isLoadingComplete set to true.");

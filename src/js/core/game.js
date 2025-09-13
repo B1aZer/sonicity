@@ -13,6 +13,7 @@ import { CosmeticItemsContract } from '../contracts/CosmeticItemsContract.js';
 import { BattleSystemContract } from '../contracts/BattleSystemContract.js';
 import Logger from '../utils/logger.js';
 import { musicManager } from '../managers/musicManager.js';
+import { LoadingScreen } from '../utils/loadingScreen.js';
 
 export class Game {
     constructor(renderDiv, contracts = null) {
@@ -77,6 +78,11 @@ export class Game {
         
         // Initialize music manager with camera for 3D audio
         musicManager.init(this.camera);
+        
+        // Set up progress tracking for asset loading
+        this.assetLoader.onProgress((progress, loaded, total, status) => {
+            LoadingScreen.updateProgress(progress, loaded, total, status);
+        });
         
         // Load assets first
         await this.assetLoader.loadAssets();
