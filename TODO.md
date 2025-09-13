@@ -19,6 +19,7 @@
 ## todo
 
 - metrics / sentry
+- mobile
 - you know the driss like, rt for wl
 
 ## mobile
