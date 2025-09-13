@@ -1,8 +1,58 @@
-// Netlify Function - Simple Faucet
-// Sends 10 SONIC to user's wallet
+// Netlify Function - Faucet with Weekly Rate Limiting
+// Sends 10 SONIC to user's wallet (once per week per address)
 
 // Note: Netlify Functions use Node.js, so we use require() instead of import
 const { ethers } = require('ethers');
+const fs = require('fs').promises;
+const path = require('path');
+
+// Rate limiting functions
+async function getRateLimitData() {
+    try {
+        const filePath = '/tmp/faucet-requests.json';
+        const data = await fs.readFile(filePath, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        // File doesn't exist or is empty, return empty object
+        return {};
+    }
+}
+
+async function saveRateLimitData(data) {
+    try {
+        const filePath = '/tmp/faucet-requests.json';
+        await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error('Error saving rate limit data:', error);
+    }
+}
+
+function isWithinWeek(timestamp) {
+    const oneWeek = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+    return Date.now() - timestamp < oneWeek;
+}
+
+async function checkRateLimit(userAddress) {
+    const rateLimitData = await getRateLimitData();
+    const lastRequest = rateLimitData[userAddress.toLowerCase()];
+    
+    if (lastRequest && isWithinWeek(lastRequest)) {
+        const timeLeft = (lastRequest + 7 * 24 * 60 * 60 * 1000) - Date.now();
+        const daysLeft = Math.ceil(timeLeft / (24 * 60 * 60 * 1000));
+        return {
+            allowed: false,
+            daysLeft: daysLeft
+        };
+    }
+    
+    return { allowed: true };
+}
+
+async function recordRequest(userAddress) {
+    const rateLimitData = await getRateLimitData();
+    rateLimitData[userAddress.toLowerCase()] = Date.now();
+    await saveRateLimitData(rateLimitData);
+}
 
 exports.handler = async (event, context) => {
     // Only allow POST requests
@@ -24,10 +74,22 @@ exports.handler = async (event, context) => {
             };
         }
 
+        // Check rate limiting (once per week per address)
+        const rateLimitCheck = await checkRateLimit(userAddress);
+        if (!rateLimitCheck.allowed) {
+            return {
+                statusCode: 429,
+                body: JSON.stringify({ 
+                    error: `Faucet limit reached. You can request again in ${rateLimitCheck.daysLeft} day(s).`,
+                    daysLeft: rateLimitCheck.daysLeft
+                })
+            };
+        }
+
         // Faucet configuration from environment variables
         const RPC_URL = process.env.VITE_RPC_URL || 'https://api.testnet.sonic.game';
-        const PRIVATE_KEY = process.env.FAUCET_PRIVATE_KEY; // Your test wallet private key
-        const AMOUNT = process.env.FAUCET_AMOUNT || '10'; // 10 SONIC
+        const PRIVATE_KEY = process.env.VITE_FAUCET_PRIVATE_KEY; // Your test wallet private key
+        const AMOUNT = process.env.VITE_FAUCET_AMOUNT || '10'; // 10 SONIC
 
         if (!PRIVATE_KEY) {
             throw new Error('Faucet private key not configured');
@@ -68,6 +130,9 @@ exports.handler = async (event, context) => {
         
         // Wait for confirmation
         const receipt = await tx.wait();
+        
+        // Record this request for rate limiting
+        await recordRequest(userAddress);
         
         return {
             statusCode: 200,

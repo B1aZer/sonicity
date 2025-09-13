@@ -30,6 +30,12 @@ export const config = {
     dev: {
         mode: import.meta.env.VITE_DEV_MODE === 'true',
         hotReload: import.meta.env.VITE_HOT_RELOAD === 'true',
+    },
+    
+    // Faucet settings
+    faucet: {
+        amount: import.meta.env.VITE_FAUCET_AMOUNT || '10',
+        privateKey: import.meta.env.VITE_FAUCET_PRIVATE_KEY
     }
 };
 

@@ -2,7 +2,7 @@ import { BasePage } from './BasePage.js';
 import { WalletManager, formatAddress } from '../js/utils/wallet.js';
 import Logger from '../js/utils/logger.js';
 import { Modal } from '../js/utils/modal.js';
-import { getCurrentNetworkConfig } from '../js/utils/config.js';
+import { getCurrentNetworkConfig, config } from '../js/utils/config.js';
 import { ethers } from 'ethers';
 
 export class FaucetPage extends BasePage {
@@ -138,6 +138,9 @@ export class FaucetPage extends BasePage {
                 
                 // Refresh balance after successful request
                 setTimeout(() => this.loadFaucetData(), 2000);
+            } else if (response.status === 429) {
+                // Rate limited
+                this.modal.error(result.error || `Rate limit reached. Try again in ${result.daysLeft || 'a few'} days.`);
             } else {
                 this.modal.error(result.error || 'Faucet request failed');
             }
@@ -150,19 +153,20 @@ export class FaucetPage extends BasePage {
             const requestBtn = this.element.querySelector('.request-btn');
             if (requestBtn) {
                 requestBtn.disabled = false;
-                requestBtn.textContent = 'Request 10 SONIC';
+                requestBtn.textContent = `Request ${config.faucet.amount} SONIC`;
             }
         }
     }
 
     render() {
         const networkConfig = getCurrentNetworkConfig();
+        const faucetAmount = config.faucet.amount;
         
         this.element.innerHTML = `
             <div class="page-container">
                 <h1>Testnet Faucet</h1>
                 <p class="page-description">
-                    Get free testnet SONIC tokens to start playing the game! You can request 10 SONIC tokens.
+                    Get free testnet SONIC tokens to start playing the game! You can request ${faucetAmount} SONIC tokens.
                 </p>
                 
                 <div class="page-section">
@@ -185,11 +189,11 @@ export class FaucetPage extends BasePage {
                 
                 <div class="page-section">
                     <h2>Request Tokens</h2>
-                    <p class="section-description">Click the button below to receive 10 testnet SONIC tokens</p>
+                    <p class="section-description">Click the button below to receive ${faucetAmount} testnet SONIC tokens</p>
                     
                     <div class="btn-container">
                         <button class="btn btn-primary request-btn" data-state="canRequest">
-                            Request 10 SONIC
+                            Request ${faucetAmount} SONIC
                         </button>
                         <button class="btn btn-secondary refresh-btn">
                             Refresh Balance
@@ -207,7 +211,8 @@ export class FaucetPage extends BasePage {
                 <div class="page-section">
                     <h2>Faucet Information</h2>
                     <ul>
-                        <li><strong>Amount per request:</strong> 10 SONIC</li>
+                        <li><strong>Amount per request:</strong> ${faucetAmount} SONIC</li>
+                        <li><strong>Rate limit:</strong> Once per week per wallet address</li>
                         <li><strong>Network:</strong> ${networkConfig.name}</li>
                         <li><strong>Use case:</strong> Testing and playing the game</li>
                         <li><strong>Note:</strong> These are testnet tokens with no real value</li>
@@ -219,7 +224,7 @@ export class FaucetPage extends BasePage {
                     <ol>
                         <li><strong>Connect Wallet:</strong> Use the wallet button in the navbar</li>
                         <li><strong>Correct Network:</strong> Make sure you're on ${networkConfig.name}</li>
-                        <li><strong>Request Tokens:</strong> Click "Request 10 SONIC" above</li>
+                        <li><strong>Request Tokens:</strong> Click "Request ${faucetAmount} SONIC" above</li>
                         <li><strong>Start Playing:</strong> Go back to the game once you have tokens!</li>
                     </ol>
                 </div>
