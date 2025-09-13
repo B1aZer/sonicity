@@ -20,6 +20,7 @@ import { RevenueHubPage } from '../../pages/RevenueHubPage.js';
 import { TavernPage } from '../../pages/TavernPage.js';
 import { TacticsCenterPage } from '../../pages/TacticsCenterPage.js';
 import { YieldStationPage } from '../../pages/YieldStationPage.js';
+import { FaucetPage } from '../../pages/FaucetPage.js';
 import Logger from '../utils/logger.js';
 
 export class Router {
@@ -31,10 +32,10 @@ export class Router {
         this.game = null;
         
         // Pages that don't require wallet connection
-        this.publicPages = new Set(['access']);
+        this.publicPages = new Set(['access', 'faucet']);
         
         // Pages that don't require player initialization
-        this.uninitializedPages = new Set(['', 'access']);
+        this.uninitializedPages = new Set(['', 'access', 'faucet']);
         
         // Pages that should NOT be cached (complex pages with heavy resources)
         this.noCachePages = new Set(['', 'overview']); // StartPage and GamePage
@@ -61,7 +62,8 @@ export class Router {
             'revenue-hub': RevenueHubPage,
             'tavern': TavernPage,
             'tactics-center': TacticsCenterPage,
-            'yield-station': YieldStationPage
+            'yield-station': YieldStationPage,
+            'faucet': FaucetPage
         };
     }
 
@@ -241,7 +243,8 @@ export class Router {
             'stake': () => import('../../pages/StakeHubPage.js').then(m => m.StakePage),
             'tavern': () => import('../../pages/TavernPage.js').then(m => m.TavernPage),
             'tactics-center': () => import('../../pages/TacticsCenterPage.js').then(m => m.TacticsCenterPage),
-            'yield-station': () => import('../../pages/YieldStationPage.js').then(m => m.YieldStationPage)
+            'yield-station': () => import('../../pages/YieldStationPage.js').then(m => m.YieldStationPage),
+            'faucet': () => import('../../pages/FaucetPage.js').then(m => m.FaucetPage)
         };
     }
 

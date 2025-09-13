@@ -168,6 +168,7 @@ export class AccessPage extends BasePage {
                     <ol>
                         <li><strong>Connect Wallet:</strong> Use the wallet button in the navbar</li>
                         <li><strong>Add Network:</strong> Click "Add Network to MetaMask" above</li>
+                        <li><strong>Get Testnet Tokens:</strong> <a href="/faucet" class="btn btn-small btn-secondary">Faucet</a></li>
                         <li><strong>Start Playing:</strong> Build your district and compete!</li>
                     </ol>
                 </div>
