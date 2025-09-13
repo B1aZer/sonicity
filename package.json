@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "NODE_ENV=production node scripts/optimize-assets.js && cd contracts && npm install && npm run compile && cd .. && vite build",
+    "build": "node scripts/optimize-assets.js && cd contracts && npm install && npm run compile && cd .. && vite build",
     "optimize-assets": "node scripts/optimize-assets.js",
     "preview": "vite preview"
   },
