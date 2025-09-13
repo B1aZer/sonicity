@@ -17,7 +17,7 @@ export default defineConfig({
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true, // Remove console.log statements
+        drop_console: false, // Remove console.log statements
         drop_debugger: true, // Remove debugger statements
         pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
         // Advanced compression for better obfuscation
@@ -33,7 +33,7 @@ export default defineConfig({
         passes: 3 // Multiple passes for better compression
       },
       mangle: {
-        toplevel: true,
+        toplevel: false, // enable later
         properties: {
           regex: /^_/
         },
