@@ -21,10 +21,12 @@ export class PropsManager {
         try {
             Logger.info('Loading all props...');
             
-            // Load each prop type
-            for (const [propType, config] of Object.entries(PROPS)) {
-                await this.loadPropType(propType, config);
-            }
+            // Load all prop types in parallel for better performance
+            const loadPromises = Object.entries(PROPS).map(([propType, config]) => 
+                this.loadPropType(propType, config)
+            );
+            
+            await Promise.all(loadPromises);
             
             Logger.info(`✅ All props loaded successfully. Total props: ${this.props.size}`);
         } catch (error) {
@@ -38,6 +40,12 @@ export class PropsManager {
     async loadPropType(propType, config) {
         try {
             Logger.info(`Loading prop type: ${config.name} (${config.instances.length} instances)`);
+            
+            // Skip missing assets to avoid 404 errors and delays
+            if (config.model === 'assets/rock.glb' || config.model === 'assets/bush.glb') {
+                Logger.warn(`Skipping missing asset: ${config.model} (404 error)`);
+                return;
+            }
             
             // Load the model if not already cached
             let model = this.propModels.get(config.model);

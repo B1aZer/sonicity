@@ -702,6 +702,48 @@ export class SceneManager {
     }
 
     /**
+     * Setup audio asynchronously (non-blocking)
+     */
+    setupAudioAsync() {
+        // Create audio listener
+        const listener = new THREE.AudioListener();
+        this.camera.add(listener);
+
+        // Create bird sound
+        this.birdSound = new THREE.Audio(listener);
+
+        // Load bird sound asynchronously (non-blocking)
+        this.loadBirdSoundAsync();
+    }
+    
+    async loadBirdSoundAsync() {
+        try {
+            const audioLoader = new THREE.AudioLoader();
+            const buffer = await new Promise((resolve, reject) => {
+                audioLoader.load(
+                    'assets/sound/bird.wav',
+                    resolve,
+                    (xhr) => {
+                        // Reduced logging frequency for performance
+                        if (xhr.loaded % 10000 === 0) {
+                            Logger.info('Loading bird sound:', (xhr.loaded / xhr.total * 100) + '% loaded');
+                        }
+                    },
+                    reject
+                );
+            });
+            
+            this.birdSound.setBuffer(buffer);
+            this.birdSound.setLoop(true);
+            this.birdSound.setVolume(0.3);
+            this.birdSound.play();
+            Logger.info('Bird sound loaded and playing');
+        } catch (error) {
+            Logger.error('Error loading bird sound:', error);
+        }
+    }
+
+    /**
      * Logs current camera position and rotation
      */
     logCameraPosition() {
@@ -1070,8 +1112,8 @@ export class SceneManager {
             // Setup window resize handler
             this.setupWindowResizeHandler();
             
-            // Setup audio
-            this.setupAudio();
+            // Setup audio (non-blocking)
+            this.setupAudioAsync();
 
             // Add debug GUI
             this.setupDebugUI();
