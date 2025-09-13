@@ -136,10 +136,20 @@ async function main() {
   const districtBuildingsProxyAddress = await districtBuildingsProxy.getAddress();
   console.log("DistrictBuildings proxy deployed to:", districtBuildingsProxyAddress);
 
-  // Deploy GridBuildings using the reusable function
+  // Deploy BattleSystem proxy
+  console.log("Deploying BattleSystem proxy...");
+  const battleSystemProxy = await upgrades.deployProxy(BattleSystem, [], {
+    kind: 'uups',
+    initializer: 'initialize',
+  });
+  console.log("Waiting for BattleSystem proxy deployment...");
+  await battleSystemProxy.waitForDeployment();
+  const battleSystemProxyAddress = await battleSystemProxy.getAddress();
+  console.log("BattleSystem proxy deployed to:", battleSystemProxyAddress);
+
+  // Deploy GridBuildings using the reusable function (without altar address initially)
   const gridAddresses = await deployGridBuildings({
     gameStateProxy: gameStateProxyAddress,
-    altarProxy: altarProxyAddress,
     battleSystemProxy: battleSystemProxyAddress,
     districtBuildingsProxy: districtBuildingsProxyAddress
   });
@@ -161,16 +171,10 @@ async function main() {
   const altarImplAddress = altarAddresses.altarImpl;
   const altarProxyAddress = altarAddresses.altarProxy;
 
-  // Deploy BattleSystem proxy
-  console.log("Deploying BattleSystem proxy...");
-  const battleSystemProxy = await upgrades.deployProxy(BattleSystem, [], {
-    kind: 'uups',
-    initializer: 'initialize',
-  });
-  console.log("Waiting for BattleSystem proxy deployment...");
-  await battleSystemProxy.waitForDeployment();
-  const battleSystemProxyAddress = await battleSystemProxy.getAddress();
-  console.log("BattleSystem proxy deployed to:", battleSystemProxyAddress);
+  // Now set the altar address in GridBuildings (after altar is deployed)
+  console.log("Setting Altar address in GridBuildings...");
+  const gridBuildingsProxy = await ethers.getContractAt("GridBuildings", gridBuildingsProxyAddress);
+  await gridBuildingsProxy.setAltarAddress(altarProxyAddress);
 
   // Deploy HeroNFT proxy
   console.log("Deploying HeroNFT proxy...");
@@ -209,10 +213,7 @@ async function main() {
   console.log("Setting up contract interactions...");
   
   // Altar setup is handled by the deployAltar function
-  
-  // Set BattleSystem address in GameState (if not already set by deployAltar)
-  console.log("Setting BattleSystem address in GameState...");
-  await gameStateProxy.setBattleSystemAddress(battleSystemProxyAddress);
+  // GridBuildings setup is handled by the deployGridBuildings function
   
   // Set GameState address in DistrictBuildings
   console.log("Setting GameState address in DistrictBuildings...");
@@ -221,8 +222,6 @@ async function main() {
   // Set DistrictBuildings address in GameState
   console.log("Setting DistrictBuildings address in GameState...");
   await gameStateProxy.setDistrictBuildingsAddress(districtBuildingsProxyAddress);
-
-  // GridBuildings setup is handled by the deployGridBuildings function
 
   // Set GameState address in BattleSystem
   console.log("Setting GameState address in BattleSystem...");
