@@ -4,6 +4,7 @@
   "description": "Smart contracts for Sonicity game",
   "main": "index.js",
   "scripts": {
+    "compile": "npx hardhat compile",
     "test": "hardhat test",
     "node": "npx hardhat node",
     "anvil:sonic": "./scripts/start-anvil-sonic.sh",
