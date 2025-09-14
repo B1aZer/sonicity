@@ -1123,15 +1123,18 @@ export class StakePage extends BasePage {
                 await this.contracts.altar.stake(tokenId, tier, collection);
             }
             
-            // Close staking loading modal
-            stakingModal.close();
             
             // Reload data
             await this.loadUserData();
-            
+
+            // Close staking loading modal
+            stakingModal.close();
+
             // Show success modal
             this.modal.success('NFT staked successfully!', { title: 'NFT Staked!' });
         } catch (e) {
+            // Close staking loading modal
+            stakingModal.close();
             Logger.error('Error staking NFT:', e);
             this.modal.error(e.message || 'Failed to stake NFT', { title: 'Staking Failed' });
         }
