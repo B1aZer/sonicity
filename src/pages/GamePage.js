@@ -237,6 +237,7 @@ export class GamePage extends BasePage {
 
             // Place district buildings
             try {
+                scenePerformanceLogger.start('district-buildings-placement');
                 // Get built district buildings from contract
                 const builtDistrictBuildings = await this.contracts.districtBuildings.getBuiltBuildings();
                 Logger.info('Retrieved district buildings:', builtDistrictBuildings);
@@ -264,16 +265,19 @@ export class GamePage extends BasePage {
                         }
                     }
                 }
+                scenePerformanceLogger.end('district-buildings-placement');
             } catch (error) {
                 Logger.error('Error placing district buildings:', error);
             }
 
             // Set up click handlers for the buildings
+            scenePerformanceLogger.start('click-handlers-setup');
             if (this.game.renderer && this.game.renderer.domElement) {
                 this.setupClickHandlers();
             } else {
                 Logger.error('Renderer not initialized');
             }
+            scenePerformanceLogger.end('click-handlers-setup');
 
             Logger.info('Game setup complete (loading screen still visible)');
         } catch (error) {

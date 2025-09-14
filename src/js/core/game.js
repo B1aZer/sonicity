@@ -81,7 +81,9 @@ export class Game {
         this.gridHelper = gridHelper;
         
         // Initialize music manager with camera for 3D audio
+        scenePerformanceLogger.start('music-manager-init');
         musicManager.init(this.camera);
+        scenePerformanceLogger.end('music-manager-init');
         
         // Set up progress tracking for asset loading
         this.globalAssetCache.onProgress((progress, loaded, total, status) => {
@@ -89,9 +91,12 @@ export class Game {
         });
         
         // Load assets first (will use global cache)
+        scenePerformanceLogger.start('asset-loading');
         await this.globalAssetCache.loadAssets();
+        scenePerformanceLogger.end('asset-loading');
         
         // Now create building manager after assets are loaded
+        scenePerformanceLogger.start('building-manager-creation');
         this.buildingManager = new BuildingManager(
             this.gridManager, 
             this.gameStateContract, 
@@ -100,27 +105,38 @@ export class Game {
             this.gridBuildingsContract,
             this.districtBuildingsContract
         );
+        scenePerformanceLogger.end('building-manager-creation');
         scenePerformanceLogger.start('building-manager-set-scene');
         this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.globalAssetCache);
         scenePerformanceLogger.end('building-manager-set-scene');
         
         // Initialize cosmetic manager
+        scenePerformanceLogger.start('cosmetic-manager-creation');
         this.cosmeticManager = new CosmeticManager(this.scene, this.cosmeticItemsContract);
+        scenePerformanceLogger.end('cosmetic-manager-creation');
         
         // Initialize patrol manager
+        scenePerformanceLogger.start('patrol-manager-creation');
         this.patrolManager = new PatrolManager(this.scene, this.globalAssetCache, this.battleSystemContract);
+        scenePerformanceLogger.end('patrol-manager-creation');
         
         // Set up input handlers
         Logger.info("Game: Setting up input handlers");
+        scenePerformanceLogger.start('input-handlers-setup');
         this.inputHandler.setupEventListeners();
+        scenePerformanceLogger.end('input-handlers-setup');
         
         // Show UI and update initial state
         Logger.info("Game: Setting up UI");
+        scenePerformanceLogger.start('ui-setup');
         this.showUI();
+        scenePerformanceLogger.end('ui-setup');
         
         // Start the game loop
         Logger.info("Game: Starting game loop");
+        scenePerformanceLogger.start('game-loop-start');
         this.start();
+        scenePerformanceLogger.end('game-loop-start');
         
         Logger.info("Game: Initialization complete");
     }
