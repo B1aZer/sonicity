@@ -5,6 +5,7 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { AccessControl } from '../js/utils/accessControl.js';
 import { BasePage } from './BasePage.js';
+import scenePerformanceLogger from '../js/utils/scenePerformanceLogger.js';
 import { BUILDINGS, BUILDING_ENTER_DELAY } from '../js/utils/constants.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { AudioManager } from '../js/managers/audioManager.js';
@@ -28,25 +29,39 @@ export class GamePage extends BasePage {
     async onInitialized(walletResult) {
         try {
             Logger.info('GamePage onInitialized called with wallet:', walletResult);
+            scenePerformanceLogger.start('game-page-init');
             
             // All contracts are already initialized by BasePage.initializeContracts()
             // Now setup the game since contracts are ready
+            scenePerformanceLogger.start('game-setup');
             await this.setupGame();
+            scenePerformanceLogger.end('game-setup');
             
             // Load all wallet-dependent data here (like other pages)
+            scenePerformanceLogger.start('player-data-loading');
             await this.loadPlayerData();
+            scenePerformanceLogger.end('player-data-loading');
             
             // Update resource display
+            scenePerformanceLogger.start('resource-display-update');
             await this.updateResourceDisplay();
+            scenePerformanceLogger.end('resource-display-update');
             
             // Check for outpost warnings on page load
+            scenePerformanceLogger.start('outpost-warning-check');
             await this.checkOutpostWarning();
+            scenePerformanceLogger.end('outpost-warning-check');
             
             // Hide loading screen after everything is completely loaded
+            scenePerformanceLogger.start('loading-screen-hide');
             const renderDiv = this.element.querySelector('#renderDiv');
             if (renderDiv) {
                 LoadingScreen.hide(renderDiv);
             }
+            scenePerformanceLogger.end('loading-screen-hide');
+            
+            scenePerformanceLogger.end('game-page-init');
+            scenePerformanceLogger.milestone('game-page-complete');
             
             Logger.info('GamePage initialized successfully');
         } catch (error) {
@@ -185,14 +200,20 @@ export class GamePage extends BasePage {
 
     async setupGame() {
         try {
+            scenePerformanceLogger.start('game-creation');
             const renderDiv = this.element.querySelector('#renderDiv');
             this.game = new Game(renderDiv, this.contracts);
+            scenePerformanceLogger.end('game-creation');
             
             // Show loading screen before starting initialization
+            scenePerformanceLogger.start('loading-screen-show');
             LoadingScreen.show(renderDiv);
+            scenePerformanceLogger.end('loading-screen-show');
             
             // Initialize the game and wait for it to complete
+            scenePerformanceLogger.start('game-init-call');
             await this.game.init();
+            scenePerformanceLogger.end('game-init-call');
 
             // Update resource display initially
             await this.updateResourceDisplay();

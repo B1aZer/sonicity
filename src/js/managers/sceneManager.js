@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Logger from '../utils/logger.js';
+import scenePerformanceLogger from '../utils/scenePerformanceLogger.js';
 import { getConfiguredGLTFLoader } from '../utils/gltfLoader.js';
 import { GrassBlades } from '../objects/GrassBlades.js';
 import { River } from '../objects/River.js';
 import { Trees } from '../objects/Trees.js';
-import { SHOW_PERFORMANCE_MONITOR } from '../utils/constants.js';
 import { config } from '../utils/config.js';
 import GUI from 'lil-gui';
 import { BillboardManager } from './billboardManager.js';
@@ -435,18 +435,20 @@ export class SceneManager {
         monitor.style.fontSize = '12px';
         monitor.style.borderRadius = '5px';
         monitor.style.zIndex = '1000';
-        monitor.style.display = 'none'; // Hidden by default instead of SHOW_PERFORMANCE_MONITOR
+        monitor.style.display = config.features.performanceMonitor ? 'block' : 'none';
         renderDiv.appendChild(monitor);
         return monitor;
     }
 
     setupKeyBindings() {
-        this.boundOnKeyDown = (event) => {
-            if (event.key === 'p') { // Using 'p' key for performance monitor toggle
-                this.togglePerformanceMonitor();
-            }
-        };
-        window.addEventListener('keydown', this.boundOnKeyDown);
+        if (config.features.performanceMonitor) {
+            this.boundOnKeyDown = (event) => {
+                if (event.key === 'p') { // Using 'p' key for performance monitor toggle
+                    this.togglePerformanceMonitor();
+                }
+            };
+            window.addEventListener('keydown', this.boundOnKeyDown);
+        }
 
         // Debug GUI hotkey
         this.boundOnDebugKeyDown = (event) => {
@@ -517,8 +519,10 @@ export class SceneManager {
         renderer.toneMappingExposure = 1.2;
         renderDiv.appendChild(renderer.domElement);
 
-        // Create performance monitor
-        this.performanceMonitor = this.createPerformanceMonitor(renderDiv);
+        // Create performance monitor only if enabled
+        if (config.features.performanceMonitor) {
+            this.performanceMonitor = this.createPerformanceMonitor(renderDiv);
+        }
         
         // Setup key bindings
         this.setupKeyBindings();
@@ -1032,37 +1036,54 @@ export class SceneManager {
      * @returns {Promise<Object>} Scene components
      */
     async setupScene(renderDiv) {
+        scenePerformanceLogger.start('scene-setup');
         try {
             // Create scene
+            scenePerformanceLogger.start('scene-creation');
             this.scene = new THREE.Scene();
+            scenePerformanceLogger.end('scene-creation');
             
             // Add sky
+            scenePerformanceLogger.start('sky-creation');
             this.sky = this.createSky();
             this.scene.add(this.sky);
+            scenePerformanceLogger.end('sky-creation');
             
             // Add sun and its light
+            scenePerformanceLogger.start('sun-creation');
             const { sun, sunLight } = this.createSun();
             this.sun = sun;
             this.lights.sunLight = sunLight;
             this.scene.add(this.sun);
             this.scene.add(this.lights.sunLight);
+            scenePerformanceLogger.end('sun-creation');
             
             // Setup camera
+            scenePerformanceLogger.start('camera-setup');
             this.camera = this.setupCamera(renderDiv);
+            scenePerformanceLogger.end('camera-setup');
             
             // Setup renderer
+            scenePerformanceLogger.start('renderer-setup');
             this.renderer = this.setupRenderer(renderDiv);
+            scenePerformanceLogger.end('renderer-setup');
             
             // Setup controls
+            scenePerformanceLogger.start('controls-setup');
             this.controls = this.setupControls(this.camera, this.renderer);
+            scenePerformanceLogger.end('controls-setup');
             
             // Create ground plane
+            scenePerformanceLogger.start('ground-plane-creation');
             this.groundPlane = await this.createGroundPlane();
             this.scene.add(this.groundPlane);
+            scenePerformanceLogger.end('ground-plane-creation');
             
             // Create grid helper
+            scenePerformanceLogger.start('grid-helper-creation');
             this.gridHelper = this.createGridHelper();
             this.scene.add(this.gridHelper);
+            scenePerformanceLogger.end('grid-helper-creation');
             
             // Initialize billboard manager
             this.billboardManager = new BillboardManager(this.scene);
@@ -1086,8 +1107,10 @@ export class SceneManager {
             // this.trees = new Trees(this.scene, this.gridManager);
 
             // Create props manager for decorative objects
+            scenePerformanceLogger.start('props-loading');
             this.propsManager = new PropsManager(this.scene, this.assetLoader);
             await this.propsManager.loadAllProps();
+            scenePerformanceLogger.end('props-loading');
 
             // Create fog manager for atmospheric effects
             this.fogManager = new FogManager(this.scene);
@@ -1124,6 +1147,9 @@ export class SceneManager {
                 totalSize: this.gridManager.getTotalSize()
             });
             
+            scenePerformanceLogger.end('scene-setup');
+            scenePerformanceLogger.milestone('scene-setup-complete');
+            
             return { 
                 scene: this.scene,
                 camera: this.camera,
@@ -1135,6 +1161,7 @@ export class SceneManager {
             };
         } catch (error) {
             Logger.error('Error setting up scene:', error);
+            scenePerformanceLogger.milestone('scene-setup-error', { error: error.message });
             throw error;
         }
     }
@@ -1187,7 +1214,7 @@ export class SceneManager {
         //     this.trees.update();
         // }
 
-        if (config.features.performanceMonitor) {
+        if (config.features.performanceMonitor && this.performanceMonitor) {
             this.updatePerformanceMonitor();
         }
     }
@@ -1308,4 +1335,8 @@ export class SceneManager {
         };
         this.boundOnWindowResize = null;
     }
-} 
+}
+
+// Add global 3D scene performance debugging functions
+window.get3DPerformanceData = () => scenePerformanceLogger.getSceneSummary();
+window.get3DTimings = () => scenePerformanceLogger.timings; 

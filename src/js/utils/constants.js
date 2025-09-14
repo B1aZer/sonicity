@@ -28,8 +28,7 @@ export const CONTRACT_CONFIG = {
     FARM_MAX_SUPPLY: 5000
 };
 
-// Performance monitoring
-export const SHOW_PERFORMANCE_MONITOR = true;
+// Performance monitoring - now controlled via environment variables in config.js
 
 // UI/UX timing constants
 export const BUILDING_ENTER_DELAY = 450; // ms - Delay between sound and page navigation

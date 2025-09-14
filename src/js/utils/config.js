@@ -23,6 +23,7 @@ export const config = {
     features: {
         debug: import.meta.env.VITE_ENABLE_DEBUG === 'true',
         performanceMonitor: import.meta.env.VITE_ENABLE_PERFORMANCE_MONITOR === 'true',
+        performanceLogging: import.meta.env.VITE_ENABLE_PERFORMANCE_LOGGING === 'true',
         analytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
     },
     
