@@ -534,31 +534,33 @@ export class StakePage extends BasePage {
     }
 
     async claimAllInTier(tier) {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Claiming resources...');
+        
         try {
-            // Show loading modal
-            const loadingModal = this.modal.loading('Claiming resources...');
-            
             await this.contracts.gridBuildings.collectResourcesByType(tier);
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadUserData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success modal
             this.modal.success('Resources claimed successfully!', { title: 'Resources Collected!' });
         } catch (e) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error claiming resources:', e);
             this.modal.error(e.message || 'Failed to claim resources', { title: 'Collection Failed' });
         }
     }
 
     async rechargeNInTier(tier, n) {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading(`Charging ${n} building(s)...`);
+        
         try {
-            // Show loading modal
-            const loadingModal = this.modal.loading(`Charging ${n} building(s)...`);
-            
             // Find N staked buildings in this tier, prioritize at cap, then oldest
             const items = this.state.byTier[tier].filter(i => i.isStaked && !i.damaged);
             const atCap = items.filter(b => b.isAtCap);
@@ -569,15 +571,17 @@ export class StakePage extends BasePage {
             
             await this.contracts.gridBuildings.rechargeBuildings(selected.map(b => b.id));
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadUserData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success modal
             this.modal.success('Buildings charged successfully!', { title: 'Buildings Charged!' });
         } catch (e) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error charging buildings:', e);
             this.modal.error(e.message || 'Failed to charge buildings', { title: 'Charge Failed' });
         }
@@ -1185,6 +1189,9 @@ export class StakePage extends BasePage {
     }
     
     async upgradeBuilding(item) {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Upgrading building...');
+        
         try {
             // Get upgrade info first to show appropriate error messages
             let upgradeInfo = null;
@@ -1196,26 +1203,24 @@ export class StakePage extends BasePage {
             
             // Check if upgrade is possible and show specific error if not
             if (upgradeInfo && !upgradeInfo.canUpgrade) {
+                loadingModal.close();
                 this.modal.error(upgradeInfo.errorMessage || 'Cannot upgrade building', { title: 'Upgrade Not Available' });
                 return;
             }
             
-            // Show loading modal
-            let loadingMessage = 'Upgrading building...';
-            
-            const loadingModal = this.modal.loading(loadingMessage);
-            
             await this.contracts.gridBuildings.upgradeBuilding(item.id);
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadUserData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success modal
             this.modal.success('Building upgraded successfully!', { title: 'Building Upgraded!' });
         } catch (e) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error upgrading building:', e);
             
             // Show specific error messages based on common failure reasons
@@ -1235,21 +1240,23 @@ export class StakePage extends BasePage {
     }
 
     async claimBuilding(item) {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Claiming resources...');
+        
         try {
-            // Show loading modal
-            const loadingModal = this.modal.loading('Claiming resources...');
-            
             await this.contracts.gridBuildings.collectResources(item.id);
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadUserData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success modal
             this.modal.success('Resources claimed successfully!', { title: 'Resources Collected!' });
         } catch (e) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error claiming resources:', e);
             this.modal.error(e.message || 'Failed to claim resources', { title: 'Collection Failed' });
         }
@@ -1376,24 +1383,26 @@ export class StakePage extends BasePage {
     }
 
     async burnNFT(tokenId, contractAddress) {
-        try {
-            // Show confirmation dialog
-            const result = await this.modal.confirm(
-                'Are you sure you want to burn this NFT?<br><br>This will permanently destroy the NFT. This action cannot be undone.',
-                {
-                    title: 'Confirm Burn',
-                    confirmButtonText: 'Burn NFT',
-                    cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#dc3545',
-                    cancelButtonColor: '#6c757d'
-                }
-            );
-            
-            if (!result.isConfirmed) {
-                return; // User cancelled
+        // Show confirmation dialog
+        const result = await this.modal.confirm(
+            'Are you sure you want to burn this NFT?<br><br>This will permanently destroy the NFT. This action cannot be undone.',
+            {
+                title: 'Confirm Burn',
+                confirmButtonText: 'Burn NFT',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d'
             }
-            
-            const loadingModal = this.modal.loading('Burning NFT...');
+        );
+        
+        if (!result.isConfirmed) {
+            return; // User cancelled
+        }
+        
+        // Show loading modal IMMEDIATELY after confirmation
+        const loadingModal = this.modal.loading('Burning NFT...');
+        
+        try {
             
             // Determine which NFT contract to use based on contract address
             let nftContract;
@@ -1414,39 +1423,43 @@ export class StakePage extends BasePage {
             // Burn the NFT directly using the contract's burn function
             await nftContract.burn(tokenId);
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadUserData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success modal
             this.modal.success('NFT burned successfully!', { title: 'NFT Burned!' });
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error burning NFT:', error);
             this.modal.error(error.message || 'Failed to burn NFT', { title: 'Burn Failed' });
         }
     }
 
     async destroyBuilding(item) {
-        try {
-            // Show confirmation dialog for unstaking
-            const result = await this.modal.confirm(
-                'Are you sure you want to unstake this building?<br><br>This will unstake the NFT and preserve the building data.<br><br><strong>WARNING: Any unclaimed resources will be lost!</strong>',
-                {
-                    title: 'Confirm Unstake',
-                    confirmButtonText: 'Unstake Building',
-                    cancelButtonText: 'Cancel',
-                    confirmButtonColor: '#ffc107',
-                    cancelButtonColor: '#6c757d'
-                }
-            );
-            
-            if (!result.isConfirmed) {
-                return; // User cancelled
+        // Show confirmation dialog for unstaking
+        const result = await this.modal.confirm(
+            'Are you sure you want to unstake this building?<br><br>This will unstake the NFT and preserve the building data.<br><br><strong>WARNING: Any unclaimed resources will be lost!</strong>',
+            {
+                title: 'Confirm Unstake',
+                confirmButtonText: 'Unstake Building',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#ffc107',
+                cancelButtonColor: '#6c757d'
             }
-            
-            const loadingModal = this.modal.loading('Unstaking building...');
+        );
+        
+        if (!result.isConfirmed) {
+            return; // User cancelled
+        }
+        
+        // Show loading modal IMMEDIATELY after confirmation
+        const loadingModal = this.modal.loading('Unstaking building...');
+        
+        try {
             
             // Get NFT info for this building
             const nftInfo = await this.getNFTInfoForBuilding(item.id);
@@ -1487,17 +1500,22 @@ export class StakePage extends BasePage {
                 
                 // Unstake the NFT (preserves building data)
                 await this.contracts.altar.unstake(nftInfo.contractAddress, nftInfo.tokenId);
-                loadingModal.close();
-                this.modal.success('Building unstaked successfully!', { title: 'Success!' });
             } else {
                 // Fallback to direct destruction if no NFT found
                 await this.contracts.altar.destroyBuilding(item.id);
-                loadingModal.close();
-                this.modal.success('Building destroyed successfully!', { title: 'Success!' });
             }
             
+            // Reload data (keep loading modal open during this)
             await this.loadUserData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
+            
+            // Show success modal
+            this.modal.success('Building unstaked successfully!', { title: 'Success!' });
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error unstaking building:', error);
             this.modal.error(error.message || 'Failed to unstake building', { title: 'Action Failed' });
         }
