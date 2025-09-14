@@ -12,7 +12,7 @@ import "./GridBuildings.sol";
 
 // Interface for NFT contracts that support mintForAltar
 interface IMintableNFT {
-    function mintForAltar(address to, uint256 tokenId) external;
+    function mintForAltar(address to) external returns (uint256);
     function burnForAltar(uint256 tokenId) external;
 }
 
@@ -131,38 +131,42 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     /**
      * @dev Mint and stake an NFT in one operation
      * @param collection The address of the NFT collection to mint from
-     * @param tokenId The specific token ID to mint
      * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: DIAMOND_STATION, 3: REP_FORGE)
+     * @return tokenId The ID of the newly minted and staked NFT
      */
-    function mintAndStake(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) external payable nonReentrant {
+    function mintAndStake(address collection, GridBuildings.GridBuildingType buildingType) external payable nonReentrant returns (uint256) {
         require(approvedCollections[collection], "Collection not approved");
         
         // Step 1: Validate and collect payment
         _validateAndCollectPayment(buildingType);
         
         // Step 2: Mint the NFT directly to this contract
-        IMintableNFT(collection).mintForAltar(address(this), tokenId);
+        uint256 tokenId = IMintableNFT(collection).mintForAltar(address(this));
         
         // Step 3: Stake the NFT (shared logic)
         _stakeNFT(collection, tokenId, buildingType);
+        
+        return tokenId;
     }
 
     /**
      * @dev Mint an NFT with payment validation
      * @param collection The address of the NFT collection to mint from
-     * @param tokenId The specific token ID to mint
      * @param buildingType The type of building to create
+     * @return tokenId The ID of the newly minted NFT
      */
-    function mint(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) external payable {
+    function mint(address collection, GridBuildings.GridBuildingType buildingType) external payable returns (uint256) {
         require(approvedCollections[collection], "Collection not approved");
         
         // Validate and collect payment
         _validateAndCollectPayment(buildingType);
         
         // Mint to player
-        IMintableNFT(collection).mintForAltar(msg.sender, tokenId);
+        uint256 tokenId = IMintableNFT(collection).mintForAltar(msg.sender);
         
         emit NFTMinted(msg.sender, tokenId, collection, buildingType);
+        
+        return tokenId;
     }
 
     /**

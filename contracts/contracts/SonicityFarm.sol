@@ -25,6 +25,9 @@ contract SonicityFarm is ERC721Enumerable, Ownable {
     // Track how many NFTs each player has minted
     mapping(address => uint256) public playerMintCount;
 
+    // Token ID counter for sequential minting
+    uint256 private _tokenIdCounter = 1;
+
     // Events
     event PlayerMintLimitReached(address indexed player, uint256 totalMinted);
 
@@ -36,13 +39,15 @@ contract SonicityFarm is ERC721Enumerable, Ownable {
     /**
      * @dev Mint NFT for Altar contract - only callable by Altar contract
      * @param to The address to mint the NFT to
-     * @param tokenId The specific token ID to mint
+     * @return tokenId The ID of the newly minted NFT
      */
-    function mintForAltar(address to, uint256 tokenId) external {
+    function mintForAltar(address to) external returns (uint256) {
         require(msg.sender == altarContract, "Only Altar contract can call this function");
-        require(tokenId > 0 && tokenId <= MAX_SUPPLY, "Invalid token ID");
-        require(_ownerOf(tokenId) == address(0), "Token already exists");
+        require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
         require(playerMintCount[to] < MAX_MINT_PER_PLAYER, "Player has reached mint limit");
+        
+        uint256 tokenId = _tokenIdCounter;
+        _tokenIdCounter++;
         
         _safeMint(to, tokenId);
         
@@ -52,6 +57,8 @@ contract SonicityFarm is ERC721Enumerable, Ownable {
         if (playerMintCount[to] == MAX_MINT_PER_PLAYER) {
             emit PlayerMintLimitReached(to, playerMintCount[to]);
         }
+        
+        return tokenId;
     }
 
     /**
@@ -106,6 +113,14 @@ contract SonicityFarm is ERC721Enumerable, Ownable {
         ));
     }
     
+    /**
+     * @dev Get current token ID counter (for debugging)
+     * @return uint256 The current token ID counter
+     */
+    function getTokenIdCounter() external view returns (uint256) {
+        return _tokenIdCounter;
+    }
+
     // Withdraw funds from contract
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
