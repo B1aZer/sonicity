@@ -5,6 +5,7 @@ import { BasePage } from './BasePage.js';
 import { StatusComponent } from '../components/StatusComponent.js';
 import { Modal } from '../js/utils/modal.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
+import { ContractErrorHandler } from '../js/utils/contractErrorHandler.js';
 import { ethers } from 'ethers';
 
 import('../styles/stake-hub-page.css');
@@ -1271,9 +1272,10 @@ export class StakePage extends BasePage {
         console.log(`[DEBUG] mintBuilding called with:`, { tier, price, priceRaw, resourceType, resourceName });
         const tierNames = ['House', 'Farm', 'Diamond Station', 'Rep Station', 'Yield Station'];
         
+        const tierName = tierNames[tier];
+        let loadingModal = null;
+        
         try {
-            const tierName = tierNames[tier];
-            
             // Check if user has enough resources
             if (resourceType === 4n) { // SONIC
                 // Check SONIC balance (native token balance)
@@ -1312,7 +1314,7 @@ export class StakePage extends BasePage {
                 }
             }
             
-            const loadingModal = this.modal.loading(`Minting ${tierName.toLowerCase()}...`);
+            loadingModal = this.modal.loading(`Minting ${tierName.toLowerCase()}...`);
             
             // Determine which NFT contract to use based on tier
             let nftContract, contractAddress;
@@ -1378,7 +1380,14 @@ export class StakePage extends BasePage {
             // Show success modal
             this.modal.success(`${tierName} minted successfully!`, { title: 'Building Minted!' });
         } catch (error) {
-            this.modal.error(error.message || `Failed to mint ${tierNames[tier].toLowerCase()}`, { title: 'Minting Failed' });
+            // Close loading modal on error
+            if (loadingModal) {
+                loadingModal.close();
+            }
+            
+            // Get user-friendly error message and show it
+            const userMessage = ContractErrorHandler.getErrorMessage(error);
+            this.modal.error(userMessage, { title: 'Minting Failed' });
         }
     }
 

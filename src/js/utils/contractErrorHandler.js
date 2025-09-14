@@ -1,69 +1,99 @@
 import Logger from './logger.js';
 
 /**
- * Centralized contract error handler that processes smart contract revert messages
- * and provides user-friendly error messages
+ * Simple contract error handler that returns user-friendly error messages
  */
 export class ContractErrorHandler {
     
     /**
-     * Process contract error and return user-friendly message
+     * Get user-friendly error message from contract error
      * @param {Error} error - The error from contract call
-     * @param {string} operation - The operation being performed (e.g., "resolve battle", "train troops")
      * @returns {string} User-friendly error message
      */
-    static processError(error, operation = 'operation') {
-        Logger.error(`Contract error in ${operation}:`, error);
+    static getErrorMessage(error) {
+        Logger.error('Contract error:', error);
         
-        // Extract the actual revert message from the error
-        const revertMessage = this.extractRevertMessage(error);
-        
-        if (revertMessage) {
-            // Return the contract's revert message directly - it's already user-friendly
-            return revertMessage;
-        }
-        
-        // If we have a missing revert data error, try to provide context-specific message
         const errorString = error.message || error.toString();
-        if (errorString.includes('missing revert data')) {
-            const contextMessage = this.getKnownErrorMessage(errorString);
-            if (contextMessage !== 'Transaction failed - please check your resources and try again') {
-                return contextMessage;
-            }
+        
+        // Extract revert message if available
+        const revertMessage = this.extractRevertMessage(errorString);
+        if (revertMessage) {
+            return this.makeUserFriendly(revertMessage);
         }
         
-        // Fallback to generic error message if no specific revert message
-        return `Failed to ${operation}. Please try again.`;
+        // Handle common blockchain errors
+        return this.handleCommonErrors(errorString);
+    }
+    
+    /**
+     * Make contract revert message user-friendly
+     * @param {string} revertMessage - The revert message from contract
+     * @returns {string} User-friendly message
+     */
+    static makeUserFriendly(revertMessage) {
+        const friendlyMessages = {
+            'Token already exists': 'This NFT has already been minted. Please refresh the page to see your latest NFTs.',
+            'Insufficient SONIC balance': 'You don\'t have enough SONIC tokens. Get more from the faucet or collect from buildings.',
+            'Insufficient balance': 'You don\'t have enough resources. Collect from your buildings or wait for more.',
+            'Building slot limit reached': 'You\'ve reached the maximum buildings for your tier. Upgrade your tier for more slots.',
+            'Tier not unlocked': 'You need to unlock this tier first. Complete the requirements.',
+            'NFT already staked': 'This NFT is already staked. Check your staked buildings.',
+            'NFT not approved': 'The NFT needs approval. Try the staking process again.',
+            'Battle already resolved': 'This battle has already been resolved. Check your battle history.',
+            'Cannot start battle': 'Cannot start battle. Make sure you have troops and no active battles.',
+            'Building already exists': 'This building already exists. Check your district buildings.',
+            'Cannot upgrade': 'Cannot upgrade. Check resources and building level.'
+        };
+        
+        // Return friendly message if available, otherwise return original
+        return friendlyMessages[revertMessage] || revertMessage;
+    }
+    
+    /**
+     * Handle common blockchain/wallet errors
+     * @param {string} errorString - The error string
+     * @returns {string} User-friendly error message
+     */
+    static handleCommonErrors(errorString) {
+        if (errorString.includes('User rejected the request')) {
+            return 'Transaction was cancelled. Please try again and approve the transaction.';
+        }
+        
+        if (errorString.includes('gas required exceeds allowance')) {
+            return 'Not enough gas. Increase your gas limit or check your SONIC balance.';
+        }
+        
+        if (errorString.includes('nonce too low')) {
+            return 'Transaction order issue. Please wait a moment and try again.';
+        }
+        
+        if (errorString.includes('network error')) {
+            return 'Network connection error. Check your internet and try again.';
+        }
+        
+        if (errorString.includes('missing revert data')) {
+            return 'Transaction failed. Please refresh the page and try again.';
+        }
+        
+        // Default fallback
+        return 'Transaction failed. Please try again.';
     }
     
     /**
      * Extract revert message from contract error
-     * @param {Error} error - The error object
+     * @param {string} errorString - The error string
      * @returns {string|null} The revert message or null if not found
      */
-    static extractRevertMessage(error) {
-        // Check if error has a reason property (ethers.js v6)
-        if (error.reason) {
-            return error.reason;
-        }
-        
-        // Check if error has a shortMessage property (ethers.js v6)
-        if (error.shortMessage) {
-            return error.shortMessage;
-        }
-        
-        // Common patterns for revert messages in different environments
+    static extractRevertMessage(errorString) {
+        // Common patterns for revert messages
         const patterns = [
             /reverted with reason string '([^']+)'/,  // Hardhat/Anvil
-            /execution reverted: ([^"]+)/,           // MetaMask
+            /execution reverted: "([^"]+)"/,         // MetaMask with quotes
+            /execution reverted: ([^"]+)/,           // MetaMask without quotes
             /VM Exception while processing transaction: reverted with reason string '([^']+)'/, // Hardhat
             /revert ([^"]+)/,                        // Generic
             /Error: ([^"]+)/,                        // Generic
-            /missing revert data.*action="([^"]+)"/, // ethers.js v6 missing revert data
-            /Battle already resolved/,               // Specific battle resolution error
         ];
-        
-        const errorString = error.message || error.toString();
         
         for (const pattern of patterns) {
             const match = errorString.match(pattern);
@@ -72,82 +102,18 @@ export class ContractErrorHandler {
             }
         }
         
-        // Handle specific known contract errors based on the operation context
-        if (errorString.includes('missing revert data')) {
-            return this.getKnownErrorMessage(errorString);
-        }
-        
-        // If no pattern matches, return null to use fallback
         return null;
     }
-    
-    /**
-     * Get known error messages for common contract operations
-     * @param {string} errorString - The error string
-     * @returns {string} A user-friendly error message
-     */
-    static getKnownErrorMessage(errorString) {
-        // Extract the method name from the transaction data if available
-        const methodPatterns = {
-            '0x617497cb': 'resolveBattle', // resolveBattle(address) method signature
-            '0x8b4ce637': 'startBattle',   // startBattle(uint256,uint256,uint256) method signature
-            '0x12345678': 'deployToGarrison', // deployToGarrison method signature (placeholder)
-            '0x87654321': 'trainTroops',   // trainTroops method signature (placeholder)
-        };
-        
-        // Check for method signatures in the transaction data
-        for (const [signature, method] of Object.entries(methodPatterns)) {
-            if (errorString.includes(signature)) {
-                switch (method) {
-                    case 'resolveBattle':
-                        return 'Battle has already been resolved or does not exist';
-                    case 'startBattle':
-                        return 'Cannot start battle - no opponent found or battle already in progress';
-                    case 'deployToGarrison':
-                        return 'Cannot deploy troops - battle not active or troops already deployed';
-                    case 'trainTroops':
-                        return 'Cannot train troops - insufficient resources or barracks not built';
-                }
-            }
-        }
-        
-        // Fallback to text-based detection
-        if (errorString.includes('resolveBattle') || errorString.includes('resolve battle')) {
-            return 'Battle has already been resolved or does not exist';
-        }
-        if (errorString.includes('Battle already resolved')) {
-            return 'Battle has already been resolved or does not exist';
-        }
-        if (errorString.includes('startBattle') || errorString.includes('start battle')) {
-            return 'Cannot start battle - no opponent found or battle already in progress';
-        }
-        if (errorString.includes('deployToGarrison') || errorString.includes('deploy to garrison')) {
-            return 'Cannot deploy troops - battle not active or troops already deployed';
-        }
-        if (errorString.includes('trainTroops') || errorString.includes('train troops')) {
-            return 'Cannot train troops - insufficient resources or barracks not built';
-        }
-        if (errorString.includes('buildDistrictBuilding') || errorString.includes('build district building')) {
-            return 'Cannot build - insufficient resources or building already exists';
-        }
-        if (errorString.includes('upgradeDistrictBuilding') || errorString.includes('upgrade district building')) {
-            return 'Cannot upgrade - insufficient resources or building at max level';
-        }
-        
-        return 'Transaction failed - please check your resources and try again';
-    }
-    
-    /**
-     * Handle contract error with modal display
-     * @param {Error} error - The error from contract call
-     * @param {string} operation - The operation being performed
-     * @param {Modal} modal - The modal instance to display error
-     * @returns {void}
-     */
-    static handleError(error, operation, modal) {
-        const userMessage = this.processError(error, operation);
-        modal.error(userMessage);
-    }
+}
+
+/**
+ * Simple utility function to get user-friendly error message
+ * Can be used anywhere without dependencies
+ * @param {Error} error - The error object
+ * @returns {string} User-friendly error message
+ */
+export function getContractErrorMessage(error) {
+    return ContractErrorHandler.getErrorMessage(error);
 }
 
 export default ContractErrorHandler;

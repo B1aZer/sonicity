@@ -323,7 +323,8 @@ export class BasePage {
      * @param {string} operation - The operation being performed
      */
     handleContractError(error, operation) {
-        ContractErrorHandler.handleError(error, operation, this.modal);
+        const userMessage = ContractErrorHandler.getErrorMessage(error);
+        this.modal.error(userMessage);
     }
 
     unmount() {
