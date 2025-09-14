@@ -125,6 +125,8 @@ export class CosmeticManager {
             const availableIds = await this.cosmeticItemsContract.getAvailableCosmetics(10);
             const playerCosmeticInstances = new Set();
             
+            // TODO: OPTIMIZATION - Check ownership for all cosmetics in parallel instead of sequential
+            // This could reduce cosmetic loading time by 70-80% for players with many cosmetics
             for (const cosmeticId of availableIds) {
                 // Check if player owns this cosmetic (like BuildingManager checks ownership)
                 const isOwned = await this.cosmeticItemsContract.ownsCosmetic(playerAddress, cosmeticId);

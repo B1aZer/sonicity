@@ -150,6 +150,8 @@ export class WorkshopPage extends BasePage {
             // Show loading modal
             const loadingModal = this.modal.loading('Repairing all damaged buildings...');
             
+            // TODO: OPTIMIZATION - Repair all buildings in parallel instead of sequential
+            // This could reduce repair time by 70-80% when repairing multiple buildings
             // Repair each building one by one
             for (const building of this.state.damagedBuildings) {
                 await this.contracts.gridBuildings.repairBuilding(building.id);

@@ -87,16 +87,15 @@ export class GamePage extends BasePage {
     async updateResourceDisplay() {
         try {
             const playerAddress = await this.contracts.gameState.getAddress();
-            const [gold, food, activeBuildings, buildingSlots, repPoints] = await Promise.all([
+            // OPTIMIZATION: Get all resource data in parallel
+            const [gold, food, activeBuildings, buildingSlots, repPoints, diamonds] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(playerAddress),
                 this.contracts.gameState.getPlayerFood(playerAddress),
                 this.contracts.gridBuildings.getActiveBuildings(playerAddress),
                 this.contracts.gameState.getBuildingSlots(playerAddress),
-                this.contracts.gameState.getPlayerRep(playerAddress)
+                this.contracts.gameState.getPlayerRep(playerAddress),
+                this.contracts.gameState.getPlayerDiamonds(playerAddress)
             ]);
-            
-            // Get diamonds balance
-            const diamonds = await this.contracts.gameState.getPlayerDiamonds(playerAddress);
             
             // TODO: Implement gems contract calls
             const gems = 0; // await this.contracts.gameState.getPlayerGems(playerAddress);
@@ -314,10 +313,19 @@ export class GamePage extends BasePage {
             const activeBuildings = await this.contracts.gridBuildings.getActiveBuildings(playerAddress);
             Logger.info('Retrieved active buildings:', activeBuildings);
 
-            // Place houses on the grid
-            for (const buildingId of activeBuildings) {
-                Logger.info('Processing building:', buildingId);
+            // OPTIMIZATION: Fetch all building data in parallel
+            Logger.info('Fetching building data in parallel...');
+            const buildingDataPromises = activeBuildings.map(async (buildingId) => {
                 const building = await this.contracts.gridBuildings.getBuilding(buildingId);
+                return { buildingId, building };
+            });
+            
+            const buildingDataResults = await Promise.all(buildingDataPromises);
+            Logger.info(`Fetched ${buildingDataResults.length} building data entries in parallel`);
+
+            // Process buildings sequentially (position search needs to be sequential)
+            for (const { buildingId, building } of buildingDataResults) {
+                Logger.info('Processing building:', buildingId);
                 
                 // Skip if building type is 0 and level is 0 (inactive building)
                 if (building.buildingType === 0 && building.level === 0) {
