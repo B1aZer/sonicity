@@ -64,7 +64,9 @@ export class Game {
         Logger.info("Game: Starting initialization");
         
         // Initialize grid manager first with gameStateContract
+        scenePerformanceLogger.start('grid-manager-initialize');
         await this.gridManager.initialize(this.gameStateContract);
+        scenePerformanceLogger.end('grid-manager-initialize');
         
         // Set up scene with dynamic grid
         const { scene, camera, renderer, controls, groundPlane, gridHelper } = 
@@ -98,7 +100,9 @@ export class Game {
             this.gridBuildingsContract,
             this.districtBuildingsContract
         );
+        scenePerformanceLogger.start('building-manager-set-scene');
         this.buildingManager.setScene(this.scene, this.gridManager.getCellSize(), this.globalAssetCache);
+        scenePerformanceLogger.end('building-manager-set-scene');
         
         // Initialize cosmetic manager
         this.cosmeticManager = new CosmeticManager(this.scene, this.cosmeticItemsContract);

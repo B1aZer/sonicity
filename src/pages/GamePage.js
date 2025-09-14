@@ -216,7 +216,9 @@ export class GamePage extends BasePage {
             scenePerformanceLogger.end('game-init-call');
 
             // Update resource display initially
+            scenePerformanceLogger.start('initial-resource-display-update');
             await this.updateResourceDisplay();
+            scenePerformanceLogger.end('initial-resource-display-update');
             
             // Set up periodic updates for resource display and outpost warnings
             this.resourceUpdateInterval = setInterval(() => {
