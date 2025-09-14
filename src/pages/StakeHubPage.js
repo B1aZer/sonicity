@@ -879,6 +879,17 @@ export class StakePage extends BasePage {
             // Add staked flag
             building.isStaked = true;
             
+            // Get NFT info for this building (tokenId and contractAddress)
+            try {
+                const nftInfo = await this.getNFTInfoForBuilding(building.id);
+                building.tokenId = nftInfo.tokenId;
+                building.contractAddress = nftInfo.contractAddress;
+            } catch (error) {
+                console.warn(`Failed to get NFT info for building ${building.id}:`, error);
+                building.tokenId = null;
+                building.contractAddress = null;
+            }
+            
             // Get building configuration for production rate and other details
             const config = await this.contracts.gridBuildings.getBuildingConfig(building.buildingType);
             building.config = {
