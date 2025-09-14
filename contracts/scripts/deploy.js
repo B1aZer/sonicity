@@ -2,59 +2,13 @@ const { ethers, upgrades } = require("hardhat");
 // Import the reusable deployment functions
 const { deployGridBuildings } = require("./deploy-grid");
 const { deployAltar } = require("./deploy-altar");
+const { deployNFTs } = require("./deploy-nfts");
 
 async function main() {
   console.log("Starting deployment...");
 
-  // Deploy SonicityNFT if not already deployed
-  console.log("Deploying SonicityNFT...");
-  const SonicityNFT = await ethers.getContractFactory("SonicityNFT");
-  const sonicityNFT = await SonicityNFT.deploy();
-  console.log("Waiting for SonicityNFT deployment...");
-  await sonicityNFT.waitForDeployment();
-  const sonicityNFTAddress = await sonicityNFT.getAddress();
-  console.log("SonicityNFT deployed to:", sonicityNFTAddress);
-
-  // Deploy SonicityFarm
-  console.log("Deploying SonicityFarm...");
-  const SonicityFarm = await ethers.getContractFactory("SonicityFarm");
-  const sonicityFarm = await SonicityFarm.deploy();
-  console.log("Waiting for SonicityFarm deployment...");
-  await sonicityFarm.waitForDeployment();
-  const sonicityFarmAddress = await sonicityFarm.getAddress();
-  console.log("SonicityFarm deployed to:", sonicityFarmAddress);
-
-  // Deploy SonicityDiamond NFT contract
-  console.log("Deploying SonicityDiamond NFT contract...");
-  const SonicityDiamond = await ethers.getContractFactory("SonicityDiamond");
-  const sonicityDiamond = await SonicityDiamond.deploy();
-  await sonicityDiamond.waitForDeployment();
-  const sonicityDiamondAddress = await sonicityDiamond.getAddress();
-  console.log("SonicityDiamond deployed to:", sonicityDiamondAddress);
-
-  // Deploy SonicityRep NFT contract
-  console.log("Deploying SonicityRep NFT contract...");
-  const SonicityRep = await ethers.getContractFactory("SonicityRep");
-  const sonicityRep = await SonicityRep.deploy();
-  await sonicityRep.waitForDeployment();
-  const sonicityRepAddress = await sonicityRep.getAddress();
-  console.log("SonicityRep deployed to:", sonicityRepAddress);
-
-  // Deploy SonicityYieldNFT contract
-  console.log("Deploying SonicityYieldNFT contract...");
-  const SonicityYieldNFT = await ethers.getContractFactory("SonicityYieldNFT");
-  const sonicityYieldNFT = await SonicityYieldNFT.deploy();
-  await sonicityYieldNFT.waitForDeployment();
-  const sonicityYieldNFTAddress = await sonicityYieldNFT.getAddress();
-  console.log("SonicityYieldNFT deployed to:", sonicityYieldNFTAddress);
-
-  // Deploy SonicityArtProxy contract
-  console.log("Deploying SonicityArtProxy contract...");
-  const SonicityArtProxy = await ethers.getContractFactory("SonicityArtProxy");
-  const sonicityArtProxy = await SonicityArtProxy.deploy();
-  await sonicityArtProxy.waitForDeployment();
-  const sonicityArtProxyAddress = await sonicityArtProxy.getAddress();
-  console.log("SonicityArtProxy deployed to:", sonicityArtProxyAddress);
+  // Deploy NFT contracts using the reusable function
+  const nftAddresses = await deployNFTs({});
 
   // Deploy GameState implementation
   console.log("Deploying GameState implementation...");
@@ -87,32 +41,6 @@ async function main() {
   const battleSystemImplAddress = await battleSystemImpl.getAddress();
   console.log("BattleSystem implementation deployed to:", battleSystemImplAddress);
 
-  // Deploy HeroNFT implementation
-  console.log("Deploying HeroNFT implementation...");
-  const HeroNFT = await ethers.getContractFactory("HeroNFT");
-  const heroNFTImpl = await HeroNFT.deploy();
-  console.log("Waiting for HeroNFT implementation deployment...");
-  await heroNFTImpl.waitForDeployment();
-  const heroNFTImplAddress = await heroNFTImpl.getAddress();
-  console.log("HeroNFT implementation deployed to:", heroNFTImplAddress);
-
-  // Deploy TacticsNFT implementation
-  console.log("Deploying TacticsNFT implementation...");
-  const TacticsNFT = await ethers.getContractFactory("TacticsNFT");
-  const tacticsNFTImpl = await TacticsNFT.deploy();
-  console.log("Waiting for TacticsNFT implementation deployment...");
-  await tacticsNFTImpl.waitForDeployment();
-  const tacticsNFTImplAddress = await tacticsNFTImpl.getAddress();
-  console.log("TacticsNFT implementation deployed to:", tacticsNFTImplAddress);
-
-  // Deploy CosmeticItems implementation
-  console.log("Deploying CosmeticItems implementation...");
-  const CosmeticItemsImpl = await ethers.getContractFactory("CosmeticItems");
-  const cosmeticItemsImpl = await CosmeticItemsImpl.deploy();
-  console.log("Waiting for CosmeticItems implementation deployment...");
-  await cosmeticItemsImpl.waitForDeployment();
-  const cosmeticItemsImplAddress = await cosmeticItemsImpl.getAddress();
-  console.log("CosmeticItems implementation deployed to:", cosmeticItemsImplAddress);
 
   // Deploy GameState proxy
   console.log("Deploying GameState proxy...");
@@ -161,12 +89,7 @@ async function main() {
     gameStateProxy: gameStateProxyAddress,
     gridBuildingsProxy: gridBuildingsProxyAddress,
     battleSystemProxy: battleSystemProxyAddress,
-    sonicityNFT: sonicityNFTAddress,
-    sonicityFarm: sonicityFarmAddress,
-    sonicityDiamond: sonicityDiamondAddress,
-    sonicityRep: sonicityRepAddress,
-    sonicityYieldNFT: sonicityYieldNFTAddress,
-    sonicityArtProxy: sonicityArtProxyAddress
+    ...nftAddresses
   });
   const altarImplAddress = altarAddresses.altarImpl;
   const altarProxyAddress = altarAddresses.altarProxy;
@@ -176,38 +99,6 @@ async function main() {
   const gridBuildingsProxy = await ethers.getContractAt("GridBuildings", gridBuildingsProxyAddress);
   await gridBuildingsProxy.setAltarAddress(altarProxyAddress);
 
-  // Deploy HeroNFT proxy
-  console.log("Deploying HeroNFT proxy...");
-  const heroNFTProxy = await upgrades.deployProxy(HeroNFT, [], {
-    kind: 'uups',
-    initializer: 'initialize',
-  });
-  console.log("Waiting for HeroNFT proxy deployment...");
-  await heroNFTProxy.waitForDeployment();
-  const heroNFTProxyAddress = await heroNFTProxy.getAddress();
-  console.log("HeroNFT proxy deployed to:", heroNFTProxyAddress);
-
-  // Deploy TacticsNFT proxy
-  console.log("Deploying TacticsNFT proxy...");
-  const tacticsNFTProxy = await upgrades.deployProxy(TacticsNFT, [], {
-    kind: 'uups',
-    initializer: 'initialize',
-  });
-  console.log("Waiting for TacticsNFT proxy deployment...");
-  await tacticsNFTProxy.waitForDeployment();
-  const tacticsNFTProxyAddress = await tacticsNFTProxy.getAddress();
-  console.log("TacticsNFT proxy deployed to:", tacticsNFTProxyAddress);
-
-  // Deploy CosmeticItems proxy
-  console.log("Deploying CosmeticItems proxy...");
-  const cosmeticItemsProxy = await upgrades.deployProxy(CosmeticItemsImpl, [], {
-    kind: 'uups',
-    initializer: 'initialize',
-  });
-  console.log("Waiting for CosmeticItems proxy deployment...");
-  await cosmeticItemsProxy.waitForDeployment();
-  const cosmeticItemsProxyAddress = await cosmeticItemsProxy.getAddress();
-  console.log("CosmeticItems proxy deployed to:", cosmeticItemsProxyAddress);
 
   // Set up contract interactions
   console.log("Setting up contract interactions...");
@@ -240,45 +131,48 @@ async function main() {
   
   // Set GameState address in HeroNFT
   console.log("Setting GameState address in HeroNFT...");
+  const heroNFTProxy = await ethers.getContractAt("HeroNFT", nftAddresses.heroNFTProxy);
   await heroNFTProxy.setGameStateAddress(gameStateProxyAddress);
   
   // Set GameState address in TacticsNFT
   console.log("Setting GameState address in TacticsNFT...");
+  const tacticsNFTProxy = await ethers.getContractAt("TacticsNFT", nftAddresses.tacticsNFTProxy);
   await tacticsNFTProxy.setGameStateAddress(gameStateProxyAddress);
   
   // Set HeroNFT address in GameState
   console.log("Setting HeroNFT address in GameState...");
-  await gameStateProxy.setHeroNFTAddress(heroNFTProxyAddress);
+  await gameStateProxy.setHeroNFTAddress(nftAddresses.heroNFTProxy);
   
   // Set TacticsNFT address in GameState
   console.log("Setting TacticsNFT address in GameState...");
-  await gameStateProxy.setTacticsNFTAddress(tacticsNFTProxyAddress);
+  await gameStateProxy.setTacticsNFTAddress(nftAddresses.tacticsNFTProxy);
   
   // Set CosmeticItems address in GameState
   console.log("Setting CosmeticItems address in GameState...");
-  await gameStateProxy.setCosmeticItemsAddress(cosmeticItemsProxyAddress);
+  await gameStateProxy.setCosmeticItemsAddress(nftAddresses.cosmeticItemsProxy);
   
   // Set GameState address in CosmeticItems
   console.log("Setting GameState address in CosmeticItems...");
+  const cosmeticItemsProxy = await ethers.getContractAt("CosmeticItems", nftAddresses.cosmeticItemsProxy);
   await cosmeticItemsProxy.setGameStateAddress(gameStateProxyAddress);
 
   // Set HeroNFT address in BattleSystem
   console.log("Setting HeroNFT address in BattleSystem...");
-  await battleSystemProxy.setHeroNFTAddress(heroNFTProxyAddress);
+  await battleSystemProxy.setHeroNFTAddress(nftAddresses.heroNFTProxy);
 
   // Set TacticsNFT address in BattleSystem
   console.log("Setting TacticsNFT address in BattleSystem...");
-  await battleSystemProxy.setTacticsNFTAddress(tacticsNFTProxyAddress);
+  await battleSystemProxy.setTacticsNFTAddress(nftAddresses.tacticsNFTProxy);
 
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
   console.log("Contract addresses:");
-  console.log("SonicityNFT:", sonicityNFTAddress);
-  console.log("SonicityFarm:", sonicityFarmAddress);
-  console.log("SonicityDiamond:", sonicityDiamondAddress);
-  console.log("SonicityRep:", sonicityRepAddress);
-  console.log("SonicityYieldNFT:", sonicityYieldNFTAddress);
-  console.log("SonicityArtProxy:", sonicityArtProxyAddress);
+  console.log("SonicityNFT:", nftAddresses.sonicityNFT);
+  console.log("SonicityFarm:", nftAddresses.sonicityFarm);
+  console.log("SonicityDiamond:", nftAddresses.sonicityDiamond);
+  console.log("SonicityRep:", nftAddresses.sonicityRep);
+  console.log("SonicityYieldNFT:", nftAddresses.sonicityYieldNFT);
+  console.log("SonicityArtProxy:", nftAddresses.sonicityArtProxy);
   console.log("GameState implementation:", gameStateImplAddress);
   console.log("GameState proxy:", gameStateProxyAddress);
   console.log("DistrictBuildings implementation:", districtBuildingsImplAddress);
@@ -289,21 +183,16 @@ async function main() {
   console.log("Altar proxy:", altarProxyAddress);
   console.log("BattleSystem implementation:", battleSystemImplAddress);
   console.log("BattleSystem proxy:", battleSystemProxyAddress);
-  console.log("HeroNFT implementation:", heroNFTImplAddress);
-  console.log("HeroNFT proxy:", heroNFTProxyAddress);
-  console.log("TacticsNFT implementation:", tacticsNFTImplAddress);
-  console.log("TacticsNFT proxy:", tacticsNFTProxyAddress);
-  console.log("CosmeticItems implementation:", cosmeticItemsImplAddress);
-  console.log("CosmeticItems proxy:", cosmeticItemsProxyAddress);
+  console.log("HeroNFT implementation:", nftAddresses.heroNFTImpl);
+  console.log("HeroNFT proxy:", nftAddresses.heroNFTProxy);
+  console.log("TacticsNFT implementation:", nftAddresses.tacticsNFTImpl);
+  console.log("TacticsNFT proxy:", nftAddresses.tacticsNFTProxy);
+  console.log("CosmeticItems implementation:", nftAddresses.cosmeticItemsImpl);
+  console.log("CosmeticItems proxy:", nftAddresses.cosmeticItemsProxy);
 
   // Save addresses to a file for frontend use
   const addresses = {
-    sonicityNFT: sonicityNFTAddress,
-    sonicityFarm: sonicityFarmAddress,
-    sonicityDiamond: sonicityDiamondAddress,
-    sonicityRep: sonicityRepAddress,
-    sonicityYieldNFT: sonicityYieldNFTAddress,
-    sonicityArtProxy: sonicityArtProxyAddress,
+    ...nftAddresses,
     gameStateImpl: gameStateImplAddress,
     gameStateProxy: gameStateProxyAddress,
     districtBuildingsImpl: districtBuildingsImplAddress,
@@ -314,12 +203,6 @@ async function main() {
     altarProxy: altarProxyAddress,
     battleSystemImpl: battleSystemImplAddress,
     battleSystemProxy: battleSystemProxyAddress,
-    heroNFTImpl: heroNFTImplAddress,
-    heroNFTProxy: heroNFTProxyAddress,
-    tacticsNFTImpl: tacticsNFTImplAddress,
-    tacticsNFTProxy: tacticsNFTProxyAddress,
-    cosmeticItemsImpl: cosmeticItemsImplAddress,
-    cosmeticItemsProxy: cosmeticItemsProxyAddress,
   };
 
   const fs = require('fs');
