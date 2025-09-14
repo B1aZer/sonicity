@@ -8,7 +8,7 @@ export const CONTRACT_ADDRESSES = {
     SONICITY_REP: "0xA4aE77554847958aC0854f06601267c9F9C75dfD", // Will be updated by update-addresses.sh
     SONICITY_YIELD_NFT: "0x7c02b58029beeA7c1FcC872803dC9818f57A0E61", // Will be updated by update-addresses.sh
     SONICITY_ART_PROXY: "0x3818eAb6Ca8Bf427222bfACFA706c514145F4104", // Will be updated by update-addresses.sh
-    ALTAR: "0x55027d3dBBcEA0327eF73eFd74ba0Af42A13A966", // Will be updated by update-addresses.sh
+    ALTAR: "0x9BcA065E19b6d630032b53A8757fB093CbEAfC1d", // Will be updated by update-addresses.sh
     GAME_STATE: "0x0B306BF915C4d645ff596e518fAf3F9669b97016", // Will be updated by update-addresses.sh
     DISTRICT_BUILDINGS: "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE", // Will be updated by update-addresses.sh
     GRID_BUILDINGS: "0xB9d9e972100a1dD01cd441774b45b5821e136043", // Will be updated by update-addresses.sh
