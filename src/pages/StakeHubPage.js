@@ -1138,22 +1138,24 @@ export class StakePage extends BasePage {
     }
     
     async unstakeNFT(tokenId, collection) {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Unstaking NFT...');
+        
         try {
-            // Show loading modal
-            const loadingModal = this.modal.loading('Unstaking NFT...');
-            
             // Unstake NFT
             await this.contracts.altar.unstake(collection, tokenId);
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadUserData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success modal
             this.modal.success('NFT unstaked successfully!', { title: 'NFT Unstaked!' });
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error unstaking NFT:', error);
             
             // Check for specific error patterns
