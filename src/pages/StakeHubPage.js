@@ -873,55 +873,74 @@ export class StakePage extends BasePage {
         const buildings = await this.contracts.gridBuildings.getActiveBuildingsWithData(userAddress);
         // console.log('[DEBUG] getActiveBuildingsWithData returned:', buildings);
         
-        for (const building of buildings) {
+        // Process all buildings in parallel for much better performance
+        await Promise.all(buildings.map(async (building) => {
             // console.log(`[DEBUG] Processing building ${building.id}:`, building);
             
             // Add staked flag
             building.isStaked = true;
             
-            // Get NFT info for this building (tokenId and contractAddress)
-            try {
-                const nftInfo = await this.getNFTInfoForBuilding(building.id);
-                building.tokenId = nftInfo.tokenId;
-                building.contractAddress = nftInfo.contractAddress;
-            } catch (error) {
-                console.warn(`Failed to get NFT info for building ${building.id}:`, error);
+            // Get all building data in parallel
+            const [
+                nftInfo,
+                config,
+                isAtCap,
+                claimable,
+                isActivelyProducing,
+                progressData,
+                upgradeInfo
+            ] = await Promise.allSettled([
+                this.getNFTInfoForBuilding(building.id),
+                this.contracts.gridBuildings.getBuildingConfig(building.buildingType),
+                this.contracts.gridBuildings.isBuildingAtCap(building.id),
+                this.contracts.gridBuildings.calculateClaimableResources(building.id),
+                this.contracts.gridBuildings.isBuildingActivelyProducing(userAddress, building.id),
+                this.contracts.gridBuildings.calculateProductionProgress(building.id),
+                this.contracts.gridBuildings.getBuildingUpgradeInfo(building.id)
+            ]);
+            
+            // Handle NFT info
+            if (nftInfo.status === 'fulfilled') {
+                building.tokenId = nftInfo.value.tokenId;
+                building.contractAddress = nftInfo.value.contractAddress;
+            } else {
+                console.warn(`Failed to get NFT info for building ${building.id}:`, nftInfo.reason);
                 building.tokenId = null;
                 building.contractAddress = null;
             }
             
-            // Get building configuration for production rate and other details
-            const config = await this.contracts.gridBuildings.getBuildingConfig(building.buildingType);
-            building.config = {
-                name: config.name,
-                baseProductionRate: Number(config.baseProductionRate),
-                upgradeCost: Number(config.upgradeCost),
-                maxLevel: Number(config.maxLevel),
-                description: config.description,
-                tier: Number(config.tier),
-                rechargeCost: config.rechargeCost // Add recharge cost to config
-            };
+            // Handle building config
+            if (config.status === 'fulfilled') {
+                building.config = {
+                    name: config.value.name,
+                    baseProductionRate: Number(config.value.baseProductionRate),
+                    upgradeCost: Number(config.value.upgradeCost),
+                    maxLevel: Number(config.value.maxLevel),
+                    description: config.value.description,
+                    tier: Number(config.value.tier),
+                    rechargeCost: config.value.rechargeCost
+                };
+                building.formattedRechargeCost = this.contracts.gridBuildings.formatRechargeFee(config.value.rechargeCost);
+            }
             
-            // Get formatted recharge cost for display
-            building.formattedRechargeCost = this.contracts.gridBuildings.formatRechargeFee(config.rechargeCost);
+            // Handle other building data
+            building.isAtCap = isAtCap.status === 'fulfilled' ? isAtCap.value : false;
+            building.claimable = claimable.status === 'fulfilled' ? Number(claimable.value) : 0;
+            building.isActivelyProducing = isActivelyProducing.status === 'fulfilled' ? isActivelyProducing.value : false;
             
-            // Add extra info for UI
-            building.isAtCap = await this.contracts.gridBuildings.isBuildingAtCap(building.id);
-            building.claimable = Number(await this.contracts.gridBuildings.calculateClaimableResources(building.id));
-            building.isActivelyProducing = await this.contracts.gridBuildings.isBuildingActivelyProducing(userAddress, building.id);
-
-            // Use contract method for production progress
-            const [progressCurrent, progressMax, progressPercent] = await this.contracts.gridBuildings.calculateProductionProgress(building.id);
-            building.progressCurrent = Number(progressCurrent);
-            building.progressMax = Number(progressMax);
-            building.progressPercent = Number(progressPercent);
+            // Handle progress data
+            if (progressData.status === 'fulfilled') {
+                const [progressCurrent, progressMax, progressPercent] = progressData.value;
+                building.progressCurrent = Number(progressCurrent);
+                building.progressMax = Number(progressMax);
+                building.progressPercent = Number(progressPercent);
+            }
             
-            // Get upgrade info for this building
-            try {
-                building.upgradeInfo = await this.contracts.gridBuildings.getBuildingUpgradeInfo(building.id);
-            } catch (error) {
-                console.warn(`Failed to get upgrade info for building ${building.id}:`, error);
-                // Provide fallback upgrade info
+            // Handle upgrade info
+            if (upgradeInfo.status === 'fulfilled') {
+                building.upgradeInfo = upgradeInfo.value;
+            } else {
+                console.warn(`Failed to get upgrade info for building ${building.id}:`, upgradeInfo.reason);
                 building.upgradeInfo = {
                     canUpgrade: false,
                     currentLevel: building.level || 0,
@@ -958,7 +977,7 @@ export class StakePage extends BasePage {
                     building.yieldRate = 0; // Fallback to 0 if error
                 }
             }
-        }
+        }));
         
         return buildings;
     }
@@ -1143,21 +1162,23 @@ export class StakePage extends BasePage {
     }
     
     async rechargeBuilding(item) {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Charging building...');
+        
         try {
-            // Show loading modal
-            const loadingModal = this.modal.loading('Charging building...');
-            
             await this.contracts.gridBuildings.rechargeBuilding(item.id);
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadUserData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success modal
             this.modal.success('Building charged successfully!', { title: 'Building Charged!' });
         } catch (e) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error charging building:', e);
             this.modal.error(e.message || 'Failed to charge building', { title: 'Charge Failed' });
         }
