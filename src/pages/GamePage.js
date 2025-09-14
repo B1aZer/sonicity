@@ -242,8 +242,8 @@ export class GamePage extends BasePage {
                 const builtDistrictBuildings = await this.contracts.districtBuildings.getBuiltBuildings();
                 Logger.info('Retrieved district buildings:', builtDistrictBuildings);
 
-                // Place each built district building
-                for (const building of builtDistrictBuildings) {
+                // Place all built district buildings in parallel for better performance
+                const buildingPlacementPromises = builtDistrictBuildings.map(async (building) => {
                     const buildingConfig = BUILDINGS[building.name];
                     if (buildingConfig) {
                         const position = new THREE.Vector3(
@@ -251,20 +251,39 @@ export class GamePage extends BasePage {
                             buildingConfig.position.y,
                             buildingConfig.position.z
                         );
+                        
+                        // Time individual building placement for debugging
+                        const startTime = performance.now();
                         const placedBuilding = await this.game.buildingManager.placeFixedBuilding(
                             building.name,
                             position,
                             buildingConfig.rotation,
                             building.level
                         );
+                        const endTime = performance.now();
                         
                         if (!placedBuilding) {
-                            Logger.error(`Failed to place district building: ${building.name}`);
+                            Logger.error(`Failed to place district building: ${building.name} (${(endTime - startTime).toFixed(2)}ms)`);
+                            return { success: false, building: building.name, time: endTime - startTime };
                         } else {
-                            Logger.info(`Successfully placed district building: ${building.name}`);
+                            Logger.info(`Successfully placed district building: ${building.name} (${(endTime - startTime).toFixed(2)}ms)`);
+                            return { success: true, building: building.name, time: endTime - startTime };
                         }
                     }
-                }
+                    return { success: false, building: building.name, reason: 'No config found', time: 0 };
+                });
+                
+                // Wait for all buildings to be placed in parallel
+                const placementResults = await Promise.all(buildingPlacementPromises);
+                
+                // Log summary with performance metrics
+                const successful = placementResults.filter(r => r.success);
+                const failed = placementResults.filter(r => !r.success);
+                const totalTime = placementResults.reduce((sum, r) => sum + (r.time || 0), 0);
+                const avgTime = successful.length > 0 ? totalTime / successful.length : 0;
+                
+                Logger.info(`District building placement complete: ${successful.length} successful, ${failed.length} failed`);
+                Logger.info(`Performance: Total time ${totalTime.toFixed(2)}ms, Average per building ${avgTime.toFixed(2)}ms`);
                 scenePerformanceLogger.end('district-buildings-placement');
             } catch (error) {
                 Logger.error('Error placing district buildings:', error);

@@ -81,22 +81,42 @@ export class DistrictBuildingsContract extends BaseContract {
 
     async getBuiltBuildings() {
         const address = await this.getAddress();
-        const [buildingTypes, configs] = await this.call('getAllDistrictBuildingConfigs');
-        const buildingNames = await this.call('getBuildingNames');
-        const builtBuildings = [];
-
-        for (let i = 0; i < buildingTypes.length; i++) {
-            const isBuilt = await this.call('isDistrictBuildingBuilt', address, buildingTypes[i]);
-            if (isBuilt) {
-                const level = await this.call('getBuildingLevel', address, buildingTypes[i]);
-                builtBuildings.push({
-                    type: buildingTypes[i],
-                    name: buildingNames[i],
-                    level: level,
-                    config: configs[i]
-                });
-            }
-        }
+        
+        // Batch all contract calls in parallel to minimize network round trips
+        const [buildingTypes, configs, buildingNames] = await Promise.all([
+            this.call('getAllDistrictBuildingConfigs'),
+            this.call('getAllDistrictBuildingConfigs'), // This returns both types and configs
+            this.call('getBuildingNames')
+        ]);
+        
+        // Extract building types and configs from the first call
+        const [types, buildingConfigs] = buildingTypes;
+        
+        // Create promises for all building status checks in parallel
+        const buildingStatusPromises = types.map((buildingType, index) => 
+            this.call('isDistrictBuildingBuilt', address, buildingType)
+                .then(isBuilt => ({ index, buildingType, isBuilt }))
+        );
+        
+        const buildingStatuses = await Promise.all(buildingStatusPromises);
+        
+        // Create promises for level checks only for built buildings
+        const levelPromises = buildingStatuses
+            .filter(status => status.isBuilt)
+            .map(status => 
+                this.call('getBuildingLevel', address, status.buildingType)
+                    .then(level => ({ ...status, level }))
+            );
+        
+        const builtBuildingData = await Promise.all(levelPromises);
+        
+        // Build the final result
+        const builtBuildings = builtBuildingData.map(data => ({
+            type: data.buildingType,
+            name: buildingNames[data.index],
+            level: data.level,
+            config: buildingConfigs[data.index]
+        }));
 
         return builtBuildings;
     }

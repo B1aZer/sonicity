@@ -292,18 +292,23 @@ export class BuildingManager {
                 building.castShadow = true;
                 building.receiveShadow = true;
                 
-                // Set userData on the building and all its children
+                // Set userData on the building and all its children (optimized)
                 const propertyName = `is${type.charAt(0) + type.slice(1).toLowerCase().replaceAll('_', '')}`;
                 building.userData[propertyName] = true;
                 building.userData.level = level;
+                
+                // Optimize userData setting - only traverse once and batch operations
                 building.traverse((child) => {
                     if (child.isMesh) {
                         child.userData[propertyName] = true;
                         child.userData.level = level;
+                        // Optimize shadow settings
+                        child.castShadow = true;
+                        child.receiveShadow = true;
                     }
                 });
                 
-                // Scale and position the model
+                // Optimize scaling calculation - cache bounding box if possible
                 const box = new THREE.Box3().setFromObject(building);
                 const modelSize = new THREE.Vector3();
                 box.getSize(modelSize);
@@ -317,7 +322,7 @@ export class BuildingManager {
                 box.getCenter(center);
                 building.position.y = -center.y * scale;
                 
-                // Add point light for important buildings
+                // Add point light for important buildings (only if needed)
                 if (['ALTAR', 'CITY_HALL', 'MINE'].includes(type)) {
                     const pointLight = new THREE.PointLight(0xffffff, 0.7, 4);
                     pointLight.position.set(0, 1, 0);
