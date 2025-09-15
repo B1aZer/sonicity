@@ -73,7 +73,7 @@ async function loadDeployedAddresses() {
 
 async function loadFrontendConstants() {
     try {
-        const constantsFile = fs.readFileSync('../src/js/utils/constants-dev.js', 'utf8');
+        const constantsFile = fs.readFileSync('../src/js/utils/constants.js', 'utf8');
         
         // Extract CONTRACT_ADDRESSES object using regex
         const addressMatch = constantsFile.match(/export const CONTRACT_ADDRESSES = \{([\s\S]*?)\};/);
