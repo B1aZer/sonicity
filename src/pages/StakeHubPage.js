@@ -1342,28 +1342,34 @@ export class StakePage extends BasePage {
                 throw new Error(`Unsupported tier: ${tier}`);
             }
             
+            // Get the next token ID to mint
+            const totalSupply = await nftContract.totalSupply();
+            const tokenId = totalSupply + 1n;
+            
             // Use the mint function - contracts now handle token ID generation
             if (resourceType === 4n) { // SONIC payment
                 const sonicAmount = BigInt(priceRaw);
                 console.log(`[DEBUG] Minting House with SONIC payment:`, {
                     contractAddress,
+                    tokenId: tokenId.toString(),
                     tier,
                     sonicAmount: sonicAmount.toString(),
                     priceRaw,
                     price
                 });
-                const tokenId = await this.contracts.altar.mint(contractAddress, tier, { value: sonicAmount });
+                await this.contracts.altar.mint(contractAddress, tokenId, tier, { value: sonicAmount });
                 console.log(`[DEBUG] Minted NFT with token ID:`, tokenId.toString());
             } else {
                 // Resource-based payment
                 console.log(`[DEBUG] Minting building with resource payment:`, {
                     contractAddress,
+                    tokenId: tokenId.toString(),
                     tier,
                     resourceType,
                     resourceName,
                     price
                 });
-                const tokenId = await this.contracts.altar.mint(contractAddress, tier);
+                await this.contracts.altar.mint(contractAddress, tokenId, tier);
                 console.log(`[DEBUG] Minted NFT with token ID:`, tokenId.toString());
             }
             
