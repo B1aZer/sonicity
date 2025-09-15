@@ -3,6 +3,7 @@ const { ethers, upgrades } = require("hardhat");
 const { deployGridBuildings } = require("./deploy-grid");
 const { deployAltar } = require("./deploy-altar");
 const { deployNFTs } = require("./deploy-nfts");
+const { deployHeroTactics } = require("./deploy-hero-tactics");
 
 async function main() {
   console.log("Starting deployment...");
@@ -99,6 +100,11 @@ async function main() {
   const gridBuildingsProxy = await ethers.getContractAt("GridBuildings", gridBuildingsProxyAddress);
   await gridBuildingsProxy.setAltarAddress(altarProxyAddress);
 
+  // Deploy Hero/Tactics/Cosmetic contracts using the reusable function
+  const heroTacticsAddresses = await deployHeroTactics({
+    gameStateProxy: gameStateProxyAddress,
+    battleSystemProxy: battleSystemProxyAddress
+  });
 
   // Set up contract interactions
   console.log("Setting up contract interactions...");
@@ -126,43 +132,7 @@ async function main() {
   console.log("Setting GridBuildings address in BattleSystem...");
   await battleSystemProxy.setGridBuildingsAddress(gridBuildingsProxyAddress);
 
-  // Set up Hero & Tactics contract interactions
-  console.log("Setting up Hero & Tactics contract interactions...");
-  
-  // Set GameState address in HeroNFT
-  console.log("Setting GameState address in HeroNFT...");
-  const heroNFTProxy = await ethers.getContractAt("HeroNFT", nftAddresses.heroNFTProxy);
-  await heroNFTProxy.setGameStateAddress(gameStateProxyAddress);
-  
-  // Set GameState address in TacticsNFT
-  console.log("Setting GameState address in TacticsNFT...");
-  const tacticsNFTProxy = await ethers.getContractAt("TacticsNFT", nftAddresses.tacticsNFTProxy);
-  await tacticsNFTProxy.setGameStateAddress(gameStateProxyAddress);
-  
-  // Set HeroNFT address in GameState
-  console.log("Setting HeroNFT address in GameState...");
-  await gameStateProxy.setHeroNFTAddress(nftAddresses.heroNFTProxy);
-  
-  // Set TacticsNFT address in GameState
-  console.log("Setting TacticsNFT address in GameState...");
-  await gameStateProxy.setTacticsNFTAddress(nftAddresses.tacticsNFTProxy);
-  
-  // Set CosmeticItems address in GameState
-  console.log("Setting CosmeticItems address in GameState...");
-  await gameStateProxy.setCosmeticItemsAddress(nftAddresses.cosmeticItemsProxy);
-  
-  // Set GameState address in CosmeticItems
-  console.log("Setting GameState address in CosmeticItems...");
-  const cosmeticItemsProxy = await ethers.getContractAt("CosmeticItems", nftAddresses.cosmeticItemsProxy);
-  await cosmeticItemsProxy.setGameStateAddress(gameStateProxyAddress);
-
-  // Set HeroNFT address in BattleSystem
-  console.log("Setting HeroNFT address in BattleSystem...");
-  await battleSystemProxy.setHeroNFTAddress(nftAddresses.heroNFTProxy);
-
-  // Set TacticsNFT address in BattleSystem
-  console.log("Setting TacticsNFT address in BattleSystem...");
-  await battleSystemProxy.setTacticsNFTAddress(nftAddresses.tacticsNFTProxy);
+  // Hero/Tactics/Cosmetic contract interactions are handled by the deployHeroTactics function
 
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
@@ -183,16 +153,17 @@ async function main() {
   console.log("Altar proxy:", altarProxyAddress);
   console.log("BattleSystem implementation:", battleSystemImplAddress);
   console.log("BattleSystem proxy:", battleSystemProxyAddress);
-  console.log("HeroNFT implementation:", nftAddresses.heroNFTImpl);
-  console.log("HeroNFT proxy:", nftAddresses.heroNFTProxy);
-  console.log("TacticsNFT implementation:", nftAddresses.tacticsNFTImpl);
-  console.log("TacticsNFT proxy:", nftAddresses.tacticsNFTProxy);
-  console.log("CosmeticItems implementation:", nftAddresses.cosmeticItemsImpl);
-  console.log("CosmeticItems proxy:", nftAddresses.cosmeticItemsProxy);
+  console.log("HeroNFT implementation:", heroTacticsAddresses.heroNFTImpl);
+  console.log("HeroNFT proxy:", heroTacticsAddresses.heroNFTProxy);
+  console.log("TacticsNFT implementation:", heroTacticsAddresses.tacticsNFTImpl);
+  console.log("TacticsNFT proxy:", heroTacticsAddresses.tacticsNFTProxy);
+  console.log("CosmeticItems implementation:", heroTacticsAddresses.cosmeticItemsImpl);
+  console.log("CosmeticItems proxy:", heroTacticsAddresses.cosmeticItemsProxy);
 
   // Save addresses to a file for frontend use
   const addresses = {
     ...nftAddresses,
+    ...heroTacticsAddresses,
     gameStateImpl: gameStateImplAddress,
     gameStateProxy: gameStateProxyAddress,
     districtBuildingsImpl: districtBuildingsImplAddress,

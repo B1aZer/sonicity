@@ -53,65 +53,6 @@ async function deployNFTs(existingAddresses = {}) {
   const sonicityArtProxyAddress = await sonicityArtProxy.getAddress();
   console.log("SonicityArtProxy deployed to:", sonicityArtProxyAddress);
 
-  // Deploy HeroNFT implementation
-  console.log("Deploying HeroNFT implementation...");
-  const HeroNFT = await ethers.getContractFactory("HeroNFT");
-  const heroNFTImpl = await HeroNFT.deploy();
-  console.log("Waiting for HeroNFT implementation deployment...");
-  await heroNFTImpl.waitForDeployment();
-  const heroNFTImplAddress = await heroNFTImpl.getAddress();
-  console.log("HeroNFT implementation deployed to:", heroNFTImplAddress);
-
-  // Deploy TacticsNFT implementation
-  console.log("Deploying TacticsNFT implementation...");
-  const TacticsNFT = await ethers.getContractFactory("TacticsNFT");
-  const tacticsNFTImpl = await TacticsNFT.deploy();
-  console.log("Waiting for TacticsNFT implementation deployment...");
-  await tacticsNFTImpl.waitForDeployment();
-  const tacticsNFTImplAddress = await tacticsNFTImpl.getAddress();
-  console.log("TacticsNFT implementation deployed to:", tacticsNFTImplAddress);
-
-  // Deploy CosmeticItems implementation
-  console.log("Deploying CosmeticItems implementation...");
-  const CosmeticItemsImpl = await ethers.getContractFactory("CosmeticItems");
-  const cosmeticItemsImpl = await CosmeticItemsImpl.deploy();
-  console.log("Waiting for CosmeticItems implementation deployment...");
-  await cosmeticItemsImpl.waitForDeployment();
-  const cosmeticItemsImplAddress = await cosmeticItemsImpl.getAddress();
-  console.log("CosmeticItems implementation deployed to:", cosmeticItemsImplAddress);
-
-  // Deploy HeroNFT proxy
-  console.log("Deploying HeroNFT proxy...");
-  const heroNFTProxy = await upgrades.deployProxy(HeroNFT, [], {
-    kind: 'uups',
-    initializer: 'initialize',
-  });
-  console.log("Waiting for HeroNFT proxy deployment...");
-  await heroNFTProxy.waitForDeployment();
-  const heroNFTProxyAddress = await heroNFTProxy.getAddress();
-  console.log("HeroNFT proxy deployed to:", heroNFTProxyAddress);
-
-  // Deploy TacticsNFT proxy
-  console.log("Deploying TacticsNFT proxy...");
-  const tacticsNFTProxy = await upgrades.deployProxy(TacticsNFT, [], {
-    kind: 'uups',
-    initializer: 'initialize',
-  });
-  console.log("Waiting for TacticsNFT proxy deployment...");
-  await tacticsNFTProxy.waitForDeployment();
-  const tacticsNFTProxyAddress = await tacticsNFTProxy.getAddress();
-  console.log("TacticsNFT proxy deployed to:", tacticsNFTProxyAddress);
-
-  // Deploy CosmeticItems proxy
-  console.log("Deploying CosmeticItems proxy...");
-  const cosmeticItemsProxy = await upgrades.deployProxy(CosmeticItemsImpl, [], {
-    kind: 'uups',
-    initializer: 'initialize',
-  });
-  console.log("Waiting for CosmeticItems proxy deployment...");
-  await cosmeticItemsProxy.waitForDeployment();
-  const cosmeticItemsProxyAddress = await cosmeticItemsProxy.getAddress();
-  console.log("CosmeticItems proxy deployed to:", cosmeticItemsProxyAddress);
 
   // Set up contract interactions if Altar is available
   if (existingAddresses.altarProxy) {
@@ -158,12 +99,6 @@ async function deployNFTs(existingAddresses = {}) {
   console.log("SonicityRep:", sonicityRepAddress);
   console.log("SonicityYieldNFT:", sonicityYieldNFTAddress);
   console.log("SonicityArtProxy:", sonicityArtProxyAddress);
-  console.log("HeroNFT implementation:", heroNFTImplAddress);
-  console.log("HeroNFT proxy:", heroNFTProxyAddress);
-  console.log("TacticsNFT implementation:", tacticsNFTImplAddress);
-  console.log("TacticsNFT proxy:", tacticsNFTProxyAddress);
-  console.log("CosmeticItems implementation:", cosmeticItemsImplAddress);
-  console.log("CosmeticItems proxy:", cosmeticItemsProxyAddress);
 
   return {
     sonicityNFT: sonicityNFTAddress,
@@ -171,13 +106,7 @@ async function deployNFTs(existingAddresses = {}) {
     sonicityDiamond: sonicityDiamondAddress,
     sonicityRep: sonicityRepAddress,
     sonicityYieldNFT: sonicityYieldNFTAddress,
-    sonicityArtProxy: sonicityArtProxyAddress,
-    heroNFTImpl: heroNFTImplAddress,
-    heroNFTProxy: heroNFTProxyAddress,
-    tacticsNFTImpl: tacticsNFTImplAddress,
-    tacticsNFTProxy: tacticsNFTProxyAddress,
-    cosmeticItemsImpl: cosmeticItemsImplAddress,
-    cosmeticItemsProxy: cosmeticItemsProxyAddress
+    sonicityArtProxy: sonicityArtProxyAddress
   };
 }
 
