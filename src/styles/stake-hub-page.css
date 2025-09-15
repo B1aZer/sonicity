@@ -67,17 +67,9 @@
     gap: var(--spacing-lg);
 }
 
-/* Buildings Grid - Specific to revenue hub page */
-.revenue-hub-page .buildings-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--spacing-lg);
-}
-
 /* Building Card with Stone Texture Overlay */
 .stake-hub-page .building-card {
     position: relative;
-    overflow: hidden;
 }
 
 .stake-hub-page .building-card::before {
@@ -364,23 +356,6 @@
   to   { box-shadow: 0 0 20px 2px rgba(51, 47, 9, 0.4); }
 }
   */
-
-.page-container {
-    padding: var(--spacing-xl) var(--spacing-xxl) var(--spacing-xl) var(--spacing-xxl);
-    background-color: var(--bg-dark);
-    border-radius: var(--radius-xl);
-    box-shadow: inset 0 4px 8px #000000;
-    background-image: url(/images/ornament/corner-top-left.png), url(/images/ornament/corner-top-right.png), url(/images/ornament/corner-bottom-left.png), url(/images/ornament/corner-bottom-right.png), url(/images/ornament/center-ornament.png), /*url('/images/ornament/header-ornament.png'),*/ url(/images/textures/parchment-texture.png), linear-gradient(var(--bg-light), var(--bg-dark));
-    background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, /*no-repeat,*/ repeat, repeat;
-    background-position: top left, top right, bottom left, bottom right, center center, /*center 30%,*/ center center, center center;
-    background-size: 100px 100px, 100px 100px, 100px 100px, 100px 100px, 192px 194px, /*628px 94px,*/ auto, auto;
-    background-blend-mode: normal, normal, normal, normal, normal, /*normal,*/ soft-light, soft-light;
-    /* background-clip: padding-box; */
-    /* border-image: url(/images/ornament/corner.png) 32 fill / 1px; */
-    position: relative;
-    margin: 0;
-    border: 1px solid #221d0c;
-}
 
 /* Arcanum Page NFT Grid Layout - Max 2 per row */
 .arcanum-page .buildings-grid {

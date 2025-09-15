@@ -4,6 +4,13 @@
     gap: var(--spacing-md);
 }
 
+/* Buildings Grid - Specific to revenue hub page */
+.revenue-hub-page .buildings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-lg);
+}
+
 .building-card {
     background: var(--card-bg);
     border-radius: var(--radius-lg);
@@ -79,6 +86,11 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .buildings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Buildings Grid - Specific to revenue hub page */
+    .revenue-hub-page .buildings-grid {
         grid-template-columns: 1fr;
     }
 

@@ -2,8 +2,11 @@
 
 ## todo
 
-- anal
-- do not send from loalhost
++ anal
++ do not send from loalhost
+- pve ?
+- loading ?
+- REPAIR ??
 
 ## todo
 

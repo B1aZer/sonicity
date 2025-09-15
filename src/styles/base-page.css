@@ -88,6 +88,18 @@
     transform: translateY(50px);
 }
 
+@media (max-width: 768px) {
+    .page-container {
+        padding: var(--spacing-lg);
+    }
+}
+
+@media (max-width: 480px) {
+    .page-container {
+        padding: var(--spacing-md);
+    }
+}
+
 @keyframes slideUpFromBottom {
   0% {
     opacity: 0;

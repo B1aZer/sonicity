@@ -49,7 +49,12 @@
   margin: 0;
 }
 
-
+.shop-item-action-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+}
 
 .shop-item-stock {
   font-size: var(--font-size-sm);

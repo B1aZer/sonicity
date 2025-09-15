@@ -134,23 +134,23 @@ export class StakePage extends BasePage {
                 <div class="page-section tier-tabs-section">
                     <div class="tier-tabs">
                         <button class="tier-tab active" data-tier="0">
-                            <span class="tab-label">Tier 0 (Houses)</span>
+                            <span class="tab-label">Tier 0</span>
                             <span class="tab-count">0</span>
                         </button>
                         <button class="tier-tab" data-tier="1">
-                            <span class="tab-label">Tier 1 (Farms)</span>
+                            <span class="tab-label">Tier 1</span>
                             <span class="tab-count">0</span>
                         </button>
                         <button class="tier-tab" data-tier="2">
-                            <span class="tab-label">Tier 2 (Diamond Stations)</span>
+                            <span class="tab-label">Tier 2</span>
                             <span class="tab-count">0</span>
                         </button>
                         <button class="tier-tab" data-tier="3">
-                            <span class="tab-label">Tier 3 (REP Forges)</span>
+                            <span class="tab-label">Tier 3</span>
                             <span class="tab-count">0</span>
                         </button>
                         <button class="tier-tab" data-tier="4">
-                            <span class="tab-label">Tier 4 (Yield Stations)</span>
+                            <span class="tab-label">Tier 4</span>
                             <span class="tab-count">0</span>
                         </button>
                     </div>
@@ -411,6 +411,7 @@ export class StakePage extends BasePage {
             
             <div class="page-section tier-actions-section">
                 <h3>${tierNames[tier]} Actions</h3>
+                <div class="btn-container">
                 ${tier === 4 ? 
                     `<button class="btn btn-md btn-secondary" disabled title="Create Yield NFTs in Arcanum building first">
                         Mint ${tierNames[tier]}
@@ -424,6 +425,7 @@ export class StakePage extends BasePage {
                     </button>`
                 }
                 <button class="btn btn-md btn-primary claim-all-btn" title="Claim from all ${tierNamesPlural[tier]}"><i class="fas fa-coins"></i> Claim All</button>
+                </div>
             </div>
             
             <div class="buildings-grid">
