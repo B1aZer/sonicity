@@ -45,9 +45,41 @@ async function main() {
         await gameState.setGridBuildingsAddress(addresses.gridBuildingsProxy);
         console.log('  ✅ GridBuildings address set');
         
+        // Set DistrictBuildings address in GameState
+        console.log('  Setting DistrictBuildings address in GameState...');
+        await gameState.setDistrictBuildingsAddress(addresses.districtBuildingsProxy);
+        console.log('  ✅ DistrictBuildings address set');
+        
+        // Set BattleSystem address in GameState
+        console.log('  Setting BattleSystem address in GameState...');
+        await gameState.setBattleSystemAddress(addresses.battleSystemProxy);
+        console.log('  ✅ BattleSystem address set');
+        
+        // Set Hero/Tactics/Cosmetic addresses in GameState
+        if (addresses.heroNFTProxy) {
+            console.log('  Setting HeroNFT address in GameState...');
+            await gameState.setHeroNFTAddress(addresses.heroNFTProxy);
+            console.log('  ✅ HeroNFT address set');
+        }
+        if (addresses.tacticsNFTProxy) {
+            console.log('  Setting TacticsNFT address in GameState...');
+            await gameState.setTacticsNFTAddress(addresses.tacticsNFTProxy);
+            console.log('  ✅ TacticsNFT address set');
+        }
+        if (addresses.cosmeticItemsProxy) {
+            console.log('  Setting CosmeticItems address in GameState...');
+            await gameState.setCosmeticItemsAddress(addresses.cosmeticItemsProxy);
+            console.log('  ✅ CosmeticItems address set');
+        }
+        
         // Fix DistrictBuildings references
         console.log('\n🔧 Fixing DistrictBuildings references...');
         const districtBuildings = await ethers.getContractAt('DistrictBuildings', addresses.districtBuildingsProxy);
+        
+        // Set GameState address in DistrictBuildings
+        console.log('  Setting GameState address in DistrictBuildings...');
+        await districtBuildings.setGameStateAddress(addresses.gameStateProxy);
+        console.log('  ✅ GameState address set');
         
         // Set BattleSystem address in DistrictBuildings
         console.log('  Setting BattleSystem address in DistrictBuildings...');
@@ -96,12 +128,68 @@ async function main() {
         await sonicityYieldNFT.setAltarContract(addresses.altarProxy);
         console.log('  ✅ SonicityYieldNFT altarContract set');
         
+        // Set Art Proxy address in SonicityYieldNFT
+        if (addresses.sonicityArtProxy) {
+            console.log('  Setting Art Proxy address in SonicityYieldNFT...');
+            await sonicityYieldNFT.setArtProxy(addresses.sonicityArtProxy);
+            console.log('  ✅ Art Proxy address set in SonicityYieldNFT');
+        }
+        
+        // Fix Altar references
+        console.log('\n🔧 Fixing Altar references...');
+        const altar = await ethers.getContractAt('Altar', addresses.altarProxy);
+        
+        // Set GridBuildings address in Altar
+        console.log('  Setting GridBuildings address in Altar...');
+        await altar.setGridBuildingsAddress(addresses.gridBuildingsProxy);
+        console.log('  ✅ GridBuildings address set in Altar');
+        
+        // Set Yield NFT address in Altar
+        if (addresses.sonicityYieldNFT) {
+            console.log('  Setting Yield NFT address in Altar...');
+            await altar.setYieldNFT(addresses.sonicityYieldNFT);
+            console.log('  ✅ Yield NFT address set in Altar');
+        }
+        
+        // Fix BattleSystem references
+        console.log('\n🔧 Fixing BattleSystem references...');
+        const battleSystem = await ethers.getContractAt('BattleSystem', addresses.battleSystemProxy);
+        
+        // Set GameState address in BattleSystem
+        console.log('  Setting GameState address in BattleSystem...');
+        await battleSystem.setGameStateAddress(addresses.gameStateProxy);
+        console.log('  ✅ GameState address set in BattleSystem');
+        
+        // Set DistrictBuildings address in BattleSystem
+        console.log('  Setting DistrictBuildings address in BattleSystem...');
+        await battleSystem.setDistrictBuildingsAddress(addresses.districtBuildingsProxy);
+        console.log('  ✅ DistrictBuildings address set in BattleSystem');
+        
+        // Set GridBuildings address in BattleSystem
+        console.log('  Setting GridBuildings address in BattleSystem...');
+        await battleSystem.setGridBuildingsAddress(addresses.gridBuildingsProxy);
+        console.log('  ✅ GridBuildings address set in BattleSystem');
+        
+        // Set Hero/Tactics addresses in BattleSystem
+        if (addresses.heroNFTProxy) {
+            console.log('  Setting HeroNFT address in BattleSystem...');
+            await battleSystem.setHeroNFTAddress(addresses.heroNFTProxy);
+            console.log('  ✅ HeroNFT address set in BattleSystem');
+        }
+        if (addresses.tacticsNFTProxy) {
+            console.log('  Setting TacticsNFT address in BattleSystem...');
+            await battleSystem.setTacticsNFTAddress(addresses.tacticsNFTProxy);
+            console.log('  ✅ TacticsNFT address set in BattleSystem');
+        }
+        
         console.log('\n🎉 All contract references have been fixed!');
         console.log('\n📋 Fixed References:');
         console.log('  ✅ GameState.altarAddress →', addresses.altarProxy);
         console.log('  ✅ GameState.gridBuildingsAddress →', addresses.gridBuildingsProxy);
         console.log('  ✅ DistrictBuildings.battleSystemAddress →', addresses.battleSystemProxy);
         console.log('  ✅ GridBuildings.altarAddress →', addresses.altarProxy);
+        console.log('  ✅ Altar.gridBuildings →', addresses.gridBuildingsProxy);
+        console.log('  ✅ BattleSystem.gridBuildingsAddress →', addresses.gridBuildingsProxy);
         console.log('  ✅ SonicityNFT.altarContract →', addresses.altarProxy);
         console.log('  ✅ SonicityFarm.altarContract →', addresses.altarProxy);
         console.log('  ✅ SonicityDiamond.altarContract →', addresses.altarProxy);

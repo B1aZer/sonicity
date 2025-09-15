@@ -125,7 +125,8 @@ const CONTRACT_REFERENCES = {
     sonicityYieldNFT: {
         contractName: 'SonicityYieldNFT',
         references: {
-            altarContract: 'altarProxy'
+            altarContract: 'altarProxy',
+            artProxy: 'sonicityArtProxy'
         }
     }
 };
