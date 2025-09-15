@@ -11,7 +11,7 @@
     border: var(--border-secondary);
     transition: transform var(--transition-normal);
     position: relative;
-    overflow: hidden;
+    overflow: scroll;
     box-shadow: var(--shadow-md);
 }
 

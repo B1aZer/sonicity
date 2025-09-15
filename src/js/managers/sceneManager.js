@@ -362,6 +362,7 @@ export class SceneManager {
         // Use 35mm lens FOV (approximately 54 degrees)
         const baseFOV = 52;
         
+        /*
         if (screenWidth < 480) { // Mobile phones
             return {
                 fov: 95, // Very wide FOV for mobile devices
@@ -381,6 +382,7 @@ export class SceneManager {
                 rotation: { x: threeRotX, y: threeRotY, z: threeRotZ }
             };
         }
+        */
         return {
             fov: baseFOV, // Default 35mm FOV for large screens
             position: { x: threePosX, y: threePosY, z: threePosZ },

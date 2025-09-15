@@ -139,7 +139,7 @@ export class DiamondStationPage extends BasePage {
     render() {
         this.element.innerHTML = `
             <div class="page-container">
-                <h1>Diamond Station Management</h1>
+                <h1>Diamond Station</h1>
                 <p class="page-description">
                     <strong>Diamonds are precious resources for advanced upgrades.</strong> Diamond Stations produce diamonds steadily over time. 
                     <em>Each station produces 8 diamonds every 24 hours at level 1, scaling with building level.</em>

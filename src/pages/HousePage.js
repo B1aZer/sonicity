@@ -129,7 +129,7 @@ export class HousePage extends BasePage {
     render() {
         this.element.innerHTML = `
             <div class="page-container">
-                <h1>House Management</h1>
+                <h1>House</h1>
                 <p class="page-description">
                     <strong><em>Gold</em> is stored in your vault for 24 hours. After that, workers rest and production stops until you collect.
                 </p>

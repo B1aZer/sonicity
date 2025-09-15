@@ -5,6 +5,19 @@
     gap: var(--spacing-md);
 }
 
+@media (max-width: 768px) {
+    .status-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.btn-container {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+    width: 100%;
+    /*justify-content: center;*/
+}
+
 /* Status Items */
 .status-item {
     display: flex;

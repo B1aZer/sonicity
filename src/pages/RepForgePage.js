@@ -136,7 +136,7 @@ export class RepForgePage extends BasePage {
     render() {
         this.element.innerHTML = `
             <div class="page-container">
-                <h1>REP Forge Management</h1>
+                <h1>REP Forge</h1>
                 <p class="page-description">
                     <strong>REP Points fuel your reputation in the community.</strong> REP Forges produce reputation points over time that can be earned through battles, donations, and production. 
                     <em>Each forge produces 1 REP point every 168 hours (7 days), scaling with building level.</em>

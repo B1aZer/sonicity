@@ -135,7 +135,7 @@ export class FarmPage extends BasePage {
     render() {
         this.element.innerHTML = `
             <div class="page-container container-min-width-800">
-                <h1>Farm Management</h1>
+                <h1>Farm</h1>
                 <p class="page-description">
                     <strong>Food sustains your population and fuels your economy.</strong> Farms produce food continuously, but you must collect it regularly. 
                     <em>Larger farms produce more food and can support bigger cities.</em>
