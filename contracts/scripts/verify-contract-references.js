@@ -91,6 +91,42 @@ const CONTRACT_REFERENCES = {
         references: {
             gameStateAddress: 'gameStateProxy'
         }
+    },
+    
+    // NFT contracts should reference:
+    sonicityNFT: {
+        contractName: 'SonicityNFT',
+        references: {
+            altarContract: 'altarProxy'
+        }
+    },
+    
+    sonicityFarm: {
+        contractName: 'SonicityFarm',
+        references: {
+            altarContract: 'altarProxy'
+        }
+    },
+    
+    sonicityDiamond: {
+        contractName: 'SonicityDiamond',
+        references: {
+            altarContract: 'altarProxy'
+        }
+    },
+    
+    sonicityRep: {
+        contractName: 'SonicityRep',
+        references: {
+            altarContract: 'altarProxy'
+        }
+    },
+    
+    sonicityYieldNFT: {
+        contractName: 'SonicityYieldNFT',
+        references: {
+            altarContract: 'altarProxy'
+        }
     }
 };
 

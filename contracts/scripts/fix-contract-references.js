@@ -63,12 +63,50 @@ async function main() {
         await gridBuildings.setAltarAddress(addresses.altarProxy);
         console.log('  ✅ Altar address set');
         
+        // Fix NFT contract references
+        console.log('\n🔧 Fixing NFT contract references...');
+        
+        // Fix SonicityNFT
+        console.log('  Setting Altar address in SonicityNFT...');
+        const sonicityNFT = await ethers.getContractAt('SonicityNFT', addresses.sonicityNFT);
+        await sonicityNFT.setAltarContract(addresses.altarProxy);
+        console.log('  ✅ SonicityNFT altarContract set');
+        
+        // Fix SonicityFarm
+        console.log('  Setting Altar address in SonicityFarm...');
+        const sonicityFarm = await ethers.getContractAt('SonicityFarm', addresses.sonicityFarm);
+        await sonicityFarm.setAltarContract(addresses.altarProxy);
+        console.log('  ✅ SonicityFarm altarContract set');
+        
+        // Fix SonicityDiamond
+        console.log('  Setting Altar address in SonicityDiamond...');
+        const sonicityDiamond = await ethers.getContractAt('SonicityDiamond', addresses.sonicityDiamond);
+        await sonicityDiamond.setAltarContract(addresses.altarProxy);
+        console.log('  ✅ SonicityDiamond altarContract set');
+        
+        // Fix SonicityRep
+        console.log('  Setting Altar address in SonicityRep...');
+        const sonicityRep = await ethers.getContractAt('SonicityRep', addresses.sonicityRep);
+        await sonicityRep.setAltarContract(addresses.altarProxy);
+        console.log('  ✅ SonicityRep altarContract set');
+        
+        // Fix SonicityYieldNFT
+        console.log('  Setting Altar address in SonicityYieldNFT...');
+        const sonicityYieldNFT = await ethers.getContractAt('SonicityYieldNFT', addresses.sonicityYieldNFT);
+        await sonicityYieldNFT.setAltarContract(addresses.altarProxy);
+        console.log('  ✅ SonicityYieldNFT altarContract set');
+        
         console.log('\n🎉 All contract references have been fixed!');
         console.log('\n📋 Fixed References:');
         console.log('  ✅ GameState.altarAddress →', addresses.altarProxy);
         console.log('  ✅ GameState.gridBuildingsAddress →', addresses.gridBuildingsProxy);
         console.log('  ✅ DistrictBuildings.battleSystemAddress →', addresses.battleSystemProxy);
         console.log('  ✅ GridBuildings.altarAddress →', addresses.altarProxy);
+        console.log('  ✅ SonicityNFT.altarContract →', addresses.altarProxy);
+        console.log('  ✅ SonicityFarm.altarContract →', addresses.altarProxy);
+        console.log('  ✅ SonicityDiamond.altarContract →', addresses.altarProxy);
+        console.log('  ✅ SonicityRep.altarContract →', addresses.altarProxy);
+        console.log('  ✅ SonicityYieldNFT.altarContract →', addresses.altarProxy);
         
         console.log('\n🔍 You can now run the verification script to confirm all references are correct:');
         console.log('  npx hardhat run scripts/verify-contract-references.js --network', process.env.HARDHAT_NETWORK || 'localhost');
