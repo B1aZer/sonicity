@@ -1,5 +1,18 @@
 # Now
 
+## todo
+
+- anal
+- do not send from loalhost
+
+## todo
+
++ altar fails,
++ all tests fails
++ nft fails
++ how to redpeloy everything grid related ?
++ check duplicate nft id error is resolved haha
+
 ## todo PRODUCTION
 
 1. switch to prod
