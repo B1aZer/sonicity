@@ -1368,11 +1368,11 @@ export class StakePage extends BasePage {
                 console.log(`[DEBUG] Minted NFT with auto-generated token ID:`, tokenId.toString());
             }
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadUserData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success modal
             this.modal.success(`${tierName} minted successfully!`, { title: 'Building Minted!' });
