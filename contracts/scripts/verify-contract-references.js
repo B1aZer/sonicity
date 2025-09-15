@@ -11,6 +11,7 @@ const fs = require('fs');
  */
 
 // Contract cross-reference mappings (what addresses each contract should store)
+// Based on the actual deployment script setup
 const CONTRACT_REFERENCES = {
     // GameState should reference:
     gameStateProxy: {
