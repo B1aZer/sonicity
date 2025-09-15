@@ -13,6 +13,14 @@
 </head>
 <body>
     <div id="app"></div>
+    <script src='https://js-de.sentry-cdn.com/788cbed50adc8122c62c134625ce9276.min.js' crossorigin="anonymous"></script>
+    <script>
+        // Initialize Sentry with your DSN
+        Sentry.init({
+            dsn: "https://788cbed50adc8122c62c134625ce9276@o4510023210434560.ingest.de.sentry.io/4510023232061520",
+            environment: "production"
+        });
+    </script>
     <script type="module" src="/src/js/core/main.js"></script>
 </body>
 </html> 
