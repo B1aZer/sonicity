@@ -17,7 +17,11 @@ This document describes the contract address verification system created to ensu
 
 **Usage**:
 ```bash
+# Direct script execution
 npx hardhat run scripts/verify-contract-addresses.js --network localhost
+
+# Or using npm script
+npm run verify
 ```
 
 ### 2. `verify-contract-references.js`
@@ -31,7 +35,11 @@ npx hardhat run scripts/verify-contract-addresses.js --network localhost
 
 **Usage**:
 ```bash
+# Direct script execution
 npx hardhat run scripts/verify-contract-references.js --network localhost
+
+# Or using npm script
+npm run verify:refs
 ```
 
 ### 3. `fix-contract-references.js`
@@ -45,7 +53,39 @@ npx hardhat run scripts/verify-contract-references.js --network localhost
 
 **Usage**:
 ```bash
+# Direct script execution
 npx hardhat run scripts/fix-contract-references.js --network localhost
+
+# Or using npm script
+npm run verify:fix
+```
+
+## NPM Scripts
+
+For convenience, the verification scripts have been added to `package.json`:
+
+### Local Development (localhost)
+```bash
+npm run verify          # Basic address verification
+npm run verify:refs     # Cross-reference verification  
+npm run verify:fix      # Fix cross-reference issues
+npm run verify:all      # Run both basic and cross-reference verification
+```
+
+### Testnet
+```bash
+npm run verify:testnet      # Basic address verification
+npm run verify:refs:testnet # Cross-reference verification
+npm run verify:fix:testnet  # Fix cross-reference issues
+npm run verify:all:testnet  # Run both verifications
+```
+
+### Mainnet
+```bash
+npm run verify:mainnet      # Basic address verification
+npm run verify:refs:mainnet # Cross-reference verification
+npm run verify:fix:mainnet  # Fix cross-reference issues
+npm run verify:all:mainnet  # Run both verifications
 ```
 
 ## Verification Results
