@@ -38,6 +38,9 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
     // Track how many NFTs each player has minted
     mapping(address => uint256) public playerMintCount;
 
+    // Token ID counter for auto-generation
+    uint256 private _tokenIdCounter;
+
     // Stake data for each token
     struct StakeData {
         uint256 repStaked;
@@ -55,6 +58,7 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
     // Constructor - initialize NFT contract
     constructor() ERC721("Sonicity Yield NFT", "SYNFT") Ownable(msg.sender) {
         baseURI = "http://localhost:3000/metadata/yield/";
+        _tokenIdCounter = 1; // Start from 1 to avoid token ID 0
     }
 
     /**
@@ -89,6 +93,35 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
         require(_ownerOf(tokenId) == address(0), "Token already exists");
         require(repAmount > 0, "REP amount must be positive");
         require(playerMintCount[to] < MAX_MINT_PER_PLAYER, "Player has reached mint limit");
+        
+        stakeInfo[tokenId] = StakeData({
+            repStaked: repAmount,
+            mintedAt: block.timestamp
+        });
+        
+        _safeMint(to, tokenId);
+        
+        // Update player mint count
+        playerMintCount[to] += 1;
+        
+        if (playerMintCount[to] == MAX_MINT_PER_PLAYER) {
+            emit PlayerMintLimitReached(to, playerMintCount[to]);
+        }
+    }
+
+    /**
+     * @dev Mint NFT for Altar contract with auto-generated token ID - only callable by Altar contract
+     * @param to The address to mint the NFT to
+     * @param repAmount The amount of REP staked for this NFT
+     * @return tokenId The auto-generated token ID
+     */
+    function mintForAltarAuto(address to, uint256 repAmount) external returns (uint256 tokenId) {
+        require(msg.sender == altarContract, "Only Altar contract can call this function");
+        require(_tokenIdCounter <= MAX_SUPPLY, "Maximum supply reached");
+        require(repAmount > 0, "REP amount must be positive");
+        require(playerMintCount[to] < MAX_MINT_PER_PLAYER, "Player has reached mint limit");
+        
+        tokenId = _tokenIdCounter++;
         
         stakeInfo[tokenId] = StakeData({
             repStaked: repAmount,
@@ -209,6 +242,14 @@ contract SonicityYieldNFT is ERC721Enumerable, Ownable {
      */
     function canPlayerMint(address player, uint256 amount) external view returns (bool) {
         return playerMintCount[player] + amount <= MAX_MINT_PER_PLAYER;
+    }
+
+    /**
+     * @dev Get current token ID counter (for testing and debugging)
+     * @return The current token ID counter
+     */
+    function getTokenIdCounter() external view returns (uint256) {
+        return _tokenIdCounter;
     }
 
     // Withdraw funds from contract

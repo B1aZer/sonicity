@@ -25,8 +25,8 @@ contract SonicityDiamond is ERC721Enumerable, Ownable {
     // Track how many NFTs each player has minted
     mapping(address => uint256) public playerMintCount;
 
-    // Token ID counter for sequential minting
-    uint256 private _tokenIdCounter = 1;
+    // Token ID counter for auto-generation
+    uint256 private _tokenIdCounter;
 
     // Events
     event PlayerMintLimitReached(address indexed player, uint256 totalMinted);
@@ -34,20 +34,19 @@ contract SonicityDiamond is ERC721Enumerable, Ownable {
     // Constructor - initialize NFT contract
     constructor() ERC721("Sonicity Diamond NFT", "SDIAMOND") Ownable(msg.sender) {
         baseURI = "http://localhost:3000/metadata/diamonds/";
+        _tokenIdCounter = 1; // Start from 1 to avoid token ID 0
     }
 
     /**
      * @dev Mint NFT for Altar contract - only callable by Altar contract
      * @param to The address to mint the NFT to
-     * @return tokenId The ID of the newly minted NFT
+     * @param tokenId The specific token ID to mint
      */
-    function mintForAltar(address to) external returns (uint256) {
+    function mintForAltar(address to, uint256 tokenId) external {
         require(msg.sender == altarContract, "Only Altar contract can call this function");
-        require(_tokenIdCounter <= MAX_SUPPLY, "Max supply reached");
+        require(tokenId > 0 && tokenId <= MAX_SUPPLY, "Invalid token ID");
+        require(_ownerOf(tokenId) == address(0), "Token already exists");
         require(playerMintCount[to] < MAX_MINT_PER_PLAYER, "Player has reached mint limit");
-        
-        uint256 tokenId = _tokenIdCounter;
-        _tokenIdCounter++;
         
         _safeMint(to, tokenId);
         
@@ -57,8 +56,27 @@ contract SonicityDiamond is ERC721Enumerable, Ownable {
         if (playerMintCount[to] == MAX_MINT_PER_PLAYER) {
             emit PlayerMintLimitReached(to, playerMintCount[to]);
         }
+    }
+
+    /**
+     * @dev Mint NFT for Altar contract with auto-generated token ID - only callable by Altar contract
+     * @param to The address to mint the NFT to
+     * @return tokenId The auto-generated token ID
+     */
+    function mintForAltarAuto(address to) external returns (uint256 tokenId) {
+        require(msg.sender == altarContract, "Only Altar contract can call this function");
+        require(_tokenIdCounter <= MAX_SUPPLY, "Maximum supply reached");
+        require(playerMintCount[to] < MAX_MINT_PER_PLAYER, "Player has reached mint limit");
         
-        return tokenId;
+        tokenId = _tokenIdCounter++;
+        _safeMint(to, tokenId);
+        
+        // Update player mint count
+        playerMintCount[to] += 1;
+        
+        if (playerMintCount[to] == MAX_MINT_PER_PLAYER) {
+            emit PlayerMintLimitReached(to, playerMintCount[to]);
+        }
     }
 
     /**
@@ -113,14 +131,6 @@ contract SonicityDiamond is ERC721Enumerable, Ownable {
         ));
     }
     
-    /**
-     * @dev Get current token ID counter (for debugging)
-     * @return uint256 The current token ID counter
-     */
-    function getTokenIdCounter() external view returns (uint256) {
-        return _tokenIdCounter;
-    }
-
     // Withdraw funds from contract
     function withdraw() external onlyOwner {
         uint256 balance = address(this).balance;
@@ -147,5 +157,13 @@ contract SonicityDiamond is ERC721Enumerable, Ownable {
      */
     function canPlayerMint(address player, uint256 amount) external view returns (bool) {
         return playerMintCount[player] + amount <= MAX_MINT_PER_PLAYER;
+    }
+
+    /**
+     * @dev Get current token ID counter (for testing and debugging)
+     * @return The current token ID counter
+     */
+    function getTokenIdCounter() external view returns (uint256) {
+        return _tokenIdCounter;
     }
 } 

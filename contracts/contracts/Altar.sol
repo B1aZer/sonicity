@@ -12,13 +12,15 @@ import "./GridBuildings.sol";
 
 // Interface for NFT contracts that support mintForAltar
 interface IMintableNFT {
-    function mintForAltar(address to) external returns (uint256);
+    function mintForAltar(address to, uint256 tokenId) external;
+    function mintForAltarAuto(address to) external returns (uint256 tokenId);
     function burnForAltar(uint256 tokenId) external;
 }
 
 // Interface for Yield NFT contracts that support mintForAltar with REP amount
 interface IYieldNFT {
     function mintForAltar(address to, uint256 tokenId, uint256 repAmount) external;
+    function mintForAltarAuto(address to, uint256 repAmount) external returns (uint256 tokenId);
     function totalSupply() external view returns (uint256);
     function ownerOf(uint256 tokenId) external view returns (address);
 }
@@ -131,42 +133,63 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     /**
      * @dev Mint and stake an NFT in one operation
      * @param collection The address of the NFT collection to mint from
+     * @param tokenId The specific token ID to mint
      * @param buildingType The type of building to create (0: HOUSE, 1: FARM, 2: DIAMOND_STATION, 3: REP_FORGE)
-     * @return tokenId The ID of the newly minted and staked NFT
      */
-    function mintAndStake(address collection, GridBuildings.GridBuildingType buildingType) external payable nonReentrant returns (uint256) {
+    function mintAndStake(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) external payable nonReentrant {
         require(approvedCollections[collection], "Collection not approved");
         
         // Step 1: Validate and collect payment
         _validateAndCollectPayment(buildingType);
         
         // Step 2: Mint the NFT directly to this contract
-        uint256 tokenId = IMintableNFT(collection).mintForAltar(address(this));
+        IMintableNFT(collection).mintForAltar(address(this), tokenId);
         
         // Step 3: Stake the NFT (shared logic)
         _stakeNFT(collection, tokenId, buildingType);
-        
-        return tokenId;
     }
 
     /**
      * @dev Mint an NFT with payment validation
      * @param collection The address of the NFT collection to mint from
+     * @param tokenId The specific token ID to mint
      * @param buildingType The type of building to create
-     * @return tokenId The ID of the newly minted NFT
      */
-    function mint(address collection, GridBuildings.GridBuildingType buildingType) external payable returns (uint256) {
+    function mint(address collection, uint256 tokenId, GridBuildings.GridBuildingType buildingType) external payable {
         require(approvedCollections[collection], "Collection not approved");
         
         // Validate and collect payment
         _validateAndCollectPayment(buildingType);
         
         // Mint to player
-        uint256 tokenId = IMintableNFT(collection).mintForAltar(msg.sender);
+        IMintableNFT(collection).mintForAltar(msg.sender, tokenId);
         
         emit NFTMinted(msg.sender, tokenId, collection, buildingType);
+    }
+
+    /**
+     * @dev Mint an NFT with auto-generated token ID and payment validation
+     * @param collection The address of the NFT collection to mint from
+     * @param buildingType The type of building to create
+     * @return tokenId The auto-generated token ID
+     */
+    function mintAuto(address collection, GridBuildings.GridBuildingType buildingType) external payable returns (uint256 tokenId) {
+        require(approvedCollections[collection], "Collection not approved");
         
-        return tokenId;
+        // Validate and collect payment
+        _validateAndCollectPayment(buildingType);
+        
+        // Mint to player with auto-generated token ID
+        if (collection == address(yieldNFT)) {
+            // Special case for yield NFT - need to get REP amount from payment
+            // For now, we'll use a default REP amount - this should be improved
+            tokenId = IYieldNFT(collection).mintForAltarAuto(msg.sender, 10); // Default 10 REP
+        } else {
+            // Standard NFT contracts
+            tokenId = IMintableNFT(collection).mintForAltarAuto(msg.sender);
+        }
+        
+        emit NFTMinted(msg.sender, tokenId, collection, buildingType);
     }
 
     /**
