@@ -14,12 +14,59 @@
 <body>
     <div id="app"></div>
     <script src='https://js-de.sentry-cdn.com/788cbed50adc8122c62c134625ce9276.min.js' crossorigin="anonymous"></script>
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-B17QP8GPT8"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-B17QP8GPT8');
+    </script>
+    
     <script>
         // Initialize Sentry with your DSN
-        Sentry.init({
-            dsn: "https://788cbed50adc8122c62c134625ce9276@o4510023210434560.ingest.de.sentry.io/4510023232061520",
-            environment: "production"
-        });
+        const isLocalhost = window.location.hostname === 'localhost' || 
+                           window.location.hostname === '127.0.0.1' || 
+                           window.location.hostname === '0.0.0.0';
+        
+        if (!isLocalhost) {
+            // Only initialize Sentry in production
+            Sentry.init({
+                dsn: "https://788cbed50adc8122c62c134625ce9276@o4510023210434560.ingest.de.sentry.io/4510023232061520",
+                environment: "production"
+            });
+            console.log("Sentry initialized for production");
+        } else {
+            console.log("Sentry disabled for localhost development");
+        }
+        
+        // Simple analytics helper
+        window.gameAnalytics = {
+            track: function(eventName, data = {}) {
+                // Send to Google Analytics
+                gtag('event', eventName, {
+                    event_category: 'game',
+                    ...data
+                });
+                
+                // Also log to console for debugging
+                console.log('Analytics:', eventName, data);
+            },
+            
+            trackPage: function(pageName) {
+                gtag('event', 'page_view', {
+                    page_title: pageName,
+                    page_location: window.location.href
+                });
+            },
+            
+            trackError: function(errorType, errorMessage) {
+                gtag('event', 'game_error', {
+                    error_type: errorType,
+                    error_message: errorMessage
+                });
+            }
+        };
     </script>
     <script type="module" src="/src/js/core/main.js"></script>
 </body>
