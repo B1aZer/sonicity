@@ -456,6 +456,15 @@ contract Altar is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentrancy
     }
 
     /**
+     * @dev Set the GridBuildings contract address (only owner)
+     * @param _gridBuildings The address of the GridBuildings contract
+     */
+    function setGridBuildingsAddress(address _gridBuildings) external onlyOwner {
+        require(_gridBuildings != address(0), "Invalid GridBuildings contract address");
+        gridBuildings = GridBuildings(_gridBuildings);
+    }
+
+    /**
      * @dev Set the SonicityYieldNFT contract address (only owner)
      * @param _yieldNFT The address of the SonicityYieldNFT contract
      */
