@@ -214,12 +214,25 @@ export class TavernPage extends BasePage {
             // Close loading modal after data reload
             loadingModal.close();
             
+            // Track successful hero mint in analytics
+            if (window.gameAnalytics) {
+                window.gameAnalytics.track('hero_minted', {
+                    hero_class: heroClassName,
+                    hero_class_value: heroClassValue
+                });
+            }
+            
             // Show success message
             this.modal.success(`${heroClassName} hero minted successfully! Your hero is ready for battle.`);
             
         } catch (error) {
             // Close loading modal on error
             loadingModal.close();
+            
+            // Track hero mint error in analytics
+            if (window.gameAnalytics) {
+                window.gameAnalytics.trackError('hero_mint_failed', error.message || 'Unknown error');
+            }
             
             Logger.error('Error minting hero:', error);
             this.modal.error('Failed to mint hero: ' + error.message);

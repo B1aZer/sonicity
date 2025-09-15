@@ -126,6 +126,13 @@ export class WalletManager {
             this.persistState();
             this.notify();
             
+            // Track wallet connection in analytics
+            if (window.gameAnalytics) {
+                window.gameAnalytics.track('wallet_connected', {
+                    wallet_address: walletAddress // Full address for testing
+                });
+            }
+            
             // For demo: automatically verify NFT status
             // This avoids needing to call contracts
             this.simulateNFTVerification();

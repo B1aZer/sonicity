@@ -210,12 +210,25 @@ export class TacticsCenterPage extends BasePage {
             // Close loading modal after data reload
             loadingModal.close();
             
+            // Track successful tactic mint in analytics
+            if (window.gameAnalytics) {
+                window.gameAnalytics.track('tactic_minted', {
+                    tactic_id: tacticId,
+                    tactic_name: tacticName
+                });
+            }
+            
             // Show success message
             this.modal.success(`${tacticName} minted successfully! Your tactic is ready for deployment.`);
             
         } catch (error) {
             // Close loading modal on error
             loadingModal.close();
+            
+            // Track tactic mint error in analytics
+            if (window.gameAnalytics) {
+                window.gameAnalytics.trackError('tactic_mint_failed', error.message || 'Unknown error');
+            }
             
             Logger.error('Error minting tactic:', error);
             this.modal.error('Failed to mint tactic: ' + error.message);

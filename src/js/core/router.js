@@ -100,6 +100,12 @@ export class Router {
         this.currentPage = pageInstance;
         pageInstance.mount(this.container);
         
+        // Track page view in analytics
+        if (window.gameAnalytics) {
+            const pageName = this.getPageDisplayName(route);
+            window.gameAnalytics.trackPage(pageName);
+        }
+        
         Logger.info('Successfully navigated to:', route);
     }
 
@@ -109,6 +115,37 @@ export class Router {
     getRouteFromPath(path) {
         // Remove leading slash if present
         return path.startsWith('/') ? path.slice(1) : path;
+    }
+
+    /**
+     * Get display name for a route (for analytics)
+     */
+    getPageDisplayName(route) {
+        const displayNames = {
+            '': 'Start Page',
+            'overview': 'Game Overview',
+            'access': 'Access Page',
+            'stake': 'Stake Hub',
+            'house': 'House',
+            'farm': 'Farm',
+            'diamond-station': 'Diamond Station',
+            'rep-forge': 'Rep Forge',
+            'arcanum': 'Arcanum',
+            'city': 'City',
+            'shop': 'Shop',
+            'workshop': 'Workshop',
+            'barracks': 'Barracks',
+            'scout-guild': 'Scout Guild',
+            'command-center': 'Command Center',
+            'garrison': 'Garrison',
+            'outpost': 'Outpost',
+            'revenue-hub': 'Revenue Hub',
+            'tavern': 'Tavern',
+            'tactics-center': 'Tactics Center',
+            'yield-station': 'Yield Station',
+            'faucet': 'Faucet'
+        };
+        return displayNames[route] || route;
     }
 
     /**

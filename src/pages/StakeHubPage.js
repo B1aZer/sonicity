@@ -1374,12 +1374,27 @@ export class StakePage extends BasePage {
             // Close loading modal after data reload
             loadingModal.close();
             
+            // Track successful mint in analytics
+            if (window.gameAnalytics) {
+                window.gameAnalytics.track('nft_minted', {
+                    nft_type: tierName.toLowerCase(),
+                    tier: tier,
+                    payment_type: resourceType === 4n ? 'sonic' : resourceName.toLowerCase(),
+                    payment_amount: price
+                });
+            }
+            
             // Show success modal
             this.modal.success(`${tierName} minted successfully!`, { title: 'Building Minted!' });
         } catch (error) {
             // Close loading modal on error
             if (loadingModal) {
                 loadingModal.close();
+            }
+            
+            // Track mint error in analytics
+            if (window.gameAnalytics) {
+                window.gameAnalytics.trackError('mint_failed', error.message || 'Unknown error');
             }
             
             // Get user-friendly error message and show it
