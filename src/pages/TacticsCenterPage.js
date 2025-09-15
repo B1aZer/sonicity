@@ -197,27 +197,28 @@ export class TacticsCenterPage extends BasePage {
     async mintTactic(tacticId, tacticName) {
         const mintButton = this.element.querySelector(`[data-tactic-id="${tacticId}"]`);
         
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Minting tactic...');
+        
         try {
-            // Disable button and show loading state
-            mintButton.disabled = true;
-            mintButton.textContent = 'Minting...';
-            
             // Mint the tactic
             const receipt = await this.contracts.tacticsNFT.mintTactic(tacticId);
             
-            // Show success message
-            this.modal.success(`${tacticName} minted successfully! Your tactic is ready for deployment.`);
-
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadTacticsCenterData();
             
+            // Close loading modal after data reload
+            loadingModal.close();
+            
+            // Show success message
+            this.modal.success(`${tacticName} minted successfully! Your tactic is ready for deployment.`);
+            
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
+            
             Logger.error('Error minting tactic:', error);
             this.modal.error('Failed to mint tactic: ' + error.message);
-            
-            // Reset button state
-            mintButton.disabled = false;
-            mintButton.textContent = 'Mint Tactic';
         }
     }
 

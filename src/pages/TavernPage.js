@@ -201,27 +201,28 @@ export class TavernPage extends BasePage {
     async mintHero(heroClassValue, heroClassName) {
         const mintButton = this.element.querySelector(`[data-hero-class="${heroClassName}"]`);
         
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Minting hero...');
+        
         try {
-            // Disable button and show loading state
-            mintButton.disabled = true;
-            mintButton.textContent = 'Minting...';
-
             // Mint the hero
             const receipt = await this.contracts.heroNFT.mintHero(heroClassValue);
             
-            // Show success message
-            this.modal.success(`${heroClassName} hero minted successfully! Your hero is ready for battle.`);
-
-            // Reload data
+            // Reload data (keep loading modal open during this)
             await this.loadTavernData();
             
+            // Close loading modal after data reload
+            loadingModal.close();
+            
+            // Show success message
+            this.modal.success(`${heroClassName} hero minted successfully! Your hero is ready for battle.`);
+            
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
+            
             Logger.error('Error minting hero:', error);
             this.modal.error('Failed to mint hero: ' + error.message);
-            
-            // Reset button state
-            mintButton.disabled = false;
-            mintButton.textContent = 'Mint Hero';
         }
     }
 
