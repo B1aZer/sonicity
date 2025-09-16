@@ -55,7 +55,10 @@ export class StakePage extends BasePage {
             food: 0,
             diamonds: 0,
             repPoints: 0,
-            buildingSlotsReached: false // New state variable
+            buildingSlotsReached: false, // New state variable
+            // Loading states
+            isLoading: true,
+            isTabLoading: { 0: false, 1: false, 2: false, 3: false, 4: false }
         };
         this.render();
     }
@@ -68,12 +71,15 @@ export class StakePage extends BasePage {
             return;
         }
         try {
+            this.setState({ isLoading: true });
             await this.loadUserData();
             this.setupEventListeners();
             Logger.info('Stake page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing stake page:', error);
             this.modal.error('Failed to initialize stake page. Please try refreshing the page.');
+        } finally {
+            this.setState({ isLoading: false });
         }
     }
 
@@ -154,11 +160,11 @@ export class StakePage extends BasePage {
                             <span class="tab-count">0</span>
                         </button>
                     </div>
-                    <div class="tier-content active" data-tier="0"><div class="buildings-grid"></div></div>
-                    <div class="tier-content" data-tier="1"><div class="buildings-grid"></div></div>
-                    <div class="tier-content" data-tier="2"><div class="buildings-grid"></div></div>
-                    <div class="tier-content" data-tier="3"><div class="buildings-grid"></div></div>
-                    <div class="tier-content" data-tier="4"><div class="buildings-grid"></div></div>
+                    <div class="tier-content active" data-tier="0">${this.getLoadingContainerHTML('Loading tier content...')}</div>
+                    <div class="tier-content" data-tier="1">${this.getLoadingContainerHTML('Loading tier content...')}</div>
+                    <div class="tier-content" data-tier="2">${this.getLoadingContainerHTML('Loading tier content...')}</div>
+                    <div class="tier-content" data-tier="3">${this.getLoadingContainerHTML('Loading tier content...')}</div>
+                    <div class="tier-content" data-tier="4">${this.getLoadingContainerHTML('Loading tier content...')}</div>
                 </div>
             </div>
         </div>
@@ -169,46 +175,64 @@ export class StakePage extends BasePage {
         // Use BasePage event management system to prevent duplicate handlers
         this.addEventListener('.tier-tab', 'click', async (event) => {
             const tab = event.currentTarget;
+            const tier = Number(tab.dataset.tier);
+            
+            // Don't allow switching to locked tabs
+            if (tab.disabled || tab.classList.contains('locked')) {
+                return;
+            }
+            
+            // Update active states
             this.element.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
             this.element.querySelectorAll('.tier-content').forEach(c => c.classList.remove('active'));
             tab.classList.add('active');
-            const tier = tab.dataset.tier;
-            this.element.querySelector(`.tier-content[data-tier="${tier}"]`).classList.add('active');
-            this.state.selectedTier = Number(tier);
-            await this.renderTierContent(Number(tier));
+            
+            // Show loading for the selected tab
+            const tierContent = this.element.querySelector(`.tier-content[data-tier="${tier}"]`);
+            tierContent.classList.add('active');
+            tierContent.innerHTML = this.getLoadingContainerHTML('Loading tier content...');
+            
+            // Update state
+            this.setState({ 
+                selectedTier: tier,
+                isTabLoading: { ...this.state.isTabLoading, [tier]: true }
+            });
+            
+            try {
+                await this.renderTierContent(tier);
+            } finally {
+                this.setState({ 
+                    isTabLoading: { ...this.state.isTabLoading, [tier]: false }
+                });
+            }
         });
     }
 
     async loadUserData() {
         const userAddress = await this.contracts.nft.getAddress();
-        let usedSlots = 0, totalSlots = 0;
+        // Get all data in parallel for better performance
+        let stakedBuildings = [], availableNFTs = [], totalSlots = 0;
+        let gold = 0, food = 0, diamonds = 0, repPoints = 0;
+        let usedSlots = 0;
+        
         try {
-            const stakedBuildings = await this.getStakedBuildings(userAddress);
+            // Parallel requests for better efficiency
+            [stakedBuildings, availableNFTs, totalSlots, gold, food, repPoints, diamonds] = await Promise.all([
+                this.getStakedBuildings(userAddress),
+                this.getAvailableNFTs(userAddress),
+                this.contracts.gameState.getBuildingSlots().then(slots => Number(slots)),
+                this.contracts.gameState.getPlayerGold(userAddress),
+                this.contracts.gameState.getPlayerFood(userAddress),
+                this.contracts.gameState.getPlayerRep(userAddress),
+                this.contracts.gameState.getPlayerDiamonds(userAddress)
+            ]);
+            
             usedSlots = stakedBuildings.length;
-            totalSlots = Number(await this.contracts.gameState.getBuildingSlots());
-        } catch (e) {
+        } catch (error) {
+            Logger.error('Error fetching user data:', error);
             usedSlots = 0;
             totalSlots = 0;
         }
-        
-        // Get player resources
-        let gold = 0, food = 0, diamonds = 0, repPoints = 0;
-        
-        try {
-            [gold, food, repPoints] = await Promise.all([
-                this.contracts.gameState.getPlayerGold(userAddress),
-                this.contracts.gameState.getPlayerFood(userAddress),
-                this.contracts.gameState.getPlayerRep(userAddress)
-            ]);
-            
-            // Get diamonds balance
-            diamonds = await this.contracts.gameState.getPlayerDiamonds(userAddress);
-        } catch (error) {
-            Logger.error('Error fetching player resources:', error);
-        }
-        
-        const stakedBuildings = await this.getStakedBuildings(userAddress);
-        const availableNFTs = await this.getAvailableNFTs(userAddress);
         // Group by buildingType (0: House, 1: Farm, 2: Diamond Station, 3: REP Forge)
         const byTier = { 0: [], 1: [], 2: [], 3: [], 4: [] };
         let atCap = 0, damaged = 0;
@@ -242,7 +266,9 @@ export class StakePage extends BasePage {
         };
         this.updateStatusSection();
         await this.updateTierTabs();
-        this.renderTierContent(this.state.selectedTier);
+        
+        // Render initial tier content without loading state since we're already loading
+        await this.renderTierContent(this.state.selectedTier);
     }
 
     updateStatusSection() {
