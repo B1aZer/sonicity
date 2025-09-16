@@ -36,4 +36,14 @@ export class Layout {
     unmount() {
         this.element.remove();
     }
+
+    /**
+     * Update the navbar based on the current route
+     * @param {string} route - The current route
+     */
+    updateNavbarRoute(route) {
+        if (this.navbar) {
+            this.navbar.updateRoute(route);
+        }
+    }
 } 

@@ -8,19 +8,21 @@ export class Navbar {
         this.element.className = 'navbar';
         this.walletButton = new WalletButton();
         this.musicToggle = new MusicToggle();
+        this.currentRoute = '';
         this.render();
         this.setupEventListeners();
     }
 
     render() {
+        // Generate navigation links based on current route
+        const navLinks = this.getNavLinks();
+        
         this.element.innerHTML = `
             <div class="nav-content">
                 <div class="nav-brand" id="logo">SoniCity</div>
                 <div class="nav-container">
                     <div class="nav-links">
-                        <a href="/faucet" class="nav-link" data-page="faucet">Faucet</a>
-                        <a href="/overview" class="nav-link" data-page="overview">Overview</a>
-                        <!-- <a href="/mint" class="nav-link" data-page="mint">Mint</a> -->
+                        ${navLinks}
                     </div>
                     <div class="nav-controls">
                         <div id="music-toggle-container"></div>
@@ -40,6 +42,32 @@ export class Navbar {
         const walletContainer = this.element.querySelector('#wallet-button-container');
         if (walletContainer) {
             walletContainer.appendChild(this.walletButton.element);
+        }
+    }
+
+    /**
+     * Get navigation links based on current route
+     * @returns {string} HTML string of navigation links
+     */
+    getNavLinks() {
+        // On start page ('' route), show only Faucet
+        if (this.currentRoute === '') {
+            return '<a href="/faucet" class="nav-link" data-page="faucet">Faucet</a>';
+        }
+        
+        // On all other pages, show only Overview
+        return '<a href="/overview" class="nav-link" data-page="overview">Overview</a>';
+    }
+
+    /**
+     * Update the navbar based on the current route
+     * @param {string} route - The current route
+     */
+    updateRoute(route) {
+        if (this.currentRoute !== route) {
+            this.currentRoute = route;
+            this.render();
+            this.setupEventListeners();
         }
     }
 

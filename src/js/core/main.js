@@ -68,6 +68,9 @@ class App {
             // Get the new route after navigation
             const newRoute = this.router.getCurrentRoute();
             
+            // Update navbar based on new route
+            this.layout.updateNavbarRoute(newRoute);
+            
             // Only update music if we actually navigated to a different page
             if (currentRoute !== newRoute) {
                 musicManager.updatePage(newRoute);
@@ -77,6 +80,8 @@ class App {
             // Fallback to access page on error
             window.history.pushState({}, '', '/access');
             await this.router.navigate('/access');
+            // Update navbar for access page
+            this.layout.updateNavbarRoute('access');
         }
     }
 }
