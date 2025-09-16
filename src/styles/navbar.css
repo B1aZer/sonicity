@@ -446,4 +446,91 @@
         text-align: center;
         font-size: 1.1rem;
     }
+}
+
+/* Wallet Button Responsive Styles */
+@media (max-width: 768px) {
+    .wallet-address {
+        font-size: 0.8rem;
+    }
+    
+    .wallet-status {
+        padding: 0 var(--spacing-sm);
+        gap: var(--spacing-xs);
+    }
+    
+    .network-badge {
+        font-size: 0.65rem;
+        padding: 1px 4px;
+    }
+}
+
+@media (max-width: 600px) {
+    .wallet-address {
+        display: none;
+    }
+    
+    .wallet-status {
+        padding: 0 var(--spacing-xs);
+    }
+    
+    .wallet-status::after {
+        content: 'Wallet';
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-left: var(--spacing-xs);
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-controls {
+        gap: var(--spacing-xs);
+    }
+    
+    .wallet-btn-wrapper {
+        min-width: 60px;
+    }
+    
+    .wallet-status {
+        padding: 0 var(--spacing-xs);
+        min-width: 50px;
+        justify-content: center;
+    }
+    
+    .wallet-status::after {
+        content: '';
+    }
+    
+    .wallet-status .wallet-address,
+    .wallet-status .network-badge {
+        display: none;
+    }
+    
+    .wallet-status .wallet-indicator {
+        width: 10px;
+        height: 10px;
+    }
+    
+    .wallet-status .dropdown-arrow {
+        display: none;
+    }
+    
+    /* Show wallet indicator with game theme */
+    .wallet-status::before {
+        content: 'W';
+        background-color: var(--color-secondary);
+        color: var(--text-primary);
+        font-size: 0.8rem;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 50%;
+        margin-right: var(--spacing-xs);
+        min-width: 20px;
+        text-align: center;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-family-navbar);
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
 } 
