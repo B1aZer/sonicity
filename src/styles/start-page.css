@@ -19,10 +19,12 @@
     align-items: center;
     justify-content: center;
     gap: var(--spacing-xl);
+    padding: 0 var(--spacing-lg);
+    box-sizing: border-box;
 }
 
 .start-image {
-    max-width: 80%;
+    max-width: 100%;
     max-height: 60vh;
     object-fit: contain;
     border-radius: var(--radius-lg);
@@ -41,11 +43,19 @@
     min-width: 180px;
 }
 
-
-/* Responsive adjustments */
+/* Responsive padding for smaller screens */
 @media (max-width: 768px) {
-    .start-image {
-        max-width: 90%;
+    .start-container {
+        padding: 0 var(--spacing-md);
+    }
+}
+
+@media (max-width: 480px) {
+    .start-container {
+        padding: 0 var(--spacing-sm);
     }
     
-} 
+    .start-buttons .btn {
+        min-width: 150px;
+    }
+}
