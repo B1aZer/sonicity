@@ -11,6 +11,7 @@ import GUI from 'lil-gui';
 import { BillboardManager } from './billboardManager.js';
 import { PropsManager } from './propsManager.js';
 import { FogManager } from './fogManager.js';
+import { ParticleManager } from './particleManager.js';
 
 export class SceneManager {
     constructor(gridManager) {
@@ -33,6 +34,7 @@ export class SceneManager {
         this.billboardManager = null;
         this.propsManager = null; // Add props manager
         this.fogManager = null; // Add fog manager
+        this.particleManager = null; // Add particle manager
         //this.river = null;
         this.lights = {
             sunLight: null,
@@ -1030,6 +1032,108 @@ export class SceneManager {
                 }
             }, 'enableConfigDebug').name('Enable Config Debug');
         }
+
+        // Particle System Controls
+        if (this.particleManager) {
+            const particleFolder = this.gui.addFolder('Particle Systems');
+            
+            const particleControls = {
+                enabled: true,
+                globalOpacity: 1.0,
+                windStrength: 0.05,
+                windDirectionX: 0.8,
+                windDirectionZ: 0.3
+            };
+            
+            particleFolder.add(particleControls, 'enabled').name('Particles Enabled').onChange((value) => {
+                this.particleManager.setEnabled(value);
+            });
+            
+            particleFolder.add(particleControls, 'globalOpacity', 0, 2).name('Global Opacity').onChange((value) => {
+                const particleNames = this.particleManager.getParticleSystemNames();
+                particleNames.forEach(name => {
+                    this.particleManager.updateSettings(name, { opacity: value * 0.4 });
+                });
+            });
+
+            // Wind controls
+            const windFolder = particleFolder.addFolder('Wind');
+            windFolder.add(particleControls, 'windStrength', 0, 0.2).name('Wind Strength').onChange((value) => {
+                const particleNames = this.particleManager.getParticleSystemNames();
+                particleNames.forEach(name => {
+                    this.particleManager.updateSettings(name, { windStrength: value });
+                });
+            });
+            
+            windFolder.add(particleControls, 'windDirectionX', -1, 1).name('Wind X').onChange((value) => {
+                const particleNames = this.particleManager.getParticleSystemNames();
+                particleNames.forEach(name => {
+                    const currentSettings = this.particleManager.getParticleSystem(name)?.userData?.config;
+                    if (currentSettings) {
+                        const newDirection = currentSettings.windDirection.clone();
+                        newDirection.x = value;
+                        this.particleManager.updateSettings(name, { windDirection: newDirection });
+                    }
+                });
+            });
+            
+            windFolder.add(particleControls, 'windDirectionZ', -1, 1).name('Wind Z').onChange((value) => {
+                const particleNames = this.particleManager.getParticleSystemNames();
+                particleNames.forEach(name => {
+                    const currentSettings = this.particleManager.getParticleSystem(name)?.userData?.config;
+                    if (currentSettings) {
+                        const newDirection = currentSettings.windDirection.clone();
+                        newDirection.z = value;
+                        this.particleManager.updateSettings(name, { windDirection: newDirection });
+                    }
+                });
+            });
+
+            // Individual particle system controls
+            const systemsFolder = particleFolder.addFolder('Individual Systems');
+            const particleNames = this.particleManager.getParticleSystemNames();
+            
+            particleNames.forEach(name => {
+                const systemFolder = systemsFolder.addFolder(name);
+                const system = this.particleManager.getParticleSystem(name);
+                
+                if (system) {
+                    systemFolder.add(system, 'visible').name('Visible');
+                    
+                    systemFolder.add({
+                        remove: () => {
+                            this.particleManager.removeParticleSystem(name);
+                            systemFolder.destroy();
+                        }
+                    }, 'remove').name('Remove System');
+                }
+            });
+
+            // Add new particle system button
+            particleFolder.add({
+                addNewSystem: () => {
+                    const name = `dust_${Date.now()}`;
+                    this.particleManager.createGoldenDust(name, {
+                        count: 500,
+                        size: 0.015,
+                        color: 0xFFD700,
+                        opacity: 0.3,
+                        speed: 0.3,
+                        turbulence: 0.2,
+                        life: 10.0,
+                        spawnRadius: 8.0,
+                        height: 2.0,
+                        windStrength: 0.05,
+                        windDirection: new THREE.Vector3(0.5, 0, 0.5)
+                    }, new THREE.Vector3(
+                        (Math.random() - 0.5) * 40,
+                        0,
+                        (Math.random() - 0.5) * 40
+                    ));
+                    Logger.info(`Added new particle system: ${name}`);
+                }
+            }, 'addNewSystem').name('Add New Dust System');
+        }
     }
 
     /**
@@ -1117,6 +1221,10 @@ export class SceneManager {
             // Create fog manager for atmospheric effects
             this.fogManager = new FogManager(this.scene);
             await this.fogManager.loadAllFog();
+
+            // Create particle manager for golden dust effects
+            this.particleManager = new ParticleManager(this.scene);
+            this.createDefaultParticles();
 
             // Create river
             /*
@@ -1216,9 +1324,67 @@ export class SceneManager {
         //     this.trees.update();
         // }
 
+        // Update particle systems
+        if (this.particleManager) {
+            this.particleManager.update(this.clock.getDelta());
+        }
+
         if (config.features.performanceMonitor && this.performanceMonitor) {
             this.updatePerformanceMonitor();
         }
+    }
+
+    /**
+     * Creates default particle systems for the scene
+     */
+    createDefaultParticles() {
+        if (!this.particleManager) return;
+
+        // Create subtle golden dust particles around the center of the scene
+        this.particleManager.createGoldenDust('ambient_dust', {
+            count: 800,
+            size: 0.015,
+            color: 0xFFD700,
+            opacity: 0.4,
+            speed: 0.3,
+            turbulence: 0.2,
+            life: 12.0,
+            spawnRadius: 15.0,
+            height: 3.0,
+            windStrength: 0.05,
+            windDirection: new THREE.Vector3(0.8, 0, 0.3)
+        }, new THREE.Vector3(0, 0, 0));
+
+        // Create additional dust particles in different areas for more coverage
+        this.particleManager.createGoldenDust('ambient_dust_2', {
+            count: 600,
+            size: 0.012,
+            color: 0xFFE55C,
+            opacity: 0.3,
+            speed: 0.25,
+            turbulence: 0.15,
+            life: 10.0,
+            spawnRadius: 12.0,
+            height: 2.5,
+            windStrength: 0.08,
+            windDirection: new THREE.Vector3(-0.5, 0, 0.7)
+        }, new THREE.Vector3(20, 0, 15));
+
+        this.particleManager.createGoldenDust('ambient_dust_3', {
+            count: 500,
+            size: 0.018,
+            color: 0xFFC107,
+            opacity: 0.35,
+            speed: 0.35,
+            turbulence: 0.25,
+            life: 8.0,
+            spawnRadius: 10.0,
+            height: 2.0,
+            windStrength: 0.06,
+            windDirection: new THREE.Vector3(0.3, 0, -0.9)
+        }, new THREE.Vector3(-15, 0, -10));
+
+        Logger.info('Created default golden dust particle systems');
     }
 
     /**
@@ -1284,6 +1450,12 @@ export class SceneManager {
         if (this.fogManager) {
             this.fogManager.dispose();
             this.fogManager = null;
+        }
+
+        // Dispose of particle manager
+        if (this.particleManager) {
+            this.particleManager.dispose();
+            this.particleManager = null;
         }
 
         // Dispose of river
