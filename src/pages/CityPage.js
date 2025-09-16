@@ -15,24 +15,40 @@ export class CityPage extends BasePage {
         // Initialize audio manager for sound effects (without camera for now)
         this.audioManager = new AudioManager();
         
-        // Building name to route mapping
+        // Building name to route mapping (only buildings with dedicated pages)
         this.buildingRoutes = {
-            'House': '/house',
-            'Farm': '/farm',
-            'Diamond Station': '/diamond-station',
-            'REP Forge': '/rep-forge',
-            'Arcanum': '/arcanum',
+            // Core buildings
+            //'City Hall': '/city',
+            //'Altar': '/stake',
+            //'Mine': '/revenue-hub',
+            
+            // District buildings with dedicated pages
             'Shop': '/shop',
             'Workshop': '/workshop',
+            'Outpost': '/outpost',
             'Barracks': '/barracks',
             'Scout Guild': '/scout-guild',
-            'Command Center': '/command-center',
             'Garrison': '/garrison',
-            'Outpost': '/outpost',
-            'Revenue Hub': '/revenue-hub',
+            'Command Center': '/command-center',
             'Tavern': '/tavern',
+            //'Adventure Camp': '#', // No dedicated page yet
+            //'Mage Tower': '#', // No dedicated page yet
             'Tactics Center': '/tactics-center',
+            
+            //'Gem Workshop': '#', // No dedicated page yet
+            //'Diamond Vault': '/diamond-station',
+            'Arcanum of Names': '/arcanum',
+            //'Council Hall': '#', // No dedicated page yet
+            //'Fortress Walls': '#', // No dedicated page yet
+            //'Embassy Home': '#', // No dedicated page yet
+            //'Treasury Vault': '#', // No dedicated page yet
+            // Grid buildings
+            /*
+            'House': '/house',
+            'Farm': '/farm',
+            'REP Forge': '/rep-forge',
             'Yield Station': '/yield-station'
+            */
         };
         
         this.element.className = 'base-page';
@@ -254,9 +270,11 @@ export class CityPage extends BasePage {
                             </div>
                             <div class="btn-container">
                                 ${isBuilt ? `
-                                    <button class="building-button btn btn-secondary enter-button" data-route="${this.buildingRoutes[config.name] || '#'}" type="button">
-                                        Enter
-                                    </button>
+                                    ${this.buildingRoutes[config.name] ? `
+                                        <button class="building-button btn btn-secondary enter-button" data-route="${this.buildingRoutes[config.name]}" type="button">
+                                            Enter
+                                        </button>
+                                    ` : ''}
                                     ${canUpgrade ? `
                                         <button class="building-button btn btn-primary upgrade-button" data-building="${config.name}" type="button">
                                             Upgrade to Level ${currentLevel + 1}
