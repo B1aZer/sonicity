@@ -81,7 +81,7 @@ export class StakePage extends BasePage {
         this.element.innerHTML = `
         <div class="page-container-outer">
             <div class="page-container">
-                <h1>Grid Buildings</h1>
+                <h1>Grid Hub</h1>
                 <p class="page-description">
                     Stake your NFTs to create grid buildings. Manage, upgrade, and recharge your buildings here.
                 </p>
