@@ -15,6 +15,26 @@ export class CityPage extends BasePage {
         // Initialize audio manager for sound effects (without camera for now)
         this.audioManager = new AudioManager();
         
+        // Building name to route mapping
+        this.buildingRoutes = {
+            'House': '/house',
+            'Farm': '/farm',
+            'Diamond Station': '/diamond-station',
+            'REP Forge': '/rep-forge',
+            'Arcanum': '/arcanum',
+            'Shop': '/shop',
+            'Workshop': '/workshop',
+            'Barracks': '/barracks',
+            'Scout Guild': '/scout-guild',
+            'Command Center': '/command-center',
+            'Garrison': '/garrison',
+            'Outpost': '/outpost',
+            'Revenue Hub': '/revenue-hub',
+            'Tavern': '/tavern',
+            'Tactics Center': '/tactics-center',
+            'Yield Station': '/yield-station'
+        };
+        
         this.element.className = 'base-page';
         
         this.render();
@@ -232,12 +252,22 @@ export class CityPage extends BasePage {
                                     <p class="unlock-cost">Unlock Cost: ${config.unlockCost} gold</p>
                                 `}
                             </div>
-                            <button class="building-button btn btn-primary" data-building="${config.name}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
-                                ${isDisabled ? 'Building Disabled' :
-                                    isBuilt ? 
-                                        (canUpgrade ? `Upgrade to Level ${currentLevel + 1}` : 'Constructed') : 
-                                        `Build ${config.name}`}
-                            </button>
+                            <div class="btn-container">
+                                ${isBuilt ? `
+                                    <button class="building-button btn btn-secondary enter-button" data-route="${this.buildingRoutes[config.name] || '#'}" type="button">
+                                        Enter
+                                    </button>
+                                    ${canUpgrade ? `
+                                        <button class="building-button btn btn-primary upgrade-button" data-building="${config.name}" type="button">
+                                            Upgrade to Level ${currentLevel + 1}
+                                        </button>
+                                    ` : ''}
+                                ` : `
+                                    <button class="building-button btn btn-primary" data-building="${config.name}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
+                                        ${isDisabled ? 'Building Disabled' : `Build ${config.name}`}
+                                    </button>
+                                `}
+                            </div>
                         </div>
                     `;
                 }).join('');
@@ -500,23 +530,35 @@ export class CityPage extends BasePage {
         this.addEventListener('.building-button', 'click', async (event) => {
             const button = event.currentTarget;
             const buildingType = button.dataset.building;
+            const route = button.dataset.route;
             const buildingCard = button.closest('.building-card');
             const requiredDonation = buildingCard.dataset.requiredDonation;
             
             try {
-                // Check if building is disabled
-                if (buildingCard.classList.contains('disabled')) {
-                    this.modal.error('This building is currently disabled and cannot be built.');
+                // Handle Enter button clicks (navigation)
+                if (button.classList.contains('enter-button') && route) {
+                    this.audioManager.playBuildingEnter();
+                    window.history.pushState({}, '', route);
+                    window.dispatchEvent(new PopStateEvent('popstate'));
                     return;
                 }
                 
-                // Check if building is locked
-                if (buildingCard.classList.contains('locked')) {
-                    this.modal.error(`This building requires ${requiredDonation} gold in donations to unlock`);
-                    return;
+                // Handle building actions (build/upgrade)
+                if (buildingType) {
+                    // Check if building is disabled
+                    if (buildingCard.classList.contains('disabled')) {
+                        this.modal.error('This building is currently disabled and cannot be built.');
+                        return;
+                    }
+                    
+                    // Check if building is locked
+                    if (buildingCard.classList.contains('locked')) {
+                        this.modal.error(`This building requires ${requiredDonation} gold in donations to unlock`);
+                        return;
+                    }
+                    
+                    await this.handleBuildingAction(buildingType);
                 }
-                
-                await this.handleBuildingAction(buildingType);
             } catch (error) {
                 this.modal.error('Failed to build: ' + error.message);
             }
