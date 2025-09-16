@@ -55,8 +55,21 @@ export class Navbar {
             return '<a href="/faucet" class="nav-link" data-page="faucet">Faucet</a>';
         }
         
-        // On all other pages, show only Overview
-        return '<a href="/overview" class="nav-link" data-page="overview">Overview</a>';
+        // On all other pages, show Menu with dropdown
+        return `
+            <div class="menu-container">
+                <button class="nav-link menu-toggle" data-page="menu">
+                    Menu
+                    <span class="menu-arrow">▼</span>
+                </button>
+                <div class="menu-dropdown">
+                    <a href="/overview" class="menu-link" data-page="overview">Overview</a>
+                    <a href="/city" class="menu-link" data-page="city">District Hall</a>
+                    <a href="/stake" class="menu-link" data-page="stake">Grid Hub</a>
+                    <a href="/revenue-hub" class="menu-link" data-page="revenue-hub">Guidance Potal</a>
+                </div>
+            </div>
+        `;
     }
 
     /**
@@ -77,8 +90,33 @@ export class Navbar {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const page = e.target.dataset.page;
-                window.history.pushState({}, '', `/${page}`);
-                window.dispatchEvent(new PopStateEvent('popstate'));
+                if (page && page !== 'menu') {
+                    window.history.pushState({}, '', `/${page}`);
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                }
+            });
+        });
+
+        // Handle menu toggle
+        const menuToggle = this.element.querySelector('.menu-toggle');
+        if (menuToggle) {
+            menuToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleMenu();
+            });
+        }
+
+        // Handle menu links
+        this.element.querySelectorAll('.menu-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = e.target.dataset.page;
+                if (page) {
+                    this.closeMenu();
+                    window.history.pushState({}, '', `/${page}`);
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                }
             });
         });
 
@@ -92,6 +130,56 @@ export class Navbar {
             });
             // Add cursor pointer to indicate it's clickable
             logo.style.cursor = 'pointer';
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!this.element.contains(e.target)) {
+                this.closeMenu();
+            }
+        });
+    }
+
+    /**
+     * Toggle the menu dropdown
+     */
+    toggleMenu() {
+        const dropdown = this.element.querySelector('.menu-dropdown');
+        const arrow = this.element.querySelector('.menu-arrow');
+        
+        if (dropdown && arrow) {
+            const isOpen = dropdown.classList.contains('open');
+            if (isOpen) {
+                this.closeMenu();
+            } else {
+                this.openMenu();
+            }
+        }
+    }
+
+    /**
+     * Open the menu dropdown
+     */
+    openMenu() {
+        const dropdown = this.element.querySelector('.menu-dropdown');
+        const arrow = this.element.querySelector('.menu-arrow');
+        
+        if (dropdown && arrow) {
+            dropdown.classList.add('open');
+            arrow.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    /**
+     * Close the menu dropdown
+     */
+    closeMenu() {
+        const dropdown = this.element.querySelector('.menu-dropdown');
+        const arrow = this.element.querySelector('.menu-arrow');
+        
+        if (dropdown && arrow) {
+            dropdown.classList.remove('open');
+            arrow.style.transform = 'rotate(0deg)';
         }
     }
 
