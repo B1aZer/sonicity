@@ -151,6 +151,10 @@ export class AccessPage extends BasePage {
                             <span class="status-label">RPC URL:</span>
                             <span class="status-value">${networkConfig.rpcUrl}</span>
                         </div>
+                        <div class="status-item">
+                            <span class="status-label">Currency Symbol:</span>
+                            <span class="status-value">S</span>
+                        </div>
                     </div>
                     
                     <div class="network-actions">
