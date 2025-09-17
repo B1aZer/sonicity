@@ -18,6 +18,14 @@ export class Layout {
         // Create footer content
         this.footer.innerHTML = `
             <div class="footer-content">
+                <div class="footer-social">
+                    <a href="https://x.com/SonicityFi" target="_blank" rel="noopener noreferrer" title="Follow us on X (Twitter)">
+                        <i class="fab fa-x-twitter fa-lg"></i>
+                    </a>
+                    <a href="https://t.me/+mG5GwkGPzocyOTY8" target="_blank" rel="noopener noreferrer" title="Join our Telegram">
+                        <i class="fab fa-telegram fa-lg"></i>
+                    </a>
+                </div>
                 <p>&copy; ${new Date().getFullYear()} Sonicity. All rights reserved.</p>
             </div>
         `;

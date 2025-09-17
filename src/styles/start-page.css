@@ -2,7 +2,7 @@
     background-color: var(--bg-dark);
     padding-top: 80px; /* Account for navbar height */
     position: relative;
-    height: calc(100vh - 80px);
+    height: calc(90vh - 80px);
     overflow: hidden;
     display: flex;
     flex-direction: column;
