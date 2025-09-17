@@ -65,6 +65,17 @@
 
 ## configs 
 206.189.106.53
+
+anvil \
+  --host 127.0.0.1 \
+  --port 8545 \
+  --accounts 10 \
+  --mnemonic "test test test test test test test test test test test junk" \
+  --dump-state ~/.anvil-state/sonic-fork.json \
+  --chain-id 1337
+  --block-time 1
+
+
 anvil \
   --fork-url https://rpc.soniclabs.com \
   --host 127.0.0.1 \
