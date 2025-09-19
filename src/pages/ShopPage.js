@@ -225,7 +225,7 @@ export class ShopPage extends BasePage {
             
             // Handle SONIC payments
             if (item.currency === 'SONIC') {
-                const sonicAmount = item.cost; // Cost is already in wei
+                const sonicAmount = BigInt(item.cost); // Ensure it's a BigInt
                 await this.contracts.cosmeticItems.transact('purchaseCosmetic', cosmeticId, { value: sonicAmount });
             } else {
                 // Handle resource-based payments
