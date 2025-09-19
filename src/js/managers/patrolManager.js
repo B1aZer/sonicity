@@ -305,11 +305,9 @@ export class PatrolManager {
         
         const mixer = new THREE.AnimationMixer(unit);
         
-        // Find and setup walk animation
+        // Find and setup walk animation (prioritize walk over run)
         const walkClip = unit.animations.find(clip => 
-            clip.name.toLowerCase().includes('walk') || 
-            clip.name.toLowerCase().includes('run') ||
-            clip.name.toLowerCase().includes('move')
+            clip.name.toLowerCase().includes('walk')
         );
         
         if (walkClip) {

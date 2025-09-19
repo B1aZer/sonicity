@@ -1116,7 +1116,7 @@ export const PATROL_CONFIG = {
     
     // Limits
     MAX_PATROLS_PER_TYPE: 4,  // Maximum patrol units of each type
-    TERRAIN_OFFSET: 0.1,      // Height above terrain to prevent clipping
+    TERRAIN_OFFSET: 0.01,      // Height above terrain to prevent clipping
     
     // Animation settings
     ANIMATION_FADE_TIME: 0.3, // Seconds for animation transitions
