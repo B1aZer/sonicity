@@ -1038,7 +1038,8 @@ export const RESOURCE_TYPES = {
   0: 'GOLD',
   1: 'DIAMONDS', 
   2: 'FOOD',
-  3: 'REP'
+  3: 'REP',
+  4: 'SONIC'
 };
 
 // Static cosmetic metadata (images, descriptions, model paths, positioning)
@@ -1052,6 +1053,15 @@ export const COSMETIC_METADATA = {
     position: { x: -20, y: 0, z: -22 }, // Near city center, in front
     rotation: { x: 0, y: 1.2, z: 0 },   // Default rotation
     size: new THREE.Vector3(1.5, 1.5, 1.5)  // Default size (consistent with PROPS)
+  },
+  1: {
+    image: '/images/shop/help.png',
+    description: 'Instant 1000 gold for emergency situations. Limited to 5 purchases per player.',
+    type: 'emergency',
+    modelPath: '',
+    position: { x: 0, y: 0, z: 0 }, // Not a 3D item
+    rotation: { x: 0, y: 0, z: 0 },
+    size: new THREE.Vector3(1, 1, 1)
   }
   // Future cosmetic metadata will be added here
 };

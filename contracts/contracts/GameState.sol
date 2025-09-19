@@ -306,6 +306,21 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Add gold to player (for emergency help purchases)
+     * @param player The address of the player
+     * @param amount The amount of gold to add
+     * @notice TODO: Remove this function in production - it's only for emergency help shop items
+     */
+    function addGold(address player, uint256 amount) external {
+        require(
+            msg.sender == cosmeticItemsAddress, 
+            "Only CosmeticItems can call this function"
+        );
+        playerState[player].gold += amount;
+        emit GoldEarned(player, amount);
+    }
+
+    /**
      * @dev Earn food (can only be called by GridBuildings)
      * @param player The address of the player
      * @param amount The amount of food to earn
