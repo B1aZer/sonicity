@@ -802,7 +802,10 @@ export class StakePage extends BasePage {
                         ${item.tier === 4 && item.repStaked ? `<div class="detail-item"><span class="detail-label">REP Points:</span><span class="detail-value">${item.repStaked.toLocaleString()} REP</span></div>` : ''}
                     </div>
                     <div class="building-actions">
-                        <button class="btn btn-full btn-primary stake-btn" title="Stake NFT to create building">Stake</button>
+                        ${this.state.buildingSlotsReached ? 
+                            `<button class="btn btn-full btn-secondary" disabled title="Building slot limit reached for current tier. Upgrade your tier to get more slots.">Stake</button>` :
+                            `<button class="btn btn-full btn-primary stake-btn" title="Stake NFT to create building">Stake</button>`
+                        }
                         <button class="btn btn-full btn-danger burn-btn"><i class="fas fa-fire"></i> Burn</button>
                     </div>
                 </div>
@@ -1111,9 +1114,20 @@ export class StakePage extends BasePage {
 
     // --- Action handlers ---
     async stakeNFT(tokenId, collection) {
+        // Check building slot limit before attempting to stake
+        if (this.state.buildingSlotsReached) {
+            this.modal.error('Building slot limit reached for current tier. Upgrade your tier to get more slots.', { 
+                title: 'Cannot Stake NFT' 
+            });
+            return;
+        }
+
+        let loadingModal = null;
+        let stakingModal = null;
+        
         try {
             // Phase 1: Approve NFT transfer
-            const loadingModal = this.modal.loading('Approving NFT transfer...');
+            loadingModal = this.modal.loading('Approving NFT transfer...');
             
             // Determine tier from UI or NFT
             let tier = 0;
@@ -1138,10 +1152,13 @@ export class StakePage extends BasePage {
             await nftContract.approve(altarAddress, tokenId);
             
             // Close approval loading modal
-            loadingModal.close();
+            if (loadingModal) {
+                loadingModal.close();
+                loadingModal = null;
+            }
             
             // Phase 2: Stake NFT
-            const stakingModal = this.modal.loading('Staking NFT...');
+            stakingModal = this.modal.loading('Staking NFT...');
             
             // Stake NFT - use specialized function for yield stations
             if (tier === 4) {
@@ -1152,18 +1169,26 @@ export class StakePage extends BasePage {
                 await this.contracts.altar.stake(tokenId, tier, collection);
             }
             
-            
             // Reload data
             await this.loadUserData();
 
             // Close staking loading modal
-            stakingModal.close();
+            if (stakingModal) {
+                stakingModal.close();
+                stakingModal = null;
+            }
 
             // Show success modal
             this.modal.success('NFT staked successfully!', { title: 'NFT Staked!' });
         } catch (e) {
-            // Close staking loading modal
-            stakingModal.close();
+            // Close any open modals
+            if (loadingModal) {
+                loadingModal.close();
+            }
+            if (stakingModal) {
+                stakingModal.close();
+            }
+            
             Logger.error('Error staking NFT:', e);
             this.modal.error(e.message || 'Failed to stake NFT', { title: 'Staking Failed' });
         }
@@ -1302,6 +1327,14 @@ export class StakePage extends BasePage {
         
         const tierName = tierNames[tier];
         let loadingModal = null;
+        
+        // Check building slot limit before attempting to mint
+        if (this.state.buildingSlotsReached) {
+            this.modal.error('Building slot limit reached for current tier. Upgrade your tier to get more slots.', { 
+                title: 'Cannot Mint NFT' 
+            });
+            return;
+        }
         
         try {
             // Check if user has enough resources
