@@ -177,24 +177,38 @@ export class ShopPage extends BasePage {
                 return;
             }
             
-            if (Number(this.state.diamonds) < item.cost) {
-                this.modal.error(`Insufficient diamonds! You need ${item.cost} diamonds but only have ${this.state.diamonds}.`);
-                return;
-            }
-            
-            // Check if already owned
-            if (item.isOwned) {
-                this.modal.info(`You already own <b>${item.name}</b>!`);
-                return;
-            }
-            
-            const result = await this.modal.confirm(
-                `Purchase <b>${item.name}</b> for <b>${item.cost} Diamonds</b>?`,
-                { title: 'Confirm Purchase' }
-            );
-            
-            if (result.isConfirmed) {
-                await this.purchaseCosmetic(cosmeticId, item);
+            // Handle different currency types
+            if (item.currency === 'SONIC') {
+                // For SONIC payments, we'll handle the payment in the contract call
+                const result = await this.modal.confirm(
+                    `Purchase <b>${item.name}</b> for <b>${item.cost / 1e18} SONIC</b>?`,
+                    { title: 'Confirm Purchase' }
+                );
+                
+                if (result.isConfirmed) {
+                    await this.purchaseCosmetic(cosmeticId, item);
+                }
+            } else {
+                // Handle resource-based payments
+                if (item.currency === 'DIAMONDS' && Number(this.state.diamonds) < item.cost) {
+                    this.modal.error(`Insufficient diamonds! You need ${item.cost} diamonds but only have ${this.state.diamonds}.`);
+                    return;
+                }
+                
+                // Check if already owned (for regular cosmetic items)
+                if (item.type !== 'emergency' && item.isOwned) {
+                    this.modal.info(`You already own <b>${item.name}</b>!`);
+                    return;
+                }
+                
+                const result = await this.modal.confirm(
+                    `Purchase <b>${item.name}</b> for <b>${item.cost} ${item.currency}</b>?`,
+                    { title: 'Confirm Purchase' }
+                );
+                
+                if (result.isConfirmed) {
+                    await this.purchaseCosmetic(cosmeticId, item);
+                }
             }
         } catch (error) {
             Logger.error('Error in purchase handler:', error);
@@ -209,13 +223,26 @@ export class ShopPage extends BasePage {
             // Show loading modal
             const loadingModal = this.modal.loading('Processing purchase...');
             
-            await this.contracts.cosmeticItems.transact('purchaseCosmetic', cosmeticId);
+            // Handle SONIC payments
+            if (item.currency === 'SONIC') {
+                const sonicAmount = item.cost; // Cost is already in wei
+                await this.contracts.cosmeticItems.transact('purchaseCosmetic', cosmeticId, { value: sonicAmount });
+            } else {
+                // Handle resource-based payments
+                await this.contracts.cosmeticItems.transact('purchaseCosmetic', cosmeticId);
+            }
             
             // Close loading modal
             loadingModal.close();
             
             Logger.info(`Successfully purchased cosmetic: ${item.name}`);
-            this.modal.success(`You have purchased <b>${item.name}</b>! It will appear in your district.`);
+            
+            // Different success messages for different item types
+            if (item.type === 'emergency') {
+                this.modal.success(`You have purchased <b>${item.name}</b>! 1000 gold has been added to your account instantly.`);
+            } else {
+                this.modal.success(`You have purchased <b>${item.name}</b>! It will appear in your district.`);
+            }
             
             // Refresh player resources and ownership status
             await this.loadPlayerResources();
@@ -296,7 +323,7 @@ export class ShopPage extends BasePage {
         }
 
         container.innerHTML = `
-            <div class="buildings-grid">
+            <div class="buildings-grid-rows">
                 ${this.state.cosmeticItems.map(item => `
                     <div class="shop-item-card">
                         <div class="shop-item-image">
@@ -309,17 +336,17 @@ export class ShopPage extends BasePage {
                             <div class="shop-item-desc">${item.description}</div>
                             <div class="cost-component">
                                 <div class="cost-item">
-                                    <i class="fas fa-gem cost-icon"></i>
-                                    <span class="cost-value">${item.cost}</span>
+                                    <i class="fas ${this.getCurrencyIcon(item.currency)} cost-icon"></i>
+                                    <span class="cost-value">${this.formatCost(item.cost, item.currency)}</span>
                                 </div>
                             </div>
                         </div>
                         <div class="shop-item-action-row">
-                            <button class="btn ${item.isOwned ? 'btn-secondary' : 'btn-primary'} buy-btn" 
+                            <button class="btn ${this.getButtonClass(item)} buy-btn" 
                                     data-item-id="${item.id}" 
-                                    ${item.isOwned ? 'disabled' : ''}>
-                                <i class="fas ${item.isOwned ? 'fa-check' : 'fa-shopping-cart'}"></i>
-                                ${item.isOwned ? 'Already Owned' : 'Purchase'}
+                                    ${this.isButtonDisabled(item) ? 'disabled' : ''}>
+                                <i class="fas ${this.getButtonIcon(item)}"></i>
+                                ${this.getButtonText(item)}
                             </button>
                         </div>
                     </div>
@@ -347,5 +374,52 @@ export class ShopPage extends BasePage {
         Logger.info('Updating wallet status with address:', address);
         // Wallet status updates are handled through onInitialized
         // This method is kept for BasePage compatibility
+    }
+
+    // Helper methods for shop item display
+    getCurrencyIcon(currency) {
+        switch (currency) {
+            case 'GOLD': return 'fa-coins';
+            case 'DIAMONDS': return 'fa-gem';
+            case 'FOOD': return 'fa-wheat-awn';
+            case 'REP': return 'fa-star';
+            case 'SONIC': return 'fa-dollar-sign';
+            default: return 'fa-coins';
+        }
+    }
+
+    formatCost(cost, currency) {
+        if (currency === 'SONIC') {
+            return (cost / 1e18).toFixed(0); // Convert wei to SONIC, no decimal point
+        }
+        return cost.toString();
+    }
+
+    getButtonClass(item) {
+        if (item.type === 'emergency') {
+            return 'btn-primary'; // Emergency items are always purchasable (until limit reached)
+        }
+        return item.isOwned ? 'btn-secondary' : 'btn-primary';
+    }
+
+    isButtonDisabled(item) {
+        if (item.type === 'emergency') {
+            return false; // Emergency items are never disabled (contract handles limits)
+        }
+        return item.isOwned;
+    }
+
+    getButtonIcon(item) {
+        if (item.type === 'emergency') {
+            return 'fa-shopping-cart';
+        }
+        return item.isOwned ? 'fa-check' : 'fa-shopping-cart';
+    }
+
+    getButtonText(item) {
+        if (item.type === 'emergency') {
+            return 'Purchase';
+        }
+        return item.isOwned ? 'Already Owned' : 'Purchase';
     }
 } 
