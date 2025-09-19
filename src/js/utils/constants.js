@@ -1042,6 +1042,13 @@ export const RESOURCE_TYPES = {
   4: 'SONIC'
 };
 
+// Emergency help configuration
+export const EMERGENCY_HELP_CONFIG = {
+  PURCHASE_LIMIT: 5, // Maximum purchases per player
+  GOLD_AMOUNT: 1000, // Gold given per purchase
+  SONIC_COST: 20     // SONIC cost per purchase
+};
+
 // Static cosmetic metadata (images, descriptions, model paths, positioning)
 // This data doesn't change often and is UI-specific
 export const COSMETIC_METADATA = {

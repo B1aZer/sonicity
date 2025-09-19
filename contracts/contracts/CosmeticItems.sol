@@ -12,6 +12,9 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
  */
 contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     
+    // Emergency help configuration
+    uint8 public constant EMERGENCY_HELP_PURCHASE_LIMIT = 5;
+    
     // Resource types for pricing
     enum ResourceType {
         GOLD,
@@ -111,7 +114,7 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Handle different item types
         if (config.cosmeticType == 1) {
             // Emergency items - check purchase limit instead of ownership
-            require(playerPurchaseCounts[msg.sender][cosmeticId] < 5, "Purchase limit reached (5 max)");
+            require(playerPurchaseCounts[msg.sender][cosmeticId] < EMERGENCY_HELP_PURCHASE_LIMIT, "Purchase limit reached");
         } else {
             // Regular cosmetic items - check ownership
             require(!ownedCosmetics[msg.sender][cosmeticId], "Already owned");

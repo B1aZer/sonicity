@@ -1,5 +1,5 @@
 import { BasePage } from './BasePage.js';
-import { COSMETIC_METADATA, RESOURCE_TYPES } from '../js/utils/constants.js';
+import { COSMETIC_METADATA, RESOURCE_TYPES, EMERGENCY_HELP_CONFIG } from '../js/utils/constants.js';
 import { Modal } from '../js/utils/modal.js';
 import { WalletManager } from '../js/utils/wallet.js';
 import Logger from '../js/utils/logger.js';
@@ -145,11 +145,26 @@ export class ShopPage extends BasePage {
                 this.contracts.gameState.getPlayerGold(this.state.playerAddress)
             ]);
             
-            // Update ownership status for each cosmetic item
+            // Update ownership status and purchase counts for each cosmetic item
             const updatedItems = await Promise.all(
                 this.state.cosmeticItems.map(async (item) => {
                     const isOwned = await this.contracts.cosmeticItems.ownsCosmetic(this.state.playerAddress, item.id);
-                    return { ...item, isOwned };
+                    let purchaseCount = 0;
+                    
+                    // Load purchase count for emergency items
+                    if (item.type === 'emergency') {
+                        try {
+                            const rawPurchaseCount = await this.contracts.cosmeticItems.getPurchaseCount(this.state.playerAddress, item.id);
+                            purchaseCount = Number(rawPurchaseCount); // Convert BigInt to number
+                            const remaining = EMERGENCY_HELP_CONFIG.PURCHASE_LIMIT - purchaseCount;
+                            Logger.info(`Emergency item ${item.id}: purchaseCount=${purchaseCount}, remaining=${remaining}`);
+                        } catch (error) {
+                            Logger.warn(`Failed to load purchase count for item ${item.id}:`, error);
+                            purchaseCount = 0;
+                        }
+                    }
+                    
+                    return { ...item, isOwned, purchaseCount };
                 })
             );
 
@@ -332,6 +347,7 @@ export class ShopPage extends BasePage {
                         <div class="shop-item-info">
                             <div class="shop-item-title-row">
                                 <h3>${item.name}</h3>
+                                ${this.getStockDisplay(item)}
                             </div>
                             <div class="shop-item-desc">${item.description}</div>
                             <div class="cost-component">
@@ -397,14 +413,16 @@ export class ShopPage extends BasePage {
 
     getButtonClass(item) {
         if (item.type === 'emergency') {
-            return 'btn-primary'; // Emergency items are always purchasable (until limit reached)
+            const purchaseCount = Number(item.purchaseCount || 0);
+            return purchaseCount >= EMERGENCY_HELP_CONFIG.PURCHASE_LIMIT ? 'btn-secondary' : 'btn-primary';
         }
         return item.isOwned ? 'btn-secondary' : 'btn-primary';
     }
 
     isButtonDisabled(item) {
         if (item.type === 'emergency') {
-            return false; // Emergency items are never disabled (contract handles limits)
+            const purchaseCount = Number(item.purchaseCount || 0);
+            return purchaseCount >= EMERGENCY_HELP_CONFIG.PURCHASE_LIMIT;
         }
         return item.isOwned;
     }
@@ -421,5 +439,25 @@ export class ShopPage extends BasePage {
             return 'Purchase';
         }
         return item.isOwned ? 'Already Owned' : 'Purchase';
+    }
+
+    getStockDisplay(item) {
+        if (item.type === 'emergency') {
+            const purchaseCount = Number(item.purchaseCount || 0);
+            const remaining = EMERGENCY_HELP_CONFIG.PURCHASE_LIMIT - purchaseCount;
+            if (remaining > 0) {
+                return `<span class="shop-item-stock in-stock">
+                    <i class="fas fa-shopping-cart"></i>
+                    ${remaining} remaining
+                </span>`;
+            } else {
+                return `<span class="shop-item-stock out-of-stock">
+                    <i class="fas fa-times-circle"></i>
+                    Limit reached
+                </span>`;
+            }
+        }
+        // No label for regular cosmetic items
+        return '';
     }
 } 
