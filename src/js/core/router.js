@@ -23,6 +23,8 @@ import { TacticsCenterPage } from '../../pages/TacticsCenterPage.js';
 import { YieldStationPage } from '../../pages/YieldStationPage.js';
 import { FaucetPage } from '../../pages/FaucetPage.js';
 import Logger from '../utils/logger.js';
+import { musicManager } from '../managers/musicManager.js';
+import { gameStateManager } from '../managers/gameStateManager.js';
 
 export class Router {
     constructor(container) {
@@ -31,6 +33,7 @@ export class Router {
         // Re-enable page caching for lightweight pages (excluding complex 3D pages)
         this.pageCache = new Map();
         this.game = null;
+        this.globalManagersInitialized = false; // Track if global managers are initialized
         
         // Pages that don't require wallet connection
         this.publicPages = new Set(['access']);
@@ -100,6 +103,11 @@ export class Router {
         this.currentPage = pageInstance;
         pageInstance.mount(this.container);
         
+        // Initialize global managers after first page with contracts is loaded
+        if (!this.globalManagersInitialized && pageInstance.contracts) {
+            await this.initializeGlobalManagers(pageInstance.contracts);
+        }
+        
         // Track page view in analytics
         if (window.gameAnalytics) {
             const pageName = this.getPageDisplayName(route);
@@ -107,6 +115,28 @@ export class Router {
         }
         
         Logger.info('Successfully navigated to:', route);
+    }
+
+    /**
+     * Initialize global managers after contracts are available
+     * @param {Object} contracts - The contracts object from the page
+     */
+    async initializeGlobalManagers(contracts) {
+        try {
+            Logger.info('Initializing global managers...');
+            
+            // Set up global state manager with contracts
+            gameStateManager.setContracts(contracts);
+            
+            // Initialize music manager after contracts are ready
+            musicManager.init();
+            Logger.info('Music manager initialized after contracts');
+            
+            this.globalManagersInitialized = true;
+            Logger.info('Global managers initialized successfully');
+        } catch (error) {
+            Logger.error('Error initializing global managers:', error);
+        }
     }
 
     /**

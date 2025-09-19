@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import Logger from '../utils/logger.js';
+import { gameStateManager } from './gameStateManager.js';
 
 export class MusicManager {
     constructor() {
@@ -33,6 +34,10 @@ export class MusicManager {
             'home-village': {
                 path: '/music/2- Home Village.mp3',
                 name: 'Home Village'
+            },
+            'battle': {
+                path: '/music/3- Battle.mp3',
+                name: 'Battle'
             },
             'mystical-forest': {
                 path: '/music/4- Mystical Forest.mp3',
@@ -152,7 +157,9 @@ export class MusicManager {
         
         // If music is enabled, play music for the new page
         if (this.isPlaying) {
-            this.playPageMusic(pageName);
+            this.playPageMusic(pageName).catch(error => {
+                Logger.error('Error updating page music:', error);
+            });
         }
     }
 
@@ -160,7 +167,19 @@ export class MusicManager {
      * Play music for a specific page
      * @param {string} pageName - The page name/route
      */
-    playPageMusic(pageName) {
+    async playPageMusic(pageName) {
+        // Check if player is in battle first
+        const isInBattle = await gameStateManager.isPlayerInBattle();
+        
+        if (isInBattle) {
+            Logger.info(`Page music requested for ${pageName} but player is in battle - keeping battle music`);
+            // Ensure battle music is playing if in battle
+            if (this.currentTrack !== 'battle') {
+                this.playBattleMusic();
+            }
+            return;
+        }
+        
         // Default to home village for all pages
         let trackKey = 'home-village';
         
@@ -442,6 +461,36 @@ export class MusicManager {
     setCrossfadeDuration(duration) {
         this.crossfadeDuration = Math.max(0.5, Math.min(5.0, duration)); // Clamp between 0.5 and 5 seconds
         Logger.info(`Crossfade duration set to: ${this.crossfadeDuration}s`);
+    }
+
+    /**
+     * Play battle music
+     */
+    playBattleMusic() {
+        if (this.isPlaying && this.currentTrack !== 'battle') {
+            Logger.info('Switching to battle music');
+            this.playTrack('battle');
+        }
+    }
+
+    /**
+     * Return to normal page music, but only if not in battle
+     */
+    async returnToPageMusic() {
+        // Check current battle state before switching back
+        const isInBattle = await gameStateManager.isPlayerInBattle();
+        
+        if (!isInBattle && this.isPlaying && this.currentTrack === 'battle') {
+            Logger.info('Returning to page music from battle music');
+            if (this.currentPage !== null) {
+                await this.playPageMusic(this.currentPage);
+            } else {
+                // Default to home village if no current page
+                this.playTrack('home-village');
+            }
+        } else if (isInBattle) {
+            Logger.info('Still in battle, keeping battle music');
+        }
     }
 }
 

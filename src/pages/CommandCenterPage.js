@@ -633,6 +633,10 @@ export class CommandCenterPage extends BasePage {
                     heroClass
                 );
 
+                // Switch to battle music when player starts a battle
+                Logger.info('Player started battle - switching to battle music');
+                musicManager.playBattleMusic();
+
                 const heroText = heroClass !== 255 ? ` with hero` : '';
                 this.modal.success(`Battle started${heroText}! Your troops are marching to battle.`);
                 await this.loadCommandCenterData();
@@ -646,6 +650,10 @@ export class CommandCenterPage extends BasePage {
                 const address = WalletManager.getCurrentWallet();
                 
                 await this.contracts.battleSystem.resolveBattle(address);
+                
+                // Switch back to normal music when battle is resolved
+                Logger.info('Battle resolved - returning to normal music');
+                await musicManager.returnToPageMusic();
                 
                 // Clear the battle timer interval
                 if (this.battleTimerInterval) {

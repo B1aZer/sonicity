@@ -18,9 +18,6 @@ class App {
     }
 
     init() {
-        // Initialize music manager
-        musicManager.init();
-        
         // Mount layout
         this.layout.mount(this.container);
 

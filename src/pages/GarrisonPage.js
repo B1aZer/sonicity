@@ -623,6 +623,10 @@ export class GarrisonPage extends BasePage {
                 
                 await this.contracts.battleSystem.resolveBattle(address);
                 
+                // Switch back to normal music when battle is resolved
+                Logger.info('Battle resolved - returning to normal music');
+                await musicManager.returnToPageMusic();
+                
                 // Clear the battle timer interval
                 if (this.battleTimerInterval) {
                     clearInterval(this.battleTimerInterval);
