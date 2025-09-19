@@ -1081,6 +1081,23 @@ export const SCOUT_GUILD_MESSAGES = [
     "They wandered far, but no city dared reveal itself."
 ];
 
+// Unit model paths and configurations for patrol and battle systems
+export const UNIT_MODELS = {
+    INFANTRY: {
+        modelPath: 'assets/Infantry_A.glb',
+        size: new THREE.Vector3(0.5, 0.5, 0.5) // Standard unit size, scaled down from default
+    },
+    // TODO: Add when models are available
+    // CAVALRY: {
+    //     modelPath: 'assets/Cavalry_A.glb',
+    //     size: new THREE.Vector3(1.0, 1.0, 1.0) // Slightly larger for mounted units
+    // },
+    // SIEGE: {
+    //     modelPath: 'assets/Siege_A.glb',
+    //     size: new THREE.Vector3(1.2, 1.2, 1.2) // Larger for heavy equipment
+    // }
+};
+
 // Patrol system configuration
 export const PATROL_CONFIG = {
     // Movement speeds (units per second)

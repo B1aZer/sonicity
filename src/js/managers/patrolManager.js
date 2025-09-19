@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { BattleSystemContract } from '../contracts/BattleSystemContract.js';
-import { PATROL_CONFIG, BUILDINGS } from '../utils/constants.js';
+import { PATROL_CONFIG, BUILDINGS, UNIT_MODELS } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
 import { getConfiguredGLTFLoader } from '../utils/gltfLoader.js';
 
@@ -188,13 +188,27 @@ export class PatrolManager {
      */
     getUnitModelPath(unitType) {
         const modelPaths = {
-            'infantry': 'assets/Infantry_A.glb',
+            'infantry': UNIT_MODELS.INFANTRY.modelPath,
             // Add more when you have them
-            // 'cavalry': 'assets/Cavalry_A.glb',
-            // 'siege': 'assets/Siege_A.glb'
+            // 'cavalry': UNIT_MODELS.CAVALRY.modelPath,
+            // 'siege': UNIT_MODELS.SIEGE.modelPath
         };
         
         return modelPaths[unitType] || modelPaths['infantry'];
+    }
+    
+    /**
+     * Get size configuration for unit type
+     */
+    getUnitSize(unitType) {
+        const unitSizes = {
+            'infantry': UNIT_MODELS.INFANTRY.size,
+            // Add more when you have them
+            // 'cavalry': UNIT_MODELS.CAVALRY.size,
+            // 'siege': UNIT_MODELS.SIEGE.size
+        };
+        
+        return unitSizes[unitType] || unitSizes['infantry'];
     }
     
     /**
@@ -245,8 +259,9 @@ export class PatrolManager {
             Logger.info(`Spawning unit at barracks: (${startPosition.x}, ${startPosition.y}, ${startPosition.z}) for route: ${routeId}`);
             unit.position.copy(startPosition);
             
-            // Scale unit appropriately
-            unit.scale.setScalar(PATROL_CONFIG.UNIT_SCALE);
+            // Scale unit appropriately using unit-specific size
+            const unitSize = this.getUnitSize(unitType);
+            unit.scale.copy(unitSize);
             
             // Setup unit data
             unit.userData = {
