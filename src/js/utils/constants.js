@@ -1056,7 +1056,7 @@ export const COSMETIC_METADATA = {
   },
   1: {
     image: '/images/shop/help.png',
-    description: 'Instant 1000 gold for emergency situations.',
+    description: 'Instant 1000 gold for emergency situations',
     type: 'emergency',
     modelPath: '',
     position: { x: 0, y: 0, z: 0 }, // Not a 3D item
