@@ -1101,7 +1101,7 @@ export const UNIT_MODELS = {
 // Patrol system configuration
 export const PATROL_CONFIG = {
     // Movement speeds (units per second)
-    INFANTRY_SPEED: 2.0,      // Standard patrol speed
+    INFANTRY_SPEED: 0.75,      // Standard patrol speed
     CAVALRY_SPEED: 3.5,       // Faster for mounted units
     SIEGE_SPEED: 1.2,         // Slower for heavy equipment
     
