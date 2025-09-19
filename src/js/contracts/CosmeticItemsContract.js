@@ -32,6 +32,11 @@ export class CosmeticItemsContract extends BaseContract {
         return this.contract.getAvailableCosmetics(maxId);
     }
 
+    // Get purchase count for a specific cosmetic item
+    async getPurchaseCount(player, cosmeticId) {
+        return this.contract.getPurchaseCount(player, cosmeticId);
+    }
+
     // Owner functions (if needed)
     async setCosmeticConfig(cosmeticId, name, cost, resourceType, enabled, description = "", modelPath = "", cosmeticType = 0, options = {}) {
         return this.transact('setCosmeticConfig', cosmeticId, name, cost, resourceType, enabled, description, modelPath, cosmeticType, options);

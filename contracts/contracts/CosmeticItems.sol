@@ -79,7 +79,7 @@ contract CosmeticItems is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             cost: 20 ether, // 20 SONIC (in wei)
             resourceType: ResourceType.SONIC,
             enabled: true,
-            description: "Instant 1000 gold for emergency situations. Limited to 5 purchases per player.",
+            description: "Instant 1000 gold for emergency situations",
             modelPath: "",
             cosmeticType: 1 // 1 = Emergency item type
         });
