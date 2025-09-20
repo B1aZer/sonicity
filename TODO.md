@@ -1,5 +1,11 @@
 # Now
 
+## chain
+
+- multichain ? anvil ? account abstraction
+- sei?
+- google play ??
+
 ## todo
 
 + anal

@@ -4,6 +4,7 @@ import Logger from '../js/utils/logger.js';
 import { WalletManager } from '../js/utils/wallet.js';
 import { TacticsNFTContract } from '../js/contracts/TacticsNFTContract.js';
 import { BattleProgressBar } from '../components/BattleProgressBar.js';
+import { musicManager } from '../js/managers/musicManager.js';
 
 import('../styles/command-center-page.css');
 import('../styles/battle-progress-bar.css');
