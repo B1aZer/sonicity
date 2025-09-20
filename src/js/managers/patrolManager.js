@@ -41,17 +41,24 @@ export class PatrolManager {
     setupPatrolRoutes() {
         // Get barracks spawn position
         const barracksPos = BUILDINGS.BARRACKS.position;
-        this.barracksSpawnPoint = new THREE.Vector3(barracksPos.x + 3, 0, barracksPos.z + 3); // Slightly offset from barracks
+        
+        // Create separate spawn points for each unit type
+        this.spawnPoints = {
+            infantry: new THREE.Vector3(barracksPos.x + 0.1, 0, barracksPos.z + 0.1),   // Close to barracks
+            cavalry: new THREE.Vector3(barracksPos.x - 1, 0, barracksPos.z - 2),   // Slightly further east
+            siege: new THREE.Vector3(barracksPos.x + 2, 0, barracksPos.z - 3)      // Slightly further south
+        };
         
         // City Center Patrol - flows around main buildings avoiding collisions
         this.patrolRoutes.set('city_center', [
-            new THREE.Vector3(-10, 0, -2),  // West of Altar (safe corridor)
-            new THREE.Vector3(-10, 0, -7),  // South of Altar  
+            new THREE.Vector3(-5, 0, -2),   // Closer to barracks area
+            new THREE.Vector3(-8, 0, -5),   // West of Altar (safe corridor)
+            new THREE.Vector3(-8, 0, -10),  // South of Altar  
             new THREE.Vector3(-3, 0, -15),  // West of City Hall (avoiding building)
             new THREE.Vector3(3, 0, -15),   // East of City Hall
-            new THREE.Vector3(10, 0, -7),   // North of Mine (safe passage)
-            new THREE.Vector3(10, 0, -2),   // Around Mine area
-            new THREE.Vector3(-2, 0, 3),    // North corridor (avoiding Altar)
+            new THREE.Vector3(8, 0, -10),   // North of Mine (safe passage)
+            new THREE.Vector3(8, 0, -5),    // Around Mine area
+            new THREE.Vector3(0, 0, 0),     // Return to barracks area
         ]);
         
         // Perimeter Patrol - outer defensive ring with safe clearance
@@ -68,35 +75,39 @@ export class PatrolManager {
         
         // Military Corridor - connects military buildings with safe passages
         this.patrolRoutes.set('military_corridor', [
-            new THREE.Vector3(15, 0, -7),   // East of Barracks (safe side)
-            new THREE.Vector3(18, 0, -15),  // Clear corridor east
-            new THREE.Vector3(18, 0, -25),  // Midway south
-            new THREE.Vector3(12, 0, -30),  // Approach to Garrison (avoiding building)
+            new THREE.Vector3(5, 0, -5),    // Close to barracks area
+            new THREE.Vector3(12, 0, -8),   // East of Barracks (safe side)
+            new THREE.Vector3(15, 0, -15),  // Clear corridor east
+            new THREE.Vector3(15, 0, -25),  // Midway south
+            new THREE.Vector3(10, 0, -30),  // Approach to Garrison (avoiding building)
             new THREE.Vector3(4, 0, -32),   // West of Garrison (safe passage)
             new THREE.Vector3(4, 0, -38),   // South of Garrison
             new THREE.Vector3(8, 0, -42),   // Return path east
-            new THREE.Vector3(15, 0, -35),  // Return north avoiding buildings
-            new THREE.Vector3(18, 0, -20),  // Return corridor
+            new THREE.Vector3(12, 0, -35),  // Return north avoiding buildings
+            new THREE.Vector3(8, 0, -20),   // Return corridor
+            new THREE.Vector3(2, 0, -5),    // Return to barracks area
         ]);
         
         // Scout Route - wide reconnaissance avoiding all major structures
         this.patrolRoutes.set('scout_route', [
-            new THREE.Vector3(20, 0, -35),  // East of Scout Guild (safe approach)
-            new THREE.Vector3(25, 0, -30),  // Eastern outpost clear area
-            new THREE.Vector3(30, 0, -20),  // Far east observation
-            new THREE.Vector3(25, 0, -10),  // Northeast sweep
-            new THREE.Vector3(15, 0, -5),   // Central east (avoiding Mine)
+            new THREE.Vector3(3, 0, -8),    // Close to barracks area
+            new THREE.Vector3(15, 0, -12),  // East of Scout Guild (safe approach)
+            new THREE.Vector3(20, 0, -25),  // Eastern outpost clear area
+            new THREE.Vector3(25, 0, -20),  // Far east observation
+            new THREE.Vector3(20, 0, -10),  // Northeast sweep
+            new THREE.Vector3(12, 0, -5),   // Central east (avoiding Mine)
             new THREE.Vector3(0, 0, -2),    // Central north (clear corridor)
-            new THREE.Vector3(-15, 0, -5),  // Central west
-            new THREE.Vector3(-25, 0, -15), // Western observation
-            new THREE.Vector3(-20, 0, -30), // Southwest sweep
-            new THREE.Vector3(-10, 0, -40), // South central
-            new THREE.Vector3(5, 0, -45),   // Return east (clear of buildings)
-            new THREE.Vector3(15, 0, -42),  // Approach return
+            new THREE.Vector3(-12, 0, -5),  // Central west
+            new THREE.Vector3(-20, 0, -15), // Western observation
+            new THREE.Vector3(-15, 0, -25), // Southwest sweep
+            new THREE.Vector3(-5, 0, -35),  // South central
+            new THREE.Vector3(5, 0, -40),   // Return east (clear of buildings)
+            new THREE.Vector3(10, 0, -35),  // Approach return
+            new THREE.Vector3(1, 0, -5),    // Return to barracks area
         ]);
         
         Logger.info(`Setup ${this.patrolRoutes.size} building-aware patrol routes`);
-        Logger.info(`Barracks spawn point: (${this.barracksSpawnPoint.x}, ${this.barracksSpawnPoint.z})`);
+        Logger.info(`Spawn points - Infantry: (${this.spawnPoints.infantry.x}, ${this.spawnPoints.infantry.z}), Cavalry: (${this.spawnPoints.cavalry.x}, ${this.spawnPoints.cavalry.z}), Siege: (${this.spawnPoints.siege.x}, ${this.spawnPoints.siege.z})`);
     }
     
     /**
@@ -246,15 +257,15 @@ export class PatrolManager {
                 return null;
             }
 
-            // Start at barracks, then create route: barracks -> patrol route -> loop patrol
-            const barracksSpawn = this.barracksSpawnPoint.clone();
-            const deploymentRoute = [barracksSpawn, ...baseRoute]; // Add barracks as first waypoint
+            // Start at unit-specific spawn point, then create route: spawn -> patrol route -> loop patrol
+            const unitSpawnPoint = this.spawnPoints[unitType] || this.spawnPoints.infantry;
+            const deploymentRoute = [unitSpawnPoint.clone(), ...baseRoute]; // Add spawn point as first waypoint
             
             // Update route to follow terrain height
             const terrainRoute = this.updateRouteToTerrain(deploymentRoute);
-            const startPosition = position || terrainRoute[0].clone(); // Start at barracks
+            const startPosition = position || terrainRoute[0].clone(); // Start at unit-specific spawn point
             
-            Logger.info(`Spawning unit at barracks: (${startPosition.x}, ${startPosition.y}, ${startPosition.z}) for route: ${routeId}`);
+            Logger.info(`Spawning ${unitType} unit at spawn point: (${startPosition.x}, ${startPosition.y}, ${startPosition.z}) for route: ${routeId}`);
             unit.position.copy(startPosition);
             
             // Scale unit appropriately using unit-specific size
