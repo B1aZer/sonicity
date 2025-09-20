@@ -278,7 +278,7 @@ export class TavernPage extends BasePage {
                         <!-- WARRIOR -->
                         <div class="shop-item-card" id="hero-warrior">
                             <div class="shop-item-image">
-                                <img src="/images/heroes/warrior.png" alt="Warrior" onerror="this.src='/images/heroes/default.png'" />
+                                <img src="/images/heroes/Warrior.png" alt="Warrior" onerror="this.src='/images/heroes/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -313,7 +313,7 @@ export class TavernPage extends BasePage {
                         <!-- STRATEGIST -->
                         <div class="shop-item-card" id="hero-strategist">
                             <div class="shop-item-image">
-                                <img src="/images/heroes/strategist.png" alt="Strategist" onerror="this.src='/images/heroes/default.png'" />
+                                <img src="/images/heroes/Tactician.png" alt="Strategist" onerror="this.src='/images/heroes/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -348,7 +348,7 @@ export class TavernPage extends BasePage {
                         <!-- SCOUT -->
                         <div class="shop-item-card" id="hero-scout">
                             <div class="shop-item-image">
-                                <img src="/images/heroes/scout.png" alt="Scout" onerror="this.src='/images/heroes/default.png'" />
+                                <img src="/images/heroes/Scout.png" alt="Scout" onerror="this.src='/images/heroes/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">

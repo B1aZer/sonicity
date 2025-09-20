@@ -19,12 +19,12 @@ export class BattleSystemContract extends BaseContract {
         },
         CAVALRY: {
             name: 'Cavalry',
-            description: 'More powerful unit with chance to disable enemy grid buildings',
+            description: 'Mobile unit with 30% chance to damage enemy grid buildings.',
             image: '/images/barracks/cavalry.png'
         },
         SIEGE: {
             name: 'Siege',
-            description: 'Best at damaging structures with chance to burn enemy treasury gold',
+            description: 'Heavy unit with 50% chance to damage district buildings and 10% chance to burn enemy treasury.',
             image: '/images/barracks/siege.png'
         }
     };
