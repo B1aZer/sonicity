@@ -445,9 +445,9 @@ export class PatrolManager {
         // Spawn infantry patrols using configurable ratio
         const infantryPatrols = Math.min(
             Math.floor(troopCounts.infantry / PATROL_CONFIG.INFANTRY_PER_PATROL), 
-            PATROL_CONFIG.MAX_PATROLS_PER_TYPE
+            PATROL_CONFIG.MAX_PATROLS.INFANTRY
         );
-        Logger.info(`Calculating patrols: ${troopCounts.infantry} infantry ÷ ${PATROL_CONFIG.INFANTRY_PER_PATROL} = ${infantryPatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS_PER_TYPE})`);
+        Logger.info(`Calculating patrols: ${troopCounts.infantry} infantry ÷ ${PATROL_CONFIG.INFANTRY_PER_PATROL} = ${infantryPatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS.INFANTRY})`);
         
         for (let i = 0; i < infantryPatrols; i++) {
             const routes = ['city_center', 'perimeter', 'military_corridor', 'scout_route'];
@@ -463,9 +463,9 @@ export class PatrolManager {
         // Spawn cavalry patrols using configurable ratio
         const cavalryPatrols = Math.min(
             Math.floor(troopCounts.cavalry / PATROL_CONFIG.CAVALRY_PER_PATROL), 
-            PATROL_CONFIG.MAX_PATROLS_PER_TYPE
+            PATROL_CONFIG.MAX_PATROLS.CAVALRY
         );
-        Logger.info(`Calculating patrols: ${troopCounts.cavalry} cavalry ÷ ${PATROL_CONFIG.CAVALRY_PER_PATROL} = ${cavalryPatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS_PER_TYPE})`);
+        Logger.info(`Calculating patrols: ${troopCounts.cavalry} cavalry ÷ ${PATROL_CONFIG.CAVALRY_PER_PATROL} = ${cavalryPatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS.CAVALRY})`);
         
         for (let i = 0; i < cavalryPatrols; i++) {
             const routes = ['perimeter', 'military_corridor', 'scout_route', 'city_center'];
@@ -481,9 +481,9 @@ export class PatrolManager {
         // Spawn siege patrols using configurable ratio
         const siegePatrols = Math.min(
             Math.floor(troopCounts.siege / PATROL_CONFIG.SIEGE_PER_PATROL), 
-            PATROL_CONFIG.MAX_PATROLS_PER_TYPE
+            PATROL_CONFIG.MAX_PATROLS.SIEGE
         );
-        Logger.info(`Calculating patrols: ${troopCounts.siege} siege ÷ ${PATROL_CONFIG.SIEGE_PER_PATROL} = ${siegePatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS_PER_TYPE})`);
+        Logger.info(`Calculating patrols: ${troopCounts.siege} siege ÷ ${PATROL_CONFIG.SIEGE_PER_PATROL} = ${siegePatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS.SIEGE})`);
         
         for (let i = 0; i < siegePatrols; i++) {
             // Siege units use minimal edge movement only

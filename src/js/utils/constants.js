@@ -1113,8 +1113,12 @@ export const PATROL_CONFIG = {
     CAVALRY_PER_PATROL: 1,    // 1 patrol per 2 cavalry  
     SIEGE_PER_PATROL: 1,      // 1 patrol per 3 siege units
     
-    // Limits
-    MAX_PATROLS_PER_TYPE: 3,  // Maximum patrol units of each type
+    // Limits - separate max patrols for each unit type
+    MAX_PATROLS: {
+        INFANTRY: 3,  // Maximum infantry patrol units
+        CAVALRY: 2,   // Maximum cavalry patrol units  
+        SIEGE: 1      // Maximum siege patrol units
+    },
     TERRAIN_OFFSET: 0.01,      // Height above terrain to prevent clipping
     
     // Animation settings
