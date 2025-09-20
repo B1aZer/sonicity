@@ -189,9 +189,8 @@ export class PatrolManager {
     getUnitModelPath(unitType) {
         const modelPaths = {
             'infantry': UNIT_MODELS.INFANTRY.modelPath,
-            // Add more when you have them
-            // 'cavalry': UNIT_MODELS.CAVALRY.modelPath,
-            // 'siege': UNIT_MODELS.SIEGE.modelPath
+            'cavalry': UNIT_MODELS.CAVALRY.modelPath,
+            'siege': UNIT_MODELS.SIEGE.modelPath
         };
         
         return modelPaths[unitType] || modelPaths['infantry'];
@@ -203,9 +202,8 @@ export class PatrolManager {
     getUnitSize(unitType) {
         const unitSizes = {
             'infantry': UNIT_MODELS.INFANTRY.size,
-            // Add more when you have them
-            // 'cavalry': UNIT_MODELS.CAVALRY.size,
-            // 'siege': UNIT_MODELS.SIEGE.size
+            'cavalry': UNIT_MODELS.CAVALRY.size,
+            'siege': UNIT_MODELS.SIEGE.size
         };
         
         return unitSizes[unitType] || unitSizes['infantry'];
@@ -305,9 +303,10 @@ export class PatrolManager {
         
         const mixer = new THREE.AnimationMixer(unit);
         
-        // Find and setup walk animation (prioritize walk over run)
+        // Find and setup walk animation (prioritize walk over run, but also check for 'move')
         const walkClip = unit.animations.find(clip => 
-            clip.name.toLowerCase().includes('walk')
+            clip.name.toLowerCase().includes('walk') ||
+            clip.name.toLowerCase().includes('move')
         );
         
         if (walkClip) {
@@ -439,6 +438,42 @@ export class PatrolManager {
         }
         
         Logger.info(`Spawned ${infantryPatrols} infantry patrols from ${troopCounts.infantry} total infantry`);
+        
+        // Spawn cavalry patrols using configurable ratio
+        const cavalryPatrols = Math.min(
+            Math.floor(troopCounts.cavalry / PATROL_CONFIG.CAVALRY_PER_PATROL), 
+            PATROL_CONFIG.MAX_PATROLS_PER_TYPE
+        );
+        Logger.info(`Calculating patrols: ${troopCounts.cavalry} cavalry ÷ ${PATROL_CONFIG.CAVALRY_PER_PATROL} = ${cavalryPatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS_PER_TYPE})`);
+        
+        for (let i = 0; i < cavalryPatrols; i++) {
+            const routes = ['perimeter', 'military_corridor', 'scout_route', 'city_center'];
+            const routeId = routes[i % routes.length];
+            await this.spawnPatrolUnit('cavalry', routeId);
+            
+            // Small delay between spawns to spread them out on routes
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        Logger.info(`Spawned ${cavalryPatrols} cavalry patrols from ${troopCounts.cavalry} total cavalry`);
+        
+        // Spawn siege patrols using configurable ratio
+        const siegePatrols = Math.min(
+            Math.floor(troopCounts.siege / PATROL_CONFIG.SIEGE_PER_PATROL), 
+            PATROL_CONFIG.MAX_PATROLS_PER_TYPE
+        );
+        Logger.info(`Calculating patrols: ${troopCounts.siege} siege ÷ ${PATROL_CONFIG.SIEGE_PER_PATROL} = ${siegePatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS_PER_TYPE})`);
+        
+        for (let i = 0; i < siegePatrols; i++) {
+            const routes = ['military_corridor', 'city_center', 'perimeter', 'scout_route'];
+            const routeId = routes[i % routes.length];
+            await this.spawnPatrolUnit('siege', routeId);
+            
+            // Small delay between spawns to spread them out on routes
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        Logger.info(`Spawned ${siegePatrols} siege patrols from ${troopCounts.siege} total siege`);
     }
     
     /**

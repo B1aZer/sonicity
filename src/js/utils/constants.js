@@ -1087,23 +1087,22 @@ export const UNIT_MODELS = {
         modelPath: 'assets/Infantry_A.glb',
         size: new THREE.Vector3(0.5, 0.5, 0.5) // Standard unit size, scaled down from default
     },
-    // TODO: Add when models are available
-    // CAVALRY: {
-    //     modelPath: 'assets/Cavalry_A.glb',
-    //     size: new THREE.Vector3(1.0, 1.0, 1.0) // Slightly larger for mounted units
-    // },
-    // SIEGE: {
-    //     modelPath: 'assets/Siege_A.glb',
-    //     size: new THREE.Vector3(1.2, 1.2, 1.2) // Larger for heavy equipment
-    // }
+    CAVALRY: {
+        modelPath: 'assets/Cavalery_A.glb',
+        size: new THREE.Vector3(0.5, 0.5, 0.5) // Slightly larger for mounted units
+    },
+    SIEGE: {
+        modelPath: 'assets/Catapult.glb',
+        size: new THREE.Vector3(1.0, 1.0, 1.0) // Larger for heavy equipment
+    }
 };
 
 // Patrol system configuration
 export const PATROL_CONFIG = {
     // Movement speeds (units per second)
     INFANTRY_SPEED: 0.75,      // Standard patrol speed
-    CAVALRY_SPEED: 3.5,       // Faster for mounted units
-    SIEGE_SPEED: 1.2,         // Slower for heavy equipment
+    CAVALRY_SPEED: 0.9,       // Faster for mounted units
+    SIEGE_SPEED: 0.5,         // Slower for heavy equipment
     
     // Behavior settings
     WAYPOINT_PAUSE_TIME: 2.0, // Seconds to pause at each waypoint
@@ -1111,11 +1110,11 @@ export const PATROL_CONFIG = {
     
     // Spawn ratios (troops needed per patrol unit)
     INFANTRY_PER_PATROL: 1,   // 1 patrol per infantry
-    CAVALRY_PER_PATROL: 2,    // 1 patrol per 2 cavalry  
-    SIEGE_PER_PATROL: 3,      // 1 patrol per 3 siege units
+    CAVALRY_PER_PATROL: 1,    // 1 patrol per 2 cavalry  
+    SIEGE_PER_PATROL: 1,      // 1 patrol per 3 siege units
     
     // Limits
-    MAX_PATROLS_PER_TYPE: 4,  // Maximum patrol units of each type
+    MAX_PATROLS_PER_TYPE: 3,  // Maximum patrol units of each type
     TERRAIN_OFFSET: 0.01,      // Height above terrain to prevent clipping
     
     // Animation settings
