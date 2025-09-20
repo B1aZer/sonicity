@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BUILDINGS } from '../utils/constants.js';
+import { BUILDINGS, TERRAIN_ROTATION_CONFIG } from '../utils/constants.js';
 import Logger from '../utils/logger.js';
 import { AnimationManager } from './animationManager.js';
 
@@ -125,14 +125,16 @@ export class BuildingManager {
         // Default up vector
         const upVector = new THREE.Vector3(0, 1, 0);
         
-        // If terrain is flat (normal is mostly up), no rotation needed
-        // Lower threshold to detect gentler slopes
-        if (Math.abs(terrainNormal.y) > 0.98) {
+        // If terrain is too flat, no rotation needed
+        if (Math.abs(terrainNormal.y) > TERRAIN_ROTATION_CONFIG.MIN_SLOPE_THRESHOLD) {
             return new THREE.Euler(0, 0, 0);
         }
         
         // Calculate the angle between terrain normal and up vector
         const angle = Math.acos(THREE.MathUtils.clamp(terrainNormal.y, -1, 1));
+        
+        // Limit the rotation angle to prevent excessive tilting
+        const limitedAngle = Math.min(angle, TERRAIN_ROTATION_CONFIG.MAX_ROTATION_ANGLE);
         
         // Calculate rotation axis (cross product of up vector and terrain normal)
         const rotationAxis = new THREE.Vector3();
@@ -143,9 +145,9 @@ export class BuildingManager {
             return new THREE.Euler(0, 0, 0);
         }
         
-        // Create quaternion for rotation
+        // Create quaternion for rotation with limited angle
         const quaternion = new THREE.Quaternion();
-        quaternion.setFromAxisAngle(rotationAxis, angle);
+        quaternion.setFromAxisAngle(rotationAxis, limitedAngle);
         
         // Convert to euler angles
         const euler = new THREE.Euler();
@@ -154,7 +156,8 @@ export class BuildingManager {
         // Only apply X and Z rotation (pitch and roll), keep Y rotation (yaw) for building orientation
         const terrainRotation = new THREE.Euler(euler.x, 0, euler.z);
         
-        Logger.debug(`🏗️ Applied terrain rotation: ${slopeAngle.toFixed(1)}° slope`);
+        const limitedAngleDegrees = limitedAngle * (180 / Math.PI);
+        Logger.debug(`🏗️ Applied terrain rotation: ${slopeAngle.toFixed(1)}° slope, limited to ${limitedAngleDegrees.toFixed(1)}°`);
         
         return terrainRotation;
     }

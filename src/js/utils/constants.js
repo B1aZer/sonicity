@@ -1126,6 +1126,14 @@ export const PATROL_CONFIG = {
     UNIT_SCALE: 0.8          // Scale factor for patrol units
 };
 
+// Terrain rotation settings for building alignment
+export const TERRAIN_ROTATION_CONFIG = {
+    // How steep terrain must be before buildings rotate
+    MIN_SLOPE_THRESHOLD: 0.95,     // Minimum slope to trigger rotation (0.95 = ~18°)
+    // Maximum degrees buildings can tilt to match terrain
+    MAX_ROTATION_ANGLE: Math.PI / 6 // Maximum rotation angle (30 degrees)
+};
+
 // Validation function to ensure building constants are in sync with smart contract
 export function validateBuildingConstants() {
     const expectedDistrictBuildings = [
