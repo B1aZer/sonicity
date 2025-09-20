@@ -106,6 +106,16 @@ export class PatrolManager {
             new THREE.Vector3(1, 0, -5),    // Return to barracks area
         ]);
         
+        // Siege Edge Route - minimal movement for heavy siege equipment on town edges
+        this.patrolRoutes.set('siege_edge', [
+            new THREE.Vector3(5, 0, -8),    // Close to barracks area
+            new THREE.Vector3(8, 0, -12),   // East edge of town
+            new THREE.Vector3(8, 0, -20),   // South along east edge
+            new THREE.Vector3(5, 0, -25),   // Return west slightly
+            new THREE.Vector3(2, 0, -20),   // Back toward barracks area
+            new THREE.Vector3(1, 0, -8),    // Return to spawn area
+        ]);
+        
         Logger.info(`Setup ${this.patrolRoutes.size} building-aware patrol routes`);
         Logger.info(`Spawn points - Infantry: (${this.spawnPoints.infantry.x}, ${this.spawnPoints.infantry.z}), Cavalry: (${this.spawnPoints.cavalry.x}, ${this.spawnPoints.cavalry.z}), Siege: (${this.spawnPoints.siege.x}, ${this.spawnPoints.siege.z})`);
     }
@@ -476,8 +486,8 @@ export class PatrolManager {
         Logger.info(`Calculating patrols: ${troopCounts.siege} siege ÷ ${PATROL_CONFIG.SIEGE_PER_PATROL} = ${siegePatrols} patrols (max ${PATROL_CONFIG.MAX_PATROLS_PER_TYPE})`);
         
         for (let i = 0; i < siegePatrols; i++) {
-            const routes = ['military_corridor', 'city_center', 'perimeter', 'scout_route'];
-            const routeId = routes[i % routes.length];
+            // Siege units use minimal edge movement only
+            const routeId = 'siege_edge';
             await this.spawnPatrolUnit('siege', routeId);
             
             // Small delay between spawns to spread them out on routes
