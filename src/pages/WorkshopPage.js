@@ -240,7 +240,6 @@ export class WorkshopPage extends BasePage {
         }
     }
 
-
     setupEventListeners() {
         Logger.info('Setting up event listeners');
         
@@ -250,7 +249,6 @@ export class WorkshopPage extends BasePage {
                 Logger.error('Error in handleRepairAllBuildings:', error);
             });
         });
-
 
         // Add event listeners for individual repair buttons only if they exist
         const repairButtons = this.element.querySelectorAll('.repair-building-button');
@@ -421,7 +419,6 @@ export class WorkshopPage extends BasePage {
                 `).join('');
             }
         }
-
 
         this.setupEventListeners();
     }
