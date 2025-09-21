@@ -193,12 +193,13 @@ export class CityPage extends BasePage {
                         Logger.info(`Processing building: ${buildingName}`);
                         
                         try {
-                            const [isBuilt, level] = await Promise.all([
+                            const [isBuilt, level, isDamaged] = await Promise.all([
                                 this.contracts.districtBuildings.isDistrictBuildingBuilt(buildingName),
-                                this.contracts.districtBuildings.getBuildingLevel(buildingName)
+                                this.contracts.districtBuildings.getBuildingLevel(buildingName),
+                                this.contracts.districtBuildings.isBuildingDamaged(buildingName)
                             ]);
-                            Logger.info(`Building ${buildingName} - Built: ${isBuilt}, Level: ${level}`);
-                            return { type, isBuilt, level };
+                            Logger.info(`Building ${buildingName} - Built: ${isBuilt}, Level: ${level}, Damaged: ${isDamaged}`);
+                            return { type, isBuilt, level, isDamaged };
                         } catch (error) {
                             Logger.error(`Error getting data for building ${buildingName}:`, error);
                             throw error;
@@ -208,8 +209,8 @@ export class CityPage extends BasePage {
 
                 buildingsGrid.innerHTML = nonCoreBuildings.map((type, index) => {
                     const config = nonCoreConfigs[index];
-                    const { isBuilt, level } = buildingData[index];
-                    Logger.info(`Rendering building ${config.name}:`, { isBuilt, level, config });
+                    const { isBuilt, level, isDamaged } = buildingData[index];
+                    Logger.info(`Rendering building ${config.name}:`, { isBuilt, level, isDamaged, config });
                     
                     const treasuryBigInt = BigInt(treasury);
                     const unlockCostBigInt = BigInt(config.unlockCost);
@@ -238,7 +239,7 @@ export class CityPage extends BasePage {
                     const isButtonDisabled = isLocked || isTierLocked || (isBuilt && !canUpgrade) || isDisabled;
                     
                     return `
-                        <div class="building-card ${isLocked || isTierLocked || isDisabled ? 'locked' : ''} ${isBuilt ? 'built' : ''} ${isDisabled ? 'disabled' : ''}" 
+                        <div class="building-card ${isLocked || isTierLocked || isDisabled ? 'locked' : ''} ${isBuilt ? 'built' : ''} ${isDisabled ? 'disabled' : ''} ${isBuilt && isDamaged ? 'damaged' : ''}" 
                              data-required-donation="${config.unlockCost}"
                              data-building-type="${config.name}">
                             ${(isLocked || isTierLocked || isDisabled) ? `
@@ -262,6 +263,7 @@ export class CityPage extends BasePage {
                             <div class="building-details">
                                 ${isBuilt ? `
                                     <p class="build-cost">Current Level: ${currentLevel} / ${config.maxLevel}</p>
+                                    ${isDamaged ? `<p class="damage-status"><i class="fas fa-exclamation-triangle"></i> Damaged (${Math.floor(Number(config.buildCost) / 2)} gold)</p>` : ''}
                                     ${canUpgrade ? `<p class="upgrade-cost">Upgrade Cost: ${upgradeCost.toString()} gold</p>` : ''}
                                 ` : `
                                     <p class="build-cost">Build Cost: ${config.buildCost} gold</p>
@@ -270,16 +272,22 @@ export class CityPage extends BasePage {
                             </div>
                             <div class="btn-container">
                                 ${isBuilt ? `
-                                    ${this.buildingRoutes[config.name] ? `
-                                        <button class="building-button btn btn-secondary enter-button" data-route="${this.buildingRoutes[config.name]}" type="button">
-                                            Enter
+                                    ${isDamaged ? `
+                                        <button class="building-button btn btn-danger repair-button" data-building="${config.name}" type="button">
+                                            Repair Building
                                         </button>
-                                    ` : ''}
-                                    ${canUpgrade ? `
-                                        <button class="building-button btn btn-primary upgrade-button" data-building="${config.name}" type="button">
-                                            Upgrade to Level ${currentLevel + 1}
-                                        </button>
-                                    ` : ''}
+                                    ` : `
+                                        ${this.buildingRoutes[config.name] ? `
+                                            <button class="building-button btn btn-secondary enter-button" data-route="${this.buildingRoutes[config.name]}" type="button">
+                                                Enter
+                                            </button>
+                                        ` : ''}
+                                        ${canUpgrade ? `
+                                            <button class="building-button btn btn-primary upgrade-button" data-building="${config.name}" type="button">
+                                                Upgrade to Level ${currentLevel + 1}
+                                            </button>
+                                        ` : ''}
+                                    `}
                                 ` : `
                                     <button class="building-button btn btn-primary" data-building="${config.name}" type="button" ${isButtonDisabled ? 'disabled' : ''}>
                                         ${isDisabled ? 'Building Disabled' : `Build ${config.name}`}
@@ -510,6 +518,54 @@ export class CityPage extends BasePage {
         }
     }
 
+    async handleRepairBuilding(buildingType) {
+        try {
+            Logger.info(`Repairing building: ${buildingType}`);
+            
+            // Get building config to show proper name in confirmation
+            const [buildingTypes, configs] = await this.contracts.districtBuildings.getAllDistrictBuildingConfigs();
+            const config = configs.find(c => c.name === buildingType);
+            
+            if (!config) {
+                this.modal.error(`Building configuration not found for ${buildingType}`);
+                return;
+            }
+            
+            // Calculate repair cost (half of build cost)
+            const repairCost = Math.floor(Number(config.buildCost) / 2);
+            
+            // Show confirmation dialog
+            const result = await this.modal.confirm(
+                `Repair ${config.name}?`,
+                `This will cost ${repairCost} gold to repair the damaged building.`
+            );
+            
+            if (result.isConfirmed) {
+                const loadingModal = this.modal.loading('Repairing building...');
+                try {
+                    await this.contracts.districtBuildings.repairBuilding(buildingType);
+                    loadingModal.close();
+                    
+                    // Play repair sound effect
+                    this.audioManager.playBuildingSpawn();
+                    
+                    // Reload city data to update the UI
+                    await this.loadCityData();
+                    this.setupEventListeners();
+                    
+                    this.modal.success(`Successfully repaired ${config.name}!`);
+                } catch (error) {
+                    loadingModal.close();
+                    Logger.error('Error repairing district building:', error);
+                    this.modal.error(`Failed to repair ${config.name}: ${error.message}`);
+                }
+            }
+        } catch (error) {
+            Logger.error('Error in handleRepairBuilding:', error);
+            this.modal.error(`Error repairing building: ${error.message}`);
+        }
+    }
+
     setupEventListeners() {
         Logger.info('Setting up event listeners');
         
@@ -558,6 +614,12 @@ export class CityPage extends BasePage {
                     this.audioManager.playBuildingEnter();
                     window.history.pushState({}, '', route);
                     window.dispatchEvent(new PopStateEvent('popstate'));
+                    return;
+                }
+                
+                // Handle repair button clicks
+                if (button.classList.contains('repair-button') && buildingType) {
+                    await this.handleRepairBuilding(buildingType);
                     return;
                 }
                 
