@@ -20,6 +20,7 @@ export class WorkshopPage extends BasePage {
             totalDamaged: 0,
             canRepair: false,
             repairCost: 0,
+            playerGold: 0,
             damagedByTier: {
                 0: 0, // Houses
                 1: 0, // Farms
@@ -64,6 +65,7 @@ export class WorkshopPage extends BasePage {
                     totalDamaged: 0,
                     canRepair: false,
                     repairCost: 0,
+                    playerGold: 0,
                     damagedByTier: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 }
                 });
                 return;
@@ -73,6 +75,10 @@ export class WorkshopPage extends BasePage {
             const playerAddress = await this.contracts.gameState.getAddress();
             const activeBuildingIds = await this.contracts.gridBuildings.getActiveBuildings(playerAddress);
             Logger.info('Retrieved active building IDs:', activeBuildingIds);
+
+            // Get player's gold balance
+            const playerGold = await this.contracts.gameState.getPlayerGold(playerAddress);
+            Logger.info('Player gold balance:', playerGold.toString());
 
             // Get building details for each ID and filter for damaged buildings
             const damagedBuildings = [];
@@ -139,6 +145,7 @@ export class WorkshopPage extends BasePage {
                 totalDamaged: damagedBuildings.length + damagedDistrictBuildings.length,
                 canRepair: (damagedBuildings.length + damagedDistrictBuildings.length) > 0,
                 repairCost: totalRepairCost.toString(),
+                playerGold: playerGold.toString(),
                 damagedByTier: damagedByTier
             });
 
@@ -299,6 +306,10 @@ export class WorkshopPage extends BasePage {
                         <div class="status-item">
                             <span class="status-label">Total Repair Cost:</span>
                             <span class="status-value" data-state="repairCost">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Your Gold:</span>
+                            <span class="status-value" data-state="playerGold">0</span>
                         </div>
                     </div>
                 </div>
