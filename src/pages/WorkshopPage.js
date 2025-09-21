@@ -16,6 +16,7 @@ export class WorkshopPage extends BasePage {
         // Initialize state
         this.setState({
             damagedBuildings: [],
+            damagedDistrictBuildings: [],
             totalDamaged: 0,
             canRepair: false,
             repairCost: 0,
@@ -77,6 +78,7 @@ export class WorkshopPage extends BasePage {
             let totalRepairCost = 0n;
             const damagedByTier = { 0: 0, 1: 0, 2: 0, 3: 0 };
 
+            // Check grid buildings
             for (const buildingId of activeBuildingIds) {
                 const building = await this.contracts.gridBuildings.getBuilding(buildingId);
                 if (building.damaged) {
@@ -89,20 +91,52 @@ export class WorkshopPage extends BasePage {
                         level: building.level,
                         repairCost: repairCost.toString(),
                         name: config.name,
-                        tier: config.tier
+                        tier: config.tier,
+                        buildingType: 'grid'
                     });
                     
                     totalRepairCost += repairCost;
                     damagedByTier[config.tier]++;
                 }
             }
-            Logger.info('Found damaged buildings:', damagedBuildings);
+
+            // Check district buildings
+            const damagedDistrictBuildings = [];
+            const [buildingTypes, configs] = await this.contracts.districtBuildings.getAllDistrictBuildingConfigs();
+            
+            for (let i = 0; i < buildingTypes.length; i++) {
+                const buildingType = buildingTypes[i];
+                const config = configs[i];
+                
+                // Skip tier 0 buildings (they can't be damaged)
+                if (config.tier === 0) continue;
+                
+                const isBuilt = await this.contracts.districtBuildings.isDistrictBuildingBuilt(config.name);
+                const isDamaged = await this.contracts.districtBuildings.isBuildingDamaged(config.name);
+                
+                if (isBuilt && isDamaged) {
+                    const repairCost = Math.floor(Number(config.buildCost) / 2); // Half the build cost
+                    
+                    damagedDistrictBuildings.push({
+                        name: config.name,
+                        tier: config.tier,
+                        repairCost: repairCost.toString(),
+                        buildingType: 'district'
+                    });
+                    
+                    totalRepairCost += BigInt(repairCost);
+                }
+            }
+
+            Logger.info('Found damaged grid buildings:', damagedBuildings);
+            Logger.info('Found damaged district buildings:', damagedDistrictBuildings);
 
             // Update state
             this.setState({
                 damagedBuildings: damagedBuildings,
-                totalDamaged: damagedBuildings.length,
-                canRepair: damagedBuildings.length > 0,
+                damagedDistrictBuildings: damagedDistrictBuildings,
+                totalDamaged: damagedBuildings.length + damagedDistrictBuildings.length,
+                canRepair: (damagedBuildings.length + damagedDistrictBuildings.length) > 0,
                 repairCost: totalRepairCost.toString(),
                 damagedByTier: damagedByTier
             });
@@ -138,11 +172,38 @@ export class WorkshopPage extends BasePage {
         }
     }
 
+    async handleRepairDistrictBuilding(buildingName) {
+        try {
+            Logger.info('Starting district building repair for:', buildingName);
+            
+            // Show loading modal
+            const loadingModal = this.modal.loading('Repairing district building...');
+            
+            // Repair the district building
+            await this.contracts.districtBuildings.repairBuilding(buildingName);
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload workshop data
+            await this.loadWorkshopData();
+            
+            // Show success message
+            this.modal.success(`Successfully repaired ${buildingName}!`);
+            
+        } catch (error) {
+            Logger.error('Error repairing district building:', error);
+            this.modal.error('Failed to repair district building. Please try again.');
+        }
+    }
+
     async handleRepairAllBuildings() {
         try {
             Logger.info('Starting repair of all damaged buildings...');
             
-            if (this.state.damagedBuildings.length === 0) {
+            const totalDamaged = this.state.damagedBuildings.length + this.state.damagedDistrictBuildings.length;
+            
+            if (totalDamaged === 0) {
                 this.modal.error('No damaged buildings to repair.');
                 return;
             }
@@ -150,11 +211,18 @@ export class WorkshopPage extends BasePage {
             // Show loading modal
             const loadingModal = this.modal.loading('Repairing all damaged buildings...');
             
-            // TODO: OPTIMIZATION - Repair all buildings in parallel instead of sequential
-            // This could reduce repair time by 70-80% when repairing multiple buildings
-            // Repair each building one by one
+            let repairedCount = 0;
+            
+            // Repair grid buildings
             for (const building of this.state.damagedBuildings) {
                 await this.contracts.gridBuildings.repairBuilding(building.id);
+                repairedCount++;
+            }
+            
+            // Repair district buildings
+            for (const building of this.state.damagedDistrictBuildings) {
+                await this.contracts.districtBuildings.repairBuilding(building.name);
+                repairedCount++;
             }
             
             // Close loading modal
@@ -164,13 +232,14 @@ export class WorkshopPage extends BasePage {
             await this.loadWorkshopData();
             
             // Show success message
-            this.modal.success(`Successfully repaired ${this.state.damagedBuildings.length} buildings!`);
+            this.modal.success(`Successfully repaired ${repairedCount} buildings!`);
             
         } catch (error) {
             Logger.error('Error repairing all buildings:', error);
             this.modal.error('Failed to repair buildings. Please try again.');
         }
     }
+
 
     setupEventListeners() {
         Logger.info('Setting up event listeners');
@@ -181,6 +250,7 @@ export class WorkshopPage extends BasePage {
                 Logger.error('Error in handleRepairAllBuildings:', error);
             });
         });
+
 
         // Add event listeners for individual repair buttons only if they exist
         const repairButtons = this.element.querySelectorAll('.repair-building-button');
@@ -194,6 +264,19 @@ export class WorkshopPage extends BasePage {
                 }
             });
         }
+
+        // Add event listeners for district building repair buttons
+        const districtRepairButtons = this.element.querySelectorAll('.repair-district-building-button');
+        if (districtRepairButtons.length > 0) {
+            this.addEventListener('.repair-district-building-button', 'click', (event) => {
+                const buildingName = event.currentTarget.dataset.buildingName;
+                if (buildingName) {
+                    this.handleRepairDistrictBuilding(buildingName).catch(error => {
+                        Logger.error('Error in handleRepairDistrictBuilding:', error);
+                    });
+                }
+            });
+        }
     }
 
     render() {
@@ -201,8 +284,8 @@ export class WorkshopPage extends BasePage {
             <div class="page-container">
                 <h1>Workshop</h1>
                 <p class="page-description">
-                    <strong>The Workshop allows you to repair damaged grid buildings.</strong> 
-                    Damaged buildings cannot produce resources until repaired. 
+                    <strong>The Workshop allows you to repair damaged buildings.</strong> 
+                    Damaged buildings cannot function until repaired. 
                     <em>Repair costs are based on the building's level and type.</em>
                 </p>
                 
@@ -244,11 +327,19 @@ export class WorkshopPage extends BasePage {
                     </div>
                 </div>
 
-                <!-- Damaged Buildings Section -->
+                <!-- Damaged Grid Buildings Section -->
                 <div class="page-section">
-                    <h2>Damaged Buildings</h2>
+                    <h2>Damaged Grid Buildings</h2>
                     <div class="buildings-grid" id="damaged-buildings-list">
-                        <!-- Damaged buildings will be populated here -->
+                        <!-- Damaged grid buildings will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Damaged District Buildings Section -->
+                <div class="page-section">
+                    <h2>Damaged District Buildings</h2>
+                    <div class="buildings-grid" id="damaged-district-buildings-list">
+                        <!-- Damaged district buildings will be populated here -->
                     </div>
                 </div>
 
@@ -269,38 +360,68 @@ export class WorkshopPage extends BasePage {
     }
 
     updateDamagedBuildingsList() {
-        const container = this.element.querySelector('#damaged-buildings-list');
-        if (!container) return;
-
-        if (this.state.damagedBuildings.length === 0) {
-            container.innerHTML = `
-                <div class="building-card">
-                    <h3>No Damaged Buildings</h3>
-                    <p>All your grid buildings are in good condition!</p>
-                </div>
-            `;
-            return;
+        // Update grid buildings
+        const gridContainer = this.element.querySelector('#damaged-buildings-list');
+        if (gridContainer) {
+            if (this.state.damagedBuildings.length === 0) {
+                gridContainer.innerHTML = `
+                    <div class="building-card">
+                        <h3>No Damaged Grid Buildings</h3>
+                        <p>All your grid buildings are in good condition!</p>
+                    </div>
+                `;
+            } else {
+                gridContainer.innerHTML = this.state.damagedBuildings.map(building => `
+                    <div class="building-card">
+                        <h3>${building.name}</h3>
+                        <p>Level ${building.level} building (Tier ${building.tier})</p>
+                        <div class="building-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Building ID:</span>
+                                <span class="detail-value">${building.id}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Repair Cost:</span>
+                                <span class="detail-value">${building.repairCost} gold</span>
+                            </div>
+                        </div>
+                        <button class="repair-building-button btn btn-secondary" data-building-id="${building.id}">
+                            Repair Building
+                        </button>
+                    </div>
+                `).join('');
+            }
         }
 
-        container.innerHTML = this.state.damagedBuildings.map(building => `
-            <div class="building-card">
-                <h3>${building.name}</h3>
-                <p>Level ${building.level} building (Tier ${building.tier})</p>
-                <div class="building-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Building ID:</span>
-                        <span class="detail-value">${building.id}</span>
+        // Update district buildings
+        const districtContainer = this.element.querySelector('#damaged-district-buildings-list');
+        if (districtContainer) {
+            if (this.state.damagedDistrictBuildings.length === 0) {
+                districtContainer.innerHTML = `
+                    <div class="building-card">
+                        <h3>No Damaged District Buildings</h3>
+                        <p>All your district buildings are in good condition!</p>
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Repair Cost:</span>
-                        <span class="detail-value">${building.repairCost} gold</span>
+                `;
+            } else {
+                districtContainer.innerHTML = this.state.damagedDistrictBuildings.map(building => `
+                    <div class="building-card">
+                        <h3>${building.name}</h3>
+                        <p>District building (Tier ${building.tier})</p>
+                        <div class="building-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Repair Cost:</span>
+                                <span class="detail-value">${building.repairCost} gold</span>
+                            </div>
+                        </div>
+                        <button class="repair-district-building-button btn btn-secondary" data-building-name="${building.name}">
+                            Repair Building
+                        </button>
                     </div>
-                </div>
-                <button class="repair-building-button btn btn-secondary" data-building-id="${building.id}">
-                    Repair Building
-                </button>
-            </div>
-        `).join('');
+                `).join('');
+            }
+        }
+
 
         this.setupEventListeners();
     }
@@ -309,8 +430,9 @@ export class WorkshopPage extends BasePage {
         // Call parent updateUI first
         super.updateUI(oldState, newState);
         
-        // Update damaged buildings list if the list changed
-        if (oldState?.damagedBuildings?.length !== newState?.damagedBuildings?.length) {
+        // Update damaged buildings list if either list changed
+        if (oldState?.damagedBuildings?.length !== newState?.damagedBuildings?.length ||
+            oldState?.damagedDistrictBuildings?.length !== newState?.damagedDistrictBuildings?.length) {
             this.updateDamagedBuildingsList();
         }
     }
