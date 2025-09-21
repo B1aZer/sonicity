@@ -74,14 +74,14 @@ export class WorkshopPage extends BasePage {
 
             // Get building details for each ID and filter for damaged buildings
             const damagedBuildings = [];
-            let totalRepairCost = 0;
+            let totalRepairCost = 0n;
             const damagedByTier = { 0: 0, 1: 0, 2: 0, 3: 0 };
 
             for (const buildingId of activeBuildingIds) {
                 const building = await this.contracts.gridBuildings.getBuilding(buildingId);
                 if (building.damaged) {
                     const config = await this.contracts.gridBuildings.getBuildingConfig(building.buildingType);
-                    const repairCost = (config.upgradeCost * building.level) / 2n; // Half the upgrade cost per level
+                    const repairCost = config.upgradeCost * BigInt(building.level); // Equal to upgrade cost per level
                     
                     damagedBuildings.push({
                         id: buildingId,
