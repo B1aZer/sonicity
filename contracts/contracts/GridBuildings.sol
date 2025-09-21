@@ -971,9 +971,9 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         );
         require(success && abi.decode(returnData, (bool)), "Workshop required to repair");
 
-        // Calculate repair cost (base cost * level)
+        // Calculate repair cost (equal to upgrade cost per level)
         GridBuildingConfig memory config = buildingConfigs[building.buildingType];
-        uint256 repairCost = config.upgradeCost * building.level / 2; // Half the upgrade cost per level
+        uint256 repairCost = config.upgradeCost * building.level; // Equal to upgrade cost per level
         
         // Call GameState to check and deduct gold
         (success, returnData) = gameStateAddress.call(

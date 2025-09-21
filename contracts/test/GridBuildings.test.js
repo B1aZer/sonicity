@@ -985,7 +985,7 @@ describe("GridBuildings", function () {
 
       // Get building config
       const config = await gridBuildings.buildingConfigs(GridBuildingType.FARM);
-      const expectedRepairCost = config.upgradeCost * BigInt(2) / BigInt(2); // Half of upgrade cost * level
+      const expectedRepairCost = config.upgradeCost * BigInt(2); // Equal to upgrade cost * level
 
       // Ensure player has enough gold for repair
       await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, expectedRepairCost);
