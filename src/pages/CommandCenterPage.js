@@ -672,22 +672,22 @@ export class CommandCenterPage extends BasePage {
                 const opponent = isAttacker ? lastBattle.defender : lastBattle.attacker;
                 const shortOpponent = opponent.substring(0, 6) + '...' + opponent.substring(opponent.length - 4);
                 
-                let message = `${won ? 'VICTORY!' : 'DEFEAT!'}\n\n`;
-                message += `Opponent: ${shortOpponent}\n`;
-                message += `Your Power: ${isAttacker ? lastBattle.attackerPower : lastBattle.defenderPower}\n`;
-                message += `Opponent Power: ${isAttacker ? lastBattle.defenderPower : lastBattle.attackerPower}\n\n`;
+                let message = `${won ? 'VICTORY!' : 'DEFEAT!'}<br><br>`;
+                message += `Opponent: ${shortOpponent}<br>`;
+                message += `Your Power: ${isAttacker ? lastBattle.attackerPower : lastBattle.defenderPower}<br>`;
+                message += `Opponent Power: ${isAttacker ? lastBattle.defenderPower : lastBattle.attackerPower}<br><br>`;
                 
                 if (lastBattle.treasuryBurned > 0) {
-                    message += `💰 Treasury Burned: ${lastBattle.treasuryBurned}\n`;
+                    message += `💰 Treasury Burned: ${lastBattle.treasuryBurned}<br>`;
                 }
                 if (lastBattle.gridBuildingsDamaged > 0) {
-                    message += `🏠 Grid Buildings Damaged: ${lastBattle.gridBuildingsDamaged}\n`;
+                    message += `🏠 Grid Buildings Damaged: ${lastBattle.gridBuildingsDamaged}<br>`;
                 }
                 if (lastBattle.districtBuildingsDamaged > 0) {
-                    message += `🏛️ District Buildings Damaged: ${lastBattle.districtBuildingsDamaged}\n`;
+                    message += `🏛️ District Buildings Damaged: ${lastBattle.districtBuildingsDamaged}<br>`;
                 }
                 if (lastBattle.repPoints > 0 && won) {
-                    message += `⭐ REP Earned: ${lastBattle.repPoints}\n`;
+                    message += `⭐ REP Earned: ${lastBattle.repPoints}<br>`;
                 }
                 
                 if (won) {
