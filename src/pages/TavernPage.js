@@ -310,41 +310,6 @@ export class TavernPage extends BasePage {
                             </div>
                         </div>
 
-                        <!-- STRATEGIST -->
-                        <div class="shop-item-card" id="hero-strategist">
-                            <div class="shop-item-image">
-                                <img src="/images/heroes/Tactician.png" alt="Strategist" onerror="this.src='/images/heroes/default.png'" />
-                            </div>
-                            <div class="shop-item-info">
-                                <div class="shop-item-title-row">
-                                    <h3>Shadow Tactician (STRATEGIST)</h3>
-                                </div>
-                                <div class="shop-item-desc">
-                                    A cunning strategist who boosts Siege power by +20 per troop. 
-                                    Ideal for players who rely on powerful siege weapons to break enemy defenses.
-                                </div>
-                                <div class="cost-component">
-                                    <div class="cost-item">
-                                        <i class="fas fa-coins cost-icon"></i>
-                                        <span class="cost-value">1200</span>
-                                    </div>
-                                    <div class="cost-item">
-                                        <i class="fas fa-wheat-awn cost-icon"></i>
-                                        <span class="cost-value">1200</span>
-                                    </div>
-                                    <div class="cost-item">
-                                        <i class="fas fa-gem cost-icon"></i>
-                                        <span class="cost-value">35</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="shop-item-action-row">
-                                <button class="btn btn-primary mint-hero-btn" data-hero-class="STRATEGIST">
-                                    Mint Hero
-                                </button>
-                            </div>
-                        </div>
-
                         <!-- SCOUT -->
                         <div class="shop-item-card" id="hero-scout">
                             <div class="shop-item-image">
@@ -375,6 +340,41 @@ export class TavernPage extends BasePage {
                             </div>
                             <div class="shop-item-action-row">
                                 <button class="btn btn-primary mint-hero-btn" data-hero-class="SCOUT">
+                                    Mint Hero
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- STRATEGIST -->
+                        <div class="shop-item-card" id="hero-strategist">
+                            <div class="shop-item-image">
+                                <img src="/images/heroes/Tactician.png" alt="Strategist" onerror="this.src='/images/heroes/default.png'" />
+                            </div>
+                            <div class="shop-item-info">
+                                <div class="shop-item-title-row">
+                                    <h3>Shadow Tactician (STRATEGIST)</h3>
+                                </div>
+                                <div class="shop-item-desc">
+                                    A cunning strategist who boosts Siege power by +20 per troop. 
+                                    Ideal for players who rely on powerful siege weapons to break enemy defenses.
+                                </div>
+                                <div class="cost-component">
+                                    <div class="cost-item">
+                                        <i class="fas fa-coins cost-icon"></i>
+                                        <span class="cost-value">1200</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <i class="fas fa-wheat-awn cost-icon"></i>
+                                        <span class="cost-value">1200</span>
+                                    </div>
+                                    <div class="cost-item">
+                                        <i class="fas fa-gem cost-icon"></i>
+                                        <span class="cost-value">35</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="shop-item-action-row">
+                                <button class="btn btn-primary mint-hero-btn" data-hero-class="STRATEGIST">
                                     Mint Hero
                                 </button>
                             </div>
