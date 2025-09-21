@@ -1081,6 +1081,30 @@ describe("GridBuildings", function () {
       ).to.be.revertedWith("Building is damaged");
     });
 
+    it("Should return 0 claimable resources for damaged buildings", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Mint and stake an NFT
+      const result = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      const buildingId = result.buildingId;
+
+      // Let building produce some resources first
+      await ethers.provider.send("evm_increaseTime", [2 * 60 * 60]); // 2 hours
+      await ethers.provider.send("evm_mine");
+
+      // Check that building has accumulated resources before damage
+      const claimableBeforeDamage = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(claimableBeforeDamage).to.be.gt(0);
+
+      // Damage the building
+      const damageTx = await battleSystem.connect(owner).testDamageGridBuildings(player1Address, 1);
+      const damagedBuildingId = await getDamagedBuildingId(damageTx, gridBuildings);
+
+      // Verify that claimable resources is now 0 for damaged building
+      const claimableAfterDamage = await gridBuildings.calculateClaimableResources(player1Address, damagedBuildingId);
+      expect(claimableAfterDamage).to.equal(0);
+    });
+
     it("Should allow repairing damaged farms", async function () {
       const player1Address = await player1.getAddress();
       

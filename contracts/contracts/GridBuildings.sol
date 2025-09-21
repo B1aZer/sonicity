@@ -680,6 +680,11 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
             return 0;
         }
         
+        // No resources if building is damaged (consistent with yield stations)
+        if (building.damaged) {
+            return 0;
+        }
+        
         // Calculate production window
         uint256 productionStart = _getEffectiveProductionStart(building);
         uint256 productionEnd = currentTime;
