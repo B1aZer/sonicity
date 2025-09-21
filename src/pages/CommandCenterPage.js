@@ -13,6 +13,7 @@ import('../styles/battle-progress-bar.css');
 export class CommandCenterPage extends BasePage {
     constructor() {
         super();
+        this.requiredDistrictBuilding = 'Command Center';
         
         Logger.info('CommandCenterPage constructor called');
         

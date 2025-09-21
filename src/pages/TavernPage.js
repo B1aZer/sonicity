@@ -8,6 +8,7 @@ import('../styles/shop-page.css');
 export class TavernPage extends BasePage {
     constructor() {
         super();
+        this.requiredDistrictBuilding = 'Tavern';
         
         Logger.info('TavernPage constructor called');
         

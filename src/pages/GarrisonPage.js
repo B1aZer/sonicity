@@ -13,6 +13,7 @@ import('../styles/battle-progress-bar.css');
 export class GarrisonPage extends BasePage {
     constructor() {
         super();
+        this.requiredDistrictBuilding = 'Garrison';
         
         Logger.info('GarrisonPage constructor called');
         

@@ -11,6 +11,7 @@ import('../styles/scout-guild-page.css');
 export class ScoutGuildPage extends BasePage {
     constructor() {
         super();
+        this.requiredDistrictBuilding = 'Scout Guild';
         Logger.info('ScoutGuildPage constructor called');
         
         this.element.className = 'base-page scout-guild-page';

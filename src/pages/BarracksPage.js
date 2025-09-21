@@ -8,6 +8,7 @@ import('../styles/shop-page.css');
 export class BarracksPage extends BasePage {
     constructor() {
         super();
+        this.requiredDistrictBuilding = 'Barracks';
         
         Logger.info('BarracksPage constructor called');
         
