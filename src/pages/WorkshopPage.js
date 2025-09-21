@@ -24,7 +24,8 @@ export class WorkshopPage extends BasePage {
                 0: 0, // Houses
                 1: 0, // Farms
                 2: 0, // Diamond Stations
-                3: 0  // REP Forges
+                3: 0, // REP Forges
+                4: 0  // Yield Stations
             }
         });
         
@@ -63,7 +64,7 @@ export class WorkshopPage extends BasePage {
                     totalDamaged: 0,
                     canRepair: false,
                     repairCost: 0,
-                    damagedByTier: { 0: 0, 1: 0, 2: 0, 3: 0 }
+                    damagedByTier: { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 }
                 });
                 return;
             }
@@ -76,7 +77,7 @@ export class WorkshopPage extends BasePage {
             // Get building details for each ID and filter for damaged buildings
             const damagedBuildings = [];
             let totalRepairCost = 0n;
-            const damagedByTier = { 0: 0, 1: 0, 2: 0, 3: 0 };
+            const damagedByTier = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
 
             // Check grid buildings
             for (const buildingId of activeBuildingIds) {
@@ -321,6 +322,10 @@ export class WorkshopPage extends BasePage {
                         <div class="status-item">
                             <span class="status-label">Tier 3 (REP Forges):</span>
                             <span class="status-value" data-state="damagedByTier.3">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Tier 4 (Yield Stations):</span>
+                            <span class="status-value" data-state="damagedByTier.4">0</span>
                         </div>
                     </div>
                 </div>
