@@ -56,7 +56,10 @@
     "verify:mainnet": "npx hardhat run scripts/verify-contract-addresses.js --network mainnet",
     "verify:refs:mainnet": "npx hardhat run scripts/verify-contract-references.js --network mainnet",
     "verify:fix:mainnet": "npx hardhat run scripts/fix-contract-references.js --network mainnet",
-    "verify:all:mainnet": "npm run verify:mainnet && npm run verify:refs:mainnet"
+    "verify:all:mainnet": "npm run verify:mainnet && npm run verify:refs:mainnet",
+    "verify:refs:sonicFork": "npx hardhat run scripts/verify-contract-references.js --network sonicFork",
+    "verify:all:sonicFork": "npm run verify:sonicFork && npm run verify:refs:sonicFork",
+    "verify:fix:sonicFork": "npx hardhat run scripts/fix-contract-references.js --network sonicFork"
   },
   "keywords": [],
   "author": "",

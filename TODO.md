@@ -23,7 +23,7 @@
 
 ## todo
 
-- npm run upgrade
+- npm run upgrade:sonicFork
 - npm run deploy:matchmaking:sonicFork
 - npm run verify:refs:sonicFork
 - possible fix
