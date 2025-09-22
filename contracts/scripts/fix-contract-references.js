@@ -55,6 +55,13 @@ async function main() {
         await gameState.setBattleSystemAddress(addresses.battleSystemProxy);
         console.log('  ✅ BattleSystem address set');
         
+        // Set MatchmakingSystem address in GameState
+        if (addresses.matchmakingSystemProxy) {
+            console.log('  Setting MatchmakingSystem address in GameState...');
+            await gameState.setMatchmakingSystemAddress(addresses.matchmakingSystemProxy);
+            console.log('  ✅ MatchmakingSystem address set');
+        }
+        
         // Set Hero/Tactics/Cosmetic addresses in GameState
         if (addresses.heroNFTProxy) {
             console.log('  Setting HeroNFT address in GameState...');
@@ -170,6 +177,13 @@ async function main() {
         await battleSystem.setGridBuildingsAddress(addresses.gridBuildingsProxy);
         console.log('  ✅ GridBuildings address set in BattleSystem');
         
+        // Set MatchmakingSystem address in BattleSystem
+        if (addresses.matchmakingSystemProxy) {
+            console.log('  Setting MatchmakingSystem address in BattleSystem...');
+            await battleSystem.setMatchmakingSystemAddress(addresses.matchmakingSystemProxy);
+            console.log('  ✅ MatchmakingSystem address set in BattleSystem');
+        }
+        
         // Set Hero/Tactics addresses in BattleSystem
         if (addresses.heroNFTProxy) {
             console.log('  Setting HeroNFT address in BattleSystem...');
@@ -182,14 +196,53 @@ async function main() {
             console.log('  ✅ TacticsNFT address set in BattleSystem');
         }
         
+        // Fix MatchmakingSystem references
+        if (addresses.matchmakingSystemProxy) {
+            console.log('\n🔧 Fixing MatchmakingSystem references...');
+            const matchmakingSystem = await ethers.getContractAt('MatchmakingSystem', addresses.matchmakingSystemProxy);
+            
+            // Set GameState address in MatchmakingSystem
+            console.log('  Setting GameState address in MatchmakingSystem...');
+            await matchmakingSystem.setGameStateAddress(addresses.gameStateProxy);
+            console.log('  ✅ GameState address set in MatchmakingSystem');
+            
+            // Set BattleSystem address in MatchmakingSystem
+            console.log('  Setting BattleSystem address in MatchmakingSystem...');
+            await matchmakingSystem.setBattleSystemAddress(addresses.battleSystemProxy);
+            console.log('  ✅ BattleSystem address set in MatchmakingSystem');
+            
+            // Set DistrictBuildings address in MatchmakingSystem
+            console.log('  Setting DistrictBuildings address in MatchmakingSystem...');
+            await matchmakingSystem.setDistrictBuildingsAddress(addresses.districtBuildingsProxy);
+            console.log('  ✅ DistrictBuildings address set in MatchmakingSystem');
+            
+            // Set GridBuildings address in MatchmakingSystem
+            console.log('  Setting GridBuildings address in MatchmakingSystem...');
+            await matchmakingSystem.setGridBuildingsAddress(addresses.gridBuildingsProxy);
+            console.log('  ✅ GridBuildings address set in MatchmakingSystem');
+        }
+        
         console.log('\n🎉 All contract references have been fixed!');
         console.log('\n📋 Fixed References:');
         console.log('  ✅ GameState.altarAddress →', addresses.altarProxy);
         console.log('  ✅ GameState.gridBuildingsAddress →', addresses.gridBuildingsProxy);
+        console.log('  ✅ GameState.battleSystemAddress →', addresses.battleSystemProxy);
+        if (addresses.matchmakingSystemProxy) {
+            console.log('  ✅ GameState.matchmakingSystemAddress →', addresses.matchmakingSystemProxy);
+        }
         console.log('  ✅ DistrictBuildings.battleSystemAddress →', addresses.battleSystemProxy);
         console.log('  ✅ GridBuildings.altarAddress →', addresses.altarProxy);
         console.log('  ✅ Altar.gridBuildings →', addresses.gridBuildingsProxy);
         console.log('  ✅ BattleSystem.gridBuildingsAddress →', addresses.gridBuildingsProxy);
+        if (addresses.matchmakingSystemProxy) {
+            console.log('  ✅ BattleSystem.matchmakingSystemAddress →', addresses.matchmakingSystemProxy);
+        }
+        if (addresses.matchmakingSystemProxy) {
+            console.log('  ✅ MatchmakingSystem.gameStateAddress →', addresses.gameStateProxy);
+            console.log('  ✅ MatchmakingSystem.battleSystemAddress →', addresses.battleSystemProxy);
+            console.log('  ✅ MatchmakingSystem.districtBuildingsAddress →', addresses.districtBuildingsProxy);
+            console.log('  ✅ MatchmakingSystem.gridBuildingsAddress →', addresses.gridBuildingsProxy);
+        }
         console.log('  ✅ SonicityNFT.altarContract →', addresses.altarProxy);
         console.log('  ✅ SonicityFarm.altarContract →', addresses.altarProxy);
         console.log('  ✅ SonicityDiamond.altarContract →', addresses.altarProxy);

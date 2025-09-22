@@ -22,6 +22,7 @@ GAME_STATE=$(jq -r '.gameStateProxy' "$PROJECT_ROOT/contracts/deployed-addresses
 DISTRICT_BUILDINGS=$(jq -r '.districtBuildingsProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 GRID_BUILDINGS=$(jq -r '.gridBuildingsProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 BATTLE_SYSTEM=$(jq -r '.battleSystemProxy' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+MATCHMAKING_SYSTEM=$(jq -r '.matchmakingSystemProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 HERO_NFT=$(jq -r '.heroNFTProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 TACTICS_NFT=$(jq -r '.tacticsNFTProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 COSMETIC_ITEMS=$(jq -r '.cosmeticItemsProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
@@ -53,6 +54,11 @@ sed -i '' "s/DISTRICT_BUILDINGS: \".*\"/DISTRICT_BUILDINGS: \"$DISTRICT_BUILDING
 sed -i '' "s/GRID_BUILDINGS: \".*\"/GRID_BUILDINGS: \"$GRID_BUILDINGS\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 sed -i '' "s/BATTLE_SYSTEM: \".*\"/BATTLE_SYSTEM: \"$BATTLE_SYSTEM\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 
+# Update MatchmakingSystem contract if it exists
+if [ ! -z "$MATCHMAKING_SYSTEM" ]; then
+    sed -i '' "s/MATCHMAKING_SYSTEM: \".*\"/MATCHMAKING_SYSTEM: \"$MATCHMAKING_SYSTEM\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+fi
+
 # Update Hero & Tactics contracts if they exist
 if [ ! -z "$HERO_NFT" ]; then
     sed -i '' "s/HERO_NFT: \".*\"/HERO_NFT: \"$HERO_NFT\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
@@ -82,6 +88,9 @@ echo "GameState: $GAME_STATE"
 echo "DistrictBuildings: $DISTRICT_BUILDINGS"
 echo "GridBuildings: $GRID_BUILDINGS"
 echo "BattleSystem: $BATTLE_SYSTEM"
+if [ ! -z "$MATCHMAKING_SYSTEM" ]; then
+    echo "MatchmakingSystem: $MATCHMAKING_SYSTEM"
+fi
 if [ ! -z "$HERO_NFT" ]; then
     echo "HeroNFT: $HERO_NFT"
 fi

@@ -33,6 +33,8 @@ const EXPECTED_CONTRACTS = {
     altarProxy: 'Altar (Proxy)',
     battleSystemImpl: 'BattleSystem (Implementation)',
     battleSystemProxy: 'BattleSystem (Proxy)',
+    matchmakingSystemImpl: 'MatchmakingSystem (Implementation)',
+    matchmakingSystemProxy: 'MatchmakingSystem (Proxy)',
     
     // Hero & Tactics Contracts
     heroNFTImpl: 'HeroNFT (Implementation)',
@@ -56,6 +58,7 @@ const FRONTEND_MAPPING = {
     DISTRICT_BUILDINGS: 'districtBuildingsProxy',
     GRID_BUILDINGS: 'gridBuildingsProxy',
     BATTLE_SYSTEM: 'battleSystemProxy',
+    MATCHMAKING_SYSTEM: 'matchmakingSystemProxy',
     HERO_NFT: 'heroNFTProxy',
     TACTICS_NFT: 'tacticsNFTProxy',
     COSMETIC_ITEMS: 'cosmeticItemsProxy'
@@ -232,7 +235,7 @@ async function main() {
         );
         const coreContracts = Object.entries(addresses).filter(([key]) => 
             key.includes('gameState') || key.includes('district') || key.includes('grid') || 
-            key.includes('altar') || key.includes('battle')
+            key.includes('altar') || key.includes('battle') || key.includes('matchmaking')
         );
         const heroContracts = Object.entries(addresses).filter(([key]) => 
             key.includes('hero') || key.includes('tactics') || key.includes('cosmetic')

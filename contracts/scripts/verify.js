@@ -31,6 +31,16 @@ async function main() {
   });
   console.log("Altar implementation verified");
 
+  // Verify MatchmakingSystem implementation (if it exists)
+  if (addresses.matchmakingSystemImpl) {
+    console.log("Verifying MatchmakingSystem implementation...");
+    await run("verify:verify", {
+      address: addresses.matchmakingSystemImpl,
+      constructorArguments: [],
+    });
+    console.log("MatchmakingSystem implementation verified");
+  }
+
   console.log("\nAll contracts verified!");
 }
 

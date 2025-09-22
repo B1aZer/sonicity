@@ -21,6 +21,7 @@ const CONTRACT_REFERENCES = {
             districtBuildingsAddress: 'districtBuildingsProxy',
             gridBuildingsAddress: 'gridBuildingsProxy',
             battleSystemAddress: 'battleSystemProxy',
+            matchmakingSystemAddress: 'matchmakingSystemProxy',
             heroNFTAddress: 'heroNFTProxy',
             tacticsNFTAddress: 'tacticsNFTProxy',
             cosmeticItemsAddress: 'cosmeticItemsProxy'
@@ -64,6 +65,7 @@ const CONTRACT_REFERENCES = {
             gameStateAddress: 'gameStateProxy',
             districtBuildingsAddress: 'districtBuildingsProxy',
             gridBuildingsAddress: 'gridBuildingsProxy',
+            matchmakingSystemAddress: 'matchmakingSystemProxy',
             heroNFTAddress: 'heroNFTProxy',
             tacticsNFTAddress: 'tacticsNFTProxy'
         }
@@ -90,6 +92,17 @@ const CONTRACT_REFERENCES = {
         contractName: 'CosmeticItems',
         references: {
             gameStateAddress: 'gameStateProxy'
+        }
+    },
+    
+    // MatchmakingSystem should reference:
+    matchmakingSystemProxy: {
+        contractName: 'MatchmakingSystem',
+        references: {
+            gameStateAddress: 'gameStateProxy',
+            battleSystemAddress: 'battleSystemProxy',
+            districtBuildingsAddress: 'districtBuildingsProxy',
+            gridBuildingsAddress: 'gridBuildingsProxy'
         }
     },
     

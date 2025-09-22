@@ -42,6 +42,17 @@ async function main() {
   await battleSystemProxy.waitForDeployment();
   console.log("BattleSystem upgraded to:", await battleSystemProxy.getAddress());
 
+  // Upgrade MatchmakingSystem (if it exists)
+  if (addresses.matchmakingSystemProxy) {
+    console.log("Upgrading MatchmakingSystem...");
+    const MatchmakingSystem = await ethers.getContractFactory("MatchmakingSystem");
+    const matchmakingSystemProxy = await upgrades.upgradeProxy(addresses.matchmakingSystemProxy, MatchmakingSystem);
+    await matchmakingSystemProxy.waitForDeployment();
+    console.log("MatchmakingSystem upgraded to:", await matchmakingSystemProxy.getAddress());
+  } else {
+    console.log("MatchmakingSystem not found in addresses - skipping upgrade");
+  }
+
   // Note: SonicityYieldNFT and SonicityArtProxy are regular contracts, not proxies
   // They don't need to be upgraded via the proxy system
   if (addresses.sonicityYieldNFT) {
@@ -125,6 +136,36 @@ async function main() {
   // Set GridBuildings address in BattleSystem
   console.log("Setting GridBuildings address in BattleSystem...");
   await battleSystemProxy.setGridBuildingsAddress(await gridBuildingsProxy.getAddress());
+
+  // Set up MatchmakingSystem contract interactions (if it exists)
+  if (addresses.matchmakingSystemProxy) {
+    console.log("Setting up MatchmakingSystem contract interactions...");
+    const matchmakingSystemProxy = await ethers.getContractAt("MatchmakingSystem", addresses.matchmakingSystemProxy);
+    
+    // Set GameState address in MatchmakingSystem
+    console.log("Setting GameState address in MatchmakingSystem...");
+    await matchmakingSystemProxy.setGameStateAddress(await gameStateProxy.getAddress());
+    
+    // Set BattleSystem address in MatchmakingSystem
+    console.log("Setting BattleSystem address in MatchmakingSystem...");
+    await matchmakingSystemProxy.setBattleSystemAddress(await battleSystemProxy.getAddress());
+    
+    // Set DistrictBuildings address in MatchmakingSystem
+    console.log("Setting DistrictBuildings address in MatchmakingSystem...");
+    await matchmakingSystemProxy.setDistrictBuildingsAddress(await districtBuildingsProxy.getAddress());
+    
+    // Set GridBuildings address in MatchmakingSystem
+    console.log("Setting GridBuildings address in MatchmakingSystem...");
+    await matchmakingSystemProxy.setGridBuildingsAddress(await gridBuildingsProxy.getAddress());
+    
+    // Set MatchmakingSystem address in GameState
+    console.log("Setting MatchmakingSystem address in GameState...");
+    await gameStateProxy.setMatchmakingSystemAddress(await matchmakingSystemProxy.getAddress());
+    
+    // Set MatchmakingSystem address in BattleSystem
+    console.log("Setting MatchmakingSystem address in BattleSystem...");
+    await battleSystemProxy.setMatchmakingSystemAddress(await matchmakingSystemProxy.getAddress());
+  }
 
   // Set up Hero & Tactics contract interactions (if they exist)
   if (addresses.heroNFTProxy) {
@@ -225,6 +266,11 @@ async function main() {
     altarProxy: await altarProxy.getAddress(),
     battleSystemProxy: await battleSystemProxy.getAddress(),
   };
+
+  // Update MatchmakingSystem addresses if it exists
+  if (addresses.matchmakingSystemProxy) {
+    newAddresses.matchmakingSystemProxy = await matchmakingSystemProxy.getAddress();
+  }
 
   fs.writeFileSync(
     'deployed-addresses.json',
