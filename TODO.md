@@ -6,6 +6,7 @@
 - https://x.com/Moonveil_Studio - massive polygon web3 gaming studio
 - https://x.com/real_n3o - meta project ceo on polygon
 - https://x.com/ronin_shield - ronin support
+- https://x.com/alliancegamesx - ecentralized Web3 gaming infrastructure hosting
 
 ## grants
 
@@ -26,6 +27,8 @@
 - npm run deploy:matchmaking:sonicFork
 - npm run verify:refs:sonicFork
 - possible fix
+- npx hardhat run scripts/find-and-register-players.js --network localhost",
+- PRIVATE_KEY=<REDACTED> npx hardhat run scripts/find-and-register-players.js --network sonicFork"
 
 ## chain
 
