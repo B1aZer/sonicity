@@ -4,6 +4,7 @@ const { GridBuildingType, mintAndStakeNFT, getDamagedBuildingId, donateGoldForTi
 
 describe("Battle History Consistency Tests", function () {
     let battleSystem;
+    let matchmakingSystem;
     let gameState;
     let districtBuildings;
     let gridBuildings;
@@ -72,6 +73,20 @@ describe("Battle History Consistency Tests", function () {
         battleSystem = await upgrades.deployProxy(BattleSystem, [], { initializer: 'initialize' });
         await battleSystem.waitForDeployment();
         const battleSystemAddress = await battleSystem.getAddress();
+
+        // Deploy MatchmakingSystem
+        const MatchmakingSystem = await ethers.getContractFactory("MatchmakingSystem");
+        matchmakingSystem = await upgrades.deployProxy(MatchmakingSystem, [], { initializer: 'initialize' });
+        await matchmakingSystem.waitForDeployment();
+        const matchmakingSystemAddress = await matchmakingSystem.getAddress();
+
+        // Set up contract references
+        await matchmakingSystem.setGameStateAddress(gameStateAddress);
+        await matchmakingSystem.setBattleSystemAddress(battleSystemAddress);
+        await matchmakingSystem.setDistrictBuildingsAddress(districtBuildingsAddress);
+        await matchmakingSystem.setGridBuildingsAddress(gridBuildingsAddress);
+        await battleSystem.setMatchmakingSystemAddress(matchmakingSystemAddress);
+        await gameState.setMatchmakingSystemAddress(matchmakingSystemAddress);
 
         // Deploy Altar
         const Altar = await ethers.getContractFactory("Altar");
@@ -151,7 +166,7 @@ describe("Battle History Consistency Tests", function () {
         await donateGoldForTier(player3, gameState, gridBuildings, altar, sonicityNFT, 1500);
 
         // Set noOpponentFoundChance to 0 for testing
-        await battleSystem.connect(owner).setNoOpponentFoundChance(0);
+        await matchmakingSystem.connect(owner).setNoOpponentFoundChance(0);
         
         // Set cavalry and siege damage chances to 100% for deterministic testing
         await battleSystem.connect(owner).setTroopConfig(1, 200, 100, 15, 100, 0, 0); // CAVALRY: 100% grid damage
@@ -189,7 +204,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             const tx = await battleSystem.connect(player1).findRandomOpponent();
@@ -278,7 +293,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -335,7 +350,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -399,7 +414,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -427,7 +442,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -512,7 +527,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -584,7 +599,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -657,7 +672,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -730,7 +745,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -811,7 +826,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();
@@ -893,7 +908,7 @@ describe("Battle History Consistency Tests", function () {
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
             await battleSystem.connect(player1).startSearch();
             
-            await ethers.provider.send("evm_increaseTime", [Number(await battleSystem.searchDuration()) + 1]);
+            await ethers.provider.send("evm_increaseTime", [Number(await matchmakingSystem.searchDuration()) + 1]);
             await ethers.provider.send("evm_mine");
             
             await battleSystem.connect(player1).findRandomOpponent();

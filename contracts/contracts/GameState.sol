@@ -27,7 +27,6 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     address public tacticsNFTAddress;
     // Reference to the CosmeticItems contract
     address public cosmeticItemsAddress;
-
     // Upgrade level thresholds (in SONIC wei) - adjusted for 1.0 SONIC recharge cost
     uint256 public constant UPGRADE_LEVEL_2_THRESHOLD = 10 ether;     // 10 SONIC for level 2 (10 recharges)
     uint256 public constant UPGRADE_LEVEL_3_THRESHOLD = 100 ether;    // 100 SONIC for level 3 (100 recharges)
@@ -73,6 +72,9 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     // Player registration tracking
     uint256 public totalPlayers;
     mapping(address => bool) public isRegisteredPlayer;
+
+    // Reference to the MatchmakingSystem contract
+    address public matchmakingSystemAddress;
 
     // Events
     event CityJoined(address indexed player, uint256 indexed cityId);
@@ -189,6 +191,10 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         battleSystemAddress = _battleSystemAddress;
     }
 
+    function setMatchmakingSystemAddress(address _matchmakingSystemAddress) external onlyOwner {
+        matchmakingSystemAddress = _matchmakingSystemAddress;
+    }
+
     /**
      * @dev Deduct gold for district building construction
      * @param player The address of the player
@@ -241,8 +247,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             
             // If player reaches tier 1, register them for matchmaking
             if (nextTier == 1) {
-                (bool matchmakingSuccess, bytes memory returnData) = battleSystemAddress.call(
-                    abi.encodeWithSignature("registerForMatchmaking()")
+                (bool matchmakingSuccess, bytes memory returnData) = matchmakingSystemAddress.call(
+                    abi.encodeWithSignature("registerForMatchmaking(address)", msg.sender)
                 );
                 if (!matchmakingSuccess) {
                     // If the call failed, decode and propagate the error message
@@ -512,6 +518,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
             msg.sender == districtBuildingsAddress || 
             msg.sender == gridBuildingsAddress || 
             msg.sender == battleSystemAddress ||
+            msg.sender == matchmakingSystemAddress ||
             msg.sender == altarAddress ||
             msg.sender == heroNFTAddress ||
             msg.sender == tacticsNFTAddress ||
