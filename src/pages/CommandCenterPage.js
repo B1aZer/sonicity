@@ -58,7 +58,7 @@ export class CommandCenterPage extends BasePage {
                 this.contracts.battleSystem.playerTroops(address, 0), // INFANTRY
                 this.contracts.battleSystem.playerTroops(address, 1), // CAVALRY
                 this.contracts.battleSystem.playerTroops(address, 2),  // SIEGE
-                this.contracts.battleSystem.checkSearchStatus(),
+                this.contracts.matchmakingSystem.checkSearchStatus(),
                 this.contracts.battleSystem.getActiveBattle(address), // Only returns truly active battles
                 this.contracts.battleSystem.battleDuration()
             ]);
@@ -606,10 +606,10 @@ export class CommandCenterPage extends BasePage {
 
                 // Check if search result has expired (using blockchain time)
                 const playerAddress = await this.contracts.battleSystem.getAddress();
-                const playerSearch = await this.contracts.battleSystem.getPlayerSearch(playerAddress);
+                const playerSearch = await this.contracts.matchmakingSystem.getPlayerSearch(playerAddress);
                 
                 if (playerSearch.foundOpponent !== '0x0000000000000000000000000000000000000000') {
-                    const searchDuration = await this.contracts.battleSystem.searchDuration();
+                    const searchDuration = await this.contracts.matchmakingSystem.searchDuration();
                     const searchExpiration = 24 * 60 * 60; // 24 hours in seconds
                     const currentBlock = await this.contracts.battleSystem.provider.getBlock("latest");
                     const currentTime = currentBlock.timestamp;

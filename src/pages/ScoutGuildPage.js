@@ -3,6 +3,7 @@ import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { SCOUT_GUILD_MESSAGES } from '../js/utils/constants.js';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
+import { MatchmakingSystemContract } from '../js/contracts/MatchmakingSystemContract.js';
 import { WalletManager } from '../js/utils/wallet.js';
 
 import('../styles/scout-guild-page.css');
@@ -49,8 +50,8 @@ export class ScoutGuildPage extends BasePage {
             // Load resources and search parameters
             const [gold, searchCost, searchDuration] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
-                this.contracts.battleSystem.searchCost(),
-                this.contracts.battleSystem.searchDuration()
+                this.contracts.matchmakingSystem.searchCost(),
+                this.contracts.matchmakingSystem.searchDuration()
             ]);
             Logger.info('Scout guild data loaded:', { gold, searchCost, searchDuration });
 
@@ -60,7 +61,7 @@ export class ScoutGuildPage extends BasePage {
             this.element.querySelector('#search-duration').textContent = Math.floor(Number(searchDuration) / 3600); // Convert seconds to hours
 
             // Check search status
-            const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
+            const searchStatus = await this.contracts.matchmakingSystem.checkSearchStatus();
             Logger.info('Search status:', searchStatus);
 
             // Update search UI based on status
@@ -166,17 +167,17 @@ export class ScoutGuildPage extends BasePage {
             try {
                 Logger.info('Starting search...');
                 
-                const searchDuration = await this.contracts.battleSystem.searchDuration();
+                const searchDuration = await this.contracts.matchmakingSystem.searchDuration();
                 const hours = Math.floor(Number(searchDuration) / 3600);
                 
                 // Check if user already has an active search
-                const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
+                const searchStatus = await this.contracts.matchmakingSystem.checkSearchStatus();
                 if (searchStatus.active && !searchStatus.completed) {
                     this.modal.info('Your scouts are still searching. Please wait for them to return.', { title: 'Search In Progress' });
                     return;
                 }
                 
-                await this.contracts.battleSystem.startSearch();
+                await this.contracts.matchmakingSystem.startSearch();
                 this.modal.success(`Scouts have been deployed! They will return in ${hours} hours.`);
                 await this.loadScoutGuildData();
                 
@@ -193,7 +194,7 @@ export class ScoutGuildPage extends BasePage {
                 Logger.info('Starting to check scout reports...');
                 
                 // Verify search is complete before proceeding
-                const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
+                const searchStatus = await this.contracts.matchmakingSystem.checkSearchStatus();
                 
                 if (!searchStatus.completed) {
                     this.modal.error('Your scouts are still searching. Please wait for them to return.', { title: 'Search Not Complete' });
@@ -207,7 +208,7 @@ export class ScoutGuildPage extends BasePage {
                 
                 
                 Logger.info('Calling findRandomOpponent...');
-                const receipt = await this.contracts.battleSystem.findRandomOpponent();
+                const receipt = await this.contracts.matchmakingSystem.findRandomOpponent();
                 Logger.info('Transaction mined:', receipt.hash);
                 
                 Logger.info('Reloading scout guild data...');
@@ -215,7 +216,7 @@ export class ScoutGuildPage extends BasePage {
                 Logger.info('Scout guild data reloaded');
 
                 // Get the search status to check the result
-                const newSearchStatus = await this.contracts.battleSystem.checkSearchStatus();
+                const newSearchStatus = await this.contracts.matchmakingSystem.checkSearchStatus();
                 Logger.info('Search status after transaction:', newSearchStatus);
                 const opponent = newSearchStatus.foundOpponent;
                 Logger.info('Found opponent:', opponent);
@@ -249,7 +250,7 @@ export class ScoutGuildPage extends BasePage {
 
         this.searchTimer = setInterval(async () => {
             try {
-                const searchStatus = await this.contracts.battleSystem.checkSearchStatus();
+                const searchStatus = await this.contracts.matchmakingSystem.checkSearchStatus();
                 this.updateSearchUI(searchStatus);
 
                 if (searchStatus.completed) {

@@ -9,6 +9,7 @@ import { SonicityYieldNFTContract } from '../js/contracts/SonicityYieldNFTContra
 import { DistrictBuildingsContract } from '../js/contracts/DistrictBuildingsContract.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { BattleSystemContract } from '../js/contracts/BattleSystemContract.js';
+import { MatchmakingSystemContract } from '../js/contracts/MatchmakingSystemContract.js';
 import { HeroNFTContract } from '../js/contracts/HeroNFTContract.js';
 import { TacticsNFTContract } from '../js/contracts/TacticsNFTContract.js';
 import { CosmeticItemsContract } from '../js/contracts/CosmeticItemsContract.js';
@@ -32,6 +33,7 @@ export class BasePage {
             districtBuildings: new DistrictBuildingsContract(),
             gridBuildings: new GridBuildingsContract(),
             battleSystem: new BattleSystemContract(),
+            matchmakingSystem: new MatchmakingSystemContract(),
             heroNFT: new HeroNFTContract(),
             tacticsNFT: new TacticsNFTContract(),
             cosmeticItems: new CosmeticItemsContract()
@@ -124,6 +126,10 @@ export class BasePage {
                 }),
                 this.contracts.battleSystem.initialize().catch(e => {
                     Logger.warn('BattleSystem contract initialization failed:', e);
+                    return null;
+                }),
+                this.contracts.matchmakingSystem.initialize().catch(e => {
+                    Logger.warn('MatchmakingSystem contract initialization failed:', e);
                     return null;
                 }),
                 this.contracts.heroNFT.initialize().catch(e => {

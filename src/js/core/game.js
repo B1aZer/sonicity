@@ -12,6 +12,7 @@ import { GridBuildingsContract } from '../contracts/GridBuildingsContract.js';
 import { DistrictBuildingsContract } from '../contracts/DistrictBuildingsContract.js';
 import { CosmeticItemsContract } from '../contracts/CosmeticItemsContract.js';
 import { BattleSystemContract } from '../contracts/BattleSystemContract.js';
+import { MatchmakingSystemContract } from '../contracts/MatchmakingSystemContract.js';
 import Logger from '../utils/logger.js';
 import { musicManager } from '../managers/musicManager.js';
 import { LoadingScreen } from '../utils/loadingScreen.js';
@@ -48,6 +49,7 @@ export class Game {
             this.districtBuildingsContract = contracts.districtBuildings;
             this.cosmeticItemsContract = contracts.cosmeticItems;
             this.battleSystemContract = contracts.battleSystem;
+            this.matchmakingSystemContract = contracts.matchmakingSystem;
         } else {
             // Fallback: Initialize contracts (for standalone usage)
             this.gameStateContract = new GameStateContract();
@@ -55,6 +57,7 @@ export class Game {
             this.districtBuildingsContract = new DistrictBuildingsContract();
             this.cosmeticItemsContract = new CosmeticItemsContract();
             this.battleSystemContract = new BattleSystemContract();
+            this.matchmakingSystemContract = new MatchmakingSystemContract();
         }
 
         // Game initialization complete

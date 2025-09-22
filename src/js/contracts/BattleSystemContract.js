@@ -33,41 +33,7 @@ export class BattleSystemContract extends BaseContract {
         super(CONTRACT_ADDRESSES.BATTLE_SYSTEM, BattleSystemABI.abi);
     }
 
-    async startSearch() {
-        return this.transact('startSearch');
-    }
-
-    async findRandomOpponent() {
-        return this.transact('findRandomOpponent');
-    }
-
-    async checkSearchStatus() {
-        const contract = await this.getContract();
-        try {
-            const result = await contract.checkSearchStatus();
-            return {
-                active: result.active,
-                completed: result.completed,
-                timeRemaining: result.timeRemaining,
-                foundOpponent: result.foundOpponent,
-                hasAttemptedFind: result.hasAttemptedFind
-            };
-        } catch (error) {
-            console.error('Error checking search status:', error);
-            return {
-                active: false,
-                completed: false,
-                timeRemaining: 0,
-                foundOpponent: '0x0000000000000000000000000000000000000000',
-                hasAttemptedFind: false
-            };
-        }
-    }
-
-    async getPlayerSearch(player) {
-        const contract = await this.getContract();
-        return contract.playerSearches(player);
-    }
+    // Matchmaking functions moved to MatchmakingSystemContract
 
     async startBattle(infantry, cavalry, siege) {
         return this.transact('startBattle', infantry, cavalry, siege);
@@ -120,25 +86,7 @@ export class BattleSystemContract extends BaseContract {
         return contract.battleHistory(index);
     }
 
-    async isRegisteredForMatchmaking(player) {
-        const contract = await this.getContract();
-        return contract.isRegisteredForMatchmaking(player);
-    }
-
-    async searchCost() {
-        const contract = await this.getContract();
-        return contract.searchCost();
-    }
-
-    async searchDuration() {
-        const contract = await this.getContract();
-        return contract.searchDuration();
-    }
-
-    async noOpponentFoundChance() {
-        const contract = await this.getContract();
-        return contract.noOpponentFoundChance();
-    }
+    // Matchmaking functions moved to MatchmakingSystemContract
 
     async battleDuration() {
         const contract = await this.getContract();
@@ -170,15 +118,7 @@ export class BattleSystemContract extends BaseContract {
         return contract.findPotentialOpponents();
     }
 
-    async lastBattleTime(player) {
-        const contract = await this.getContract();
-        return contract.lastBattleTime(player);
-    }
-
-    async registeredPlayers(index) {
-        const contract = await this.getContract();
-        return contract.registeredPlayers(index);
-    }
+    // Matchmaking functions moved to MatchmakingSystemContract
 
     async getTroopConfig(troopType) {
         const contract = await this.getContract();

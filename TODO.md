@@ -5,6 +5,13 @@
 - polygon ceo - https://x.com/sandeepnailwal
 - https://x.com/Moonveil_Studio - massive polygon web3 gaming studio
 - https://x.com/real_n3o - meta project ceo on polygon
+- https://x.com/ronin_shield - ronin support
+
+## grants
+
+- https://roninchain.com/grants-program
+- sonic labs https://airtable.com/appeXnYBjdPETgohD/pag0wPMXTeIVxhmXT/form
+- https://www.immutable.com/contact
 
 ## todo
 
@@ -12,6 +19,13 @@
  - 1. buy from market
  - 2. isolated vs scene, meaning we makwe PVP controlled in a way it would be fair
 - how to attract new players ?
+
+## todo
+
+- npm run upgrade
+- npm run deploy:matchmaking:sonicFork
+- npm run verify:refs:sonicFork
+- possible fix
 
 ## chain
 
