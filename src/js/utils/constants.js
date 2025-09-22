@@ -13,6 +13,7 @@ export const CONTRACT_ADDRESSES = {
     DISTRICT_BUILDINGS: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0", // Will be updated by update-addresses.sh
     GRID_BUILDINGS: "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE", // Will be updated by update-addresses.sh
     BATTLE_SYSTEM: "0x9A676e781A523b5d0C0e43731313A708CB607508", // Will be updated by update-addresses.sh
+    MATCHMAKING_SYSTEM: "0xF36F520eC1BC95c2F6bfBF6B17bE2e8b3dFc23c3", // Will be updated by update-addresses.sh
     HERO_NFT: "0x9d4454B023096f34B160D6B654540c56A1F81688", // Will be updated by update-addresses.sh
     TACTICS_NFT: "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570", // Will be updated by update-addresses.sh
     COSMETIC_ITEMS: "0x4c5859f0F772848b2D91F1D83E2Fe57935348029" // Will be updated by update-addresses.sh
