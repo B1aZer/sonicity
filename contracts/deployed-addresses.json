@@ -21,6 +21,6 @@
   "altarProxy": "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f",
   "battleSystemImpl": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
   "battleSystemProxy": "0x9A676e781A523b5d0C0e43731313A708CB607508",
-  "matchmakingSystemImpl": "0xC21Fc85a23326d34a62FB114279E9265D279bb71",
-  "matchmakingSystemProxy": "0xF36F520eC1BC95c2F6bfBF6B17bE2e8b3dFc23c3"
+  "matchmakingSystemImpl": "0x38A81470ab98Ec20EE6D65B332169B584fc6c8A5",
+  "matchmakingSystemProxy": "0x6980cD37F1D264B69faba010BC8e39B6b67FF823"
 }

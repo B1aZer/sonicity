@@ -65,7 +65,7 @@ contract MatchmakingSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable
         // Initialize search parameters
         searchCost = 100; // Cost in gold to start a search
         searchDuration = 6 hours; // Duration of search
-        noOpponentFoundChance = 0; // Always find opponent for testing
+        noOpponentFoundChance = 20; // 20% chance to not find opponent (matching original BattleSystem)
         searchExpiration = 24 hours; // Search expires after 24 hours
     }
 
