@@ -27,7 +27,8 @@ export class WorkshopPage extends BasePage {
                 2: 0, // Diamond Stations
                 3: 0, // REP Forges
                 4: 0  // Yield Stations
-            }
+            },
+            isLoading: true
         });
         
         this.render();
@@ -42,12 +43,15 @@ export class WorkshopPage extends BasePage {
         }
         
         try {
+            this.setState({ isLoading: true });
             await this.loadWorkshopData();
             this.setupEventListeners();
             Logger.info('Workshop page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing workshop page:', error);
             this.modal.error('Failed to initialize workshop page. Please try refreshing the page.');
+        } finally {
+            this.setState({ isLoading: false });
         }
     }
 
@@ -62,6 +66,7 @@ export class WorkshopPage extends BasePage {
             if (!hasWorkshop) {
                 this.setState({
                     damagedBuildings: [],
+                    damagedDistrictBuildings: [],
                     totalDamaged: 0,
                     canRepair: false,
                     repairCost: 0,
@@ -156,68 +161,72 @@ export class WorkshopPage extends BasePage {
     }
 
     async handleRepairBuilding(buildingId) {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Repairing building...');
+        
         try {
             Logger.info('Starting building repair for building ID:', buildingId);
-            
-            // Show loading modal
-            const loadingModal = this.modal.loading('Repairing building...');
             
             // Repair the building
             await this.contracts.gridBuildings.repairBuilding(buildingId);
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload workshop data
+            // Reload workshop data (keep loading modal open during this)
             await this.loadWorkshopData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success message
             this.modal.success('Successfully repaired building!');
             
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error repairing building:', error);
             this.modal.error('Failed to repair building. Please try again.');
         }
     }
 
     async handleRepairDistrictBuilding(buildingName) {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Repairing district building...');
+        
         try {
             Logger.info('Starting district building repair for:', buildingName);
-            
-            // Show loading modal
-            const loadingModal = this.modal.loading('Repairing district building...');
             
             // Repair the district building
             await this.contracts.districtBuildings.repairBuilding(buildingName);
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload workshop data
+            // Reload workshop data (keep loading modal open during this)
             await this.loadWorkshopData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success message
             this.modal.success(`Successfully repaired ${buildingName}!`);
             
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error repairing district building:', error);
             this.modal.error('Failed to repair district building. Please try again.');
         }
     }
 
     async handleRepairAllBuildings() {
+        const totalDamaged = this.state.damagedBuildings.length + this.state.damagedDistrictBuildings.length;
+        
+        if (totalDamaged === 0) {
+            this.modal.error('No damaged buildings to repair.');
+            return;
+        }
+        
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Repairing all damaged buildings...');
+        
         try {
             Logger.info('Starting repair of all damaged buildings...');
-            
-            const totalDamaged = this.state.damagedBuildings.length + this.state.damagedDistrictBuildings.length;
-            
-            if (totalDamaged === 0) {
-                this.modal.error('No damaged buildings to repair.');
-                return;
-            }
-            
-            // Show loading modal
-            const loadingModal = this.modal.loading('Repairing all damaged buildings...');
             
             let repairedCount = 0;
             
@@ -233,16 +242,18 @@ export class WorkshopPage extends BasePage {
                 repairedCount++;
             }
             
-            // Close loading modal
-            loadingModal.close();
-            
-            // Reload workshop data
+            // Reload workshop data (keep loading modal open during this)
             await this.loadWorkshopData();
+            
+            // Close loading modal after data reload
+            loadingModal.close();
             
             // Show success message
             this.modal.success(`Successfully repaired ${repairedCount} buildings!`);
             
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             Logger.error('Error repairing all buildings:', error);
             this.modal.error('Failed to repair buildings. Please try again.');
         }
@@ -345,7 +356,7 @@ export class WorkshopPage extends BasePage {
                 <div class="page-section">
                     <h2>Damaged Grid Buildings</h2>
                     <div class="buildings-grid" id="damaged-buildings-list">
-                        <!-- Damaged grid buildings will be populated here -->
+                        ${this.state.isLoading ? this.getLoadingContainerHTML('Loading damaged buildings...') : ''}
                     </div>
                 </div>
 
@@ -353,7 +364,7 @@ export class WorkshopPage extends BasePage {
                 <div class="page-section">
                     <h2>Damaged District Buildings</h2>
                     <div class="buildings-grid" id="damaged-district-buildings-list">
-                        <!-- Damaged district buildings will be populated here -->
+                        ${this.state.isLoading ? this.getLoadingContainerHTML('Loading damaged district buildings...') : ''}
                     </div>
                 </div>
 
@@ -377,6 +388,11 @@ export class WorkshopPage extends BasePage {
         // Update grid buildings
         const gridContainer = this.element.querySelector('#damaged-buildings-list');
         if (gridContainer) {
+            if (this.state.isLoading) {
+                gridContainer.innerHTML = this.getLoadingContainerHTML('Loading damaged buildings...');
+                return;
+            }
+            
             if (this.state.damagedBuildings.length === 0) {
                 gridContainer.innerHTML = `
                     <div class="building-card">
@@ -410,6 +426,11 @@ export class WorkshopPage extends BasePage {
         // Update district buildings
         const districtContainer = this.element.querySelector('#damaged-district-buildings-list');
         if (districtContainer) {
+            if (this.state.isLoading) {
+                districtContainer.innerHTML = this.getLoadingContainerHTML('Loading damaged district buildings...');
+                return;
+            }
+            
             if (this.state.damagedDistrictBuildings.length === 0) {
                 districtContainer.innerHTML = `
                     <div class="building-card">
@@ -443,9 +464,10 @@ export class WorkshopPage extends BasePage {
         // Call parent updateUI first
         super.updateUI(oldState, newState);
         
-        // Update damaged buildings list if either list changed
+        // Update damaged buildings list if either list changed or loading state changed
         if (oldState?.damagedBuildings?.length !== newState?.damagedBuildings?.length ||
-            oldState?.damagedDistrictBuildings?.length !== newState?.damagedDistrictBuildings?.length) {
+            oldState?.damagedDistrictBuildings?.length !== newState?.damagedDistrictBuildings?.length ||
+            oldState?.isLoading !== newState?.isLoading) {
             this.updateDamagedBuildingsList();
         }
     }
