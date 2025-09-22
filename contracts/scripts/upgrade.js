@@ -43,10 +43,11 @@ async function main() {
   console.log("BattleSystem upgraded to:", await battleSystemProxy.getAddress());
 
   // Upgrade MatchmakingSystem (if it exists)
+  let matchmakingSystemProxy;
   if (addresses.matchmakingSystemProxy) {
     console.log("Upgrading MatchmakingSystem...");
     const MatchmakingSystem = await ethers.getContractFactory("MatchmakingSystem");
-    const matchmakingSystemProxy = await upgrades.upgradeProxy(addresses.matchmakingSystemProxy, MatchmakingSystem);
+    matchmakingSystemProxy = await upgrades.upgradeProxy(addresses.matchmakingSystemProxy, MatchmakingSystem);
     await matchmakingSystemProxy.waitForDeployment();
     console.log("MatchmakingSystem upgraded to:", await matchmakingSystemProxy.getAddress());
   } else {
@@ -268,7 +269,7 @@ async function main() {
   };
 
   // Update MatchmakingSystem addresses if it exists
-  if (addresses.matchmakingSystemProxy) {
+  if (addresses.matchmakingSystemProxy && matchmakingSystemProxy) {
     newAddresses.matchmakingSystemProxy = await matchmakingSystemProxy.getAddress();
   }
 

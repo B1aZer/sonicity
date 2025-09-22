@@ -44,6 +44,7 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
     
     // Events
     event TacticMinted(address indexed player, uint8 tacticId, string name);
+    event TacticCostUpdated(uint8 indexed tacticId, uint256 goldCost, uint256 diamondCost);
     
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -142,13 +143,47 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
      * @dev Initialize tactic costs
      */
     function _initializeTacticCosts() internal {
-        // All tactics cost the same
-        for (uint8 i = 1; i <= 9; i++) {
-            tacticCosts[i] = TacticCost({
-                goldCost: 100,
-                diamondCost: 16
-            });
-        }
+        // Tier 1 (Strongest Effects) - Premium Pricing
+        tacticCosts[1] = TacticCost({  // Iron Strike
+            goldCost: 300,
+            diamondCost: 24
+        });
+        tacticCosts[2] = TacticCost({  // Guardian Wall
+            goldCost: 300,
+            diamondCost: 24
+        });
+        tacticCosts[3] = TacticCost({  // Battle Rage
+            goldCost: 300,
+            diamondCost: 24
+        });
+        
+        // Tier 2 (Medium Effects) - Standard Pricing
+        tacticCosts[4] = TacticCost({  // Cavalry Rush
+            goldCost: 200,
+            diamondCost: 16
+        });
+        tacticCosts[5] = TacticCost({  // Defensive Circle
+            goldCost: 200,
+            diamondCost: 16
+        });
+        tacticCosts[6] = TacticCost({  // Tactical Feint
+            goldCost: 200,
+            diamondCost: 16
+        });
+        
+        // Tier 3 (Weakest Effects) - Entry Pricing
+        tacticCosts[7] = TacticCost({  // Swift Strike
+            goldCost: 100,
+            diamondCost: 8
+        });
+        tacticCosts[8] = TacticCost({  // Shadow Guard
+            goldCost: 100,
+            diamondCost: 8
+        });
+        tacticCosts[9] = TacticCost({  // Stealth Trap
+            goldCost: 100,
+            diamondCost: 8
+        });
     }
     
     /**
@@ -342,6 +377,22 @@ contract TacticsNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reent
         return result;
     }
     
+    /**
+     * @dev Update tactic cost for a specific tactic
+     * @param tacticId The tactic ID (1-9)
+     * @param goldCost The new gold cost
+     * @param diamondCost The new diamond cost
+     */
+    function updateTacticCost(uint8 tacticId, uint256 goldCost, uint256 diamondCost) external onlyOwner {
+        require(tacticId >= 1 && tacticId <= 9, "Invalid tactic ID");
+        tacticCosts[tacticId] = TacticCost({
+            goldCost: goldCost,
+            diamondCost: diamondCost
+        });
+        emit TacticCostUpdated(tacticId, goldCost, diamondCost);
+    }
+    
+
     /**
      * @dev Set GameState address
      * @param _gameStateAddress The GameState contract address
