@@ -1,5 +1,26 @@
 # Now
 
+## todo
+
+- taxtics images
+- now - yes, in plan to make a partial army return based on power diff
+- sound toggle
+- pve ?
+- repair models
+
+## outreach
+
+- make a quick test
+- twitter
+- discord
+- telegram
+- reddit
+
+Mon–Fri: run the 90-min engine (clip + 1 channel + 10 DMs).
+Wed: Playtest Night.
+Sat: One “how I built X” dev post with a clip (works great on X/Reddit).
+Sun: Raffle + “next week plan” + clean up landing page based on feedback.
+
 ## x talk to
 
 - polygon ceo - https://x.com/sandeepnailwal
@@ -21,6 +42,24 @@
  - 2. isolated vs scene, meaning we makwe PVP controlled in a way it would be fair
 - how to attract new players ?
 
+## polish
+
++ heroes . taxtics images
+- show upgrade price
+- proper event dispose on wallet change on game
+- bonus heroes
+- day night cycle
+- grass 
+- svanwars
+- restric buidlings (see sop)
+
+## imporvements (later)
+
+- add raycaster building lights overview (out) heroes
+- merge nft buidling
+- troop survival, add description garris, center
+- postprocessing / bokeh / depth of fieldq
+
 ## todo
 
 - npm run upgrade:sonicFork
@@ -40,8 +79,8 @@
 + anal
 + do not send from loalhost
 - pve ?
-- loading ?
-- REPAIR ??
++ loading ?
++ REPAIR ??
 
 ## todo
 
@@ -61,42 +100,24 @@
 ## todo
 
 + 24 h pool
-- change music when in battle
-- dmg for buidlings
++ change music when in battle
++ dmg for buidlings
 
-- rev error on sc
-- add blender units anim - run, idle
++ rev error on sc
++ add blender units anim - run, idle
 
 ## todo
 
-- metrics / sentry
-- mobile
-- you know the driss like, rt for wl
++ metrics / sentry
++ mobile
++ you know the driss like, rt for wl
 
 ## mobile
 
-- link in city for all buidlings for mobile
++ link in city for all buidlings for mobile
 - fix small aspects billboard etc
 + outpost page ?
-- responsive changes - check
-
-## polish
-
-- heroes . taxtics images
-- show upgrade price
-- proper event dispose on wallet change on game
-- bonus heroes
-- day night cycle
-- grass 
-- svanwars
-- restric buidlings (see sop)
-
-## imporvements (later)
-
-- add raycaster building lights overview (out) heroes
-- merge nft buidling
-- troop survival, add description garris, center
-- postprocessing / bokeh / depth of fieldq
++ responsive changes - check
 
 ## configs 
 206.189.106.53
