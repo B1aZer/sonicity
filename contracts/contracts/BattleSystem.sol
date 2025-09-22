@@ -631,11 +631,17 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
             defenderPower
         );
 
-        // Update battle state with effects
-        Battle storage battle = activeBattles[attacker];
-        battle.gridBuildingsDamaged += effects.gridBuildingsDamaged;
-        battle.districtBuildingsDamaged += effects.districtBuildingsDamaged;
-        battle.treasuryBurned = effects.treasuryBurned;
+        // Update battle state with effects for both attacker and defender
+        Battle storage attackerBattle = activeBattles[attacker];
+        Battle storage defenderBattle = activeBattles[defender];
+        
+        attackerBattle.gridBuildingsDamaged += effects.gridBuildingsDamaged;
+        attackerBattle.districtBuildingsDamaged += effects.districtBuildingsDamaged;
+        attackerBattle.treasuryBurned = effects.treasuryBurned;
+        
+        defenderBattle.gridBuildingsDamaged += effects.gridBuildingsDamaged;
+        defenderBattle.districtBuildingsDamaged += effects.districtBuildingsDamaged;
+        defenderBattle.treasuryBurned = effects.treasuryBurned;
 
     }
 

@@ -1,5 +1,18 @@
 # Now
 
+## x talk to
+
+- polygon ceo - https://x.com/sandeepnailwal
+- https://x.com/Moonveil_Studio - massive polygon web3 gaming studio
+- https://x.com/real_n3o - meta project ceo on polygon
+
+## todo
+
+- how to make gam more air to new players
+ - 1. buy from market
+ - 2. isolated vs scene, meaning we makwe PVP controlled in a way it would be fair
+- how to attract new players ?
+
 ## chain
 
 - multichain ? anvil ? account abstraction
