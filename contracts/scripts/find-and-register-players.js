@@ -55,8 +55,8 @@ async function main() {
     // Query PlayerRegistered events from GameState (when players START the game)
     const playerRegisteredFilter = gameState.filters.PlayerRegistered();
     
-    // Query events from the last 10000 blocks (adjust as needed)
-    const fromBlock = Math.max(0, currentBlock - 10000);
+    // Query events from block 0 to current block (ALL blocks from the start)
+    const fromBlock = 0;
     console.log(`   Querying PlayerRegistered events from GameState from block ${fromBlock} to ${currentBlock}`);
     
     const allPlayers = new Set();
@@ -73,31 +73,6 @@ async function main() {
         }
     } catch (error) {
         console.log(`   ⚠️  Error querying PlayerRegistered events from GameState: ${error.message}`);
-    }
-    
-    // Also check for players who might have interacted with GameState but not yet registered
-    // Query other GameState events to find players who have interacted but might not be registered
-    console.log("\n🔍 Also checking other GameState events for unregistered players...");
-    
-    const gameStateEventFilters = [
-        { name: 'CityJoined', filter: gameState.filters.CityJoined() },
-        { name: 'BuildingSlotsUpdated', filter: gameState.filters.BuildingSlotsUpdated() },
-        { name: 'GoldDonated', filter: gameState.filters.GoldDonated() }
-    ];
-    
-    for (const { name, filter } of gameStateEventFilters) {
-        try {
-            const events = await gameState.queryFilter(filter, fromBlock, currentBlock);
-            console.log(`   Found ${events.length} GameState events for ${name}`);
-            
-            for (const event of events) {
-                if (event.args && event.args.player) {
-                    allPlayers.add(event.args.player);
-                }
-            }
-        } catch (error) {
-            console.log(`   ⚠️  Error querying GameState events (${name}): ${error.message}`);
-        }
     }
     
     const playerAddresses = Array.from(allPlayers);
@@ -144,11 +119,10 @@ async function main() {
                 continue;
             }
             
-            // Check player tier
-            const playerState = await gameState.getPlayerState(address);
-            const tier = playerState.tier;
-            const gold = playerState.gold;
-            const treasury = playerState.treasury;
+            // Check player tier and stats
+            const tier = await gameState.getPlayerTier(address);
+            const gold = await gameState.getPlayerGold(address);
+            const treasury = await gameState.getPlayerTreasury(address);
             
             console.log(`   📈 Player stats:`);
             console.log(`      Tier: ${tier}`);
@@ -180,8 +154,6 @@ async function main() {
     }
     
     // Final summary
-    const finalRegisteredCount = await matchmakingSystem.registeredPlayers.length();
-    
     console.log("\n📈 Summary:");
     console.log(`   Players found in events: ${playerAddresses.length}`);
     console.log(`   Already registered for matchmaking: ${alreadyRegisteredCount}`);
@@ -189,7 +161,7 @@ async function main() {
     console.log(`   Newly registered: ${registeredCount}`);
     console.log(`   Not yet tier 1: ${notTier1Count}`);
     console.log(`   Errors: ${errorCount}`);
-    console.log(`   Total registered players: ${finalRegisteredCount}`);
+    console.log(`   Total registered players: ${alreadyRegisteredCount + registeredCount}`);
     
     if (registeredCount > 0) {
         console.log("\n✅ Registration complete! Players can now use matchmaking.");

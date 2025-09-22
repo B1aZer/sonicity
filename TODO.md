@@ -27,8 +27,7 @@
 - npm run deploy:matchmaking:sonicFork
 - npm run verify:refs:sonicFork
 - possible fix
-- npx hardhat run scripts/find-and-register-players.js --network localhost",
-- PRIVATE_KEY=<REDACTED> npx hardhat run scripts/find-and-register-players.js --network sonicFork"
+- RIVATE_KEY=<REDACTED> npx hardhat run scripts/find-and-register-players.js --network sonicFork
 
 ## chain
 
