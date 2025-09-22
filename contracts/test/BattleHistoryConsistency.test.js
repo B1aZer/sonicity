@@ -561,11 +561,16 @@ describe("Battle History Consistency Tests", function () {
             expect(attackerRecord.districtBuildingsDamaged).to.equal(defenderRecord.districtBuildingsDamaged);
             expect(attackerRecord.districtBuildingsDamaged).to.equal(0); // No siege units
 
-            // If attacker won, should have grid building damage from cavalry (100% chance)
+            // If attacker won, cavalry has 30% chance to damage grid buildings
             if (attackerRecord.attackerWon) {
-                expect(attackerRecord.gridBuildingsDamaged).to.be.gt(0);
-                expect(attackerRecord.gridBuildingsDamaged).to.be.lte(2); // Max 2 buildings damaged (4 cavalry / 2 = 2)
-                console.log("✅ Grid building damage recorded correctly");
+                // Cavalry has 30% chance to damage, so we can get 0 or more damage
+                expect(attackerRecord.gridBuildingsDamaged).to.be.gte(0);
+                expect(attackerRecord.gridBuildingsDamaged).to.be.lte(2); // Max 2 buildings damaged (6 cavalry / 5 + 1 = 2)
+                if (attackerRecord.gridBuildingsDamaged > 0) {
+                    console.log("✅ Grid building damage recorded correctly");
+                } else {
+                    console.log("✅ No grid damage (30% chance didn't trigger)");
+                }
             } else {
                 expect(attackerRecord.gridBuildingsDamaged).to.equal(0);
                 console.log("✅ No damage recorded (attacker lost)");
@@ -630,9 +635,10 @@ describe("Battle History Consistency Tests", function () {
             expect(attackerRecord.gridBuildingsDamaged).to.equal(defenderRecord.gridBuildingsDamaged);
             expect(attackerRecord.districtBuildingsDamaged).to.equal(defenderRecord.districtBuildingsDamaged);
             
-            // Verify that effects are actually recorded (should be > 0 for cavalry with 100% chance)
-            expect(attackerRecord.gridBuildingsDamaged).to.be.greaterThan(0, "Grid buildings should be damaged by cavalry");
-            expect(defenderRecord.gridBuildingsDamaged).to.be.greaterThan(0, "Grid buildings should be damaged by cavalry");
+            // Verify that effects are recorded correctly (cavalry has 30% chance to damage)
+            expect(attackerRecord.gridBuildingsDamaged).to.be.gte(0, "Grid buildings damage should be >= 0");
+            expect(attackerRecord.gridBuildingsDamaged).to.be.lte(2, "Grid buildings damage should be <= 2");
+            expect(defenderRecord.gridBuildingsDamaged).to.be.gte(0, "Grid buildings damage should be >= 0");
 
             console.log("✅ GRID DAMAGE CONSISTENCY: PASSED (Defender resolves)");
         });

@@ -161,8 +161,9 @@ describe("CosmeticItems", function () {
 
         it("Should return available cosmetics", async function () {
             const available = await cosmeticItems.getAvailableCosmetics(10);
-            expect(available.length).to.equal(1);
-            expect(available[0]).to.equal(0);
+            expect(available.length).to.equal(2); // Both Royal Banner (0) and Emergency Gold Pack (1) are available
+            expect(available[0]).to.equal(0); // Royal Banner
+            expect(available[1]).to.equal(1); // Emergency Gold Pack
         });
     });
 
@@ -218,7 +219,7 @@ describe("CosmeticItems", function () {
     describe("Multiple Cosmetics", function () {
         beforeEach(async function () {
             // Add different cosmetics with different resource types
-            await cosmeticItems.setCosmeticConfig(1, "Garden Decoration", 15, 0, true, "Beautiful flowers", "assets/garden.glb", 1); // GOLD
+            await cosmeticItems.setCosmeticConfig(1, "Garden Decoration", 15, 0, true, "Beautiful flowers", "assets/garden.glb", 0); // GOLD, cosmeticType 0 (regular cosmetic)
             await cosmeticItems.setCosmeticConfig(2, "Magic Sparkles", 25, 2, true, "Magical effects", "assets/sparkles.glb", 2); // FOOD
         });
 
