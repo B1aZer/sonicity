@@ -339,7 +339,7 @@ export class TacticsCenterPage extends BasePage {
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Inspires your troops to earn +30 REP points from battles. Great for players focused on reputation building.
+                                    Inspires your troops to earn +100% more REP points from battles. Great for players focused on reputation building.
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -429,7 +429,7 @@ export class TacticsCenterPage extends BasePage {
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Deceptive maneuver that earns +20 REP points from battles. Subtle but effective reputation building.
+                                    Deceptive maneuver that earns +75% more REP points from battles. Subtle but effective reputation building.
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -519,7 +519,7 @@ export class TacticsCenterPage extends BasePage {
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Hidden trap that earns +15 REP points from battles. Subtle reputation gains for careful players.
+                                    Hidden trap that earns +50% more REP points from battles. Subtle reputation gains for careful players.
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">

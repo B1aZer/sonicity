@@ -935,7 +935,7 @@ export const TACTICS = {
         type: TACTIC_TYPES.STRIKE,
         effectMagnitude: 3,
         description: "Damage +3 buildings",
-        cost: { gold: 800, diamonds: 8 }
+        cost: { gold: 300, diamonds: 24 }
     },
     2: {
         id: 2,
@@ -943,15 +943,15 @@ export const TACTICS = {
         type: TACTIC_TYPES.SHIELD,
         effectMagnitude: 75,
         description: "Lose 75% fewer troops",
-        cost: { gold: 800, diamonds: 8 }
+        cost: { gold: 300, diamonds: 24 }
     },
     3: {
         id: 3,
         name: "Battle Rage",
         type: TACTIC_TYPES.TRICK,
-        effectMagnitude: 30,
-        description: "Gain +30 REP points",
-        cost: { gold: 800, diamonds: 8 }
+        effectMagnitude: 100,
+        description: "Gain +100% REP bonus (2x REP)",
+        cost: { gold: 300, diamonds: 24 }
     },
     4: {
         id: 4,
@@ -959,7 +959,7 @@ export const TACTICS = {
         type: TACTIC_TYPES.STRIKE,
         effectMagnitude: 2,
         description: "Damage +2 buildings",
-        cost: { gold: 800, diamonds: 8 }
+        cost: { gold: 200, diamonds: 16 }
     },
     5: {
         id: 5,
@@ -967,15 +967,15 @@ export const TACTICS = {
         type: TACTIC_TYPES.SHIELD,
         effectMagnitude: 50,
         description: "Lose 50% fewer troops",
-        cost: { gold: 800, diamonds: 8 }
+        cost: { gold: 200, diamonds: 16 }
     },
     6: {
         id: 6,
         name: "Tactical Feint",
         type: TACTIC_TYPES.TRICK,
-        effectMagnitude: 20,
-        description: "Gain +20 REP points",
-        cost: { gold: 800, diamonds: 8 }
+        effectMagnitude: 75,
+        description: "Gain +75% REP bonus (1.75x REP)",
+        cost: { gold: 200, diamonds: 16 }
     },
     7: {
         id: 7,
@@ -983,7 +983,7 @@ export const TACTICS = {
         type: TACTIC_TYPES.STRIKE,
         effectMagnitude: 1,
         description: "Damage +1 building",
-        cost: { gold: 800, diamonds: 8 }
+        cost: { gold: 100, diamonds: 8 }
     },
     8: {
         id: 8,
@@ -991,15 +991,15 @@ export const TACTICS = {
         type: TACTIC_TYPES.SHIELD,
         effectMagnitude: 25,
         description: "Lose 25% fewer troops",
-        cost: { gold: 800, diamonds: 8 }
+        cost: { gold: 100, diamonds: 8 }
     },
     9: {
         id: 9,
         name: "Stealth Trap",
         type: TACTIC_TYPES.TRICK,
-        effectMagnitude: 15,
-        description: "Gain +15 REP points",
-        cost: { gold: 800, diamonds: 8 }
+        effectMagnitude: 50,
+        description: "Gain +50% REP bonus (1.5x REP)",
+        cost: { gold: 100, diamonds: 8 }
     }
 };
 
