@@ -2,7 +2,31 @@
 
 ## todo
 
+- stramline game
+- - from landing to battle
+- stramline x
+- - gif from landing to battle
+- add some nice motivators
+- - 
+
+## multichain
+
+- deploy to multiple chains
+- LATER: make a cross chain state
+- player can choose any chain from supported and state will be th same
+- pack INTO google app/apple app
+
+## todo
+
+- fix front x
+- fix links
+- fix website
+- add proper pinned with gif
+
+## todo
+
 - taxtics images
+- charge everything in bulk
 - now - yes, in plan to make a partial army return based on power diff
 - sound toggle
 - pve ?
