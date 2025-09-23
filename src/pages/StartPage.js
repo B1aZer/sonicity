@@ -16,11 +16,22 @@ export class StartPage extends BasePage {
     async onInitialized(walletResult) {
         Logger.info('StartPage onInitialized called with wallet:', walletResult.address);
         try {
+            // Check native balance first
+            const hasBalance = await this.checkNativeBalance();
+            Logger.info('Native balance check result:', hasBalance);
+
+            if (!hasBalance) {
+                // Show faucet button if no balance
+                this.showFaucetButton();
+                this.setupEventListeners();
+                return;
+            }
+
             // Check if player is initialized
             const isInitialized = await this.contracts.gameState.isPlayerInitialized();
             Logger.info('Player initialization status:', isInitialized);
 
-            // Enable start button if wallet is connected
+            // Enable start button if wallet is connected and has balance
             const startButton = this.element.querySelector('.start-button');
             if (startButton) {
                 startButton.disabled = false;
@@ -34,6 +45,42 @@ export class StartPage extends BasePage {
         }
     }
 
+    async checkNativeBalance() {
+        try {
+            if (!window.ethereum) {
+                Logger.warn('No ethereum provider available for balance check');
+                return true; // Allow access if we can't check
+            }
+
+            const { ethers } = await import('ethers');
+            const { WalletManager } = await import('../js/utils/wallet.js');
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const currentWallet = WalletManager.getCurrentWallet();
+            
+            if (!currentWallet) {
+                return false;
+            }
+
+            const balance = await provider.getBalance(currentWallet);
+            const hasBalance = balance > 0n;
+            
+            Logger.info(`Wallet ${currentWallet} balance check: ${ethers.formatEther(balance)} SONIC (has balance: ${hasBalance})`);
+            return hasBalance;
+        } catch (error) {
+            Logger.error('Error checking native balance:', error);
+            return true; // Allow access if balance check fails to avoid blocking users
+        }
+    }
+
+    showFaucetButton() {
+        const startButton = this.element.querySelector('.start-button');
+        if (startButton) {
+            startButton.disabled = false;
+            startButton.textContent = 'Get Testnet Tokens';
+            startButton.classList.add('faucet-button');
+        }
+    }
+
     setupEventListeners() {
         const startButton = this.element.querySelector('.start-button');
         
@@ -41,6 +88,14 @@ export class StartPage extends BasePage {
         if (startButton) {
             startButton.addEventListener('click', async () => {
                 try {
+                    // Check if this is a faucet button
+                    if (startButton.classList.contains('faucet-button')) {
+                        // Navigate to faucet page
+                        window.history.pushState({}, '', '/faucet');
+                        window.dispatchEvent(new PopStateEvent('popstate'));
+                        return;
+                    }
+
                     // Disable button and show loading state
                     startButton.disabled = true;
                     startButton.classList.add('loading');
