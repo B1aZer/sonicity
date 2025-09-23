@@ -16,6 +16,30 @@
 - player can choose any chain from supported and state will be th same
 - pack INTO google app/apple app
 
+
+anvil \
+  --host 127.0.0.1 \
+  --port 8545 \
+  --accounts 10 \
+  --mnemonic "test test test test test test test test test test test junk" \
+  --state ~/.anvil-state/sonic-fork.json \
+  --chain-id 1337 \
+  --block-time 1 \
+  --max-persisted-states 50 \
+  > test.log
+
+anvil \
+  --host 127.0.0.1 \
+  --port 8545 \
+  --accounts 10 \
+  --mnemonic "test test test test test test test test test test test junk" \
+  --dump-state ~/.anvil-state/sonic-fork.json \
+  --load-state ~/.anvil-state/sonic-fork.json \
+  --chain-id 1337 \
+  --block-time 1 \
+  --max-on-disk-limit 12GB \
+  >> test.log
+
 ## todo
 
 - fix front x
