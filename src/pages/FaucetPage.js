@@ -16,7 +16,10 @@ export class FaucetPage extends BasePage {
             walletAddress: 'Not Connected',
             balance: 'Unknown',
             lastRequest: null,
-            canRequest: false
+            canRequest: false,
+            hasBalance: false,
+            isPlayerInitialized: false,
+            showStartSection: false
         });
         
         this.render();
@@ -52,6 +55,8 @@ export class FaucetPage extends BasePage {
             
             let balance = 'Unknown';
             let canRequest = false;
+            let hasBalance = false;
+            let isPlayerInitialized = false;
             
             if (isConnected && window.ethereum) {
                 try {
@@ -62,6 +67,16 @@ export class FaucetPage extends BasePage {
                     // Format to 4 decimal places for better readability
                     balance = `${parseFloat(balanceEther).toFixed(4)} SONIC`;
                     canRequest = true;
+                    hasBalance = balanceWei > 0n;
+                    
+                    // Check if player is initialized (only if they have balance)
+                    if (hasBalance) {
+                        try {
+                            isPlayerInitialized = await this.contracts.gameState.isPlayerInitialized();
+                        } catch (error) {
+                            Logger.warn('Could not check player initialization:', error);
+                        }
+                    }
                 } catch (error) {
                     Logger.error('Error getting balance:', error);
                     balance = 'Error loading balance';
@@ -72,7 +87,10 @@ export class FaucetPage extends BasePage {
             this.setState({
                 walletAddress: isConnected ? formatAddress(currentWallet) : 'Not Connected',
                 balance,
-                canRequest: isConnected
+                canRequest: isConnected,
+                hasBalance,
+                isPlayerInitialized,
+                showStartSection: hasBalance
             });
 
         } catch (error) {
@@ -99,13 +117,18 @@ export class FaucetPage extends BasePage {
                 await this.loadFaucetData();
             });
         }
+        
+        // Start/Continue game button listener
+        const startGameBtn = this.element?.querySelector('.start-game-btn');
+        if (startGameBtn) {
+            startGameBtn.addEventListener('click', async () => {
+                await this.startGame();
+            });
+        }
     }
 
     async requestTokens() {
         try {
-            const requestBtn = this.element.querySelector('.request-btn');
-            if (!requestBtn) return;
-
             // Get user's wallet address
             const userAddress = WalletManager.getCurrentWallet();
             if (!userAddress) {
@@ -113,9 +136,8 @@ export class FaucetPage extends BasePage {
                 return;
             }
             
-            // Disable button and show loading
-            requestBtn.disabled = true;
-            requestBtn.textContent = 'Sending...';
+            // Show loading modal immediately
+            const loadingModal = this.modal.loading('Requesting testnet tokens...');
             
             // Call Netlify function
             const response = await fetch('/.netlify/functions/faucet', {
@@ -128,8 +150,11 @@ export class FaucetPage extends BasePage {
             
             const result = await response.json();
             
+            // Close loading modal
+            loadingModal.close();
+            
             if (response.ok && result.success) {
-                this.modal.success(`Successfully sent ${result.amount} SONIC to your wallet!`);
+                this.modal.success(`Successfully sent ${result.amount} SONIC to your wallet!`, { title: 'Tokens Received!' });
                 
                 // Update last request time
                 this.setState({
@@ -137,23 +162,82 @@ export class FaucetPage extends BasePage {
                 });
                 
                 // Refresh balance after successful request
-                setTimeout(() => this.loadFaucetData(), 2000);
+                setTimeout(() => {
+                    this.loadFaucetData();
+                    // Show the start section after getting tokens
+                    this.setState({ showStartSection: true });
+                }, 2000);
             } else if (response.status === 429) {
                 // Rate limited
-                this.modal.error(result.error || `Rate limit reached. Try again in ${result.daysLeft || 'a few'} days.`);
+                this.modal.error(result.error || `Rate limit reached. Try again in ${result.daysLeft || 'a few'} days.`, { title: 'Rate Limited' });
             } else {
-                this.modal.error(result.error || 'Faucet request failed');
+                this.modal.error(result.error || 'Faucet request failed', { title: 'Request Failed' });
             }
             
         } catch (error) {
             Logger.error('Faucet error:', error);
-            this.modal.error('Failed to request testnet SONIC');
-        } finally {
-            // Reset button
-            const requestBtn = this.element.querySelector('.request-btn');
-            if (requestBtn) {
-                requestBtn.disabled = false;
-                requestBtn.textContent = `Request ${config.faucet.amount} SONIC`;
+            this.modal.error('Failed to request testnet SONIC', { title: 'Request Failed' });
+        }
+    }
+
+    async startGame() {
+        try {
+            Logger.info('Starting game initialization...');
+            
+            // Show loading modal immediately
+            const loadingModal = this.modal.loading('Initializing game...');
+            
+            // Check if player is already initialized
+            const isInitialized = await this.contracts.gameState.isPlayerInitialized();
+            Logger.info('Checking player initialization before start:', isInitialized);
+
+            if (!isInitialized) {
+                Logger.info('Player not initialized, initializing contract and player...');
+                // Initialize contract with user's wallet
+                await this.contracts.gameState.initialize();
+                
+                // Initialize player
+                await this.contracts.gameState.initializePlayer();
+                
+                Logger.info('Player initialization completed');
+            } else {
+                Logger.info('Player already initialized, proceeding to game...');
+            }
+
+            // Close loading modal
+            loadingModal.close();
+            
+            // Show success message
+            this.modal.success('Game initialized successfully!', { title: 'Welcome to Sonicity!' });
+
+            // Navigate to overview page
+            window.history.pushState({}, '', '/overview');
+            window.dispatchEvent(new PopStateEvent('popstate'));
+
+        } catch (error) {
+            Logger.error('Error starting game:', error);
+            this.modal.error(error.message || 'Failed to start game', { title: 'Initialization Failed' });
+        }
+    }
+
+    // Override updateElements to handle showStartSection state
+    updateElements(state) {
+        // Call parent updateElements first
+        super.updateElements(state);
+        
+        // Handle showStartSection state
+        if (state.hasOwnProperty('showStartSection')) {
+            const startSection = this.element.querySelector('.start-game-section');
+            if (startSection) {
+                startSection.style.display = state.showStartSection ? 'block' : 'none';
+            }
+        }
+        
+        // Handle isPlayerInitialized state for button text
+        if (state.hasOwnProperty('isPlayerInitialized')) {
+            const startGameBtn = this.element.querySelector('.start-game-btn');
+            if (startGameBtn) {
+                startGameBtn.textContent = state.isPlayerInitialized ? 'Continue Game' : 'Start Game';
             }
         }
     }
@@ -184,6 +268,18 @@ export class FaucetPage extends BasePage {
                             <span class="status-label">Network:</span>
                             <span class="status-value">${networkConfig.name}</span>
                         </div>
+                    </div>
+                </div>
+                
+                <!-- Start/Continue Game Section (hidden by default) -->
+                <div class="page-section start-game-section" style="display: none;">
+                    <h2>Ready to Play</h2>
+                    <p class="section-description">You have SONIC tokens! You can now start the game</p>
+                    
+                    <div class="btn-container">
+                        <button class="btn btn-primary start-game-btn">
+                            Start Game
+                        </button>
                     </div>
                 </div>
                 
