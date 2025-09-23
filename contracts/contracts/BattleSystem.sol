@@ -100,33 +100,6 @@ contract BattleSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, Ree
     uint256 public constant MAX_TREASURY_BURN_PERCENT = 20; // 20% max treasury burn
     uint256 public constant BATTLE_TIMEOUT = 48 hours; // Auto-resolve after 48 hours
 
-    // ========================================
-    // LEGACY MATCHMAKING VARIABLES (UNUSED)
-    // ========================================
-    // These variables are kept ONLY for storage layout compatibility during upgrades.
-    // All matchmaking functionality has been moved to MatchmakingSystem contract.
-    // These variables are NOT used anywhere in this contract and can be ignored.
-    
-    uint256 public noOpponentFoundChance;  // UNUSED - moved to MatchmakingSystem
-    uint256 public searchCost;             // UNUSED - moved to MatchmakingSystem  
-    uint256 public searchDuration;         // UNUSED - moved to MatchmakingSystem
-
-    // UNUSED - Search state moved to MatchmakingSystem
-    struct SearchState {
-        uint256 startTime;
-        bool active;
-        address foundOpponent;
-        bool hasAttemptedFind;
-    }
-
-    mapping(address => SearchState) public playerSearches;  // UNUSED - moved to MatchmakingSystem
-
-    // UNUSED - Matchmaking pool moved to MatchmakingSystem
-    mapping(address => bool) public isRegisteredForMatchmaking;  // UNUSED
-    mapping(address => uint256) public lastBattleTime;           // UNUSED
-    address[] public registeredPlayers;                          // UNUSED
-    // ========================================
-
     // Search status struct for frontend (needed for checkSearchStatus return type)
     struct SearchStatus {
         bool active;
