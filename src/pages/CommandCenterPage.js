@@ -22,6 +22,16 @@ export class CommandCenterPage extends BasePage {
         // Initialize Battle Progress Bar
         this.battleProgressBar = new BattleProgressBar();
         
+        // Initialize state with loading
+        this.setState({
+            isLoading: true,
+            ownedTactics: [],
+            deployedTactics: [],
+            activeBattle: null,
+            playerRole: null,
+            battleHistory: []
+        });
+        
         this.render();
     }
 
@@ -49,6 +59,7 @@ export class CommandCenterPage extends BasePage {
 
     async loadCommandCenterData() {
         try {
+            this.setState({ isLoading: true });
             const address = WalletManager.getCurrentWallet();
 
             // Load resources, command center level, and troop counts
@@ -85,9 +96,7 @@ export class CommandCenterPage extends BasePage {
             }
 
             // Update troop displays
-            this.element.querySelector('#infantry-count').textContent = infantryCount.toString();
-            this.element.querySelector('#cavalry-count').textContent = cavalryCount.toString();
-            this.element.querySelector('#siege-count').textContent = siegeCount.toString();
+            this.updateTroopDisplays(infantryCount, cavalryCount, siegeCount);
 
             // Update opponent status section (with defender message if applicable)
             this.updateOpponentStatus(searchStatus, activeBattle, playerRole);
@@ -130,6 +139,29 @@ export class CommandCenterPage extends BasePage {
         } catch (error) {
             Logger.error('Error loading command center data:', error);
             this.handleContractError(error, 'load command center data');
+        } finally {
+            this.setState({ isLoading: false });
+        }
+    }
+
+    updateTroopDisplays(infantryCount, cavalryCount, siegeCount) {
+        // Update the troops section HTML to show actual data
+        const troopsSection = this.element.querySelector('.troops-section .status-grid');
+        if (troopsSection) {
+            troopsSection.innerHTML = `
+                <div class="status-item">
+                    <span class="status-label">Infantry:</span>
+                    <span id="infantry-count" class="status-value">${infantryCount}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Cavalry:</span>
+                    <span id="cavalry-count" class="status-value">${cavalryCount}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Siege:</span>
+                    <span id="siege-count" class="status-value">${siegeCount}</span>
+                </div>
+            `;
         }
     }
 
@@ -404,6 +436,7 @@ export class CommandCenterPage extends BasePage {
                 <div class="page-section troops-section">
                     <h2>Available Troops</h2>
                     <div class="status-grid">
+                        ${this.state.isLoading ? this.getLoadingContainerHTML('Loading troop data...') : `
                         <div class="status-item">
                             <span class="status-label">Infantry:</span>
                             <span id="infantry-count" class="status-value">0</span>
@@ -416,6 +449,7 @@ export class CommandCenterPage extends BasePage {
                             <span class="status-label">Siege:</span>
                             <span id="siege-count" class="status-value">0</span>
                         </div>
+                        `}
                     </div>
                 </div>
 
@@ -497,7 +531,7 @@ export class CommandCenterPage extends BasePage {
                 <div class="page-section battle-history-section">
                     <h2>Battle History</h2>
                     <div class="battle-history-list">
-                        <!-- Battle history items will be added here -->
+                        ${this.state.isLoading ? this.getLoadingContainerHTML('Loading battle history...') : '<!-- Battle history items will be added here -->'}
                     </div>
                 </div>
             </div>

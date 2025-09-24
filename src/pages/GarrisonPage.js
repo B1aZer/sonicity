@@ -22,6 +22,16 @@ export class GarrisonPage extends BasePage {
         // Initialize Battle Progress Bar
         this.battleProgressBar = new BattleProgressBar();
         
+        // Initialize state with loading
+        this.setState({
+            isLoading: true,
+            ownedTactics: [],
+            deployedTactics: [],
+            activeBattle: null,
+            playerRole: null,
+            battleHistory: []
+        });
+        
         this.render();
     }
 
@@ -49,6 +59,7 @@ export class GarrisonPage extends BasePage {
 
     async loadGarrisonData() {
         try {
+            this.setState({ isLoading: true });
             const address = WalletManager.getCurrentWallet();
 
             // Load troop counts, defense tower level, and battle data
@@ -92,10 +103,7 @@ export class GarrisonPage extends BasePage {
             }
 
             // Update troop displays
-            this.element.querySelector('#infantry-count').textContent = infantryCount.toString();
-            this.element.querySelector('#cavalry-count').textContent = cavalryCount.toString();
-            this.element.querySelector('#siege-count').textContent = siegeCount.toString();
-            this.element.querySelector('#defense-tower-level').textContent = `Level ${defenseTowerLevel}`;
+            this.updateTroopDisplays(infantryCount, cavalryCount, siegeCount, defenseTowerLevel);
 
             // Update deployed troops display
             await this.updateDeployedTroopsDisplay(activeBattle, playerRole);
@@ -138,6 +146,33 @@ export class GarrisonPage extends BasePage {
         } catch (error) {
             Logger.error('Error loading garrison data:', error);
             this.handleContractError(error, 'load garrison data');
+        } finally {
+            this.setState({ isLoading: false });
+        }
+    }
+
+    updateTroopDisplays(infantryCount, cavalryCount, siegeCount, defenseTowerLevel) {
+        // Update the troops section HTML to show actual data
+        const troopsSection = this.element.querySelector('.troops-section .status-grid');
+        if (troopsSection) {
+            troopsSection.innerHTML = `
+                <div class="status-item">
+                    <span class="status-label">Infantry:</span>
+                    <span id="infantry-count" class="status-value">${infantryCount}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Cavalry:</span>
+                    <span id="cavalry-count" class="status-value">${cavalryCount}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Siege:</span>
+                    <span id="siege-count" class="status-value">${siegeCount}</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Defense Tower:</span>
+                    <span id="defense-tower-level" class="status-value">Level ${defenseTowerLevel}</span>
+                </div>
+            `;
         }
     }
 
@@ -393,6 +428,7 @@ export class GarrisonPage extends BasePage {
                 <div class="page-section troops-section">
                     <h2>Available Troops</h2>
                     <div class="status-grid">
+                        ${this.state.isLoading ? this.getLoadingContainerHTML('Loading troop data...') : `
                         <div class="status-item">
                             <span class="status-label">Infantry:</span>
                             <span id="infantry-count" class="status-value">0</span>
@@ -409,6 +445,7 @@ export class GarrisonPage extends BasePage {
                             <span class="status-label">Defense Tower:</span>
                             <span id="defense-tower-level" class="status-value">Level 0</span>
                         </div>
+                        `}
                     </div>
                 </div>
 
@@ -490,7 +527,7 @@ export class GarrisonPage extends BasePage {
                 <div class="page-section battle-history-section">
                     <h2>Battle History</h2>
                     <div class="battle-history-list">
-                        <!-- Battle history items will be added here -->
+                        ${this.state.isLoading ? this.getLoadingContainerHTML('Loading battle history...') : '<!-- Battle history items will be added here -->'}
                     </div>
                 </div>
             </div>
