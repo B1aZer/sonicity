@@ -13,15 +13,15 @@
 
 how to make a fuckingly awesome trailer in final cut pro. I alsready made all necessary screenvideos with:
 
-1. connect wallet
-2. receive test tokens from faucet
-3. start game (initilzie player)
+v1. connect wallet
+v2. receive test tokens from faucet
+v3. start game (initilzie player)
 4. build buidligs (build grid buidling through NFT staking)
 5. help in shop (immidately buy 1000 gold from shop to streamline onboarding)
 6. advance district (donate gold to disctrict and build first disctrict building after shop)
 7. make troops (train infantry and show in 3d view marching models)
 8. start battle with another player
-7. win the battle
+7. Change course
 8. mint og yeild NFTs (dont have a video for this but we need somehow make accent on this at the end)
 
 ## multichain

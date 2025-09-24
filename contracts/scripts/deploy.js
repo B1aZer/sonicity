@@ -42,6 +42,15 @@ async function main() {
   const battleSystemImplAddress = await battleSystemImpl.getAddress();
   console.log("BattleSystem implementation deployed to:", battleSystemImplAddress);
 
+  // Deploy MatchmakingSystem implementation
+  console.log("Deploying MatchmakingSystem implementation...");
+  const MatchmakingSystem = await ethers.getContractFactory("MatchmakingSystem");
+  const matchmakingSystemImpl = await MatchmakingSystem.deploy();
+  console.log("Waiting for MatchmakingSystem implementation deployment...");
+  await matchmakingSystemImpl.waitForDeployment();
+  const matchmakingSystemImplAddress = await matchmakingSystemImpl.getAddress();
+  console.log("MatchmakingSystem implementation deployed to:", matchmakingSystemImplAddress);
+
 
   // Deploy GameState proxy
   console.log("Deploying GameState proxy...");
@@ -75,6 +84,17 @@ async function main() {
   await battleSystemProxy.waitForDeployment();
   const battleSystemProxyAddress = await battleSystemProxy.getAddress();
   console.log("BattleSystem proxy deployed to:", battleSystemProxyAddress);
+
+  // Deploy MatchmakingSystem proxy
+  console.log("Deploying MatchmakingSystem proxy...");
+  const matchmakingSystemProxy = await upgrades.deployProxy(MatchmakingSystem, [], {
+    kind: 'uups',
+    initializer: 'initialize',
+  });
+  console.log("Waiting for MatchmakingSystem proxy deployment...");
+  await matchmakingSystemProxy.waitForDeployment();
+  const matchmakingSystemProxyAddress = await matchmakingSystemProxy.getAddress();
+  console.log("MatchmakingSystem proxy deployed to:", matchmakingSystemProxyAddress);
 
   // Deploy GridBuildings using the reusable function (without altar address initially)
   const gridAddresses = await deployGridBuildings({
@@ -136,6 +156,33 @@ async function main() {
   console.log("Setting GridBuildings address in BattleSystem...");
   await battleSystemProxy.setGridBuildingsAddress(gridBuildingsProxyAddress);
 
+  // Set up MatchmakingSystem contract interactions
+  console.log("Setting up MatchmakingSystem contract interactions...");
+  
+  // Set GameState address in MatchmakingSystem
+  console.log("Setting GameState address in MatchmakingSystem...");
+  await matchmakingSystemProxy.setGameStateAddress(gameStateProxyAddress);
+  
+  // Set BattleSystem address in MatchmakingSystem
+  console.log("Setting BattleSystem address in MatchmakingSystem...");
+  await matchmakingSystemProxy.setBattleSystemAddress(battleSystemProxyAddress);
+  
+  // Set DistrictBuildings address in MatchmakingSystem
+  console.log("Setting DistrictBuildings address in MatchmakingSystem...");
+  await matchmakingSystemProxy.setDistrictBuildingsAddress(districtBuildingsProxyAddress);
+  
+  // Set GridBuildings address in MatchmakingSystem
+  console.log("Setting GridBuildings address in MatchmakingSystem...");
+  await matchmakingSystemProxy.setGridBuildingsAddress(gridBuildingsProxyAddress);
+  
+  // Set MatchmakingSystem address in GameState
+  console.log("Setting MatchmakingSystem address in GameState...");
+  await gameStateProxy.setMatchmakingSystemAddress(matchmakingSystemProxyAddress);
+  
+  // Set MatchmakingSystem address in BattleSystem
+  console.log("Setting MatchmakingSystem address in BattleSystem...");
+  await battleSystemProxy.setMatchmakingSystemAddress(matchmakingSystemProxyAddress);
+
   // Hero/Tactics/Cosmetic contract interactions are handled by the deployHeroTactics function
 
   // Verify contracts on Etherscan (if needed)
@@ -157,6 +204,8 @@ async function main() {
   console.log("Altar proxy:", altarProxyAddress);
   console.log("BattleSystem implementation:", battleSystemImplAddress);
   console.log("BattleSystem proxy:", battleSystemProxyAddress);
+  console.log("MatchmakingSystem implementation:", matchmakingSystemImplAddress);
+  console.log("MatchmakingSystem proxy:", matchmakingSystemProxyAddress);
   console.log("HeroNFT implementation:", heroTacticsAddresses.heroNFTImpl);
   console.log("HeroNFT proxy:", heroTacticsAddresses.heroNFTProxy);
   console.log("TacticsNFT implementation:", heroTacticsAddresses.tacticsNFTImpl);
@@ -178,6 +227,8 @@ async function main() {
     altarProxy: altarProxyAddress,
     battleSystemImpl: battleSystemImplAddress,
     battleSystemProxy: battleSystemProxyAddress,
+    matchmakingSystemImpl: matchmakingSystemImplAddress,
+    matchmakingSystemProxy: matchmakingSystemProxyAddress,
   };
 
   const fs = require('fs');
