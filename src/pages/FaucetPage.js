@@ -150,32 +150,39 @@ export class FaucetPage extends BasePage {
             
             const result = await response.json();
             
-            // Close loading modal
-            loadingModal.close();
-            
             if (response.ok && result.success) {
-                this.modal.success(`Successfully sent ${result.amount} SONIC to your wallet!`, { title: 'Tokens Received!' });
-                
                 // Update last request time
                 this.setState({
                     lastRequest: new Date().toLocaleString()
                 });
                 
-                // Refresh balance after successful request
-                setTimeout(() => {
-                    this.loadFaucetData();
-                    // Show the start section after getting tokens
-                    this.setState({ showStartSection: true });
-                }, 2000);
+                // Refresh balance (transaction is already confirmed by Netlify function)
+                await this.loadFaucetData();
+                
+                // Close loading modal after data is refreshed
+                loadingModal.close();
+                
+                this.modal.success(`Successfully sent ${result.amount} SONIC to your wallet!`, { title: 'Tokens Received!' });
+                
+                // Show the start section after getting tokens
+                this.setState({ showStartSection: true });
             } else if (response.status === 429) {
+                // Close loading modal on error
+                loadingModal.close();
                 // Rate limited
                 this.modal.error(result.error || `Rate limit reached. Try again in ${result.daysLeft || 'a few'} days.`, { title: 'Rate Limited' });
             } else {
+                // Close loading modal on error
+                loadingModal.close();
                 this.modal.error(result.error || 'Faucet request failed', { title: 'Request Failed' });
             }
             
         } catch (error) {
             Logger.error('Faucet error:', error);
+            // Close loading modal on error
+            if (typeof loadingModal !== 'undefined' && loadingModal) {
+                loadingModal.close();
+            }
             this.modal.error('Failed to request testnet SONIC', { title: 'Request Failed' });
         }
     }
