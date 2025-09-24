@@ -151,11 +151,25 @@ describe("Hero & Tactics System", function () {
         });
 
         it("Should have correct tactic costs", async function () {
-            // All tactics cost the same
-            for (let i = 1; i <= 9; i++) {
+            // Tier 1 tactics (1-3): 300 gold, 24 diamonds
+            for (let i = 1; i <= 3; i++) {
+                const cost = await tacticsNFT.getTacticCost(i);
+                expect(cost.goldCost).to.equal(300);
+                expect(cost.diamondCost).to.equal(24);
+            }
+            
+            // Tier 2 tactics (4-6): 200 gold, 16 diamonds
+            for (let i = 4; i <= 6; i++) {
+                const cost = await tacticsNFT.getTacticCost(i);
+                expect(cost.goldCost).to.equal(200);
+                expect(cost.diamondCost).to.equal(16);
+            }
+            
+            // Tier 3 tactics (7-9): 100 gold, 8 diamonds
+            for (let i = 7; i <= 9; i++) {
                 const cost = await tacticsNFT.getTacticCost(i);
                 expect(cost.goldCost).to.equal(100);
-                expect(cost.diamondCost).to.equal(16);
+                expect(cost.diamondCost).to.equal(8);
             }
         });
 

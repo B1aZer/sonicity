@@ -832,5 +832,13 @@ contract DistrictBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable
         unlockedDistrictBuildings[player][DistrictBuildingType.CITY_HALL] = true;
         unlockedDistrictBuildings[player][DistrictBuildingType.ALTAR] = true;
         unlockedDistrictBuildings[player][DistrictBuildingType.MINE] = true;
+        
+        // Auto-construct shop for new players (unlock and build it)
+        unlockedDistrictBuildings[player][DistrictBuildingType.SHOP] = true;
+        buildings[player][DistrictBuildingType.SHOP] = Building({
+            level: 1,
+            active: true,
+            damaged: false
+        });
     }
 } 

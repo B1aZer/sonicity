@@ -663,10 +663,13 @@ describe("Battle History Consistency Tests", function () {
             
             // Build some district buildings for defender
             const shopIndex = getBuildingTypeIndex("SHOP");
-            const shopConfig = await districtBuildings.districtBuildingConfigs(shopIndex);
-            const shopCost = shopConfig.buildCost;
-            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, shopCost);
-            await districtBuildings.connect(player2).buildDistrictBuilding(shopIndex);
+            const isShopBuilt = await districtBuildings.isDistrictBuildingBuilt(await player2.getAddress(), shopIndex);
+            if (!isShopBuilt) {
+                const shopConfig = await districtBuildings.districtBuildingConfigs(shopIndex);
+                const shopCost = shopConfig.buildCost;
+                await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, shopCost);
+                await districtBuildings.connect(player2).buildDistrictBuilding(shopIndex);
+            }
 
             const workshopIndex = getBuildingTypeIndex("WORKSHOP");
             const workshopConfig = await districtBuildings.districtBuildingConfigs(workshopIndex);
@@ -742,10 +745,13 @@ describe("Battle History Consistency Tests", function () {
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
             
             const shopIndex = getBuildingTypeIndex("SHOP");
-            const shopConfig = await districtBuildings.districtBuildingConfigs(shopIndex);
-            const shopCost = shopConfig.buildCost;
-            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, shopCost);
-            await districtBuildings.connect(player2).buildDistrictBuilding(shopIndex);
+            const isShopBuilt = await districtBuildings.isDistrictBuildingBuilt(await player2.getAddress(), shopIndex);
+            if (!isShopBuilt) {
+                const shopConfig = await districtBuildings.districtBuildingConfigs(shopIndex);
+                const shopCost = shopConfig.buildCost;
+                await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, shopCost);
+                await districtBuildings.connect(player2).buildDistrictBuilding(shopIndex);
+            }
 
             // Battle setup
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);
@@ -817,10 +823,13 @@ describe("Battle History Consistency Tests", function () {
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
             
             const shopIndex = getBuildingTypeIndex("SHOP");
-            const shopConfig = await districtBuildings.districtBuildingConfigs(shopIndex);
-            const shopCost = shopConfig.buildCost;
-            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, shopCost);
-            await districtBuildings.connect(player2).buildDistrictBuilding(shopIndex);
+            const isShopBuilt = await districtBuildings.isDistrictBuildingBuilt(await player2.getAddress(), shopIndex);
+            if (!isShopBuilt) {
+                const shopConfig = await districtBuildings.districtBuildingConfigs(shopIndex);
+                const shopCost = shopConfig.buildCost;
+                await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, shopCost);
+                await districtBuildings.connect(player2).buildDistrictBuilding(shopIndex);
+            }
 
             const workshopIndex = getBuildingTypeIndex("WORKSHOP");
             const workshopConfig = await districtBuildings.districtBuildingConfigs(workshopIndex);
@@ -905,10 +914,13 @@ describe("Battle History Consistency Tests", function () {
             await donateGoldForTier(player2, gameState, gridBuildings, altar, sonicityNFT, 1400);
             
             const shopIndex = getBuildingTypeIndex("SHOP");
-            const shopConfig = await districtBuildings.districtBuildingConfigs(shopIndex);
-            const shopCost = shopConfig.buildCost;
-            await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, shopCost);
-            await districtBuildings.connect(player2).buildDistrictBuilding(shopIndex);
+            const isShopBuilt = await districtBuildings.isDistrictBuildingBuilt(await player2.getAddress(), shopIndex);
+            if (!isShopBuilt) {
+                const shopConfig = await districtBuildings.districtBuildingConfigs(shopIndex);
+                const shopCost = shopConfig.buildCost;
+                await ensurePlayerGold(player2, gameState, gridBuildings, altar, sonicityNFT, shopCost);
+                await districtBuildings.connect(player2).buildDistrictBuilding(shopIndex);
+            }
 
             // Battle setup
             await ensurePlayerGold(player1, gameState, gridBuildings, altar, sonicityNFT, 100);

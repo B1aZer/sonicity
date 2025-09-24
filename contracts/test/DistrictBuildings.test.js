@@ -182,6 +182,24 @@ describe("DistrictBuildings", function () {
       await gameState.connect(player1).donateGold(1000);
     });
 
+    it("Should automatically construct shop for new players", async function () {
+      const player1Address = await player1.getAddress();
+      const shopIndex = getBuildingTypeIndex("SHOP");
+      
+      // Check if shop is automatically built and unlocked
+      const isShopBuilt = await districtBuildings.isDistrictBuildingBuilt(player1Address, shopIndex);
+      const isShopUnlocked = await districtBuildings.isDistrictBuildingUnlocked(player1Address, shopIndex);
+      
+      expect(isShopBuilt).to.be.true;
+      expect(isShopUnlocked).to.be.true;
+      
+      // Verify shop is active
+      const shopBuilding = await districtBuildings.buildings(player1Address, shopIndex);
+      expect(shopBuilding.active).to.be.true;
+      expect(shopBuilding.level).to.equal(1);
+      expect(shopBuilding.damaged).to.be.false;
+    });
+
     it("Should allow building construction when unlocked", async function () {
       const player1Address = await player1.getAddress();
       const TOWER_COST = 200n;
