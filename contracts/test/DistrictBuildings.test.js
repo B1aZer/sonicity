@@ -198,6 +198,10 @@ describe("DistrictBuildings", function () {
       expect(shopBuilding.active).to.be.true;
       expect(shopBuilding.level).to.equal(1);
       expect(shopBuilding.damaged).to.be.false;
+      
+      // Verify player has the required treasury (200 initial + 1000 donated = 1200)
+      const playerState = await gameState.playerState(player1Address);
+      expect(playerState.treasury).to.equal(1200);
     });
 
     it("Should allow building construction when unlocked", async function () {

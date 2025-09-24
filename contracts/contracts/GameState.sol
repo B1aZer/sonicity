@@ -138,7 +138,7 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         state.diamonds = 0;
         state.buildingSlots = buildingSlotsPerTier[0]; // Use tier 0 building slots
         state.tier = 0;
-        state.treasury = 0;
+        state.treasury = 200; // Give player 200 gold in treasury to unlock shop
         
         // Initialize mappings (they default to 0, but we can set them explicitly if needed)
         state.maxUpgradeLevelByType[0] = 1; // HOUSE starts at level 1
@@ -147,8 +147,22 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
         state.maxUpgradeLevelByType[3] = 1; // REP_FORGE starts at level 1
         state.maxUpgradeLevelByType[4] = 1; // YIELD_STATION starts at level 1
 
-        // Initialize core buildings for the new player
+        // Check and unlock district buildings based on treasury
         (bool success, bytes memory returnData) = districtBuildingsAddress.call(
+            abi.encodeWithSignature("checkAndUnlockDistrictBuildings(address,uint256)", msg.sender, state.treasury)
+        );
+        if (!success) {
+            // If the call failed, decode and propagate the error message
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            }
+            revert("Failed to check district building unlocks");
+        }
+
+        // Initialize core buildings for the new player
+        (success, returnData) = districtBuildingsAddress.call(
             abi.encodeWithSignature("initializeCoreBuildings(address)", msg.sender)
         );
         if (!success) {
