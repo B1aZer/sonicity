@@ -184,15 +184,17 @@ export class FaucetPage extends BasePage {
         try {
             Logger.info('Starting game initialization...');
             
-            // Show loading modal immediately
-            const loadingModal = this.modal.loading('Initializing game...');
-            
-            // Check if player is already initialized
+            // Check if player is already initialized first
             const isInitialized = await this.contracts.gameState.isPlayerInitialized();
             Logger.info('Checking player initialization before start:', isInitialized);
 
+            let loadingModal = null;
+
             if (!isInitialized) {
                 Logger.info('Player not initialized, initializing contract and player...');
+                // Show loading modal only if player needs initialization
+                loadingModal = this.modal.loading('Initializing game...');
+                
                 // Initialize contract with user's wallet
                 await this.contracts.gameState.initialize();
                 
@@ -204,11 +206,10 @@ export class FaucetPage extends BasePage {
                 Logger.info('Player already initialized, proceeding to game...');
             }
 
-            // Close loading modal
-            loadingModal.close();
-            
-            // Show success message
-            this.modal.success('Game initialized successfully!', { title: 'Welcome to Sonicity!' });
+            // Close loading modal only if it was shown
+            if (loadingModal) {
+                loadingModal.close();
+            }
 
             // Navigate to overview page
             window.history.pushState({}, '', '/overview');
