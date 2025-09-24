@@ -104,4 +104,25 @@ export class TacticsNFTContract extends BaseContract {
         };
         return tacticEffects[tacticId] || 'Unknown Effect';
     }
+
+    static getTacticDescription(tacticId) {
+        const tacticDescriptions = {
+            1: 'Devastating attack that damages +3 buildings. Perfect for aggressive players who want to maximize destruction.',
+            2: 'Defensive formation that reduces troop losses by 75%. Essential for protecting your army during battles.',
+            3: 'Inspires your troops to earn +100% more REP points from battles. Great for players focused on reputation building.',
+            4: 'Swift cavalry attack that damages +2 buildings. Ideal for players who prefer fast, mobile warfare.',
+            5: 'Tactical formation that reduces troop losses by 50%. Balanced defense for various battle scenarios.',
+            6: 'Deceptive maneuver that earns +75% more REP points from battles. Subtle but effective reputation building.',
+            7: 'Quick attack that damages +1 building. Light but reliable damage for consistent results.',
+            8: 'Stealthy defense that reduces troop losses by 25%. Minimal but effective protection.',
+            9: 'Hidden trap that earns +50% more REP points from battles. Subtle reputation gains for careful players.'
+        };
+        return tacticDescriptions[tacticId] || 'A powerful tactical ability.';
+    }
+
+    static getTacticTitle(tacticId) {
+        const tacticName = this.getTacticName(tacticId);
+        const tacticType = this.getTacticType(tacticId);
+        return `${tacticName} (${tacticType})`;
+    }
 } 

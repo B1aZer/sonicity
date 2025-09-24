@@ -793,6 +793,7 @@ export class GarrisonPage extends BasePage {
         const tacticName = TacticsNFTContract.getTacticName(tacticId);
         const tacticType = TacticsNFTContract.getTacticType(tacticId);
         const tacticEffect = TacticsNFTContract.getTacticEffect(tacticId);
+        const tacticDescription = TacticsNFTContract.getTacticDescription(tacticId);
 
 
 
@@ -807,7 +808,7 @@ export class GarrisonPage extends BasePage {
                     <h3>${tacticName}</h3>
                 </div>
                 <div class="shop-item-desc">
-                    <strong>${tacticType}</strong> - ${tacticEffect}. Deploy during combat to gain tactical superiority.
+                    <strong>${tacticType}</strong> - ${tacticEffect}. ${tacticDescription}
                 </div>
             </div>
             <div class="shop-item-action-row">

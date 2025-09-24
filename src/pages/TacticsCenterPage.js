@@ -271,15 +271,15 @@ export class TacticsCenterPage extends BasePage {
                         <!-- STRIKE Tactics -->
                         <div class="shop-item-card" id="tactic-1">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(1)}" alt="Iron Strike" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(1)}" alt="${TacticsNFTContract.getTacticName(1)}" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
-                                    <h3>Iron Strike (STRIKE)</h3>
+                                    <h3>${TacticsNFTContract.getTacticTitle(1)}</h3>
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Devastating attack that damages +3 buildings. Perfect for aggressive players who want to maximize destruction.
+                                    ${TacticsNFTContract.getTacticDescription(1)}
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -301,15 +301,15 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-2">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(2)}" alt="Guardian Wall" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(2)}" alt="${TacticsNFTContract.getTacticName(2)}" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
-                                    <h3>Guardian Wall (SHIELD)</h3>
+                                    <h3>${TacticsNFTContract.getTacticTitle(2)}</h3>
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Defensive formation that reduces troop losses by 75%. Essential for protecting your army during battles.
+                                    ${TacticsNFTContract.getTacticDescription(2)}
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -331,15 +331,15 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-3">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(3)}" alt="Battle Rage" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(3)}" alt="${TacticsNFTContract.getTacticName(3)}" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
-                                    <h3>Battle Rage (TRICK)</h3>
+                                    <h3>${TacticsNFTContract.getTacticTitle(3)}</h3>
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Inspires your troops to earn +100% more REP points from battles. Great for players focused on reputation building.
+                                    ${TacticsNFTContract.getTacticDescription(3)}
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -361,15 +361,15 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-4">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(4)}" alt="Cavalry Rush" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(4)}" alt="${TacticsNFTContract.getTacticName(4)}" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
-                                    <h3>Cavalry Rush (STRIKE)</h3>
+                                    <h3>${TacticsNFTContract.getTacticTitle(4)}</h3>
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Swift cavalry attack that damages +2 buildings. Ideal for players who prefer fast, mobile warfare.
+                                    ${TacticsNFTContract.getTacticDescription(4)}
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -391,15 +391,15 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-5">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(5)}" alt="Defensive Circle" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(5)}" alt="${TacticsNFTContract.getTacticName(5)}" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
-                                    <h3>Defensive Circle (SHIELD)</h3>
+                                    <h3>${TacticsNFTContract.getTacticTitle(5)}</h3>
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Tactical formation that reduces troop losses by 50%. Balanced defense for various battle scenarios.
+                                    ${TacticsNFTContract.getTacticDescription(5)}
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -421,15 +421,15 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-6">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(6)}" alt="Tactical Feint" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(6)}" alt="${TacticsNFTContract.getTacticName(6)}" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
-                                    <h3>Tactical Feint (TRICK)</h3>
+                                    <h3>${TacticsNFTContract.getTacticTitle(6)}</h3>
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Deceptive maneuver that earns +75% more REP points from battles. Subtle but effective reputation building.
+                                    ${TacticsNFTContract.getTacticDescription(6)}
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -451,15 +451,15 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-7">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(7)}" alt="Swift Strike" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(7)}" alt="${TacticsNFTContract.getTacticName(7)}" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
-                                    <h3>Swift Strike (STRIKE)</h3>
+                                    <h3>${TacticsNFTContract.getTacticTitle(7)}</h3>
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Quick attack that damages +1 building. Light but reliable damage for consistent results.
+                                    ${TacticsNFTContract.getTacticDescription(7)}
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -481,15 +481,15 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-8">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(8)}" alt="Shadow Guard" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(8)}" alt="${TacticsNFTContract.getTacticName(8)}" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
-                                    <h3>Shadow Guard (SHIELD)</h3>
+                                    <h3>${TacticsNFTContract.getTacticTitle(8)}</h3>
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Stealthy defense that reduces troop losses by 25%. Minimal but effective protection.
+                                    ${TacticsNFTContract.getTacticDescription(8)}
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
@@ -511,15 +511,15 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-9">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(9)}" alt="Stealth Trap" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(9)}" alt="${TacticsNFTContract.getTacticName(9)}" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
-                                    <h3>Stealth Trap (TRICK)</h3>
+                                    <h3>${TacticsNFTContract.getTacticTitle(9)}</h3>
                                     <span class="shop-item-stock in-stock"><i class="fas fa-plus-circle"></i>Available</span>
                                 </div>
                                 <div class="shop-item-desc">
-                                    Hidden trap that earns +50% more REP points from battles. Subtle reputation gains for careful players.
+                                    ${TacticsNFTContract.getTacticDescription(9)}
                                 </div>
                                 <div class="cost-component">
                                     <div class="cost-item">
