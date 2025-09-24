@@ -271,7 +271,7 @@ export class TacticsCenterPage extends BasePage {
                         <!-- STRIKE Tactics -->
                         <div class="shop-item-card" id="tactic-1">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/iron-strike.png" alt="Iron Strike" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/IronStrike.png" alt="Iron Strike" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -301,7 +301,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-2">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/guardian-wall.png" alt="Guardian Wall" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/GuardianWall.png" alt="Guardian Wall" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -331,7 +331,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-3">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/battle-rage.png" alt="Battle Rage" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/BattleRage.png" alt="Battle Rage" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
