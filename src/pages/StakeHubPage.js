@@ -395,7 +395,7 @@ export class StakePage extends BasePage {
         // Status section (like CityPage)
         const tierNames = ['House', 'Farm', 'Diamond Station', 'REP Forge', 'Yield Station'];
         const tierNamesPlural = ['Houses', 'Farms', 'Diamond Stations', 'REP Forges', 'Yield Stations'];
-        const rechargeHeader = buildingCount === 1 ? `Charge ${tierNames[tier]}` : `Charge ${tierNamesPlural[tier]}`;
+        const rechargeHeader = buildingCount === 1 ? `Bulk Charge ${tierNames[tier]}` : `Bulk Charge ${tierNamesPlural[tier]}`;
         
         // Format upgrade progress for display
         let upgradeStatusText = '';

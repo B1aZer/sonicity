@@ -9,6 +9,19 @@
 - add some nice motivators
 - - 
 
+## video
+
+1. connect wallet
+2. faucet
+3. start game
+4. build buidligs
+5. advance district
+6. help in shop
+7. make troops
+6. start battle
+7. win
+8. mint og yeild NFTs
+
 ## multichain
 
 - deploy to multiple chains
