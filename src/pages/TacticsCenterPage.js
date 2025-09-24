@@ -271,7 +271,7 @@ export class TacticsCenterPage extends BasePage {
                         <!-- STRIKE Tactics -->
                         <div class="shop-item-card" id="tactic-1">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/IronStrike.png" alt="Iron Strike" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(1)}" alt="Iron Strike" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -301,7 +301,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-2">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/GuardianWall.png" alt="Guardian Wall" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(2)}" alt="Guardian Wall" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -331,7 +331,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-3">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/BattleRage.png" alt="Battle Rage" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(3)}" alt="Battle Rage" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -361,7 +361,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-4">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/CavalryRush.png" alt="Cavalry Rush" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(4)}" alt="Cavalry Rush" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -391,7 +391,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-5">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/DefensiveCircle.png" alt="Defensive Circle" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(5)}" alt="Defensive Circle" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -421,7 +421,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-6">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/TacticalFeint.png" alt="Tactical Feint" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(6)}" alt="Tactical Feint" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -451,7 +451,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-7">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/SwiftStrike.png" alt="Swift Strike" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(7)}" alt="Swift Strike" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -481,7 +481,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-8">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/ShadowGuard.png" alt="Shadow Guard" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(8)}" alt="Shadow Guard" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">
@@ -511,7 +511,7 @@ export class TacticsCenterPage extends BasePage {
 
                         <div class="shop-item-card" id="tactic-9">
                             <div class="shop-item-image">
-                                <img src="/images/tactics/StealthTrap.png" alt="Stealth Trap" onerror="this.src='/images/tactics/default.png'" />
+                                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(9)}" alt="Stealth Trap" onerror="this.src='/images/tactics/default.png'" />
                             </div>
                             <div class="shop-item-info">
                                 <div class="shop-item-title-row">

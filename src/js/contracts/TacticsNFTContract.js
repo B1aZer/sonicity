@@ -83,6 +83,13 @@ export class TacticsNFTContract extends BaseContract {
         return tacticTypes[tacticId] || 'UNKNOWN';
     }
 
+    static getTacticImageName(tacticId) {
+        const tacticName = this.getTacticName(tacticId);
+        // Convert tactic name to image filename format
+        const imageName = tacticName.replace(/\s+/g, '') + '.png';
+        return imageName;
+    }
+
     static getTacticEffect(tacticId) {
         const tacticEffects = {
             1: '+15 Infantry Power',

@@ -788,6 +788,7 @@ export class GarrisonPage extends BasePage {
         }
     }
 
+
     createTacticCard(tacticId, isDeployed) {
         const tacticName = TacticsNFTContract.getTacticName(tacticId);
         const tacticType = TacticsNFTContract.getTacticType(tacticId);
@@ -799,7 +800,7 @@ export class GarrisonPage extends BasePage {
         card.className = `shop-item-card ${isDeployed ? 'deployed' : ''}`;
         card.innerHTML = `
             <div class="shop-item-image">
-                <img src="/images/tactics/tactic${tacticId}.png" alt="${tacticName}" onerror="this.src='/images/tactics/default.png'" />
+                <img src="/images/tactics/${TacticsNFTContract.getTacticImageName(tacticId)}" alt="${tacticName}" onerror="this.src='/images/tactics/default.png'" />
             </div>
             <div class="shop-item-info">
                 <div class="shop-item-title-row">
