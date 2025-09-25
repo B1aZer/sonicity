@@ -386,10 +386,10 @@ export class GamePage extends BasePage {
                 if (foundPosition) {
                     const position = this.game.gridManager.getWorldPosition(gridX, gridZ);
                     Logger.info('Calculated world position:', position);
-                    const house = this.game.buildingManager.placeBuilding(buildingType, position);
+                    const house = this.game.buildingManager.placeBuilding(buildingType, position, building.level);
                     if (house) {
                         this.game.gridManager.occupyCell(gridX, gridZ, house.mesh);
-                        Logger.info(`Successfully placed ${buildingType.toLowerCase()} at grid position (${gridX}, ${gridZ})`);
+                        Logger.info(`Successfully placed ${buildingType.toLowerCase()} at grid position (${gridX}, ${gridZ}) with level ${building.level}`);
                     } else {
                         Logger.error(`Failed to place ${buildingType.toLowerCase()}`);
                     }

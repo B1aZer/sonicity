@@ -162,9 +162,9 @@ export class BuildingManager {
         return terrainRotation;
     }
 
-    async placeBuilding(type, position) {
+    async placeBuilding(type, position, level = null) {
         try {
-            Logger.debug('Attempting to place building', { type, position });
+            Logger.debug('Attempting to place building', { type, position, level });
             
             // Convert world position to grid position
             const gridPos = this.gridManager.getGridPosition(position.x, position.z);
@@ -180,30 +180,30 @@ export class BuildingManager {
                 return null;
             }
 
-            // Get building level from appropriate contract
-            let level = 1;  // Default level is 1
+            // Use provided level or get building level from appropriate contract
+            let buildingLevel = level || 1;  // Use provided level or default to 1
             const buildingData = BUILDINGS[type];
-            if (buildingData.isGridBuilding && this.gridBuildingsContract) {
+            if (!level && buildingData.isGridBuilding && this.gridBuildingsContract) {
                 try {
                     // TODO: For now, we'll use level 1 since we can't get the building ID from grid position
                     Logger.debug('Using default level 1 for grid building', { type, gridPos });
                 } catch (error) {
                     Logger.warn('Failed to get building level from grid contract, using default level 1', { type, error: error.message });
                 }
-            } else if (this.districtBuildingsContract) {
+            } else if (!level && this.districtBuildingsContract) {
                 try {
-                    level = await this.districtBuildingsContract.getBuildingLevel(type);
-                    Logger.debug('Got building level from district contract', { type, level });
+                    buildingLevel = await this.districtBuildingsContract.getBuildingLevel(type);
+                    Logger.debug('Got building level from district contract', { type, level: buildingLevel });
                 } catch (error) {
                     Logger.warn('Failed to get building level from district contract, using default level 1', { type, error: error.message });
                 }
             }
 
-            Logger.debug('Creating building mesh with level', { type, level });
+            Logger.debug('Creating building mesh with level', { type, level: buildingLevel });
             // Create building mesh with full functionality
-            const building = this.createBuildingMesh(type, Number(level));
+            const building = this.createBuildingMesh(type, Number(buildingLevel));
             if (!building) {
-                Logger.error('Failed to create building mesh', { type, level });
+                Logger.error('Failed to create building mesh', { type, level: buildingLevel });
                 return null;
             }
 
