@@ -515,7 +515,9 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/house',
             levels: {
-                1: { url: 'assets/house.glb' }
+                1: { url: 'assets/house.glb' },
+                2: { url: 'assets/house_lvl2.glb' },
+                3: { url: 'assets/house_lvl2.glb' } // Using level 2 model for level 3 for now
             }
         }
     },
@@ -528,7 +530,9 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/farm',
             levels: {
-                1: { url: 'assets/farm.glb' }
+                1: { url: 'assets/farm.glb' },
+                2: { url: 'assets/farm.glb' }, // Using same model for now
+                3: { url: 'assets/farm.glb' }  // Using same model for now
             }
         }
     },
@@ -541,7 +545,9 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/diamond_station',
             levels: {
-                1: { url: 'assets/diamond_station.glb' }
+                1: { url: 'assets/diamond_station.glb' },
+                2: { url: 'assets/diamond_station.glb' }, // Using same model for now
+                3: { url: 'assets/diamond_station.glb' }  // Using same model for now
             }
         }
     },
@@ -554,7 +560,9 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/rep_forge',
             levels: {
-                1: { url: 'assets/rep_forge.glb' }
+                1: { url: 'assets/rep_forge.glb' },
+                2: { url: 'assets/rep_forge.glb' }, // Using same model for now
+                3: { url: 'assets/rep_forge.glb' }  // Using same model for now
             }
         }
     },
@@ -567,7 +575,9 @@ export const BUILDINGS = {
         assets: {
             baseUrl: 'assets/yield_station',
             levels: {
-                1: { url: 'assets/yield_station.glb' }
+                1: { url: 'assets/yield_station.glb' },
+                2: { url: 'assets/yield_station.glb' }, // Using same model for now
+                3: { url: 'assets/yield_station.glb' }  // Using same model for now
             }
         }
     },
