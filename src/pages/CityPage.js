@@ -145,13 +145,25 @@ export class CityPage extends BasePage {
             
             // Calculate progress using BigInt arithmetic
             const progress = Number((treasury - currentReq) * BigInt(100) / (nextReq - currentReq));
-            progressBar.style.width = `${Math.min(progress, 100)}%`;
-            progressContainer.title = `${treasury.toString()} / ${nextReq.toString()} Gold`;
             
-            // Update tier progress text
+            // Set the progress bar width using CSS custom property
+            progressBar.style.setProperty('--progress-width', `${Math.min(progress, 100)}%`);
+            progressBar.title = `${treasury.toString()} / ${nextReq.toString()} Gold`;
+            
+            // Update tier progress text with detailed numeric information
             const progressText = this.element.querySelector('.tier-progress-text');
             if (progressText) {
-                progressText.textContent = `Progress to Tier ${currentTier + 1}: ${Math.min(progress, 100).toFixed(1)}%`;
+                const currentAmount = treasury.toString();
+                const requiredAmount = nextReq.toString();
+                
+                progressText.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <span>Progress to Tier ${currentTier + 1}: ${Math.min(progress, 100).toFixed(1)}%</span>
+                        <span style="font-size: 0.9em; color: var(--text-muted);">
+                            ${currentAmount} / ${requiredAmount} Gold
+                        </span>
+                    </div>
+                `;
             }
         }
     }
