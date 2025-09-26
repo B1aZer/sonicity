@@ -543,6 +543,13 @@ export class StakePage extends BasePage {
         return { count: staked.length, claimable };
     }
 
+    getTierData(tier) {
+        // Get tier data from current state
+        const items = this.state.byTier[tier];
+        const staked = items.filter(i => i.isStaked);
+        return this.getTierStatus(tier, staked);
+    }
+
     // Format claimable amount based on building type
     formatClaimableAmount(amount, buildingType) {
         if (!amount || amount === 0) return '0';
@@ -557,11 +564,22 @@ export class StakePage extends BasePage {
         return Number(amount).toLocaleString();
     }
 
+    getResourceName(buildingType) {
+        const resourceNames = ['Gold', 'Food', 'Diamonds', 'REP', 'SONIC'];
+        return resourceNames[buildingType] || 'Resources';
+    }
+
     async claimAllInTier(tier) {
         // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
         const loadingModal = this.modal.loading('Claiming resources...');
         
         try {
+            // Get the claimable amount before claiming (from existing data)
+            const tierData = this.getTierData(tier);
+            const claimableAmount = tierData.claimable;
+            const resourceName = this.getResourceName(tier);
+            const formattedAmount = this.formatClaimableAmount(claimableAmount, tier);
+            
             await this.contracts.gridBuildings.collectResourcesByType(tier);
             
             // Reload data (keep loading modal open during this)
@@ -570,8 +588,8 @@ export class StakePage extends BasePage {
             // Close loading modal after data reload
             loadingModal.close();
             
-            // Show success modal
-            this.modal.success('Resources claimed successfully!', { title: 'Resources Collected!' });
+            // Show success modal with claimed amount
+            this.modal.success(`Successfully claimed ${formattedAmount} ${resourceName}!`, { title: 'Resources Collected!' });
         } catch (e) {
             // Close loading modal on error
             loadingModal.close();
@@ -1289,6 +1307,11 @@ export class StakePage extends BasePage {
         const loadingModal = this.modal.loading('Claiming resources...');
         
         try {
+            // Get the claimable amount before claiming (from existing data)
+            const claimableAmount = item.claimable;
+            const resourceName = this.getResourceName(item.buildingType);
+            const formattedAmount = this.formatClaimableAmount(claimableAmount, item.buildingType);
+            
             await this.contracts.gridBuildings.collectResources(item.id);
             
             // Reload data (keep loading modal open during this)
@@ -1297,8 +1320,8 @@ export class StakePage extends BasePage {
             // Close loading modal after data reload
             loadingModal.close();
             
-            // Show success modal
-            this.modal.success('Resources claimed successfully!', { title: 'Resources Collected!' });
+            // Show success modal with claimed amount
+            this.modal.success(`Successfully claimed ${formattedAmount} ${resourceName}!`, { title: 'Resources Collected!' });
         } catch (e) {
             // Close loading modal on error
             loadingModal.close();
