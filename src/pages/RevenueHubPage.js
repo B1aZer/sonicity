@@ -596,12 +596,12 @@ export class RevenueHubPage extends BasePage {
                             <span class="status-value" data-state="totalDiamonds">0</span>
                         </div>
                         <div class="status-item">
-                            <span class="status-label">Total Yield NFTs:</span>
-                            <span class="status-value" data-state="totalYield">0</span>
-                        </div>
-                        <div class="status-item">
                             <span class="status-label">Total REP Forges:</span>
                             <span class="status-value" data-state="totalRep">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Total Yield NFTs:</span>
+                            <span class="status-value" data-state="totalYield">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Revenue Pool:</span>
