@@ -3,6 +3,7 @@
 
 ## todo
 
+- fix levels issues
 + change guidanse portal 2nd tab with ? icon
 + remove redundant help to show upgrade cost
 - check yiled does not upgrade
