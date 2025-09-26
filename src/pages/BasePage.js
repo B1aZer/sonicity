@@ -22,6 +22,7 @@ export class BasePage {
         this.modal = new Modal();
         this.provider = null;
         this.signer = null;
+        this.isInitialized = false;
         this.contracts = {
             gameState: new GameStateContract(),
             altar: new AltarContract(),
@@ -77,6 +78,9 @@ export class BasePage {
                     success: true, 
                     address: WalletManager.getCurrentWallet() 
                 });
+                
+                // Mark as initialized to prevent duplicate initialization for cached pages
+                this.isInitialized = true;
             }
         } catch (error) {
             Logger.error('Page initialization error:', error);
@@ -316,11 +320,15 @@ export class BasePage {
         container.appendChild(this.element);
         Logger.info('Element appended to container');
         
-        // Initialize the page automatically
-        this.initialize().catch(error => {
-            Logger.error('Error during page initialization:', error);
-            this.modal.error('Failed to initialize page. Please try refreshing the page.');
-        });
+        // Only initialize if not already initialized (prevents duplicate initialization for cached pages)
+        if (!this.isInitialized) {
+            this.initialize().catch(error => {
+                Logger.error('Error during page initialization:', error);
+                this.modal.error('Failed to initialize page. Please try refreshing the page.');
+            });
+        } else {
+            Logger.info('Page already initialized, skipping initialization');
+        }
     }
 
     /**
