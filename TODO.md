@@ -10,11 +10,8 @@
 - yield nfts should also change models based on tier
 
 
--stake hub page refresh
-$ arc rev:
-
-Revenue Pool:
-76.495105900218883876
++ stake hub page refresh
++ Revenue Pool: 76.495105900218883876
 
 ## todo
 
