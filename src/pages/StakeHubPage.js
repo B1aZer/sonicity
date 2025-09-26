@@ -206,6 +206,15 @@ export class StakePage extends BasePage {
                 });
             }
         });
+
+        // Auto-refresh every 5 seconds for real-time claimable updates
+        this.refreshInterval = setInterval(() => {
+            if (!this.state.isLoading) {
+                this.loadUserData().catch(error => {
+                    Logger.error('Error in auto-refresh:', error);
+                });
+            }
+        }, 5000); // 5 seconds for frequent updates
     }
 
     async loadUserData() {
@@ -1629,6 +1638,14 @@ export class StakePage extends BasePage {
             }
         } else {
             this.element.appendChild(statusElement);
+        }
+    }
+
+    onUnmount() {
+        // Clean up auto-refresh interval
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
         }
     }
 }
