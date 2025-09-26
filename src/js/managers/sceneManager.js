@@ -592,13 +592,20 @@ export class SceneManager {
             // Disable zoom completely for all screen sizes
             controls.minDistance = 5;
             controls.maxDistance = 100;
-            controls.enableZoom = false;
-            controls.zoomSpeed = 1.0;
+        controls.enableZoom = false;
+        controls.zoomSpeed = 1.0;
         controls.enablePan = true;
         controls.panSpeed = 1.0;
         controls.enableRotate = true;
         controls.rotateSpeed = 0.5; // Reduced rotation speed for more control
         controls.target.set(0, 0, 0); // Look at center
+        
+        // Disable touch zoom gestures on mobile - only allow single finger rotation
+        controls.touches = {
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.NONE
+        };
+        
         controls.update();
         return controls;
     }
