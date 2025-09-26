@@ -589,25 +589,11 @@ export class SceneManager {
         // Set subtle zoom ranges based on current camera position and screen size
         const currentDistance = camera.position.distanceTo(controls.target);
         
-        if (screenWidth < 768) {
-            // Mobile: zoom range from current position
-            controls.minDistance = currentDistance * 0.6; // 40% closer than current
-            controls.maxDistance = currentDistance * 1.4; // 40% further than current
-            controls.enableZoom = true;
-            controls.zoomSpeed = 0.5; // Very slow, subtle zoom
-        } else if (screenWidth < 1024) {
-            // Tablet: minimal zoom from current position
-            controls.minDistance = currentDistance * 0.8; // 20% closer than current
-            controls.maxDistance = currentDistance * 1.2; // 20% further than current
-            controls.enableZoom = true;
-            controls.zoomSpeed = 0.4; // Extremely slow, subtle zoom
-        } else {
-            // Desktop: disable zoom, keep original ranges
+            // Disable zoom completely for all screen sizes
             controls.minDistance = 5;
             controls.maxDistance = 100;
             controls.enableZoom = false;
             controls.zoomSpeed = 1.0;
-        }
         controls.enablePan = true;
         controls.panSpeed = 1.0;
         controls.enableRotate = true;
