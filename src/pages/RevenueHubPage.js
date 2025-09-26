@@ -67,7 +67,7 @@ export class RevenueHubPage extends BasePage {
                 totalDiamonds: Number(totalDiamonds),
                 totalYield: Number(totalYield),
                 totalRep: Number(totalRep),
-                revenuePool: ethers.formatEther(revenuePool) // Convert from wei to SONIC
+                revenuePool: (Number(revenuePool) / 1e18).toFixed(4) // Convert from wei to SONIC with 4 decimal places
             });
             
             // Update the display with the new data
@@ -121,6 +121,15 @@ export class RevenueHubPage extends BasePage {
         
         // Render initial tier content
         this.renderTierContent(this.state.selectedTier);
+        
+        // Auto-refresh every 30 seconds for real-time revenue updates
+        this.refreshInterval = setInterval(() => {
+            if (!this.state.isLoading) {
+                this.loadGameData().catch(error => {
+                    Logger.error('Error in auto-refresh:', error);
+                });
+            }
+        }, 30000); // 30 seconds for revenue updates
     }
 
 
@@ -665,5 +674,12 @@ export class RevenueHubPage extends BasePage {
                 </div>
             </div>
         `;
+    }
+    
+    onUnmount() {
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
     }
 }

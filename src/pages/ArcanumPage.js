@@ -70,8 +70,9 @@ export class ArcanumPage extends BasePage {
             const yieldNFTs = await this.loadYieldNFTs(userAddress);
             const yieldNFTsByRarity = this.organizeNFTsByRarity(yieldNFTs);
             
-            // Format revenue pool from wei to SONIC
-            const formattedRevenuePool = ethers.formatEther(revenuePool);
+            // Format revenue pool from wei to SONIC with 4 decimal places
+            const revenuePoolEther = Number(revenuePool) / 1e18;
+            const formattedRevenuePool = revenuePoolEther.toFixed(4);
             
             this.setState({
                 totalTreasury: formattedRevenuePool,
@@ -160,6 +161,15 @@ export class ArcanumPage extends BasePage {
         
         // Render initial tier content
         this.renderTierContent(this.state.selectedTier);
+        
+        // Auto-refresh every 30 seconds for real-time arcanum updates
+        this.refreshInterval = setInterval(() => {
+            if (!this.state.isLoading) {
+                this.loadArcanumData().catch(error => {
+                    Logger.error('Error in auto-refresh:', error);
+                });
+            }
+        }, 30000); // 30 seconds for arcanum updates
     }
 
     async handleMintNFT() {
@@ -377,5 +387,12 @@ export class ArcanumPage extends BasePage {
                 </div>
             </div>
         `;
+    }
+    
+    onUnmount() {
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
     }
 } 
