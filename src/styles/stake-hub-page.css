@@ -4,6 +4,14 @@
     opacity: 0.78;
 }
 
+/* Upgrade Help Icon */
+.upgrade-help-icon {
+    color: var(--color-secondary);
+    margin-left: 6px;
+    cursor: help;
+    font-size: 14px;
+}
+
 
 /* Base Page - stake hub page specific */
 

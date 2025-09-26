@@ -739,7 +739,10 @@ export class StakePage extends BasePage {
                         </div>
                         <div class="building-info">
                             <h3>${name} #${item.id}</h3>
-                            <p class="building-description">Level ${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}</p>
+                            <p class="building-description">
+                                Level ${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}
+                                <i class="fas fa-question-circle upgrade-help-icon" title="Buildings have multiple levels. Recharge buildings to reach upgrade thresholds: 10 Charges for level 2, 100 Charges for level 3. Higher levels provide better production rates."></i>
+                            </p>
                         </div>
                         <div class="building-status ${statusClass}">
                             <span class="status-indicator"></span>
