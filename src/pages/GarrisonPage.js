@@ -920,14 +920,14 @@ export class GarrisonPage extends BasePage {
         }
     }
 
-    unmount() {
+    onUnmount() {
         if (this.battleTimerInterval) {
             clearInterval(this.battleTimerInterval);
+            this.battleTimerInterval = null;
         }
         if (this.battleProgressBar) {
             this.battleProgressBar.destroy();
+            this.battleProgressBar = null;
         }
-        // Call parent unmount to properly clean up event listeners
-        super.unmount();
     }
 } 

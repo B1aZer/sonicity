@@ -274,12 +274,10 @@ export class ScoutGuildPage extends BasePage {
         });
     }
 
-    unmount() {
+    onUnmount() {
         if (this.searchTimer) {
             clearInterval(this.searchTimer);
             this.searchTimer = null;
         }
-        // Call parent unmount to properly clean up event listeners
-        super.unmount();
     }
 } 

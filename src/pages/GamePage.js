@@ -646,18 +646,17 @@ export class GamePage extends BasePage {
         `;
     }
  
-    unmount() {
+    onUnmount() {
         // Clear the resource update interval
         if (this.resourceUpdateInterval) {
             clearInterval(this.resourceUpdateInterval);
+            this.resourceUpdateInterval = null;
         }
         
         if (this.game) {
             this.game.dispose();
+            this.game = null;
         }
-        
-        // Call parent unmount to properly clean up event listeners
-        super.unmount();
     }
 
     /**

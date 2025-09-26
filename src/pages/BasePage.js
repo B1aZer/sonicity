@@ -336,6 +336,11 @@ export class BasePage {
     unmount() {
         Logger.info(`BasePage.unmount called for ${this.constructor.name}`);
         
+        // Call page-specific cleanup if it exists
+        if (typeof this.onUnmount === 'function') {
+            this.onUnmount();
+        }
+        
         // Clean up event listeners
         this.removeEventListeners();
         

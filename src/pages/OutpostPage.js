@@ -274,10 +274,10 @@ export class OutpostPage extends BasePage {
         });
     }
 
-    unmount() {
+    onUnmount() {
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
         }
-        super.unmount();
     }
 }
