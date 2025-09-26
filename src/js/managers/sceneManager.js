@@ -560,14 +560,44 @@ export class SceneManager {
         const downConstraint = Math.PI / 4; // 15 degrees down
         controls.minPolarAngle = currentPolarAngle - downConstraint;
         
-        // Restrict horizontal rotation (left/right)
-        controls.maxAzimuthAngle = Math.PI / 32; // Limit right rotation (45 degrees)
-        controls.minAzimuthAngle = -Math.PI / 32; // Limit left rotation (-45 degrees)
+        // Restrict horizontal rotation (left/right) - more range for smaller screens
+        const screenWidth = window.innerWidth;
+        const baseAngle = Math.PI / 32; // Base angle (45 degrees)
         
-        controls.minDistance = 5;
-        controls.maxDistance = 100;
-        controls.enableZoom = false; // Disabled zoom
-        controls.zoomSpeed = 1.0;
+        let rotationRange;
+        if (screenWidth < 768) {
+            rotationRange = baseAngle * 6; // 6x range for mobile
+        } else if (screenWidth < 1024) {
+            rotationRange = baseAngle * 4; // 4x range for tablets
+        } else {
+            rotationRange = baseAngle; // Original range for desktop (1024px+)
+        }
+        
+        controls.maxAzimuthAngle = rotationRange;
+        controls.minAzimuthAngle = -rotationRange;
+        
+        // Set subtle zoom ranges based on current camera position and screen size
+        const currentDistance = camera.position.distanceTo(controls.target);
+        
+        if (screenWidth < 768) {
+            // Mobile: zoom range from current position
+            controls.minDistance = currentDistance * 0.6; // 40% closer than current
+            controls.maxDistance = currentDistance * 1.4; // 40% further than current
+            controls.enableZoom = true;
+            controls.zoomSpeed = 0.5; // Very slow, subtle zoom
+        } else if (screenWidth < 1024) {
+            // Tablet: minimal zoom from current position
+            controls.minDistance = currentDistance * 0.8; // 20% closer than current
+            controls.maxDistance = currentDistance * 1.2; // 20% further than current
+            controls.enableZoom = true;
+            controls.zoomSpeed = 0.4; // Extremely slow, subtle zoom
+        } else {
+            // Desktop: disable zoom, keep original ranges
+            controls.minDistance = 5;
+            controls.maxDistance = 100;
+            controls.enableZoom = false;
+            controls.zoomSpeed = 1.0;
+        }
         controls.enablePan = true;
         controls.panSpeed = 1.0;
         controls.enableRotate = true;
