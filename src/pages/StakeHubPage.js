@@ -747,9 +747,9 @@ export class StakePage extends BasePage {
                         </div>
                     </div>
                     <div class="building-details">
-                        <div class="detail-item"><span class="detail-label">Level:</span><span class="detail-value">${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}</span></div>
                         <div class="detail-item"><span class="detail-label">Production Rate:</span><span class="detail-value">${productionRateDisplay}</span></div>
                         <div class="detail-item"><span class="detail-label">Charge Price:</span><span class="detail-value">${item.formattedRechargeCost || '0'}<span class="mint-resource-icon">${this.getResourceIcon(4n)}</span></span></div>
+                        <div class="detail-item"><span class="detail-label">Upgrade Cost:</span><span class="detail-value">${currentLevel >= maxLevel ? 'Max Level' : `${upgradeCost} diamonds`}</span></div>
                         <div class="detail-item"><span class="detail-label">Claimable:</span><span class="detail-value">${this.formatClaimableAmount(item.claimable, item.buildingType)}</span></div>
                         <div class="building-progress">
                             <div class="progress-info">
