@@ -11,6 +11,19 @@
 
 /* Global styles and shared components below */
 
+/* Reusable Help Icon */
+.help-icon {
+    color: var(--color-secondary);
+    margin-left: 6px;
+    cursor: help;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.help-icon:hover {
+    transform: scale(1.1);
+}
+
 /* SweetAlert2 Custom Styles */
 .swal2-popup {
     background: rgba(0, 0, 0, 0.8) !important;

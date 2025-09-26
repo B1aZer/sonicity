@@ -741,7 +741,7 @@ export class StakePage extends BasePage {
                             <h3>${name} #${item.id}</h3>
                             <p class="building-description">
                                 Level ${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}
-                                <i class="fas fa-question-circle upgrade-help-icon" title="Buildings have multiple levels. Recharge buildings to reach upgrade thresholds: 10 Charges for level 2, 100 Charges for level 3. Higher levels provide better production rates."></i>
+                                ${this.getHelpIcon("Buildings have multiple levels. Recharge buildings to reach upgrade thresholds: 10 Charges for level 2, 100 Charges for level 3. Higher levels provide better production rates.")}
                             </p>
                         </div>
                         <div class="building-status ${statusClass}">
@@ -904,6 +904,10 @@ export class StakePage extends BasePage {
             case 4: return '<i class="fas fa-dollar-sign"></i>'; // SONIC
             default: return '<i class="fas fa-question"></i>';
         }
+    }
+
+    getHelpIcon(tooltipText) {
+        return `<i class="fas fa-question-circle help-icon" title="${tooltipText}"></i>`;
     }
 
     // --- Replace dummy implementations below with real contract calls ---
