@@ -137,11 +137,34 @@ export class CityPage extends BasePage {
         // Update tier progress bar
         const progressBar = this.element.querySelector('.tier-progress-bar');
         const progressContainer = this.element.querySelector('.tier-progress');
+        const progressText = this.element.querySelector('.tier-progress-text');
+        
         if (progressBar && progressContainer) {
             const treasury = BigInt(playerState.treasury);
             const currentTier = Number(playerState.tier);
             const currentReq = BigInt(currentTierRequirement);
             const nextReq = BigInt(nextTierRequirement);
+            
+            // Show maximum level message if at maximum tier (4)
+            if (currentTier >= 4) {
+                progressContainer.style.display = 'block';
+                progressBar.style.setProperty('--progress-width', '100%');
+                progressBar.title = 'Maximum tier reached';
+                
+                if (progressText) {
+                    progressText.innerHTML = `
+                        <div>
+                            <span>
+                                Maximum Tier Reached!
+                            </span>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            // Show progress bar for non-max tiers
+            progressContainer.style.display = 'block';
             
             // Calculate progress using BigInt arithmetic
             const progress = Number((treasury - currentReq) * BigInt(100) / (nextReq - currentReq));
@@ -151,15 +174,14 @@ export class CityPage extends BasePage {
             progressBar.title = `${treasury.toString()} / ${nextReq.toString()} Gold`;
             
             // Update tier progress text with detailed numeric information
-            const progressText = this.element.querySelector('.tier-progress-text');
             if (progressText) {
                 const currentAmount = treasury.toString();
                 const requiredAmount = nextReq.toString();
                 
                 progressText.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="progress-text-container">
                         <span>Progress to Tier ${currentTier + 1}: ${Math.min(progress, 100).toFixed(1)}%</span>
-                        <span style="font-size: 0.9em; color: var(--text-muted);">
+                        <span class="progress-text-amount">
                             ${currentAmount} / ${requiredAmount} Gold
                         </span>
                     </div>

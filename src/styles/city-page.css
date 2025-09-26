@@ -116,15 +116,20 @@
     gap: var(--spacing-sm);
 }
 
-.tier-progress-text span:first-child {
+.tier-progress-text .progress-text-container {
+    display: flex;
     flex: 1;
     min-width: 180px;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.tier-progress-text span:last-child {
+.tier-progress-text .progress-text-amount {
     flex-shrink: 0;
     white-space: nowrap;
     font-size: 0.9em;
+    color: var(--text-muted);
 }
 
 /* Responsive adjustments */
@@ -153,12 +158,12 @@
         gap: var(--spacing-xs);
     }
     
-    .tier-progress-text span:first-child {
+    .tier-progress-text .progress-text-container {
         min-width: auto;
         width: 100%;
     }
     
-    .tier-progress-text span:last-child {
+    .tier-progress-text .progress-text-amount {
         align-self: flex-end;
     }
     

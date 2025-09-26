@@ -11,12 +11,14 @@
 ## todo
 
 - models v2
+- leaderboards, icon soul achievements to show player connection and allow them to flex
 - taxtics effects
 - charge everything in bulk
 - now - yes, in plan to make a partial army return based on power diff
 - sound toggle
 - pve ?
 - repair models
+- different backgrounds for building cards
 
 ## todo
 
