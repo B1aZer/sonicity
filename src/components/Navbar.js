@@ -66,7 +66,7 @@ export class Navbar {
                     <a href="/overview" class="menu-link" data-page="overview">Overview</a>
                     <a href="/city" class="menu-link" data-page="city">District Hall</a>
                     <a href="/stake" class="menu-link" data-page="stake">Grid Hub</a>
-                    <a href="/revenue-hub" class="menu-link" data-page="revenue-hub">Guidance Potal</a>
+                    <a href="/revenue-hub" class="menu-link" data-page="revenue-hub">Guidance Portal</a>
                 </div>
             </div>
         `;

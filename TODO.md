@@ -1,5 +1,26 @@
 # Now
 
+
+## todo
+
+- models v2
+- taxtics effects
+- charge everything in bulk
+- now - yes, in plan to make a partial army return based on power diff
+- sound toggle
+- pve ?
+- repair models
+
+## todo
+
+- welcome to sonicity
+beta
+
+- mint unique nft
+- build your city
+- battle for rewards
+- become thel egend
+
 ## todo
 
 - stramline game
@@ -61,15 +82,6 @@ anvil \
 - fix links
 - fix website
 - add proper pinned with gif
-
-## todo
-
-- taxtics images
-- charge everything in bulk
-- now - yes, in plan to make a partial army return based on power diff
-- sound toggle
-- pve ?
-- repair models
 
 ## outreach
 
