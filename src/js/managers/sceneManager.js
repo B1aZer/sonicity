@@ -316,22 +316,32 @@ export class SceneManager {
             return new THREE.Line(geometry, material);
         };
 
+        // Apply the same base offset logic as grid positioning
+        let baseOffsetX = 0;
+        let baseOffsetZ = 0;
+        
+        if (this.gridManager.tier >= 4) { // 4x4 grids
+            baseOffsetZ = -2; // Move entire grid 2 units closer to city hall
+        } else if (this.gridManager.tier >= 3) { // 4x3 grids  
+            baseOffsetZ = -1; // Move entire grid 1 unit closer to city hall
+        }
+
         // Draw vertical lines with terrain following curves
         for (let x = 0; x <= width; x++) {
-            const xPos = x * cellSize - totalWidth / 2;
+            const xPos = x * cellSize - totalWidth / 2 + baseOffsetX;
             const line = createCurvedLine(
-                xPos, -totalHeight / 2,  // Start point
-                xPos, totalHeight / 2    // End point
+                xPos, -totalHeight / 2 + baseOffsetZ,  // Start point
+                xPos, totalHeight / 2 + baseOffsetZ    // End point
             );
             group.add(line);
         }
 
         // Draw horizontal lines with terrain following curves
         for (let z = 0; z <= height; z++) {
-            const zPos = z * cellSize - totalHeight / 2;
+            const zPos = z * cellSize - totalHeight / 2 + baseOffsetZ;
             const line = createCurvedLine(
-                -totalWidth / 2, zPos,  // Start point
-                totalWidth / 2, zPos    // End point
+                -totalWidth / 2 + baseOffsetX, zPos,  // Start point
+                totalWidth / 2 + baseOffsetX, zPos    // End point
             );
             group.add(line);
         }

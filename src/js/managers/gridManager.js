@@ -95,9 +95,21 @@ export class GridManager {
         const dimensions = this.gridDimensions[this.tier];
         const halfWidth = (dimensions.width * this.cellSize) / 2;
         const halfHeight = (dimensions.height * this.cellSize) / 2;
+        
+        // Base grid offset to move larger grids closer to city hall
+        let baseOffsetX = 0;
+        let baseOffsetZ = 0;
+        
+        // For 4x4 grids, move the entire grid closer to city hall to use blank space
+        if (this.tier >= 4) { // 4x4 grids
+            baseOffsetZ = -2; // Move entire grid 2 units closer to city hall
+        } else if (this.tier >= 3) { // 4x3 grids  
+            baseOffsetZ = -1; // Move entire grid 1 unit closer to city hall
+        }
+        
         return {
-            x: (gridX * this.cellSize) - halfWidth + (this.cellSize / 2),
-            z: (gridZ * this.cellSize) - halfHeight + (this.cellSize / 2)
+            x: (gridX * this.cellSize) - halfWidth + (this.cellSize / 2) + baseOffsetX,
+            z: (gridZ * this.cellSize) - halfHeight + (this.cellSize / 2) + baseOffsetZ
         };
     }
 
@@ -105,9 +117,20 @@ export class GridManager {
         const dimensions = this.gridDimensions[this.tier];
         const halfWidth = (dimensions.width * this.cellSize) / 2;
         const halfHeight = (dimensions.height * this.cellSize) / 2;
+        
+        // Apply the same base offset logic as getWorldPosition
+        let baseOffsetX = 0;
+        let baseOffsetZ = 0;
+        
+        if (this.tier >= 4) { // 4x4 grids
+            baseOffsetZ = -2;
+        } else if (this.tier >= 3) { // 4x3 grids
+            baseOffsetZ = -1;
+        }
+        
         return {
-            x: Math.floor((worldX + halfWidth) / this.cellSize),
-            z: Math.floor((worldZ + halfHeight) / this.cellSize)
+            x: Math.floor((worldX + halfWidth - baseOffsetX) / this.cellSize),
+            z: Math.floor((worldZ + halfHeight - baseOffsetZ) / this.cellSize)
         };
     }
 
