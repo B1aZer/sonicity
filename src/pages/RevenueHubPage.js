@@ -560,7 +560,7 @@ export class RevenueHubPage extends BasePage {
                         </div>
                         <div class="detail-item">
                             <span class="detail-label">Efficiency:</span>
-                            <span class="detail-value">Upgrade buildings for better production</span>
+                            <span class="detail-value">Recharge buildings to unlock upgrades</span>
                         </div>
                     </div>
                 </div>
