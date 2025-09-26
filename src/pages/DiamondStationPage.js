@@ -33,7 +33,6 @@ export class DiamondStationPage extends BasePage {
         try {
             await this.loadStationData();
             this.setupEventListeners();
-            this.startAutoRefresh();
             Logger.info('Diamond Station page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing DiamondStationPage:', error);
@@ -134,6 +133,15 @@ export class DiamondStationPage extends BasePage {
                 Logger.error('Error in handleClaimDiamonds:', error);
             });
         });
+
+        // Auto-refresh every 30 seconds for real-time diamond updates
+        this.refreshInterval = setInterval(() => {
+            if (!this.state.isLoading) {
+                this.loadStationData().catch(error => {
+                    Logger.error('Error in auto-refresh:', error);
+                });
+            }
+        }, 30000); // 30 seconds for diamond updates
     }
 
     render() {
@@ -208,16 +216,11 @@ export class DiamondStationPage extends BasePage {
         `;
     }
 
-    startAutoRefresh() {
-        // Refresh every 30 seconds
-        this.refreshInterval = setInterval(() => {
-            this.loadStationData();
-        }, 30000);
-    }
-
     onUnmount() {
+        // Clean up auto-refresh interval
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
         }
     }
 } 

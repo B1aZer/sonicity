@@ -33,7 +33,6 @@ export class RepForgePage extends BasePage {
         try {
             await this.loadForgeData();
             this.setupEventListeners();
-            this.startAutoRefresh();
             Logger.info('REP Forge page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing RepForgePage:', error);
@@ -131,6 +130,15 @@ export class RepForgePage extends BasePage {
                 Logger.error('Error in handleClaimRep:', error);
             });
         });
+
+        // Auto-refresh every 30 seconds for real-time REP updates
+        this.refreshInterval = setInterval(() => {
+            if (!this.state.isLoading) {
+                this.loadForgeData().catch(error => {
+                    Logger.error('Error in auto-refresh:', error);
+                });
+            }
+        }, 30000); // 30 seconds for REP updates
     }
 
     render() {
@@ -205,16 +213,11 @@ export class RepForgePage extends BasePage {
         `;
     }
 
-    startAutoRefresh() {
-        // Refresh every 30 seconds
-        this.refreshInterval = setInterval(() => {
-            this.loadForgeData();
-        }, 30000);
-    }
-
     onUnmount() {
+        // Clean up auto-refresh interval
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
         }
     }
 } 

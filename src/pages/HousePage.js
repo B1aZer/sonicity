@@ -124,6 +124,15 @@ export class HousePage extends BasePage {
                 Logger.error('Error in handleClaimGold:', error);
             });
         });
+
+        // Auto-refresh every 30 seconds for real-time gold updates
+        this.refreshInterval = setInterval(() => {
+            if (!this.state.isLoading) {
+                this.loadHouseData().catch(error => {
+                    Logger.error('Error in auto-refresh:', error);
+                });
+            }
+        }, 30000); // 30 seconds for gold updates
     }
 
     render() {
@@ -195,5 +204,13 @@ export class HousePage extends BasePage {
                 </div>
             </div>
         `;
+    }
+
+    onUnmount() {
+        // Clean up auto-refresh interval
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
     }
 } 

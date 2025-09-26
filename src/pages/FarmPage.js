@@ -130,6 +130,15 @@ export class FarmPage extends BasePage {
                 Logger.error('Error in handleClaimFood:', error);
             });
         });
+
+        // Auto-refresh every 30 seconds for real-time food updates
+        this.refreshInterval = setInterval(() => {
+            if (!this.state.isLoading) {
+                this.loadFarmData().catch(error => {
+                    Logger.error('Error in auto-refresh:', error);
+                });
+            }
+        }, 30000); // 30 seconds for food updates
     }
 
     render() {
@@ -202,5 +211,13 @@ export class FarmPage extends BasePage {
                 </div>
             </div>
         `;
+    }
+
+    onUnmount() {
+        // Clean up auto-refresh interval
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
     }
 } 

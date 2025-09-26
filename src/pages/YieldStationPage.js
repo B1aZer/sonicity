@@ -35,7 +35,6 @@ export class YieldStationPage extends BasePage {
         try {
             await this.loadStationData();
             this.setupEventListeners();
-            this.startAutoRefresh();
             Logger.info('Yield Station page initialized successfully');
         } catch (error) {
             Logger.error('Error initializing YieldStationPage:', error);
@@ -183,6 +182,15 @@ export class YieldStationPage extends BasePage {
                 Logger.error('Error in handleClaimYield:', error);
             });
         });
+
+        // Auto-refresh every 30 seconds for real-time yield updates
+        this.refreshInterval = setInterval(() => {
+            if (!this.state.isLoading) {
+                this.loadStationData().catch(error => {
+                    Logger.error('Error in auto-refresh:', error);
+                });
+            }
+        }, 30000); // 30 seconds for yield updates
     }
 
     render() {
@@ -272,16 +280,11 @@ export class YieldStationPage extends BasePage {
         `;
     }
 
-    startAutoRefresh() {
-        // Refresh every 30 seconds
-        this.refreshInterval = setInterval(() => {
-            this.loadStationData();
-        }, 30000);
-    }
-
     onUnmount() {
+        // Clean up auto-refresh interval
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
         }
     }
 }
