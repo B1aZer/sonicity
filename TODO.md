@@ -3,10 +3,12 @@
 
 ## todo
 
-- change guidanse portal 2nd tab with ? icon
-- remove redundant help to show upgrade cost
++ change guidanse portal 2nd tab with ? icon
++ remove redundant help to show upgrade cost
 - check yiled does not upgrade
 - yield nfts should also change models based on tier
+
+## todo
 
 - models v2
 - taxtics effects

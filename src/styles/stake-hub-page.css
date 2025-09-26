@@ -290,6 +290,9 @@
     .building-info h3 {
         font-size: var(--font-size-md);
     }
+    .building-header {
+        text-align: left;
+    }
 }
 
 /* Responsive adjustments */
