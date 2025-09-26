@@ -398,12 +398,7 @@ export class StakePage extends BasePage {
         const rechargeHeader = buildingCount === 1 ? `Bulk Charge ${tierNames[tier]}` : `Bulk Charge ${tierNamesPlural[tier]}`;
         
         // Format upgrade progress for display
-        let upgradeStatusText = '';
-        if (formattedProgress.isMaxLevel) {
-            upgradeStatusText = 'Maximum level reached';
-        } else {
-            upgradeStatusText = ''; // Remove redundant text, progress bar shows the info
-        }
+        const upgradeStatusText = this.contracts.gridBuildings.getUpgradeStatusText(formattedProgress.currentLevel, formattedProgress.maxLevel);
         
         // Build the complete tier content HTML
         const tierHTML = `
@@ -425,7 +420,7 @@ export class StakePage extends BasePage {
                     </button>
                 </div>
                 <div class="upgrade-info" style="display: none; margin-top: 16px;">
-                    ${formattedProgress.isMaxLevel ? `
+                    ${upgradeStatusText ? `
                         <div class="upgrade-status">${upgradeStatusText}</div>
                     ` : `
                         <div class="progress-container" title="Upgrade progress: ${formattedProgress.formattedCurrent} / ${formattedProgress.formattedNext} SONIC">
@@ -705,28 +700,8 @@ export class StakePage extends BasePage {
                 }
             }
             
-            // Get upgrade information from item (will be populated by getStakedBuildings)
-            const upgradeInfo = item.upgradeInfo;
-            const canUpgrade = upgradeInfo?.canUpgrade || false;
-            const upgradeCost = upgradeInfo?.upgradeCost || 0n;
-            const maxLevel = upgradeInfo?.maxLevel || 1;
-            const currentLevel = item.level || 0;
-            
-            // Format upgrade button text and determine if disabled
-            let upgradeButtonText = 'Upgrade';
-            // Only disable if damaged or if upgrade level is not unlocked (not for diamond shortage)
-            let upgradeDisabled = item.damaged || currentLevel >= maxLevel;
-            let upgradeTooltip = '';
-            
-            if (currentLevel >= maxLevel) {
-                upgradeButtonText = 'Max Level';
-                upgradeDisabled = true;
-                upgradeTooltip = 'Building has reached maximum level';
-            } else if (item.damaged) {
-                upgradeTooltip = 'Building is damaged and needs repair before upgrading';
-            } else {
-                upgradeTooltip = `Upgrade to level ${currentLevel + 1} for ${upgradeCost} diamonds`;
-            }
+            // Get upgrade level information (already processed by contract)
+            const upgradeLevelInfo = item.upgradeLevelInfo;
             
             return `
                 <div class="building-card ${statusClass}" data-building-id="${item.id}">
@@ -740,7 +715,7 @@ export class StakePage extends BasePage {
                         <div class="building-info">
                             <h3>${name} #${item.id}</h3>
                             <p class="building-description">
-                                Level ${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}
+                                ${upgradeLevelInfo.levelDisplay}
                                 ${this.getHelpIcon("Buildings have multiple levels. Recharge buildings to reach upgrade thresholds: 10 Charges for level 2, 100 Charges for level 3. Higher levels provide better production rates.")}
                             </p>
                         </div>
@@ -752,7 +727,7 @@ export class StakePage extends BasePage {
                     <div class="building-details">
                         <div class="detail-item"><span class="detail-label">Production Rate:</span><span class="detail-value">${productionRateDisplay}</span></div>
                         <div class="detail-item"><span class="detail-label">Charge Price:</span><span class="detail-value">${item.formattedRechargeCost || '0'}<span class="mint-resource-icon">${this.getResourceIcon(4n)}</span></span></div>
-                        <div class="detail-item"><span class="detail-label">Upgrade Cost:</span><span class="detail-value">${currentLevel >= maxLevel ? 'Max Level' : `${upgradeCost} <span class="mint-resource-icon">${this.getResourceIcon(3n)}</span>`}</span></div>
+                        <div class="detail-item"><span class="detail-label">Upgrade Cost:</span><span class="detail-value">${upgradeLevelInfo.costDisplay}${upgradeLevelInfo.canUpgrade ? ` <span class="mint-resource-icon">${this.getResourceIcon(3n)}</span>` : ''}</span></div>
                         <div class="detail-item"><span class="detail-label">Claimable:</span><span class="detail-value">${this.formatClaimableAmount(item.claimable, item.buildingType)}</span></div>
                         <div class="building-progress">
                             <div class="progress-info">
@@ -767,7 +742,7 @@ export class StakePage extends BasePage {
                     <div class="building-actions">
                         <button class="btn btn-full btn-primary recharge-btn" ${item.damaged ? 'disabled' : ''} title="Charge building for ${item.formattedRechargeCost || '0'} SONIC"><i class="fas fa-bolt"></i> Charge</button>
                         <button class="btn btn-full btn-secondary claim-btn" ${item.damaged || item.claimable <= 0 ? 'disabled' : ''} title="Claim ${this.formatClaimableAmount(item.claimable, item.buildingType)}"><i class="fas fa-coins"></i> Claim</button>
-                        <button class="btn btn-full btn-primary upgrade-btn" ${upgradeDisabled ? 'disabled' : ''} title="${upgradeTooltip}"><i class="fas fa-arrow-up"></i> ${upgradeButtonText}</button>
+                        <button class="btn btn-full btn-primary upgrade-btn" ${upgradeLevelInfo.isDisabled ? 'disabled' : ''} title="${upgradeLevelInfo.tooltip}"><i class="fas fa-arrow-up"></i> ${upgradeLevelInfo.buttonText}</button>
                         <button class="btn btn-full btn-warning destroy-btn" title="Unstake building (unclaimed resources will be lost)"><i class="fas fa-undo"></i> Unstake</button>
                     </div>
                 </div>
@@ -931,7 +906,7 @@ export class StakePage extends BasePage {
                 claimable,
                 isActivelyProducing,
                 progressData,
-                upgradeInfo
+                upgradeLevelInfo
             ] = await Promise.allSettled([
                 this.getNFTInfoForBuilding(building.id),
                 this.contracts.gridBuildings.getBuildingConfig(building.buildingType),
@@ -939,7 +914,7 @@ export class StakePage extends BasePage {
                 this.contracts.gridBuildings.calculateClaimableResources(building.id),
                 this.contracts.gridBuildings.isBuildingActivelyProducing(userAddress, building.id),
                 this.contracts.gridBuildings.calculateProductionProgress(building.id),
-                this.contracts.gridBuildings.getBuildingUpgradeInfo(building.id)
+                this.contracts.gridBuildings.getUpgradeLevelDisplayInfo(building.id)
             ]);
             
             // Handle NFT info
@@ -979,19 +954,23 @@ export class StakePage extends BasePage {
                 building.progressPercent = Number(progressPercent);
             }
             
-            // Handle upgrade info
-            if (upgradeInfo.status === 'fulfilled') {
-                building.upgradeInfo = upgradeInfo.value;
+            // Handle upgrade level info
+            if (upgradeLevelInfo.status === 'fulfilled') {
+                building.upgradeLevelInfo = upgradeLevelInfo.value;
             } else {
-                console.warn(`Failed to get upgrade info for building ${building.id}:`, upgradeInfo.reason);
-                building.upgradeInfo = {
-                    canUpgrade: false,
+                console.warn(`Failed to get upgrade level info for building ${building.id}:`, upgradeLevelInfo.reason);
+                building.upgradeLevelInfo = {
                     currentLevel: building.level || 0,
                     maxLevel: 1,
+                    canUpgrade: false,
+                    buttonText: 'Error',
+                    tooltip: 'Failed to load upgrade information',
+                    isDisabled: true,
+                    isMaxLevel: false,
+                    isLocked: false,
                     upgradeCost: 0n,
-                    errorMessage: 'Failed to load upgrade info',
-                    buildingType: building.buildingType || 0,
-                    damaged: building.damaged || false
+                    levelDisplay: 'Level 0',
+                    costDisplay: 'Error'
                 };
             }
 

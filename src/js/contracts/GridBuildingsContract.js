@@ -385,6 +385,89 @@ export class GridBuildingsContract extends BaseContract {
         }
     }
 
+    /**
+     * Get comprehensive upgrade level information for UI display
+     * @param {number} buildingId - Building ID
+     * @returns {Promise<Object>} Upgrade level information
+     */
+    async getUpgradeLevelDisplayInfo(buildingId) {
+        try {
+            const upgradeInfo = await this.getBuildingUpgradeInfo(buildingId);
+            const currentLevel = Number(upgradeInfo.currentLevel);
+            const maxLevel = Number(upgradeInfo.maxLevel);
+            const isDamaged = upgradeInfo.damaged;
+            
+            // Determine upgrade status
+            const isAtMaxLevel = currentLevel >= maxLevel;
+            const isAbsoluteMaxLevel = maxLevel >= 3;
+            const isLocked = isAtMaxLevel && !isAbsoluteMaxLevel;
+            
+            let buttonText = 'Upgrade';
+            let tooltip = '';
+            let isDisabled = false;
+            
+            if (isAtMaxLevel) {
+                if (isAbsoluteMaxLevel) {
+                    // Building is at absolute maximum level (3)
+                    buttonText = 'Max Level';
+                    tooltip = 'Building has reached maximum level';
+                } else {
+                    // Building is at player's current maximum, but not absolute maximum
+                    buttonText = 'Locked';
+                    tooltip = `Recharge more buildings to unlock level ${maxLevel + 1}`;
+                }
+                isDisabled = true;
+            } else if (isDamaged) {
+                tooltip = 'Building is damaged and needs repair before upgrading';
+                isDisabled = true;
+            } else {
+                tooltip = `Upgrade to level ${currentLevel + 1} for ${upgradeInfo.upgradeCost.toString()} diamonds`;
+            }
+            
+            return {
+                currentLevel,
+                maxLevel,
+                canUpgrade: upgradeInfo.canUpgrade && !isDisabled,
+                buttonText,
+                tooltip,
+                isDisabled: isDisabled || isDamaged,
+                isMaxLevel: isAbsoluteMaxLevel,
+                isLocked,
+                upgradeCost: upgradeInfo.upgradeCost,
+                levelDisplay: `Level ${currentLevel}${maxLevel > 1 ? ` / ${maxLevel}` : ''}`,
+                costDisplay: isAtMaxLevel ? (isAbsoluteMaxLevel ? 'Max Level' : 'Locked') : upgradeInfo.upgradeCost.toString()
+            };
+        } catch (error) {
+            console.error('Error getting upgrade level display info:', error);
+            return {
+                currentLevel: 0,
+                maxLevel: 1,
+                canUpgrade: false,
+                buttonText: 'Error',
+                tooltip: 'Failed to load upgrade information',
+                isDisabled: true,
+                isMaxLevel: false,
+                isLocked: false,
+                upgradeCost: 0n,
+                levelDisplay: 'Level 0',
+                costDisplay: 'Error'
+            };
+        }
+    }
+
+    /**
+     * Get upgrade status text for progress displays
+     * @param {number} currentLevel - Current building level
+     * @param {number} maxLevel - Maximum unlocked level
+     * @returns {string} Status text
+     */
+    getUpgradeStatusText(currentLevel, maxLevel) {
+        if (currentLevel >= maxLevel) {
+            return maxLevel >= 3 ? 'Maximum level reached' : 'Upgrade level locked';
+        }
+        return '';
+    }
+
     // Get building cost for minting
     async getBuildingCost(buildingType) {
         return await this.call('getBuildingCost', buildingType);
