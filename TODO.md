@@ -1,9 +1,29 @@
 # Now
 
+## hero travels
+
+- hero is awallt smart contract, meaning it can take lp, gold, resources, and other shit.
+- in skirmishes you can lost or be robin
+- actual quests with staked money (ala poker), where you use taccis card to go through. 
+- pert of the money pool, sponsors, you also can obtain relics and other shit
 
 ## todo
 
-- fix levels issues
+- tabbs stoppedworking after mint/stake/upgrade failed
+- start overview immidately grid
+
+## prod wallets
+
+- 0xdd2fd4581271e230360230f9337d5c0430bf44c0
+- 0xda703b9bee1d579cee6fac5ed838c91f4746b13a
+
+## local
+
+- 0x70997970c51812dc3a010c7d01b50e0d17dc79c8
+
+## todo
+
++ fix levels issues
 + change guidanse portal 2nd tab with ? icon
 + remove redundant help to show upgrade cost
 - check yiled does not upgrade
