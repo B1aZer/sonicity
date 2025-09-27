@@ -631,6 +631,8 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         // Reserve this revenue from the pool
         reservedRevenue += newRevenue;
         
+        // Update the last rate update time to prevent double accumulation
+        lastRateUpdateTime[player][buildingId] = endTime;
     }
 
     /**

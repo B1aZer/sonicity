@@ -2948,4 +2948,76 @@ describe("GridBuildings", function () {
       console.log(`One hour: ${oneHourClaimable}, Cap: ${capClaimable}, Beyond cap: ${claimable}`);
     });
   });
+
+  describe("Yield Station Accumulation Bug Test", function () {
+    it("Should NOT accumulate revenue infinitely after claiming", async function () {
+      const player1Address = await player1.getAddress();
+      
+      // Setup: Create yield station and add revenue to pool
+      await donateGoldForTier(player1, gameState, gridBuildings, altar, sonicityNFT, 10000);
+      await altar.connect(player1).mintYieldNFT(25);
+      const yieldTokenId = await sonicityYieldNFT.totalSupply();
+      await sonicityYieldNFT.connect(player1).approve(altar.getAddress(), yieldTokenId);
+      await altar.connect(player1).stakeYieldNFT(yieldTokenId);
+      
+      const buildingId = await findBuildingOfType(gridBuildings, player1, GridBuildingType.YIELD_STATION);
+      expect(buildingId).to.not.equal(0, "Yield station should be created");
+      
+      // Add revenue to pool
+      const { buildingId: houseId } = await mintAndStakeNFT(player1, altar, sonicityNFT, GridBuildingType.HOUSE);
+      const houseRechargeFee = await getRechargeCost(gridBuildings, GridBuildingType.HOUSE);
+      await gridBuildings.connect(player1).rechargeBuilding(houseId, { value: houseRechargeFee });
+      
+      // Wait for house to generate revenue
+      await ethers.provider.send("evm_increaseTime", [2 * 3600]); // 2 hours
+      await ethers.provider.send("evm_mine");
+      
+      // Recharge yield station
+      const yieldRechargeFee = await getRechargeCost(gridBuildings, GridBuildingType.YIELD_STATION);
+      await gridBuildings.connect(player1).rechargeBuilding(buildingId, { value: yieldRechargeFee });
+      
+      // Wait for accumulation
+      await ethers.provider.send("evm_increaseTime", [2 * 3600]); // 2 hours
+      await ethers.provider.send("evm_mine");
+      
+      // Check initial claimable amount
+      const initialClaimable = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(initialClaimable).to.be.gt(0, "Should have initial claimable amount");
+      console.log("Initial claimable:", initialClaimable.toString());
+      
+      // Claim the revenue
+      const claimTx = await gridBuildings.connect(player1).collectResources(buildingId);
+      await claimTx.wait();
+      
+      // Check that accumulated revenue is reset to 0
+      const afterClaimClaimable = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      expect(afterClaimClaimable).to.equal(0, "Should have 0 claimable after claiming");
+      console.log("After claim claimable:", afterClaimClaimable.toString());
+      
+      // Wait more time for new accumulation
+      await ethers.provider.send("evm_increaseTime", [1 * 3600]); // 1 more hour
+      await ethers.provider.send("evm_mine");
+      
+      // Check claimable amount after waiting
+      const newClaimable = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      console.log("New claimable after waiting:", newClaimable.toString());
+      
+      // This is the critical test - new claimable should be reasonable, not infinite
+      // If the bug exists, this will be much larger than expected
+      // If fixed, this should be a reasonable amount based on 1 hour of accumulation
+      expect(newClaimable).to.be.gt(0, "Should have new claimable amount");
+      expect(newClaimable).to.be.lt(initialClaimable, "New claimable should be less than initial (showing proper time progression)");
+      
+      // Wait another hour and check again
+      await ethers.provider.send("evm_increaseTime", [1 * 3600]); // 1 more hour
+      await ethers.provider.send("evm_mine");
+      
+      const finalClaimable = await gridBuildings.calculateClaimableResources(player1Address, buildingId);
+      console.log("Final claimable after 2 hours:", finalClaimable.toString());
+      
+      // Final check - should be roughly double the 1-hour amount, not infinite
+      expect(finalClaimable).to.be.gt(newClaimable, "Should accumulate more over time");
+      expect(finalClaimable).to.be.lt(initialClaimable * 2n, "Should not accumulate infinitely");
+    });
+  });
 }); 
