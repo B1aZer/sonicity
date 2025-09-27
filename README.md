@@ -1,3 +1,11 @@
+## why game is different
+
+1. Easy to access. Browser + wallet all you need similar to defi. BUT its an actual game, not steam client
+2. Build from blockchain as ground to top, meaning it aims to be robust, distrubute and allow pvp completely on blockchain
+3. Build on defi primiteves and aims to completely incorporate defi into game
+4. Fun
+5. You can actually make profit
+
 ## ff
 
 npx hardhat run scripts/fast-forward.js --network localhost
