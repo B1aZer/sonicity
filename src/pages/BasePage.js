@@ -320,15 +320,12 @@ export class BasePage {
         container.appendChild(this.element);
         Logger.info('Element appended to container');
         
-        // Only initialize if not already initialized (prevents duplicate initialization for cached pages)
-        if (!this.isInitialized) {
-            this.initialize().catch(error => {
-                Logger.error('Error during page initialization:', error);
-                this.modal.error('Failed to initialize page. Please try refreshing the page.');
-            });
-        } else {
-            Logger.info('Page already initialized, skipping initialization');
-        }
+        // Always initialize to ensure event listeners are properly attached
+        // This fixes issues with cached pages where event listeners might be lost
+        this.initialize().catch(error => {
+            Logger.error('Error during page initialization:', error);
+            this.modal.error('Failed to initialize page. Please try refreshing the page.');
+        });
     }
 
     /**
