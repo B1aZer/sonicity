@@ -821,15 +821,50 @@ contract GridBuildings is Initializable, UUPSUpgradeable, OwnableUpgradeable, Re
         uint256 totalAmount = 0;
         uint256[] memory buildingIds = getActiveBuildings(msg.sender);
         
-        for (uint256 i = 0; i < buildingIds.length; i++) {
-            Building storage building = buildings[msg.sender][buildingIds[i]];
-            if (building.buildingType == buildingType) {
-                uint256 amount = _calculateClaimable(building, block.timestamp);
-                if (amount > 0) {
-                    _updateCollectionTime(building);
-                    _distributeResources(msg.sender, building.buildingType, amount);
-                    emit ResourcesCollected(msg.sender, buildingIds[i], amount);
-                    totalAmount += amount;
+        // Special handling for yield stations - use the yield station collection logic
+        if (buildingType == GridBuildingType.YIELD_STATION) {
+            for (uint256 i = 0; i < buildingIds.length; i++) {
+                Building storage building = buildings[msg.sender][buildingIds[i]];
+                if (building.buildingType == buildingType) {
+                    // Update accumulated revenue
+                    _updateAccumulatedRevenue(msg.sender, buildingIds[i]);
+                    
+                    uint256 claimableAmount = accumulatedRevenue[msg.sender][buildingIds[i]];
+                    if (claimableAmount > 0) {
+                        require(claimableAmount <= revenuePool, "Insufficient pool balance");
+                        
+                        // Reset accumulated revenue
+                        accumulatedRevenue[msg.sender][buildingIds[i]] = 0;
+                        
+                        // Reduce both revenue pool and reserved amount
+                        revenuePool -= claimableAmount;
+                        if (reservedRevenue >= claimableAmount) {
+                            reservedRevenue -= claimableAmount;
+                        } else {
+                            reservedRevenue = 0;
+                        }
+                        
+                        // Transfer SONIC to player
+                        (bool success, ) = payable(msg.sender).call{value: claimableAmount}("");
+                        require(success, "Failed to transfer revenue");
+                        
+                        emit SonicClaimed(msg.sender, claimableAmount);
+                        totalAmount += claimableAmount;
+                    }
+                }
+            }
+        } else {
+            // Standard handling for other building types
+            for (uint256 i = 0; i < buildingIds.length; i++) {
+                Building storage building = buildings[msg.sender][buildingIds[i]];
+                if (building.buildingType == buildingType) {
+                    uint256 amount = _calculateClaimable(building, block.timestamp);
+                    if (amount > 0) {
+                        _updateCollectionTime(building);
+                        _distributeResources(msg.sender, building.buildingType, amount);
+                        emit ResourcesCollected(msg.sender, buildingIds[i], amount);
+                        totalAmount += amount;
+                    }
                 }
             }
         }
