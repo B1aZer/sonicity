@@ -265,14 +265,7 @@ export class OutpostPage extends BasePage {
         setTimeout(() => this.updateThreatDisplay(), 0);
     }
 
-    mount(container) {
-        Logger.info('Mounting outpost page...');
-        container.appendChild(this.element);
-        this.initialize().catch(error => {
-            Logger.error('Error during outpost page initialization:', error);
-            this.modal.error('Failed to initialize outpost page. Please try refreshing the page.');
-        });
-    }
+    // Using BasePage's mount method for consistency
 
     onUnmount() {
         if (this.refreshInterval) {

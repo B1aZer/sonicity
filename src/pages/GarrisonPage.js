@@ -722,14 +722,7 @@ export class GarrisonPage extends BasePage {
         });
     }
 
-    mount(container) {
-        Logger.info('Mounting garrison page...');
-        container.appendChild(this.element);
-        this.initialize().catch(error => {
-            Logger.error('Error during garrison page initialization:', error);
-            this.handleContractError(error, 'initialize garrison page');
-        });
-    }
+    // Using BasePage's mount method for consistency
 
     async loadTacticsDeploymentSection(ownedTactics, activeBattle, playerRole = 'none') {
         // Don't load tactics for attackers

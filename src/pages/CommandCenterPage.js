@@ -748,14 +748,7 @@ export class CommandCenterPage extends BasePage {
         });
     }
 
-    mount(container) {
-        Logger.info('Mounting command center page...');
-        container.appendChild(this.element);
-        this.initialize().catch(error => {
-            Logger.error('Error during command center page initialization:', error);
-            this.handleContractError(error, 'initialize command center page');
-        });
-    }
+    // Using BasePage's mount method for consistency
 
     async loadTacticsDeploymentSection(ownedTactics, activeBattle, playerRole = 'none') {
         // Don't load tactics for defenders

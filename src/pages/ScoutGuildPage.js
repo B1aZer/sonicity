@@ -265,14 +265,7 @@ export class ScoutGuildPage extends BasePage {
         }, 1000);
     }
 
-    mount(container) {
-        Logger.info('Mounting scout guild page...');
-        container.appendChild(this.element);
-        this.initialize().catch(error => {
-            Logger.error('Error during scout guild page initialization:', error);
-            this.modal.error('Failed to initialize scout guild page. Please try refreshing the page.');
-        });
-    }
+    // Using BasePage's mount method for consistency
 
     onUnmount() {
         if (this.searchTimer) {

@@ -752,13 +752,6 @@ export class CityPage extends BasePage {
         `;
     }
 
-    mount(container) {
-        Logger.info('Mounting city page...');
-        container.appendChild(this.element);
-        this.initialize().catch(error => {
-            Logger.error('Error during city page initialization:', error);
-            this.modal.error('Failed to initialize city page. Please try refreshing the page.');
-        });
-    }
+    // Using BasePage's mount method for consistency with all other pages
 
 }

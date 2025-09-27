@@ -325,14 +325,6 @@ export class BarracksPage extends BasePage {
         });
     }
 
-    mount(container) {
-        Logger.info('Mounting barracks page...');
-        container.appendChild(this.element);
-        // Initialize using base class method
-        this.initialize().catch(error => {
-            Logger.error('Error during barracks page initialization:', error);
-            this.modal.error('Failed to initialize barracks page. Please try refreshing the page.');
-        });
-    }
+    // Using BasePage's mount method for consistency
 
 } 
