@@ -248,29 +248,22 @@ export class ScoutGuildPage extends BasePage {
             clearInterval(this.searchTimer);
         }
 
-        this.searchTimer = setInterval(async () => {
+        this.setInterval('searchTimer', async () => {
             try {
                 const searchStatus = await this.contracts.matchmakingSystem.checkSearchStatus();
                 this.updateSearchUI(searchStatus);
 
                 if (searchStatus.completed) {
-                    clearInterval(this.searchTimer);
-                    this.searchTimer = null;
+                    this.clearInterval('searchTimer');
                 }
             } catch (error) {
                 console.error('Error polling search status:', error);
-                clearInterval(this.searchTimer);
-                this.searchTimer = null;
+                this.clearInterval('searchTimer');
             }
         }, 1000);
     }
 
     // Using BasePage's mount method for consistency
 
-    onUnmount() {
-        if (this.searchTimer) {
-            clearInterval(this.searchTimer);
-            this.searchTimer = null;
-        }
-    }
+    // onUnmount removed - BasePage now handles interval cleanup automatically
 } 

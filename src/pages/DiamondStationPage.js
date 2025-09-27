@@ -135,7 +135,7 @@ export class DiamondStationPage extends BasePage {
         });
 
         // Auto-refresh every 30 seconds for real-time diamond updates
-        this.refreshInterval = setInterval(() => {
+        this.setInterval('refresh', () => {
             if (!this.state.isLoading) {
                 this.loadStationData().catch(error => {
                     Logger.error('Error in auto-refresh:', error);
@@ -216,11 +216,5 @@ export class DiamondStationPage extends BasePage {
         `;
     }
 
-    onUnmount() {
-        // Clean up auto-refresh interval
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-            this.refreshInterval = null;
-        }
-    }
+    // onUnmount removed - BasePage now handles interval cleanup automatically
 } 

@@ -208,7 +208,7 @@ export class StakePage extends BasePage {
         });
 
         // Auto-refresh every 5 seconds for real-time claimable updates
-        this.refreshInterval = setInterval(() => {
+        this.setInterval('refresh', () => {
             if (!this.state.isLoading) {
                 this.loadUserData().catch(error => {
                     Logger.error('Error in auto-refresh:', error);
@@ -1641,11 +1641,5 @@ export class StakePage extends BasePage {
         }
     }
 
-    onUnmount() {
-        // Clean up auto-refresh interval
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-            this.refreshInterval = null;
-        }
-    }
+    // onUnmount removed - BasePage now handles interval cleanup automatically
 }

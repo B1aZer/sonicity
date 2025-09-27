@@ -123,7 +123,7 @@ export class RevenueHubPage extends BasePage {
         this.renderTierContent(this.state.selectedTier);
         
         // Auto-refresh every 30 seconds for real-time revenue updates
-        this.refreshInterval = setInterval(() => {
+        this.setInterval('refresh', () => {
             if (!this.state.isLoading) {
                 this.loadGameData().catch(error => {
                     Logger.error('Error in auto-refresh:', error);
@@ -676,10 +676,5 @@ export class RevenueHubPage extends BasePage {
         `;
     }
     
-    onUnmount() {
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-            this.refreshInterval = null;
-        }
-    }
+    // onUnmount removed - BasePage now handles interval cleanup automatically
 }

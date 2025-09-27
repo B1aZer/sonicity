@@ -43,6 +43,7 @@ export class BasePage {
         // Page state management
         this.state = {};
         this.eventListeners = new Map();
+        this.intervals = new Map(); // Track intervals by key
         
         // Building access control
         this.requiredDistrictBuilding = null; // Child classes can set this
@@ -307,6 +308,38 @@ export class BasePage {
         this.eventListeners.clear();
     }
 
+    // Interval management methods
+    setInterval(key, callback, delay) {
+        // Clear existing interval with this key if it exists
+        this.clearInterval(key);
+        
+        // Create new interval and store it
+        const intervalId = setInterval(callback, delay);
+        this.intervals.set(key, intervalId);
+        
+        Logger.info(`Set interval '${key}' with ID ${intervalId}`);
+        return intervalId;
+    }
+    
+    clearInterval(key) {
+        if (this.intervals.has(key)) {
+            const intervalId = this.intervals.get(key);
+            clearInterval(intervalId);
+            this.intervals.delete(key);
+            Logger.info(`Cleared interval '${key}' with ID ${intervalId}`);
+            return true;
+        }
+        return false;
+    }
+    
+    clearAllIntervals() {
+        this.intervals.forEach((intervalId, key) => {
+            clearInterval(intervalId);
+            Logger.info(`Cleared interval '${key}' with ID ${intervalId}`);
+        });
+        this.intervals.clear();
+    }
+
     mount(container) {
         Logger.info(`BasePage.mount called for ${this.constructor.name}`);
         
@@ -346,8 +379,9 @@ export class BasePage {
             this.onUnmount();
         }
         
-        // Clean up event listeners
+        // Clean up event listeners and intervals
         this.removeEventListeners();
+        this.clearAllIntervals();
         
         // Remove the element from DOM if it exists
         if (this.element && this.element.parentNode) {

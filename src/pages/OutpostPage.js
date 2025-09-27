@@ -216,7 +216,7 @@ export class OutpostPage extends BasePage {
 
     setupEventListeners() {
         // Auto-refresh every 30 seconds
-        this.refreshInterval = setInterval(() => {
+        this.setInterval('refresh', () => {
             if (!this.state.isLoading) {
                 this.loadOutpostData().catch(error => {
                     Logger.error('Error in auto-refresh:', error);
@@ -267,10 +267,5 @@ export class OutpostPage extends BasePage {
 
     // Using BasePage's mount method for consistency
 
-    onUnmount() {
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-            this.refreshInterval = null;
-        }
-    }
+    // onUnmount removed - BasePage now handles interval cleanup automatically
 }

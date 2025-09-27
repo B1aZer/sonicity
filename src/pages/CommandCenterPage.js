@@ -230,7 +230,7 @@ export class CommandCenterPage extends BasePage {
 
         // Update immediately and then every second
         await updateTimer();
-        this.battleTimerInterval = setInterval(updateTimer, 5000);
+        this.setInterval('battleTimer', updateTimer, 5000);
     }
 
     updateTroopDeploymentSection(searchStatus, infantryCount, cavalryCount, siegeCount, activeBattle, playerRole = 'none') {
@@ -960,10 +960,7 @@ export class CommandCenterPage extends BasePage {
     }
 
     onUnmount() {
-        if (this.battleTimerInterval) {
-            clearInterval(this.battleTimerInterval);
-            this.battleTimerInterval = null;
-        }
+        // BasePage now handles interval cleanup automatically
         if (this.battleProgressBar) {
             this.battleProgressBar.destroy();
             this.battleProgressBar = null;

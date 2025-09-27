@@ -220,7 +220,7 @@ export class GamePage extends BasePage {
             scenePerformanceLogger.end('initial-resource-display-update');
             
             // Set up periodic updates for resource display and outpost warnings
-            this.resourceUpdateInterval = setInterval(() => {
+            this.setInterval('resourceUpdate', () => {
                 this.updateResourceDisplay().catch(error => {
                     Logger.error('Error in periodic resource update:', error);
                 });
@@ -647,11 +647,7 @@ export class GamePage extends BasePage {
     }
  
     onUnmount() {
-        // Clear the resource update interval
-        if (this.resourceUpdateInterval) {
-            clearInterval(this.resourceUpdateInterval);
-            this.resourceUpdateInterval = null;
-        }
+        // BasePage now handles interval cleanup automatically
         
         if (this.game) {
             this.game.dispose();

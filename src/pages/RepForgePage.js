@@ -132,7 +132,7 @@ export class RepForgePage extends BasePage {
         });
 
         // Auto-refresh every 30 seconds for real-time REP updates
-        this.refreshInterval = setInterval(() => {
+        this.setInterval('refresh', () => {
             if (!this.state.isLoading) {
                 this.loadForgeData().catch(error => {
                     Logger.error('Error in auto-refresh:', error);
@@ -213,11 +213,5 @@ export class RepForgePage extends BasePage {
         `;
     }
 
-    onUnmount() {
-        // Clean up auto-refresh interval
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-            this.refreshInterval = null;
-        }
-    }
+    // onUnmount removed - BasePage now handles interval cleanup automatically
 } 

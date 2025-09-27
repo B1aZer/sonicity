@@ -163,7 +163,7 @@ export class ArcanumPage extends BasePage {
         this.renderTierContent(this.state.selectedTier);
         
         // Auto-refresh every 30 seconds for real-time arcanum updates
-        this.refreshInterval = setInterval(() => {
+        this.setInterval('refresh', () => {
             if (!this.state.isLoading) {
                 this.loadArcanumData().catch(error => {
                     Logger.error('Error in auto-refresh:', error);
@@ -389,10 +389,5 @@ export class ArcanumPage extends BasePage {
         `;
     }
     
-    onUnmount() {
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-            this.refreshInterval = null;
-        }
-    }
+    // onUnmount removed - BasePage now handles interval cleanup automatically
 } 

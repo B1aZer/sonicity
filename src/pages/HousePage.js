@@ -126,7 +126,7 @@ export class HousePage extends BasePage {
         });
 
         // Auto-refresh every 30 seconds for real-time gold updates
-        this.refreshInterval = setInterval(() => {
+        this.setInterval('refresh', () => {
             if (!this.state.isLoading) {
                 this.loadHouseData().catch(error => {
                     Logger.error('Error in auto-refresh:', error);
@@ -206,11 +206,5 @@ export class HousePage extends BasePage {
         `;
     }
 
-    onUnmount() {
-        // Clean up auto-refresh interval
-        if (this.refreshInterval) {
-            clearInterval(this.refreshInterval);
-            this.refreshInterval = null;
-        }
-    }
+    // onUnmount removed - BasePage now handles interval cleanup automatically
 } 
