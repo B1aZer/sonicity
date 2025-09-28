@@ -1,5 +1,6 @@
 import toastr from 'toastr';
 import 'toastr/build/toastr.min.css';
+import '../../styles/toastr.css';
 
 // Configure toastr
 toastr.options = {

@@ -6,6 +6,7 @@ import { StatusComponent } from '../components/StatusComponent.js';
 import { Modal } from '../js/utils/modal.js';
 import { GridBuildingsContract } from '../js/contracts/GridBuildingsContract.js';
 import { ContractErrorHandler } from '../js/utils/contractErrorHandler.js';
+import { Toast } from '../js/utils/toast.js';
 import { ethers } from 'ethers';
 
 import('../styles/stake-hub-page.css');
@@ -469,6 +470,9 @@ export class StakePage extends BasePage {
         // Replace the entire tier content
         tierContent.innerHTML = tierHTML;
         
+        // Attach help icon listeners for this tier content
+        this.attachHelpIconListeners(tierContent);
+        
         // Attach event listeners for action buttons
         if (items && items.length > 0) {
             const grid = tierContent.querySelector('.buildings-grid');
@@ -910,6 +914,36 @@ export class StakePage extends BasePage {
 
     getHelpIcon(tooltipText) {
         return `<i class="fas fa-question-circle help-icon" title="${tooltipText}"></i>`;
+    }
+
+    attachHelpIconListeners(container) {
+        // Find all help icons in the container and attach click listeners
+        const helpIcons = container.querySelectorAll('.help-icon');
+        helpIcons.forEach((icon, index) => {
+            const listenerKey = `help-icon-${index}`;
+            
+            // Remove existing listener if it exists
+            if (this.eventListeners.has(listenerKey)) {
+                const existing = this.eventListeners.get(listenerKey);
+                existing.element.removeEventListener(existing.event, existing.handler);
+                this.eventListeners.delete(listenerKey);
+            }
+            
+            const clickHandler = (e) => {
+                e.preventDefault();
+                const helpText = e.target.getAttribute('title');
+                if (helpText) {
+                    Toast.info(helpText);
+                }
+            };
+            
+            icon.addEventListener('click', clickHandler);
+            this.eventListeners.set(listenerKey, {
+                element: icon,
+                event: 'click',
+                handler: clickHandler
+            });
+        });
     }
 
     // --- Replace dummy implementations below with real contract calls ---
