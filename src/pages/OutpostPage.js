@@ -58,6 +58,7 @@ export class OutpostPage extends BasePage {
             this.setState({
                 threats,
                 activeBattle,
+                playerAddress: address,
                 isLoading: false
             });
 
@@ -169,15 +170,34 @@ export class OutpostPage extends BasePage {
         const threatList = this.element.querySelector('.threat-list');
         if (!threatList) return;
 
-        // Check if currently under attack
-        const isUnderAttack = this.state.activeBattle !== null;
+        // Check if currently in battle and determine role
+        const activeBattle = this.state.activeBattle;
         
-        if (isUnderAttack) {
+        if (activeBattle) {
+            // Determine if player is attacker or defender
+            const playerAddress = this.state.playerAddress;
+            const isDefender = activeBattle.defender && 
+                activeBattle.defender.toLowerCase() === playerAddress.toLowerCase();
+            const isAttacker = activeBattle.attacker && 
+                activeBattle.attacker.toLowerCase() === playerAddress.toLowerCase();
+            
+            let statusText, statusColor;
+            if (isDefender) {
+                statusText = 'Under Attack';
+                statusColor = '#ff4444'; // Red for defending
+            } else if (isAttacker) {
+                statusText = 'Attacking';
+                statusColor = '#ff8800'; // Orange for attacking
+            } else {
+                statusText = 'In Battle';
+                statusColor = '#ff8800'; // Orange for general battle
+            }
+            
             threatList.innerHTML = `
                 <div class="status-grid">
                     <div class="status-item">
                         <span class="status-label">Status:</span>
-                        <span class="status-value" style="color: #ff4444;">Under Attack</span>
+                        <span class="status-value" style="color: ${statusColor};">${statusText}</span>
                     </div>
                 </div>
             `;

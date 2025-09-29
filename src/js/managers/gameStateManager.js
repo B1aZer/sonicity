@@ -139,6 +139,46 @@ export class GameStateManager {
     }
 
     /**
+     * Get player's role in current battle
+     * @param {string} playerAddress - Optional player address
+     * @returns {Promise<string>} 'attacker', 'defender', or 'none'
+     */
+    async getPlayerBattleRole(playerAddress = null) {
+        if (!this.contracts?.battleSystem) {
+            return 'none';
+        }
+
+        try {
+            const address = playerAddress || await this.getPlayerAddress();
+            const cacheKey = `battle_${address}`;
+            
+            const activeBattle = await this.getCachedData(
+                cacheKey,
+                () => this.contracts.battleSystem.getActiveBattle(address),
+                'battle'
+            );
+            
+            if (!activeBattle) {
+                return 'none';
+            }
+
+            // Check if player is attacker or defender
+            if (activeBattle.attacker && 
+                activeBattle.attacker.toLowerCase() === address.toLowerCase()) {
+                return 'attacker';
+            } else if (activeBattle.defender && 
+                activeBattle.defender.toLowerCase() === address.toLowerCase()) {
+                return 'defender';
+            }
+            
+            return 'none';
+        } catch (error) {
+            Logger.error('Error checking battle role:', error);
+            return 'none';
+        }
+    }
+
+    /**
      * Get player's active battle details
      * @param {string} playerAddress - Optional player address
      * @returns {Promise<Object|null>} Battle details or null

@@ -2,7 +2,12 @@
 
 ## todo
 
+- Deploy to sonic , ronin, sei
+
+## todo
+
 - yeild cleanup ?
+- no attack popup when in ui
 
 ## hero travels
 
@@ -13,8 +18,9 @@
 
 ## todo
 
-- tabbs stoppedworking after mint/stake/upgrade failed
-- start overview immidately grid
++ tabbs stoppedworking after mint/stake/upgrade failed
++ start overview immidately grid
+- tactics under upgrades same as barracks
 
 ## prod wallets
 
