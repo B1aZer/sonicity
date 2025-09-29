@@ -61,6 +61,16 @@ export class StakePage extends BasePage {
             isLoading: true,
             isTabLoading: { 0: false, 1: false, 2: false, 3: false, 4: false }
         };
+        
+        // Cache for static data to reduce RPC calls
+        this.cache = {
+            buildingConfigs: {}, // Cache building configs by type
+            nftContractAddresses: null, // Cache NFT contract addresses
+            nftMetadata: {}, // Cache NFT metadata by contract+tokenId
+            nftToBuildingMap: {}, // Cache NFT to building mapping
+            lastFullRefresh: 0 // Timestamp of last full data load
+        };
+        
         this.render();
     }
 
@@ -209,9 +219,10 @@ export class StakePage extends BasePage {
         });
 
         // Auto-refresh every 5 seconds for real-time claimable updates
+        // Use lightweight refresh that only updates dynamic data
         this.setInterval('refresh', () => {
             if (!this.state.isLoading) {
-                this.loadUserData().catch(error => {
+                this.lightweightRefresh().catch(error => {
                     Logger.error('Error in auto-refresh:', error);
                 });
             }
@@ -220,6 +231,18 @@ export class StakePage extends BasePage {
 
     async loadUserData() {
         const userAddress = await this.contracts.nft.getAddress();
+        
+        // Cache NFT contract addresses on first load
+        if (!this.cache.nftContractAddresses) {
+            this.cache.nftContractAddresses = await Promise.all([
+                this.contracts.nft.getContractAddress(),
+                this.contracts.farmNft.getContractAddress(),
+                this.contracts.diamondNft.getContractAddress(),
+                this.contracts.repNft.getContractAddress(),
+                this.contracts.yieldNft.getContractAddress()
+            ]);
+        }
+        
         // Get all data in parallel for better performance
         let stakedBuildings = [], availableNFTs = [], totalSlots = 0;
         let gold = 0, food = 0, diamonds = 0, repPoints = 0;
@@ -243,6 +266,9 @@ export class StakePage extends BasePage {
             usedSlots = 0;
             totalSlots = 0;
         }
+        
+        // Update last full refresh timestamp
+        this.cache.lastFullRefresh = Date.now();
         // Group by buildingType (0: House, 1: Farm, 2: Diamond Station, 3: REP Forge)
         const byTier = { 0: [], 1: [], 2: [], 3: [], 4: [] };
         let atCap = 0, damaged = 0;
@@ -331,6 +357,77 @@ export class StakePage extends BasePage {
             }
         }
         
+    }
+
+    /**
+     * Clear cache entries when data changes
+     */
+    clearCache(options = {}) {
+        if (options.nftMapping) {
+            this.cache.nftToBuildingMap = {};
+        }
+        if (options.metadata) {
+            this.cache.nftMetadata = {};
+        }
+        if (options.all) {
+            this.cache.nftToBuildingMap = {};
+            this.cache.nftMetadata = {};
+            // Don't clear buildingConfigs and nftContractAddresses as they're truly static
+        }
+    }
+
+    /**
+     * Lightweight refresh that only updates dynamic data (claimable, progress, resources)
+     * This reduces RPC calls significantly for auto-refresh
+     */
+    async lightweightRefresh() {
+        const userAddress = await this.contracts.nft.getAddress();
+        
+        try {
+            // Only refresh dynamic data that changes frequently
+            const [gold, food, repPoints, diamonds] = await Promise.all([
+                this.contracts.gameState.getPlayerGold(userAddress),
+                this.contracts.gameState.getPlayerFood(userAddress),
+                this.contracts.gameState.getPlayerRep(userAddress),
+                this.contracts.gameState.getPlayerDiamonds(userAddress)
+            ]);
+            
+            // Update resources
+            this.state.gold = Number(gold);
+            this.state.food = Number(food);
+            this.state.diamonds = Number(diamonds);
+            this.state.repPoints = Number(repPoints);
+            
+            // Update only the claimable and progress for staked buildings
+            await Promise.all(this.state.stakedBuildings.map(async (building) => {
+                const [isAtCap, claimable, progressData] = await Promise.all([
+                    this.contracts.gridBuildings.isBuildingAtCap(building.id),
+                    this.contracts.gridBuildings.calculateClaimableResources(building.id),
+                    this.contracts.gridBuildings.calculateProductionProgress(building.id)
+                ]);
+                
+                building.isAtCap = isAtCap;
+                building.claimable = Number(claimable);
+                
+                if (progressData) {
+                    const [progressCurrent, progressMax, progressPercent] = progressData;
+                    building.progressCurrent = Number(progressCurrent);
+                    building.progressMax = Number(progressMax);
+                    building.progressPercent = Number(progressPercent);
+                }
+            }));
+            
+            // Recalculate atCap count
+            this.state.atCap = this.state.stakedBuildings.filter(b => b.isAtCap).length;
+            
+            // Update UI
+            this.updateStatusSection();
+            await this.renderTierContent(this.state.selectedTier);
+        } catch (error) {
+            Logger.error('Error in lightweight refresh:', error);
+            // If lightweight refresh fails, do a full refresh
+            await this.loadUserData();
+        }
     }
 
     async renderTierContent(tier) {
@@ -952,6 +1049,14 @@ export class StakePage extends BasePage {
         const buildings = await this.contracts.gridBuildings.getActiveBuildingsWithData(userAddress);
         // console.log('[DEBUG] getActiveBuildingsWithData returned:', buildings);
         
+        // Pre-cache all building configs in parallel if not already cached
+        const uniqueBuildingTypes = [...new Set(buildings.map(b => b.buildingType))];
+        await Promise.all(uniqueBuildingTypes.map(async (type) => {
+            if (!this.cache.buildingConfigs[type]) {
+                this.cache.buildingConfigs[type] = await this.contracts.gridBuildings.getBuildingConfig(type);
+            }
+        }));
+        
         // Process all buildings in parallel for much better performance
         await Promise.all(buildings.map(async (building) => {
             // console.log(`[DEBUG] Processing building ${building.id}:`, building);
@@ -959,10 +1064,12 @@ export class StakePage extends BasePage {
             // Add staked flag
             building.isStaked = true;
             
-            // Get all building data in parallel
+            // Get building config from cache
+            const config = this.cache.buildingConfigs[building.buildingType];
+            
+            // Get all building data in parallel (excluding config which is now cached)
             const [
                 nftInfo,
-                config,
                 isAtCap,
                 claimable,
                 isActivelyProducing,
@@ -970,7 +1077,6 @@ export class StakePage extends BasePage {
                 upgradeLevelInfo
             ] = await Promise.allSettled([
                 this.getNFTInfoForBuilding(building.id),
-                this.contracts.gridBuildings.getBuildingConfig(building.buildingType),
                 this.contracts.gridBuildings.isBuildingAtCap(building.id),
                 this.contracts.gridBuildings.calculateClaimableResources(building.id),
                 this.contracts.gridBuildings.isBuildingActivelyProducing(userAddress, building.id),
@@ -988,19 +1094,17 @@ export class StakePage extends BasePage {
                 building.contractAddress = null;
             }
             
-            // Handle building config
-            if (config.status === 'fulfilled') {
-                building.config = {
-                    name: config.value.name,
-                    baseProductionRate: Number(config.value.baseProductionRate),
-                    upgradeCost: Number(config.value.upgradeCost),
-                    maxLevel: Number(config.value.maxLevel),
-                    description: config.value.description,
-                    tier: Number(config.value.tier),
-                    rechargeCost: config.value.rechargeCost
-                };
-                building.formattedRechargeCost = this.contracts.gridBuildings.formatRechargeFee(config.value.rechargeCost);
-            }
+            // Use cached building config
+            building.config = {
+                name: config.name,
+                baseProductionRate: Number(config.baseProductionRate),
+                upgradeCost: Number(config.upgradeCost),
+                maxLevel: Number(config.maxLevel),
+                description: config.description,
+                tier: Number(config.tier),
+                rechargeCost: config.rechargeCost
+            };
+            building.formattedRechargeCost = this.contracts.gridBuildings.formatRechargeFee(config.rechargeCost);
             
             // Handle other building data
             building.isAtCap = isAtCap.status === 'fulfilled' ? isAtCap.value : false;
@@ -1066,97 +1170,134 @@ export class StakePage extends BasePage {
     }
 
     async getNFTInfoForBuilding(buildingId) {
+        // Check cache first
+        if (this.cache.nftToBuildingMap[buildingId]) {
+            return this.cache.nftToBuildingMap[buildingId];
+        }
+        
         // console.log(`[DEBUG] Looking for NFT info for building ${buildingId}`);
         
         const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.diamondNft, this.contracts.repNft, this.contracts.yieldNft];
+        const userAddress = await this.contracts.gameState.getAddress();
         
-        for (const contract of nftContracts) {
-            try {
-                const contractAddress = await contract.getContractAddress();
-                // console.log(`[DEBUG] Checking contract: ${contractAddress}`);
-                
-                const userStakes = await this.contracts.altar.getUserStakesByCollection(await this.contracts.gameState.getAddress(), contractAddress);
-                // console.log(`[DEBUG] User stakes for ${contractAddress}:`, userStakes);
-                
-                for (const tokenId of userStakes) {
-                    // Use the new helper method that properly validates stakedBuildingId > 0
-                    const isStakedToThisBuilding = await this.contracts.altar.isStakedToBuilding(contractAddress, tokenId, buildingId);
-                    
-                    if (isStakedToThisBuilding) {
-                        // console.log(`[DEBUG] Found NFT! Token ${tokenId} from ${contractAddress} is staked to building ${buildingId}`);
-                        return {
-                            contractAddress,
-                            tokenId: Number(tokenId),
-                            isStaked: true
-                        };
-                    }
+        // Get all user stakes for all contracts in parallel
+        const allStakesResults = await Promise.allSettled(
+            this.cache.nftContractAddresses.map(contractAddress => 
+                this.contracts.altar.getUserStakesByCollection(userAddress, contractAddress)
+            )
+        );
+        
+        // Check each contract's stakes
+        for (let i = 0; i < this.cache.nftContractAddresses.length; i++) {
+            const contractAddress = this.cache.nftContractAddresses[i];
+            const stakesResult = allStakesResults[i];
+            
+            if (stakesResult.status !== 'fulfilled') continue;
+            
+            const userStakes = stakesResult.value;
+            
+            // Check all stakes in parallel
+            const checkResults = await Promise.allSettled(
+                userStakes.map(tokenId => 
+                    this.contracts.altar.isStakedToBuilding(contractAddress, tokenId, buildingId)
+                )
+            );
+            
+            for (let j = 0; j < userStakes.length; j++) {
+                if (checkResults[j].status === 'fulfilled' && checkResults[j].value) {
+                    const result = {
+                        contractAddress,
+                        tokenId: Number(userStakes[j]),
+                        isStaked: true
+                    };
+                    // Cache the result
+                    this.cache.nftToBuildingMap[buildingId] = result;
+                    return result;
                 }
-            } catch (error) {
-                // console.log(`[DEBUG] Error checking contract ${contract.constructor.name}:`, error);
             }
         }
         
-        return {
+        const result = {
             contractAddress: null,
             tokenId: null,
             isStaked: false
         };
+        this.cache.nftToBuildingMap[buildingId] = result;
+        return result;
     }
 
     async getAvailableNFTs(userAddress) {
         // Get unstaked NFTs from all contracts
         const nftContracts = [this.contracts.nft, this.contracts.farmNft, this.contracts.diamondNft, this.contracts.repNft, this.contracts.yieldNft];
         const available = [];
-        for (const contract of nftContracts) {
+        
+        // Process all contracts in parallel
+        const contractResults = await Promise.all(nftContracts.map(async (contract, contractIndex) => {
+            const tier = contractIndex; // 0=house, 1=farm, 2=diamond, 3=rep, 4=yield
+            const contractAddress = this.cache.nftContractAddresses[contractIndex];
             const balance = await contract.balanceOf(userAddress);
-            for (let i = 0; i < balance; i++) {
-                const tokenId = await contract.tokenOfOwnerByIndex(userAddress, i);
-                
-                // Check if staked
-                let isStaked = false;
-                try {
-                    isStaked = await this.contracts.altar.isStaked(await contract.getContractAddress(), tokenId);
-                } catch (e) {}
-                if (isStaked) continue;
-                
-                // Get token URI and metadata
-                let tokenURI, metadata = {};
-                try {
-                    tokenURI = await contract.tokenURI(tokenId);
-                    const response = await fetch(tokenURI);
-                    metadata = await response.json();
-                } catch (e) {}
-                
-                // Determine tier from contract type
-                let tier = 0;
-                if (contract === this.contracts.farmNft) tier = 1;
-                else if (contract === this.contracts.diamondNft) tier = 2;
-                else if (contract === this.contracts.repNft) tier = 3;
-                else if (contract === this.contracts.yieldNft) tier = 4;
-                
-                // For yield NFTs, get REP staked information
-                let repStaked = 0;
-                if (contract === this.contracts.yieldNft) {
-                    try {
-                        const stakeInfo = await this.contracts.yieldNft.getStakeInfo(tokenId);
-                        repStaked = Number(stakeInfo.repStaked);
-                    } catch (error) {
-                        console.warn(`Failed to get REP staked info for yield NFT ${tokenId}:`, error);
-                        repStaked = 0;
+            const tokens = [];
+            
+            // Get all token IDs in parallel
+            const tokenIds = await Promise.all(
+                Array.from({ length: Number(balance) }, (_, i) => 
+                    contract.tokenOfOwnerByIndex(userAddress, i)
+                )
+            );
+            
+            // Check all tokens in parallel
+            const tokenChecks = await Promise.allSettled(
+                tokenIds.map(async (tokenId) => {
+                    // Check if staked
+                    const isStaked = await this.contracts.altar.isStaked(contractAddress, tokenId);
+                    if (isStaked) return null;
+                    
+                    // Check metadata cache
+                    const cacheKey = `${contractAddress}-${tokenId}`;
+                    let metadata = this.cache.nftMetadata[cacheKey];
+                    
+                    if (!metadata) {
+                        // Get metadata if not cached
+                        try {
+                            const tokenURI = await contract.tokenURI(tokenId);
+                            const response = await fetch(tokenURI);
+                            metadata = await response.json();
+                            this.cache.nftMetadata[cacheKey] = metadata;
+                        } catch (e) {
+                            metadata = {};
+                        }
                     }
-                }
-                
-                available.push({
-                    tokenId,
-                    tier,
-                    metadata,
-                    contractAddress: await contract.getContractAddress(),
-                    isStaked: false,
-                    repStaked: repStaked
-                });
-            }
-        }
-        return available;
+                    
+                    // For yield NFTs, get REP staked information
+                    let repStaked = 0;
+                    if (tier === 4) {
+                        try {
+                            const stakeInfo = await this.contracts.yieldNft.getStakeInfo(tokenId);
+                            repStaked = Number(stakeInfo.repStaked);
+                        } catch (error) {
+                            repStaked = 0;
+                        }
+                    }
+                    
+                    return {
+                        tokenId: Number(tokenId),
+                        tier,
+                        metadata,
+                        contractAddress,
+                        isStaked: false,
+                        repStaked
+                    };
+                })
+            );
+            
+            // Filter out null results (staked tokens) and failed checks
+            return tokenChecks
+                .filter(result => result.status === 'fulfilled' && result.value !== null)
+                .map(result => result.value);
+        }));
+        
+        // Flatten results
+        return contractResults.flat();
     }
 
     // --- Action handlers ---
@@ -1216,6 +1357,9 @@ export class StakePage extends BasePage {
                 await this.contracts.altar.stake(tokenId, tier, collection);
             }
             
+            // Clear cache since NFT mapping changed
+            this.clearCache({ nftMapping: true });
+            
             // Reload data
             await this.loadUserData();
 
@@ -1248,6 +1392,9 @@ export class StakePage extends BasePage {
         try {
             // Unstake NFT
             await this.contracts.altar.unstake(collection, tokenId);
+            
+            // Clear cache since NFT mapping changed
+            this.clearCache({ nftMapping: true });
             
             // Reload data (keep loading modal open during this)
             await this.loadUserData();
@@ -1481,6 +1628,9 @@ export class StakePage extends BasePage {
                 console.log(`[DEBUG] Minted NFT with auto-generated token ID:`, tokenId.toString());
             }
             
+            // Clear metadata cache since new NFT was created
+            this.clearCache({ metadata: true });
+            
             // Reload data (keep loading modal open during this)
             await this.loadUserData();
             
@@ -1561,6 +1711,9 @@ export class StakePage extends BasePage {
             
             // Burn the NFT directly using the contract's burn function
             await nftContract.burn(tokenId);
+            
+            // Clear cache since NFT was destroyed
+            this.clearCache({ nftMapping: true, metadata: true });
             
             // Reload data (keep loading modal open during this)
             await this.loadUserData();
@@ -1643,6 +1796,9 @@ export class StakePage extends BasePage {
                 // Fallback to direct destruction if no NFT found
                 await this.contracts.altar.destroyBuilding(item.id);
             }
+            
+            // Clear cache since NFT mapping changed
+            this.clearCache({ nftMapping: true });
             
             // Reload data (keep loading modal open during this)
             await this.loadUserData();
