@@ -184,13 +184,13 @@ export class OutpostPage extends BasePage {
             let statusText, statusColor;
             if (isDefender) {
                 statusText = 'Under Attack';
-                statusColor = '#ff4444'; // Red for defending
+                statusColor = 'var(--color-danger)'; // Red for defending
             } else if (isAttacker) {
                 statusText = 'Attacking';
-                statusColor = '#ff8800'; // Orange for attacking
+                statusColor = 'var(--color-accent)'; // Gold for attacking
             } else {
                 statusText = 'In Battle';
-                statusColor = '#ff8800'; // Orange for general battle
+                statusColor = 'var(--color-accent)'; // Gold for general battle
             }
             
             threatList.innerHTML = `
