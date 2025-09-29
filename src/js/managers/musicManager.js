@@ -54,6 +54,10 @@ export class MusicManager {
 
         this.currentTrack = null;
         this.isInitialized = false;
+        
+        // Debouncing for page updates
+        this.lastPageUpdate = 0;
+        this.pageUpdateDebounceTime = 1000; // 1 second debounce
     }
 
     /**
@@ -153,6 +157,20 @@ export class MusicManager {
      * @param {string} pageName - The page name/route
      */
     updatePage(pageName) {
+        // Prevent unnecessary updates if already on the same page
+        if (this.currentPage === pageName) {
+            Logger.debug(`Already on page ${pageName}, skipping music update`);
+            return;
+        }
+        
+        // Debounce rapid page updates
+        const now = Date.now();
+        if (now - this.lastPageUpdate < this.pageUpdateDebounceTime) {
+            Logger.debug(`Page update debounced for ${pageName}`);
+            return;
+        }
+        this.lastPageUpdate = now;
+        
         this.currentPage = pageName;
         
         // If music is enabled, play music for the new page
@@ -196,6 +214,12 @@ export class MusicManager {
 
         if (this.currentTrack === trackKey) {
             Logger.info(`Already playing ${track.name} for page ${pageName}`);
+            return;
+        }
+
+        // Prevent starting new track if already crossfading
+        if (this.isCrossfading) {
+            Logger.debug(`Already crossfading, skipping ${track.name} for page ${pageName}`);
             return;
         }
 
