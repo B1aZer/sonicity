@@ -2,12 +2,26 @@
 
 ## todo
 
-- Deploy to sonic , ronin, sei
-
-## todo
-
 - yeild cleanup ?
 - no attack popup when in ui
+- tactics under upgrades same as barracks
+- check yiled does not upgrade
+- yield nfts should also change models based on tier
+- charge everything in bulk
+
+
+We have an issue with current yield station revenue system, actually 2:
+
+1. when buidling is removed we have leftover data.
+
+2. critical. We use array to double iterate through all (up to 1000) yield station on EACH recharge (whic h is frequent). Check how dynamic rates worrk now  and check tests, I would loke to keep current dynamic system but we need to make in manageable. I would love to hear yout thoughts on this
+
+pease check grid contract  and test how hard it would be to create charge n function that would charge single buidlign for n times, meaning it will be active not for 24 hours (and say produce 240 gold) but for 24 * n hours (and produce 240 * n gold)
+
+
+## chain multi
+
+- Deploy to sonic , ronin, sei
 
 ## hero travels
 
@@ -20,7 +34,6 @@
 
 + tabbs stoppedworking after mint/stake/upgrade failed
 + start overview immidately grid
-- tactics under upgrades same as barracks
 
 ## prod wallets
 
@@ -36,17 +49,6 @@
 + fix levels issues
 + change guidanse portal 2nd tab with ? icon
 + remove redundant help to show upgrade cost
-- check yiled does not upgrade
-- yield nfts should also change models based on tier
-
-We have an issue with current yield station revenue system, actually 2:
-
-1. when buidling is removed we have leftover data.
-
-2. critical. We use array to double iterate through all (up to 1000) yield station on EACH recharge (whic h is frequent). Check how dynamic rates worrk now  and check tests, I would loke to keep current dynamic system but we need to make in manageable. I would love to hear yout thoughts on this
-
-pease check grid contract  and test how hard it would be to create charge n function that would charge single buidlign for n times, meaning it will be active not for 24 hours (and say produce 240 gold) but for 24 * n hours (and produce 240 * n gold)
-
 
 + stake hub page refresh
 + Revenue Pool: 76.495105900218883876
@@ -56,7 +58,6 @@ pease check grid contract  and test how hard it would be to create charge n func
 - models v2
 - leaderboards, icon soul achievements to show player connection and allow them to flex
 - taxtics effects
-- charge everything in bulk
 - now - yes, in plan to make a partial army return based on power diff
 - sound toggle
 - pve ?
