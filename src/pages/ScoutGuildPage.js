@@ -74,7 +74,8 @@ export class ScoutGuildPage extends BasePage {
         const searchSection = this.element.querySelector('.search-section');
         const searchButton = searchSection.querySelector('.search-btn');
         const checkResultsButton = searchSection.querySelector('.check-results-btn');
-        const searchTimer = searchSection.querySelector('.search-timer');
+        const scoutReturnTime = this.element.querySelector('#scout-return-time');
+        const infoBox = searchSection.querySelector('.info-box');
         const goldAmount = BigInt(this.element.querySelector('#gold-amount').textContent);
         const searchCost = BigInt(this.element.querySelector('#search-cost').textContent);
 
@@ -92,20 +93,20 @@ export class ScoutGuildPage extends BasePage {
             searchButton.disabled = goldAmount < searchCost;
             searchButton.textContent = 'Deploy Scouts';
             checkResultsButton.style.display = 'none';
-            searchTimer.style.display = 'none';
+            infoBox.style.display = 'none';
         } else if (!searchStatus.completed) {
             // Search is in progress
             searchButton.disabled = true;
             searchButton.textContent = 'Scouts Deployed...';
             checkResultsButton.style.display = 'none';
-            searchTimer.style.display = 'block';
+            infoBox.style.display = 'block';
             const timeRemainingMinutes = Math.floor(Number(searchStatus.timeRemaining) / 60);
-            searchTimer.textContent = `Scouts return in: ${timeRemainingMinutes} minutes`;
+            scoutReturnTime.textContent = timeRemainingMinutes;
         } else {
             // Search is complete
             searchButton.disabled = goldAmount < searchCost;
             searchButton.textContent = 'Deploy Scouts';
-            searchTimer.style.display = 'none';
+            infoBox.style.display = 'none';
             
             // Show check results button only if search is complete, no opponent has been found yet, and hasn't attempted to find one
             if (searchStatus.foundOpponent === '0x0000000000000000000000000000000000000000' && !searchStatus.hasAttemptedFind) {
@@ -149,6 +150,12 @@ export class ScoutGuildPage extends BasePage {
                             <span class="status-value"><span id="search-expire-time">24</span> hours</span>
                         </div>
                     </div>
+                    <div class="info-box">
+                        <p>
+                            <i class="fas fa-info-circle"></i>
+                            <span class="search-status-text">Scouts return in: <strong><span id="scout-return-time">--</span> minutes</strong></span>
+                        </p>
+                    </div>
                     <div class="search-container">
                         <button class="btn btn-primary search-btn">
                             <i class="fas fa-search"></i>
@@ -158,7 +165,6 @@ export class ScoutGuildPage extends BasePage {
                             <i class="fas fa-scroll"></i>
                             Check Scout Reports
                         </button>
-                        <div class="search-timer" style="display: none;"></div>
                     </div>
                 </div>
             </div>

@@ -22,6 +22,26 @@
     font-weight: bold;
 }
 
+.info-box {
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--bg-dark);
+    border-radius: var(--radius-md);
+    border-left: 3px solid var(--color-primary);
+    display: none; /* Hidden by default, shown when scouts are active */
+}
+
+.info-box p {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.info-box .fa-info-circle {
+    color: var(--color-primary);
+    margin-right: 0.5rem;
+}
+
 .search-container {
     display: flex;
     flex-direction: column;
@@ -54,17 +74,6 @@
 .check-results-btn:hover:not(:disabled) {
     background: var(--bg-dark);
     transform: translateY(-2px);
-}
-
-.search-timer {
-    font-size: var(--font-size-md);
-    color: var(--text-primary);
-    text-align: center;
-    margin: 1rem 0;
-    padding: 0.5rem 1rem;
-    background: var(--bg-dark-secondary);
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
 }
 
 .opponent-info {
