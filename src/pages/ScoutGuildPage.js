@@ -141,9 +141,15 @@ export class ScoutGuildPage extends BasePage {
 
                 <div class="page-section search-section">
                     <h2>Scout for Enemies</h2>
-                    <div class="search-info">
-                        <p>Cost: <span id="search-cost">0</span> gold</p>
-                        <p>Duration: <span id="search-duration">0</span> hours</p>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Search Cost:</span>
+                            <span class="status-value"><span id="search-cost">0</span> gold</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Search Expire:</span>
+                            <span class="status-value"><span id="search-expire-time">24</span> hours</span>
+                        </div>
                     </div>
                     <div class="search-container">
                         <button class="btn btn-primary search-btn">
