@@ -58,8 +58,6 @@ export class ScoutGuildPage extends BasePage {
             // Update resource displays
             this.element.querySelector('#gold-amount').textContent = gold.toString();
             this.element.querySelector('#search-cost').textContent = searchCost.toString();
-            this.element.querySelector('#search-duration').textContent = Math.floor(Number(searchDuration) / 3600); // Convert seconds to hours
-
             // Check search status
             const searchStatus = await this.contracts.matchmakingSystem.checkSearchStatus();
             Logger.info('Search status:', searchStatus);
