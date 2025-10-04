@@ -1,5 +1,39 @@
 # Now
 
+## gm text
+
+Gm! Thanks for the interest.
+
+We’re building SoniCity, a Web3-native strategy game currently in active beta. It blends NFTs, DeFi mechanics, and city-building strategy to deliver real on-chain gameplay focused on sustainability and fun rather than speculation.
+
+We’re looking to collaborate with creators, communities, and ecosystem partners who want to help shape the next phase of Web3 gaming.
+
+We can offer early contributor NFTs and limited rewards to partners supporting us during beta.
+
+## marketing
+
+Pin post $100
+Repost $70
+Let's go 🚀
+What wallet address you need? Sol or bep20?
+Let's do $50 pin post
+
+--
+
+@NFTAnderson
+
+
+Tweet:350$ ~ Rt:150$ ~ pin for 6 hours:+50$
+
+## info-box
+                    <div class="info-box" style="margin: 1rem 0; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 5px; border-left: 3px solid #4CAF50;">
+                        <p style="margin: 0; font-size: 0.9rem; color: #ddd;">
+                            <i class="fas fa-info-circle" style="color: #4CAF50; margin-right: 0.5rem;"></i>
+                            <strong>How It Works:</strong> Your scouts need <strong><span id="search-duration-info">6</span> hours</strong> to complete their search. 
+                            Once they return, you can check their reports at any time - the intelligence remains valid until you start a new search.
+                        </p>
+                    </div>
+
 ## todo
 
 - yeild cleanup ?
