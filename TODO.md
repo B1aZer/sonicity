@@ -1,5 +1,75 @@
 # Now
 
+## todo
+
+- start from 1 broken home
+
+## goal
+
+1. make crypto addicting adventures to occupy and chat / leaderboard people
+2. make so that user can connect from ANY chain:
+- you need 20 s tokens
+- do you have ? ok go,
+- dont you have, bridge immdiately
+
+## chains
+
+- sonic +
+- ronin ?
+- sui
+- abstract
+
+## kols
+
+- https://x.com/yellowpantherx 176k
+- https://x.com/LoshmiOnChain 35k
+- https://x.com/pukerrainbrow 80k
+- https://x.com/SanjayWeb3 50k
+- https://x.com/OGlamozda 3k
+- https://x.com/heidichristne 30k
+- https://x.com/mr_pschmitt 110k
+- https://x.com/FefeDemeny 60k
+- https://x.com/legendarygainz_ 50k
+
+## flops
+
+- https://x.com/TribestersWorld
+- https://x.com/themachinesgame
+
+## traders
+
+- https://x.com/Stefan_B_Trades
+- https://x.com/eliz883
+- https://x.com/cryptoknight890
+- https://x.com/RebellioMarket
+- https://x.com/DrProfitCrypto
+
+## leads
+
+- Defi Maximalist 15k sonic
+- Consistent 3k marketer
+- Blub 3k tools
+- Matyv 2k will create a post
+- Alexander Jacobi 6k hop on call
+- PICS 500 what is the plan ?
+- DeeeCrypt 22k What kind of collab or creator setup are you guys focusing on right now
+- 𝐊c𝐧𝐮𝐞𝐥4𝐫𝐞𝐚𝐥 25k  What kind of collab or feature do you have in mind?
+- Kris 9k ping me tomorrow
+- 
+
+
+## research
+
+- https://x.com/eigenlayer
+- https://x.com/MedievalEmpires
+- https://x.com/PlayElumia
+
+## marketing 
+
+- app.galxe.com
+- https://yaps.kaito.ai/pre-tge
+
+
 ## gm text
 
 Gm! Thanks for the interest.
