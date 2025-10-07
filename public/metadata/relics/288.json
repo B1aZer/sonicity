@@ -1,0 +1,24 @@
+{
+  "name": "Sonicity Relic #288",
+  "description": "A crystalline artifact of immense power, emanating cosmic energy and starlight. This divine relic features a translucent glowing core with floating runes orbiting around it. Rainbow prismatic effects and streams of magical energy mark this as a treasure of the gods themselves - a once-in-a-lifetime discovery.",
+  "image": "/images/relics/legendary.png",
+  "external_url": "https://sonicity.gg/relic/288",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Rarity Level",
+      "value": 5
+    },
+    {
+      "trait_type": "Type",
+      "value": "Adventure Relic"
+    },
+    {
+      "trait_type": "Source",
+      "value": "Adventure Discovery"
+    }
+  ]
+}

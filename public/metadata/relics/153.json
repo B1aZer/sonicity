@@ -1,0 +1,24 @@
+{
+  "name": "Sonicity Relic #153",
+  "description": "A weathered stone tablet discovered during your adventure. This simple clay artifact shows signs of age with its cracked surface and basic geometric patterns. Covered in dirt and moss, it bears the marks of countless centuries buried beneath the earth.",
+  "image": "/images/relics/common.png",
+  "external_url": "https://sonicity.gg/relic/153",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Rarity Level",
+      "value": 1
+    },
+    {
+      "trait_type": "Type",
+      "value": "Adventure Relic"
+    },
+    {
+      "trait_type": "Source",
+      "value": "Adventure Discovery"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Sonicity Relic #322",
+  "description": "A bronze medallion from a forgotten era, this copper amulet displays intricate carved patterns and symbols. The oxidized green patina speaks to its age, while the detailed engravings reveal the skilled craftsmanship of ancient artisans.",
+  "image": "/images/relics/uncommon.png",
+  "external_url": "https://sonicity.gg/relic/322",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Rarity Level",
+      "value": 2
+    },
+    {
+      "trait_type": "Type",
+      "value": "Adventure Relic"
+    },
+    {
+      "trait_type": "Source",
+      "value": "Adventure Discovery"
+    }
+  ]
+}

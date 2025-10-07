@@ -1,0 +1,24 @@
+{
+  "name": "Sonicity Relic #181",
+  "description": "A fragment of a golden royal treasure, adorned with precious gems and elaborate decorations. This artifact radiates power with its warm golden aura and pulsing magical light. The immense value and legendary craftsmanship suggest it belonged to kings or heroes of old.",
+  "image": "/images/relics/epic.png",
+  "external_url": "https://sonicity.gg/relic/181",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Rarity Level",
+      "value": 4
+    },
+    {
+      "trait_type": "Type",
+      "value": "Adventure Relic"
+    },
+    {
+      "trait_type": "Source",
+      "value": "Adventure Discovery"
+    }
+  ]
+}

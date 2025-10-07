@@ -1,0 +1,24 @@
+{
+  "name": "Sonicity Relic #397",
+  "description": "An ornate silver artifact that shimmers with an otherworldly light. This ceremonial relic features complex engravings and small gemstone inlays, showing minimal tarnish despite its age. The elegant curves and mystical aura suggest it once belonged to nobility or mystics.",
+  "image": "/images/relics/rare.png",
+  "external_url": "https://sonicity.gg/relic/397",
+  "attributes": [
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Rarity Level",
+      "value": 3
+    },
+    {
+      "trait_type": "Type",
+      "value": "Adventure Relic"
+    },
+    {
+      "trait_type": "Source",
+      "value": "Adventure Discovery"
+    }
+  ]
+}
