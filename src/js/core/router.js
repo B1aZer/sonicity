@@ -22,6 +22,7 @@ import { TavernPage } from '../../pages/TavernPage.js';
 import { TacticsCenterPage } from '../../pages/TacticsCenterPage.js';
 import { YieldStationPage } from '../../pages/YieldStationPage.js';
 import { FaucetPage } from '../../pages/FaucetPage.js';
+import { AdventureHubPage } from '../../pages/AdventureHubPage.js';
 import Logger from '../utils/logger.js';
 import { musicManager } from '../managers/musicManager.js';
 import { gameStateManager } from '../managers/gameStateManager.js';
@@ -67,7 +68,8 @@ export class Router {
             'tavern': TavernPage,
             'tactics-center': TacticsCenterPage,
             'yield-station': YieldStationPage,
-            'faucet': FaucetPage
+            'faucet': FaucetPage,
+            'adventure-hub': AdventureHubPage
         };
     }
 

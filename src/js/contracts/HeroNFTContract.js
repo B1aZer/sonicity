@@ -45,6 +45,22 @@ export class HeroNFTContract extends BaseContract {
         return contract.getPlayerHeroCount(player);
     }
 
+    // Standard ERC721 methods
+    async balanceOf(owner) {
+        const contract = await this.getContract();
+        return contract.balanceOf(owner);
+    }
+
+    async ownerOf(tokenId) {
+        const contract = await this.getContract();
+        return contract.ownerOf(tokenId);
+    }
+
+    async tokenURI(tokenId) {
+        const contract = await this.getContract();
+        return contract.tokenURI(tokenId);
+    }
+
     async getHeroCost(heroClass) {
         const contract = await this.getContract();
         return contract.getHeroCost(heroClass);

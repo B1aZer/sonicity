@@ -8,17 +8,17 @@ export const CONTRACT_ADDRESSES = {
     SONICITY_REP: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9", // Will be updated by update-addresses.sh
     SONICITY_YIELD_NFT: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9", // Will be updated by update-addresses.sh
     SONICITY_ART_PROXY: "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707", // Will be updated by update-addresses.sh
-    ALTAR: "0xa85233C63b9Ee964Add6F2cffe00Fd84eb32338f", // Will be updated by update-addresses.sh
-    GAME_STATE: "0x610178dA211FEF7D417bC0e6FeD39F05609AD788", // Will be updated by update-addresses.sh
-    DISTRICT_BUILDINGS: "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0", // Will be updated by update-addresses.sh
-    GRID_BUILDINGS: "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE", // Will be updated by update-addresses.sh
-    BATTLE_SYSTEM: "0x9A676e781A523b5d0C0e43731313A708CB607508", // Will be updated by update-addresses.sh
-    MATCHMAKING_SYSTEM: "0x49fd2BE640DB2910c2fAb69bB8531Ab6E76127ff", // Will be updated by update-addresses.sh
-    HERO_NFT: "0x9d4454B023096f34B160D6B654540c56A1F81688", // Will be updated by update-addresses.sh
-    TACTICS_NFT: "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570", // Will be updated by update-addresses.sh
-    COSMETIC_ITEMS: "0x4c5859f0F772848b2D91F1D83E2Fe57935348029", // Will be updated by update-addresses.sh
-    RELIC_NFT: "0x0000000000000000000000000000000000000000", // Will be updated by update-addresses.sh
-    ADVENTURE_SYSTEM: "0x0000000000000000000000000000000000000000" // Will be updated by update-addresses.sh
+    ALTAR: "0x09635F643e140090A9A8Dcd712eD6285858ceBef", // Will be updated by update-addresses.sh
+    GAME_STATE: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e", // Will be updated by update-addresses.sh
+    DISTRICT_BUILDINGS: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82", // Will be updated by update-addresses.sh
+    GRID_BUILDINGS: "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d", // Will be updated by update-addresses.sh
+    BATTLE_SYSTEM: "0x0B306BF915C4d645ff596e518fAf3F9669b97016", // Will be updated by update-addresses.sh
+    MATCHMAKING_SYSTEM: "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE", // Will be updated by update-addresses.sh
+    HERO_NFT: "0x809d550fca64d94Bd9F66E60752A544199cfAC3D", // Will be updated by update-addresses.sh
+    TACTICS_NFT: "0x1291Be112d480055DaFd8a610b7d1e203891C274", // Will be updated by update-addresses.sh
+    COSMETIC_ITEMS: "0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575", // Will be updated by update-addresses.sh
+    RELIC_NFT: "0xD84379CEae14AA33C123Af12424A37803F885889", // Will be updated by update-addresses.sh
+    ADVENTURE_SYSTEM: "0x46b142DD1E924FAb83eCc3c08e4D46E82f005e0E" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
