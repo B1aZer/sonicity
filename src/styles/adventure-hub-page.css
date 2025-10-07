@@ -188,16 +188,16 @@
     margin: 0 auto;
 }
 
-/* Dynamic grid sizing based on rows */
-.adventure-grid[data-rows="3"] {
+/* Dynamic grid sizing based on columns */
+.adventure-grid[data-cols="3"] {
     grid-template-columns: repeat(3, 1fr);
 }
 
-.adventure-grid[data-rows="4"] {
+.adventure-grid[data-cols="4"] {
     grid-template-columns: repeat(4, 1fr);
 }
 
-.adventure-grid[data-rows="5"] {
+.adventure-grid[data-cols="5"] {
     grid-template-columns: repeat(5, 1fr);
 }
 
