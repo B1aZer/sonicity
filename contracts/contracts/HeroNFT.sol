@@ -292,6 +292,21 @@ contract HeroNFT is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentran
     }
     
     /**
+     * @dev Burn a hero NFT (called when hero is lost in adventure)
+     * @param tokenId The ID of the hero to burn
+     * @param heroOwner The expected owner of the hero (for security)
+     * @notice Can be called by contracts if the transaction originates from the hero owner
+     */
+    function burn(uint256 tokenId, address heroOwner) external {
+        require(_ownerOf(tokenId) != address(0), "Hero does not exist");
+        require(_ownerOf(tokenId) == heroOwner, "Hero owner mismatch");
+        require(tx.origin == heroOwner, "Must be called by hero owner");
+        
+        _burn(tokenId);
+        delete heroes[tokenId];
+    }
+
+    /**
      * @dev Set GameState address
      * @param _gameStateAddress The GameState contract address
      */

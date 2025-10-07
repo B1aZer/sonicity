@@ -26,6 +26,8 @@ MATCHMAKING_SYSTEM=$(jq -r '.matchmakingSystemProxy // empty' "$PROJECT_ROOT/con
 HERO_NFT=$(jq -r '.heroNFTProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 TACTICS_NFT=$(jq -r '.tacticsNFTProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 COSMETIC_ITEMS=$(jq -r '.cosmeticItemsProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+RELIC_NFT=$(jq -r '.relicNFT // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
+ADVENTURE_SYSTEM=$(jq -r '.adventureSystemProxy // empty' "$PROJECT_ROOT/contracts/deployed-addresses.json")
 
 # Check if jq was successful
 if [ -z "$SONICITY_NFT" ] || [ -z "$SONICITY_FARM" ] || [ -z "$SONICITY_DIAMOND" ] || [ -z "$SONICITY_REP" ] || [ -z "$ALTAR" ] || [ -z "$GAME_STATE" ] || [ -z "$DISTRICT_BUILDINGS" ] || [ -z "$GRID_BUILDINGS" ] || [ -z "$BATTLE_SYSTEM" ]; then
@@ -72,6 +74,15 @@ if [ ! -z "$COSMETIC_ITEMS" ]; then
     sed -i '' "s/COSMETIC_ITEMS: \".*\"/COSMETIC_ITEMS: \"$COSMETIC_ITEMS\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
 fi
 
+# Update Adventure System contracts if they exist
+if [ ! -z "$RELIC_NFT" ]; then
+    sed -i '' "s/RELIC_NFT: \".*\"/RELIC_NFT: \"$RELIC_NFT\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+fi
+
+if [ ! -z "$ADVENTURE_SYSTEM" ]; then
+    sed -i '' "s/ADVENTURE_SYSTEM: \".*\"/ADVENTURE_SYSTEM: \"$ADVENTURE_SYSTEM\"/" "$PROJECT_ROOT/src/js/utils/constants.js"
+fi
+
 echo "Contract addresses updated successfully!"
 echo "SonicityNFT: $SONICITY_NFT"
 echo "SonicityFarm: $SONICITY_FARM"
@@ -99,4 +110,10 @@ if [ ! -z "$TACTICS_NFT" ]; then
 fi
 if [ ! -z "$COSMETIC_ITEMS" ]; then
     echo "CosmeticItems: $COSMETIC_ITEMS"
+fi
+if [ ! -z "$RELIC_NFT" ]; then
+    echo "RelicNFT: $RELIC_NFT"
+fi
+if [ ! -z "$ADVENTURE_SYSTEM" ]; then
+    echo "AdventureSystem: $ADVENTURE_SYSTEM"
 fi 

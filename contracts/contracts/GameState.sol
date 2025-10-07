@@ -27,6 +27,8 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     address public tacticsNFTAddress;
     // Reference to the CosmeticItems contract
     address public cosmeticItemsAddress;
+    // Reference to the AdventureSystem contract
+    address public adventureSystemAddress;
     // Upgrade level thresholds (in SONIC wei) - adjusted for 1.0 SONIC recharge cost
     uint256 public constant UPGRADE_LEVEL_2_THRESHOLD = 10 ether;     // 10 SONIC for level 2 (10 recharges)
     uint256 public constant UPGRADE_LEVEL_3_THRESHOLD = 100 ether;    // 100 SONIC for level 3 (100 recharges)
@@ -378,6 +380,35 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
     }
 
     /**
+     * @dev Add resources to player (called by AdventureSystem)
+     * @param player The address of the player
+     * @param gold The amount of gold to add
+     * @param food The amount of food to add
+     * @param rep The amount of rep to add
+     * @param diamonds The amount of diamonds to add
+     */
+    function addResources(
+        address player,
+        uint256 gold,
+        uint256 food,
+        uint256 rep,
+        uint256 diamonds
+    ) external {
+        require(msg.sender == adventureSystemAddress, "Only AdventureSystem can call this function");
+        
+        PlayerState storage state = playerState[player];
+        state.gold += gold;
+        state.food += food;
+        state.rep += rep;
+        state.diamonds += diamonds;
+        
+        if (gold > 0) emit GoldEarned(player, gold);
+        if (food > 0) emit FoodEarned(player, food);
+        if (rep > 0) emit RepEarned(player, rep);
+        if (diamonds > 0) emit DiamondsEarned(player, diamonds);
+    }
+
+    /**
      * @dev Update building slots from Altar staking
      * @param player The address of the player
      * @param newSlots The new number of slots
@@ -493,6 +524,14 @@ contract GameState is Initializable, UUPSUpgradeable, OwnableUpgradeable, Reentr
      */
     function setCosmeticItemsAddress(address _cosmeticItemsAddress) external onlyOwner {
         cosmeticItemsAddress = _cosmeticItemsAddress;
+    }
+
+    /**
+     * @dev Set adventure system address (only owner)
+     * @param _adventureSystemAddress The new adventure system address
+     */
+    function setAdventureSystemAddress(address _adventureSystemAddress) external onlyOwner {
+        adventureSystemAddress = _adventureSystemAddress;
     }
 
     /**
