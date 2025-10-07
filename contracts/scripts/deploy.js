@@ -4,6 +4,7 @@ const { deployGridBuildings } = require("./deploy-grid");
 const { deployAltar } = require("./deploy-altar");
 const { deployNFTs } = require("./deploy-nfts");
 const { deployHeroTactics } = require("./deploy-hero-tactics");
+const { deployAdventureSystem } = require("./deploy-adventure-system");
 
 async function main() {
   console.log("Starting deployment...");
@@ -185,6 +186,13 @@ async function main() {
 
   // Hero/Tactics/Cosmetic contract interactions are handled by the deployHeroTactics function
 
+  // Deploy Adventure System
+  console.log("\nDeploying Adventure System...");
+  const adventureSystemAddresses = await deployAdventureSystem({
+    gameStateProxy: gameStateProxyAddress,
+    heroNFTProxy: heroTacticsAddresses.heroNFTProxy
+  });
+
   // Verify contracts on Etherscan (if needed)
   console.log("\nDeployment completed!");
   console.log("Contract addresses:");
@@ -212,11 +220,15 @@ async function main() {
   console.log("TacticsNFT proxy:", heroTacticsAddresses.tacticsNFTProxy);
   console.log("CosmeticItems implementation:", heroTacticsAddresses.cosmeticItemsImpl);
   console.log("CosmeticItems proxy:", heroTacticsAddresses.cosmeticItemsProxy);
+  console.log("RelicNFT:", adventureSystemAddresses.relicNFT);
+  console.log("AdventureSystem implementation:", adventureSystemAddresses.adventureSystemImpl);
+  console.log("AdventureSystem proxy:", adventureSystemAddresses.adventureSystemProxy);
 
   // Save addresses to a file for frontend use
   const addresses = {
     ...nftAddresses,
     ...heroTacticsAddresses,
+    ...adventureSystemAddresses,
     gameStateImpl: gameStateImplAddress,
     gameStateProxy: gameStateProxyAddress,
     districtBuildingsImpl: districtBuildingsImplAddress,
