@@ -42,7 +42,12 @@ const EXPECTED_CONTRACTS = {
     tacticsNFTImpl: 'TacticsNFT (Implementation)',
     tacticsNFTProxy: 'TacticsNFT (Proxy)',
     cosmeticItemsImpl: 'CosmeticItems (Implementation)',
-    cosmeticItemsProxy: 'CosmeticItems (Proxy)'
+    cosmeticItemsProxy: 'CosmeticItems (Proxy)',
+    
+    // Adventure System Contracts
+    relicNFT: 'RelicNFT',
+    adventureSystemImpl: 'AdventureSystem (Implementation)',
+    adventureSystemProxy: 'AdventureSystem (Proxy)'
 };
 
 // Frontend constants mapping
@@ -61,7 +66,9 @@ const FRONTEND_MAPPING = {
     MATCHMAKING_SYSTEM: 'matchmakingSystemProxy',
     HERO_NFT: 'heroNFTProxy',
     TACTICS_NFT: 'tacticsNFTProxy',
-    COSMETIC_ITEMS: 'cosmeticItemsProxy'
+    COSMETIC_ITEMS: 'cosmeticItemsProxy',
+    RELIC_NFT: 'relicNFT',
+    ADVENTURE_SYSTEM: 'adventureSystemProxy'
 };
 
 async function loadDeployedAddresses() {

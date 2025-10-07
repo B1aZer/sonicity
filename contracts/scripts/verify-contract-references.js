@@ -24,7 +24,8 @@ const CONTRACT_REFERENCES = {
             matchmakingSystemAddress: 'matchmakingSystemProxy',
             heroNFTAddress: 'heroNFTProxy',
             tacticsNFTAddress: 'tacticsNFTProxy',
-            cosmeticItemsAddress: 'cosmeticItemsProxy'
+            cosmeticItemsAddress: 'cosmeticItemsProxy',
+            adventureSystemAddress: 'adventureSystemProxy'
         }
     },
     
@@ -140,6 +141,24 @@ const CONTRACT_REFERENCES = {
         references: {
             altarContract: 'altarProxy',
             artProxy: 'sonicityArtProxy'
+        }
+    },
+    
+    // Adventure System should reference:
+    adventureSystemProxy: {
+        contractName: 'AdventureSystem',
+        references: {
+            gameStateAddress: 'gameStateProxy',
+            heroNFTAddress: 'heroNFTProxy',
+            relicNFTAddress: 'relicNFT'
+        }
+    },
+    
+    // RelicNFT should reference:
+    relicNFT: {
+        contractName: 'RelicNFT',
+        references: {
+            adventureSystemAddress: 'adventureSystemProxy'
         }
     }
 };

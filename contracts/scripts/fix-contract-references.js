@@ -78,6 +78,11 @@ async function main() {
             await gameState.setCosmeticItemsAddress(addresses.cosmeticItemsProxy);
             console.log('  ✅ CosmeticItems address set');
         }
+        if (addresses.adventureSystemProxy) {
+            console.log('  Setting AdventureSystem address in GameState...');
+            await gameState.setAdventureSystemAddress(addresses.adventureSystemProxy);
+            console.log('  ✅ AdventureSystem address set');
+        }
         
         // Fix DistrictBuildings references
         console.log('\n🔧 Fixing DistrictBuildings references...');
@@ -222,6 +227,36 @@ async function main() {
             console.log('  ✅ GridBuildings address set in MatchmakingSystem');
         }
         
+        // Fix AdventureSystem references
+        if (addresses.adventureSystemProxy && addresses.relicNFT) {
+            console.log('\n🔧 Fixing AdventureSystem references...');
+            const adventureSystem = await ethers.getContractAt('AdventureSystem', addresses.adventureSystemProxy);
+            
+            // Set GameState address in AdventureSystem
+            console.log('  Setting GameState address in AdventureSystem...');
+            await adventureSystem.setGameStateAddress(addresses.gameStateProxy);
+            console.log('  ✅ GameState address set in AdventureSystem');
+            
+            // Set HeroNFT address in AdventureSystem
+            console.log('  Setting HeroNFT address in AdventureSystem...');
+            await adventureSystem.setHeroNFTAddress(addresses.heroNFTProxy);
+            console.log('  ✅ HeroNFT address set in AdventureSystem');
+            
+            // Set RelicNFT address in AdventureSystem
+            console.log('  Setting RelicNFT address in AdventureSystem...');
+            await adventureSystem.setRelicNFTAddress(addresses.relicNFT);
+            console.log('  ✅ RelicNFT address set in AdventureSystem');
+            
+            // Fix RelicNFT references
+            console.log('\n🔧 Fixing RelicNFT references...');
+            const relicNFT = await ethers.getContractAt('RelicNFT', addresses.relicNFT);
+            
+            // Set AdventureSystem address in RelicNFT
+            console.log('  Setting AdventureSystem address in RelicNFT...');
+            await relicNFT.setAdventureSystemAddress(addresses.adventureSystemProxy);
+            console.log('  ✅ AdventureSystem address set in RelicNFT');
+        }
+        
         console.log('\n🎉 All contract references have been fixed!');
         console.log('\n📋 Fixed References:');
         console.log('  ✅ GameState.altarAddress →', addresses.altarProxy);
@@ -248,6 +283,13 @@ async function main() {
         console.log('  ✅ SonicityDiamond.altarContract →', addresses.altarProxy);
         console.log('  ✅ SonicityRep.altarContract →', addresses.altarProxy);
         console.log('  ✅ SonicityYieldNFT.altarContract →', addresses.altarProxy);
+        if (addresses.adventureSystemProxy) {
+            console.log('  ✅ GameState.adventureSystemAddress →', addresses.adventureSystemProxy);
+            console.log('  ✅ AdventureSystem.gameStateAddress →', addresses.gameStateProxy);
+            console.log('  ✅ AdventureSystem.heroNFTAddress →', addresses.heroNFTProxy);
+            console.log('  ✅ AdventureSystem.relicNFTAddress →', addresses.relicNFT);
+            console.log('  ✅ RelicNFT.adventureSystemAddress →', addresses.adventureSystemProxy);
+        }
         
         console.log('\n🔍 You can now run the verification script to confirm all references are correct:');
         console.log('  npx hardhat run scripts/verify-contract-references.js --network', process.env.HARDHAT_NETWORK || 'localhost');
