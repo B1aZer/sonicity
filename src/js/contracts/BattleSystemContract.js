@@ -1,6 +1,7 @@
 import { BaseContract } from './BaseContract.js';
 import { CONTRACT_ADDRESSES } from '../utils/constants.js';
 import BattleSystemABI from '../../../contracts/artifacts/contracts/BattleSystem.sol/BattleSystem.json';
+import { BlockchainTime } from '../utils/blockchainTime.js';
 
 export class BattleSystemContract extends BaseContract {
     // Troop type enum values
@@ -75,10 +76,7 @@ export class BattleSystemContract extends BaseContract {
     }
 
     async getCurrentBlockTimestamp() {
-        const contract = await this.getContract();
-        const provider = contract.provider;
-        const latestBlock = await provider.getBlock('latest');
-        return latestBlock.timestamp;
+        return await BlockchainTime.getCurrentTimestamp(this.provider);
     }
 
     async battleHistory(index) {

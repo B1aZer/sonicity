@@ -3,6 +3,7 @@ import { BaseContract } from './BaseContract.js';
 import { CONTRACT_ADDRESSES } from '../utils/constants.js';
 import AdventureSystemABI from '../../../contracts/artifacts/contracts/AdventureSystem.sol/AdventureSystem.json';
 import Logger from '../utils/logger.js';
+import { BlockchainTime } from '../utils/blockchainTime.js';
 
 export class AdventureSystemContract extends BaseContract {
     constructor() {
@@ -72,14 +73,16 @@ export class AdventureSystemContract extends BaseContract {
             if (!scout.purchased || scout.onAdventure) return false;
             
             // Use blockchain time instead of local time
-            const now = await this.getCurrentBlockTimestamp();
+            const now = await BlockchainTime.getCurrentTimestampWithLogging(this.provider, 'Scout availability check');
             const availableAt = Number(scout.availableAt);
             const isAvailable = availableAt <= now;
             
             Logger.info('Scout availability check:', {
+                scoutPurchased: scout.purchased,
+                scoutOnAdventure: scout.onAdventure,
                 now,
                 availableAt,
-                timeRemaining: availableAt > now ? `${Math.floor((availableAt - now) / 60)} minutes` : 'available',
+                timeRemaining: BlockchainTime.formatTimeRemaining(availableAt - now),
                 isAvailable
             });
             
@@ -91,16 +94,7 @@ export class AdventureSystemContract extends BaseContract {
     }
 
     async getCurrentBlockTimestamp() {
-        try {
-            const contract = await this.getContract();
-            const provider = contract.provider;
-            const latestBlock = await provider.getBlock('latest');
-            return latestBlock.timestamp;
-        } catch (error) {
-            Logger.error('Error getting block timestamp:', error);
-            // Fallback to local time if blockchain time fails
-            return Math.floor(Date.now() / 1000);
-        }
+        return await BlockchainTime.getCurrentTimestamp(this.provider);
     }
 
     // ============================================================================
@@ -276,7 +270,7 @@ export class AdventureSystemContract extends BaseContract {
         try {
             const availableAt = await this.getHeroAvailableAt(heroId);
             // Use blockchain time instead of local time
-            const now = await this.getCurrentBlockTimestamp();
+            const now = await BlockchainTime.getCurrentTimestamp(this.provider);
             return Number(availableAt) <= now;
         } catch (error) {
             Logger.error('Error checking hero availability:', error);

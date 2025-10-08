@@ -569,8 +569,16 @@ export class AdventureHubPage extends BasePage {
             if (!canStartAdventure) {
                 if (hasActiveAdventure) {
                     startAdventureBtn.textContent = 'Adventure in Progress';
-                } else if (!scoutAvailable && availableHeroes.length === 0) {
-                    startAdventureBtn.textContent = 'On Cooldown';
+                } else {
+                    // Check if we have explorers but they're on cooldown
+                    const hasExplorers = hasScout || ownedHeroes.length > 0;
+                    const allExplorersOnCooldown = hasExplorers && !scoutAvailable && availableHeroes.length === 0;
+                    
+                    if (allExplorersOnCooldown) {
+                        startAdventureBtn.textContent = 'On Cooldown';
+                    } else {
+                        startAdventureBtn.textContent = 'No Explorers Available';
+                    }
                 }
             } else {
                 startAdventureBtn.textContent = 'Start Adventure';
