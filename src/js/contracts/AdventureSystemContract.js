@@ -71,11 +71,25 @@ export class AdventureSystemContract extends BaseContract {
             const scout = await this.getPlayerScout(address);
             if (!scout.purchased || scout.onAdventure) return false;
             
-            const now = Math.floor(Date.now() / 1000);
+            // Use blockchain time instead of local time
+            const now = await this.getCurrentBlockTimestamp();
             return Number(scout.availableAt) <= now;
         } catch (error) {
             Logger.error('Error checking scout availability:', error);
             return false;
+        }
+    }
+
+    async getCurrentBlockTimestamp() {
+        try {
+            const contract = await this.getContract();
+            const provider = contract.provider;
+            const latestBlock = await provider.getBlock('latest');
+            return latestBlock.timestamp;
+        } catch (error) {
+            Logger.error('Error getting block timestamp:', error);
+            // Fallback to local time if blockchain time fails
+            return Math.floor(Date.now() / 1000);
         }
     }
 
@@ -251,7 +265,8 @@ export class AdventureSystemContract extends BaseContract {
     async isHeroAvailable(heroId) {
         try {
             const availableAt = await this.getHeroAvailableAt(heroId);
-            const now = Math.floor(Date.now() / 1000);
+            // Use blockchain time instead of local time
+            const now = await this.getCurrentBlockTimestamp();
             return Number(availableAt) <= now;
         } catch (error) {
             Logger.error('Error checking hero availability:', error);
