@@ -581,14 +581,14 @@ export class AdventureHubPage extends BasePage {
         infoBox.innerHTML = `
             <p>
             <i class="fa fa-info-circle"></i>
-            <span>Your heroes are on cooldown. Wait 3 hours after completing an adventure before starting a new one.</span>
+            Your heroes are on cooldown. Wait 3 hours after completing an adventure before starting a new one, or purchase a starting scout to explore immediately.
             </p>
         `;
         
-        // Insert after the adventure content
-        const adventureContent = this.element.querySelector('.adventure-content');
-        if (adventureContent) {
-            adventureContent.insertAdjacentElement('afterend', infoBox);
+        // Insert in the Start Adventure section, right after the button
+        const startBtn = this.element.querySelector('.start-adventure-btn');
+        if (startBtn) {
+            startBtn.insertAdjacentElement('afterend', infoBox);
         }
     }
 
