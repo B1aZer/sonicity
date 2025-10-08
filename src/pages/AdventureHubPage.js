@@ -105,7 +105,7 @@ export class AdventureHubPage extends BasePage {
             
             // Set loading to false and update UI after all data is loaded
             this.setState({ isLoading: false });
-            this.updateAdventureUI();
+            await this.updateAdventureUI();
         } catch (error) {
             Logger.error('Error loading adventure data:', error);
             this.setState({ isLoading: false });
@@ -444,7 +444,7 @@ export class AdventureHubPage extends BasePage {
         }
     }
 
-    updateAdventureUI() {
+    async updateAdventureUI() {
         Logger.info('updateAdventureUI: Starting...');
         const { hasActiveAdventure, isLoading } = this.state;
         Logger.info('updateAdventureUI: State values:', { hasActiveAdventure, isLoading });
@@ -474,7 +474,7 @@ export class AdventureHubPage extends BasePage {
         }
         
         // Show cooldown info if needed and update button states AFTER HTML is rendered
-        this.updateCooldownInfo();
+        await this.updateCooldownInfo();
         this.updateButtonStates();
         
         Logger.info('updateAdventureUI: HTML updated successfully');
@@ -504,7 +504,7 @@ export class AdventureHubPage extends BasePage {
         if (relicsElement) relicsElement.textContent = relicsFound;
     }
 
-    updateCooldownInfo() {
+    async updateCooldownInfo() {
         const { hasActiveAdventure, hasScout, scoutAvailable, ownedHeroes } = this.state;
 
         // Safety check - don't show cooldown info if data isn't loaded yet
@@ -524,7 +524,7 @@ export class AdventureHubPage extends BasePage {
 
         // Show info if on cooldown (no active adventure, no scout available, no available heroes)
         if (!hasActiveAdventure && !scoutAvailable && availableHeroes.length === 0) {
-            this.addCooldownInfo();
+            await this.addCooldownInfo();
         }
     }
 
@@ -588,17 +588,61 @@ export class AdventureHubPage extends BasePage {
         }
     }
 
-    addCooldownInfo() {
+    async addCooldownInfo() {
+        const { hasScout, ownedHeroes } = this.state;
+        
+        // Calculate time remaining for the earliest available explorer
+        let earliestAvailableAt = null;
+        let explorerType = '';
+        
+        if (hasScout) {
+            // Check scout availability
+            const scout = await this.contracts.adventureSystem.getPlayerScout(await this.contracts.adventureSystem.getAddress());
+            if (scout.purchased && !scout.onAdventure) {
+                earliestAvailableAt = Number(scout.availableAt);
+                explorerType = 'scout';
+            }
+        }
+        
+        // Check heroes
+        if (ownedHeroes.length > 0) {
+            for (const hero of ownedHeroes) {
+                if (earliestAvailableAt === null || hero.availableAt < earliestAvailableAt) {
+                    earliestAvailableAt = hero.availableAt;
+                    explorerType = 'hero';
+                }
+            }
+        }
+        
+        if (earliestAvailableAt === null) {
+            return; // No explorers to show cooldown for
+        }
+        
+        // Get current blockchain time
+        const now = await this.contracts.adventureSystem.getCurrentBlockTimestamp();
+        const timeRemaining = earliestAvailableAt - now;
+        
         const infoBox = document.createElement('div');
         infoBox.className = 'adventure-cooldown-info info-box';
         infoBox.style.display = 'block';
         
-        infoBox.innerHTML = `
-            <p>
-            <i class="fa fa-info-circle"></i>
-            Your heroes are on cooldown. Wait 3 hours after completing an adventure before starting a new one.
-            </p>
-        `;
+        if (timeRemaining <= 0) {
+            // Should be available now - this shouldn't happen, but just in case
+            infoBox.innerHTML = `
+                <p>
+                <i class="fa fa-check-circle"></i>
+                Your ${explorerType} is available! You can start a new adventure.
+                </p>
+            `;
+        } else {
+            const timeText = this.formatTime(timeRemaining);
+            infoBox.innerHTML = `
+                <p>
+                <i class="fa fa-clock-o"></i>
+                Your ${explorerType} is on cooldown. Available in <strong>${timeText}</strong>.
+                </p>
+            `;
+        }
         
         // Insert in the Start Adventure section, right after the button
         const startBtn = this.element.querySelector('.start-adventure-btn');
