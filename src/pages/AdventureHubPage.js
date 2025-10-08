@@ -269,11 +269,6 @@ export class AdventureHubPage extends BasePage {
             await this.handleStartAdventure();
         });
         
-        // Reveal tile button
-        this.addEventListener('#reveal-tile-btn', 'click', async (e) => {
-            await this.handleRevealTile();
-        });
-        
         // Complete adventure button
         this.addEventListener('#complete-adventure-btn', 'click', async (e) => {
             await this.handleCompleteAdventure();
@@ -465,6 +460,9 @@ export class AdventureHubPage extends BasePage {
             return; // Keep loading state
         }
         
+        // Update rewards collected display
+        this.updateRewardsDisplay();
+        
         const container = this.element.querySelector('.adventure-content');
         Logger.info('updateAdventureUI: Found container:', !!container);
         if (!container) return;
@@ -482,6 +480,21 @@ export class AdventureHubPage extends BasePage {
         }
         
         Logger.info('updateAdventureUI: HTML updated successfully');
+    }
+
+    updateRewardsDisplay() {
+        const { goldCollected, foodCollected, diamondsCollected, repCollected } = this.state;
+        
+        // Update the status values in the adventure rewards section
+        const goldElement = this.element.querySelector('[data-state="goldCollected"]');
+        const foodElement = this.element.querySelector('[data-state="foodCollected"]');
+        const diamondsElement = this.element.querySelector('[data-state="diamondsCollected"]');
+        const repElement = this.element.querySelector('[data-state="repCollected"]');
+        
+        if (goldElement) goldElement.textContent = ethers.formatUnits(goldCollected, 0);
+        if (foodElement) foodElement.textContent = ethers.formatUnits(foodCollected, 0);
+        if (diamondsElement) diamondsElement.textContent = ethers.formatUnits(diamondsCollected, 0);
+        if (repElement) repElement.textContent = ethers.formatUnits(repCollected, 0);
     }
 
     getStartAdventureHTML() {
@@ -588,39 +601,6 @@ export class AdventureHubPage extends BasePage {
         
         return `
             <div class="page-section">
-                <h2>Active Adventure</h2>
-                <div class="adventure-progress">
-                    <p><i class="fas fa-map-marked-alt"></i> Tiles Revealed: ${tilesRevealed} / ${gridSize}</p>
-                </div>
-            </div>
-            
-            <div class="page-section">
-                <h2>Rewards Collected</h2>
-                <div class="rewards-display">
-                    <div class="reward-item">
-                        <i class="fas fa-coins"></i>
-                        <span>${goldCollected}</span> Gold
-                    </div>
-                    <div class="reward-item">
-                        <i class="fas fa-seedling"></i>
-                        <span>${foodCollected}</span> Food
-                    </div>
-                    <div class="reward-item">
-                        <i class="fas fa-gem"></i>
-                        <span>${diamondsCollected}</span> Diamonds
-                    </div>
-                    <div class="reward-item">
-                        <i class="fas fa-star"></i>
-                        <span>${repCollected}</span> REP
-                    </div>
-                    <div class="reward-item">
-                        <i class="fas fa-crown"></i>
-                        <span>${relicsFound}</span> Relics
-                    </div>
-                </div>
-            </div>
-            
-            <div class="page-section">
                 <div class="adventure-grid" data-rows="${gridRows}" data-cols="${gridCols}">
                     ${this.getAdventureGridHTML()}
                 </div>
@@ -628,11 +608,8 @@ export class AdventureHubPage extends BasePage {
             
             <div class="page-section">
                 <div class="adventure-actions">
-                    <button id="reveal-tile-btn" class="btn btn-primary" ${tilesRevealed >= gridSize ? 'disabled' : ''}>
-                        <i class="fas fa-eye"></i> Reveal Tile
-                    </button>
-                    <button id="complete-adventure-btn" class="btn btn-success">
-                        <i class="fas fa-flag-checkered"></i> Complete Adventure
+                    <button id="complete-adventure-btn" class="btn btn-md btn-secondary">
+                        Complete Adventure
                     </button>
                 </div>
             </div>
@@ -685,23 +662,23 @@ export class AdventureHubPage extends BasePage {
                 </p>
                 
                 <div class="page-section">
-                    <h2>Resources</h2>
+                    <h2>Adventure Rewards</h2>
                     <div class="status-grid">
                         <div class="status-item">
                             <span class="status-label">Gold:</span>
-                            <span class="status-value" data-state="gold">0</span>
+                            <span class="status-value" data-state="goldCollected">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Food:</span>
-                            <span class="status-value" data-state="food">0</span>
+                            <span class="status-value" data-state="foodCollected">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Diamonds:</span>
-                            <span class="status-value" data-state="diamonds">0</span>
+                            <span class="status-value" data-state="diamondsCollected">0</span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">REP:</span>
-                            <span class="status-value" data-state="rep">0</span>
+                            <span class="status-value" data-state="repCollected">0</span>
                         </div>
                     </div>
                 </div>
