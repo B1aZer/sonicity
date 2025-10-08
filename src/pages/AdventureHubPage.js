@@ -14,36 +14,44 @@ export class AdventureHubPage extends BasePage {
         
         this.element.className = 'base-page adventure-hub-page';
         
-        // Initialize adventure-specific contracts
-        this.contracts.adventureSystem = new AdventureSystemContract();
-        this.contracts.relicNFT = new RelicNFTContract();
-        
         // Initialize state
         this.setState({
+            // Player resources
             gold: 0,
             food: 0,
             diamonds: 0,
             rep: 0,
             tier: 0,
+            
+            // Adventure state
             hasActiveAdventure: false,
-            isLoading: true,
             hasScout: false,
             scoutAvailable: false,
             scoutCost: '0',
+            
+            // Grid state
             gridSize: 9,
             gridRows: 3,
             gridCols: 3,
             tilesRevealed: 0,
+            revealedTilesMap: {},
+            
+            // Adventure rewards
             goldCollected: 0,
             foodCollected: 0,
             diamondsCollected: 0,
             repCollected: 0,
             relicsFound: 0,
+            
+            // Hero state
             heroCooldown: 0,
             selectedHeroId: 0,
             useScout: true,
             ownedHeroes: [],
-            ownedRelics: []
+            ownedRelics: [],
+            
+            // Loading state
+            isLoading: true
         });
         
         this.render();
@@ -51,10 +59,14 @@ export class AdventureHubPage extends BasePage {
 
     async onInitialized(walletResult) {
         Logger.info('AdventureHubPage onInitialized called with wallet:', walletResult);
+        if (!walletResult || !walletResult.address) {
+            Logger.error('No wallet address provided in onInitialized');
+            this.modal.error('Please connect your wallet first.');
+            return;
+        }
+        
         try {
-            // Initialize adventure contracts
-            await this.contracts.adventureSystem.initialize();
-            await this.contracts.relicNFT.initialize();
+            this.setState({ isLoading: true });
             
             // Load initial data
             await this.loadAdventureData();
@@ -64,14 +76,44 @@ export class AdventureHubPage extends BasePage {
         } catch (error) {
             Logger.error('Error initializing adventure hub page:', error);
             this.modal.error('Failed to initialize adventure hub. Please try refreshing the page.');
+            this.setState({ isLoading: false });
         }
     }
 
     async loadAdventureData() {
         try {
+            Logger.info('Starting to load adventure data...');
             const address = await this.contracts.adventureSystem.getAddress();
+            Logger.info('Got address:', address);
             
-            // Load player resources
+            // Load player resources first (needed for tier)
+            Logger.info('Loading player resources...');
+            await this.loadPlayerResources();
+            Logger.info('Player resources loaded, tier:', this.state.tier);
+            
+            // Load remaining data in parallel
+            Logger.info('Loading remaining data in parallel...');
+            await Promise.all([
+                this.loadScoutData(address),
+                this.loadAdventureStatus(address),
+                this.loadOwnedHeroes(address),
+                this.loadOwnedRelics(address)
+            ]);
+            Logger.info('All data loaded successfully');
+            
+            // Set loading to false and update UI after all data is loaded
+            this.setState({ isLoading: false });
+            this.updateAdventureUI();
+        } catch (error) {
+            Logger.error('Error loading adventure data:', error);
+            this.setState({ isLoading: false });
+            throw error;
+        }
+    }
+
+    async loadPlayerResources() {
+        try {
+            Logger.info('loadPlayerResources: Starting...');
             const [gold, food, diamonds, rep, tier] = await Promise.all([
                 this.contracts.gameState.getPlayerGold(),
                 this.contracts.gameState.getPlayerFood(),
@@ -80,74 +122,70 @@ export class AdventureHubPage extends BasePage {
                 this.contracts.gameState.getPlayerTier()
             ]);
             
-            // Load scout info
-            const [scout, scoutCost] = await Promise.all([
-                this.contracts.adventureSystem.getPlayerScout(address),
-                this.contracts.adventureSystem.getStartingScoutCost()
-            ]);
+            Logger.info('loadPlayerResources: Got values:', { gold: gold.toString(), food: food.toString(), diamonds: diamonds.toString(), rep: rep.toString(), tier: Number(tier) });
             
-            const scoutAvailable = await this.contracts.adventureSystem.isScoutAvailable(address);
-            
-            // Load adventure status
-            const adventureStatus = await this.contracts.adventureSystem.getAdventureStatus(address);
-            
-            // Load grid dimensions for player tier
-            const gridDimensions = await this.contracts.adventureSystem.getGridDimensions(Number(tier));
-            
-            // Load revealed tiles map if adventure is active
-            const revealedTilesMap = {};
-            if (adventureStatus.active) {
-                for (let i = 0; i < Number(gridDimensions.total); i++) {
-                    revealedTilesMap[i] = await this.contracts.adventureSystem.isTileRevealed(address, i);
-                }
-            }
-            
-            // Load owned heroes (check each hero class)
-            const ownedHeroes = [];
-            const heroClasses = [0, 1, 2]; // WARRIOR, STRATEGIST, SCOUT
-            
-            for (const heroClass of heroClasses) {
-                const hasHero = await this.contracts.heroNFT.hasHero(address, heroClass);
-                if (hasHero) {
-                    const tokenId = await this.contracts.heroNFT.getHeroIdByClass(address, heroClass);
-                    const isAvailable = await this.contracts.adventureSystem.isHeroAvailable(Number(tokenId));
-                    const availableAt = await this.contracts.adventureSystem.getHeroAvailableAt(Number(tokenId));
-                    ownedHeroes.push({
-                        id: Number(tokenId),
-                        class: heroClass,
-                        available: isAvailable,
-                        availableAt: Number(availableAt)
-                    });
-                }
-            }
-            
-            // Load owned relics
-            const ownedRelics = await this.contracts.relicNFT.getOwnedRelics(address);
-            
-            Logger.info('Adventure data loaded:', {
-                gold: gold.toString(),
-                food: food.toString(),
-                diamonds: diamonds.toString(),
-                rep: rep.toString(),
-                tier: Number(tier),
-                scout,
-                scoutCost: ethers.formatEther(scoutCost),
-                adventureStatus,
-                gridDimensions,
-                ownedHeroes,
-                ownedRelics
-            });
-            
-            // Update state
             this.setState({
                 gold: gold.toString(),
                 food: food.toString(),
                 diamonds: diamonds.toString(),
                 rep: rep.toString(),
-                tier: Number(tier),
+                tier: Number(tier)
+            });
+            
+            Logger.info('loadPlayerResources: State updated successfully');
+        } catch (error) {
+            Logger.error('Error loading player resources:', error);
+            throw error;
+        }
+    }
+
+    async loadScoutData(address) {
+        try {
+            Logger.info('loadScoutData: Starting with address:', address);
+            const [scout, scoutCost, scoutAvailable] = await Promise.all([
+                this.contracts.adventureSystem.getPlayerScout(address),
+                this.contracts.adventureSystem.getStartingScoutCost(),
+                this.contracts.adventureSystem.isScoutAvailable(address)
+            ]);
+            
+            Logger.info('loadScoutData: Got scout data:', { scout, scoutCost: scoutCost.toString(), scoutAvailable });
+            
+            this.setState({
                 hasScout: scout.purchased,
                 scoutAvailable,
-                scoutCost: ethers.formatEther(scoutCost),
+                scoutCost: ethers.formatEther(scoutCost)
+            });
+            
+            Logger.info('loadScoutData: State updated successfully');
+        } catch (error) {
+            Logger.error('Error loading scout data:', error);
+            throw error;
+        }
+    }
+
+    async loadAdventureStatus(address) {
+        try {
+            Logger.info('loadAdventureStatus: Starting with address:', address);
+            const adventureStatus = await this.contracts.adventureSystem.getAdventureStatus(address);
+            Logger.info('loadAdventureStatus: Got adventure status:', adventureStatus);
+            
+            // Get player tier first (should be loaded by loadPlayerResources)
+            const tier = this.state.tier || 0;
+            Logger.info('loadAdventureStatus: Using tier:', tier);
+            const gridDimensions = await this.contracts.adventureSystem.getGridDimensions(tier);
+            Logger.info('loadAdventureStatus: Got grid dimensions:', gridDimensions);
+            
+            // Load revealed tiles map if adventure is active
+            const revealedTilesMap = {};
+            if (adventureStatus.active) {
+                Logger.info('loadAdventureStatus: Adventure is active, loading revealed tiles...');
+                for (let i = 0; i < Number(gridDimensions.total); i++) {
+                    revealedTilesMap[i] = await this.contracts.adventureSystem.isTileRevealed(address, i);
+                }
+                Logger.info('loadAdventureStatus: Loaded revealed tiles map:', revealedTilesMap);
+            }
+            
+            this.setState({
                 hasActiveAdventure: adventureStatus.active,
                 gridSize: Number(gridDimensions.total),
                 gridRows: gridDimensions.rows,
@@ -158,17 +196,62 @@ export class AdventureHubPage extends BasePage {
                 diamondsCollected: adventureStatus.diamondsCollected.toString(),
                 repCollected: adventureStatus.repCollected.toString(),
                 relicsFound: Number(adventureStatus.relicsFound),
-                revealedTilesMap,
-                ownedHeroes,
-                ownedRelics,
-                isLoading: false
+                revealedTilesMap
             });
             
-            // Render the appropriate view
-            this.updateAdventureUI();
+            Logger.info('loadAdventureStatus: State updated successfully');
         } catch (error) {
-            Logger.error('Error loading adventure data:', error);
-            this.setState({ isLoading: false });
+            Logger.error('Error loading adventure status:', error);
+            throw error;
+        }
+    }
+
+    async loadOwnedHeroes(address) {
+        try {
+            Logger.info('loadOwnedHeroes: Starting with address:', address);
+            const ownedHeroes = [];
+            const heroClasses = [0, 1, 2]; // WARRIOR, STRATEGIST, SCOUT
+            
+            for (const heroClass of heroClasses) {
+                Logger.info(`loadOwnedHeroes: Checking hero class ${heroClass}`);
+                const hasHero = await this.contracts.heroNFT.hasHero(address, heroClass);
+                Logger.info(`loadOwnedHeroes: Hero class ${heroClass} hasHero:`, hasHero);
+                
+                if (hasHero) {
+                    const tokenId = await this.contracts.heroNFT.getHeroIdByClass(address, heroClass);
+                    const isAvailable = await this.contracts.adventureSystem.isHeroAvailable(Number(tokenId));
+                    const availableAt = await this.contracts.adventureSystem.getHeroAvailableAt(Number(tokenId));
+                    
+                    const heroData = {
+                        id: Number(tokenId),
+                        class: heroClass,
+                        available: isAvailable,
+                        availableAt: Number(availableAt)
+                    };
+                    
+                    Logger.info(`loadOwnedHeroes: Hero class ${heroClass} data:`, heroData);
+                    ownedHeroes.push(heroData);
+                }
+            }
+            
+            Logger.info('loadOwnedHeroes: Final owned heroes:', ownedHeroes);
+            this.setState({ ownedHeroes });
+            Logger.info('loadOwnedHeroes: State updated successfully');
+        } catch (error) {
+            Logger.error('Error loading owned heroes:', error);
+            throw error;
+        }
+    }
+
+    async loadOwnedRelics(address) {
+        try {
+            Logger.info('loadOwnedRelics: Starting with address:', address);
+            const ownedRelics = await this.contracts.relicNFT.getOwnedRelics(address);
+            Logger.info('loadOwnedRelics: Got owned relics:', ownedRelics);
+            this.setState({ ownedRelics });
+            Logger.info('loadOwnedRelics: State updated successfully');
+        } catch (error) {
+            Logger.error('Error loading owned relics:', error);
             throw error;
         }
     }
@@ -346,20 +429,32 @@ export class AdventureHubPage extends BasePage {
     }
 
     updateAdventureUI() {
+        Logger.info('updateAdventureUI: Starting...');
         const { hasActiveAdventure, isLoading } = this.state;
+        Logger.info('updateAdventureUI: State values:', { hasActiveAdventure, isLoading });
         
         if (isLoading) {
+            Logger.info('updateAdventureUI: Still loading, returning early');
             return; // Keep loading state
         }
         
         const container = this.element.querySelector('.adventure-content');
+        Logger.info('updateAdventureUI: Found container:', !!container);
         if (!container) return;
         
         if (hasActiveAdventure) {
-            container.innerHTML = this.getActiveAdventureHTML();
+            Logger.info('updateAdventureUI: Has active adventure, showing active adventure HTML');
+            const html = this.getActiveAdventureHTML();
+            Logger.info('updateAdventureUI: Active adventure HTML length:', html.length);
+            container.innerHTML = html;
         } else {
-            container.innerHTML = this.getStartAdventureHTML();
+            Logger.info('updateAdventureUI: No active adventure, showing start adventure HTML');
+            const html = this.getStartAdventureHTML();
+            Logger.info('updateAdventureUI: Start adventure HTML length:', html.length);
+            container.innerHTML = html;
         }
+        
+        Logger.info('updateAdventureUI: HTML updated successfully');
     }
 
     getStartAdventureHTML() {
@@ -555,30 +650,31 @@ export class AdventureHubPage extends BasePage {
 
     render() {
         this.element.innerHTML = `
-            <div class="page-container container-min-width-1000">
-                <h1><i class="fas fa-map-marked-alt"></i> Adventure Hub</h1>
-                <div class="page-description">
+            <div class="page-container">
+                <h1 class="page-title"><i class="fas fa-map-marked-alt"></i> Adventure Hub</h1>
+                <p class="page-description">
                     Embark on dangerous expeditions to discover <strong>resources</strong>, <em>rare relics</em>, and face potential disasters. 
                     Each tile reveals new surprises - choose wisely when to continue or return!
-                </div>
+                </p>
                 
                 <div class="page-section">
-                    <div class="resource-display">
-                        <div class="resource-item">
-                            <i class="fas fa-coins"></i>
-                            <span data-state="gold">0</span>
+                    <h2>Resources</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Gold:</span>
+                            <span class="status-value" data-state="gold">0</span>
                         </div>
-                        <div class="resource-item">
-                            <i class="fas fa-seedling"></i>
-                            <span data-state="food">0</span>
+                        <div class="status-item">
+                            <span class="status-label">Food:</span>
+                            <span class="status-value" data-state="food">0</span>
                         </div>
-                        <div class="resource-item">
-                            <i class="fas fa-gem"></i>
-                            <span data-state="diamonds">0</span>
+                        <div class="status-item">
+                            <span class="status-label">Diamonds:</span>
+                            <span class="status-value" data-state="diamonds">0</span>
                         </div>
-                        <div class="resource-item">
-                            <i class="fas fa-star"></i>
-                            <span data-state="rep">0</span>
+                        <div class="status-item">
+                            <span class="status-label">REP:</span>
+                            <span class="status-value" data-state="rep">0</span>
                         </div>
                     </div>
                 </div>
