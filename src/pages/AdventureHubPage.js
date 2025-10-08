@@ -483,18 +483,20 @@ export class AdventureHubPage extends BasePage {
     }
 
     updateRewardsDisplay() {
-        const { goldCollected, foodCollected, diamondsCollected, repCollected } = this.state;
+        const { goldCollected, foodCollected, diamondsCollected, repCollected, relicsFound } = this.state;
         
         // Update the status values in the adventure rewards section
         const goldElement = this.element.querySelector('[data-state="goldCollected"]');
         const foodElement = this.element.querySelector('[data-state="foodCollected"]');
         const diamondsElement = this.element.querySelector('[data-state="diamondsCollected"]');
         const repElement = this.element.querySelector('[data-state="repCollected"]');
+        const relicsElement = this.element.querySelector('[data-state="relicsFound"]');
         
         if (goldElement) goldElement.textContent = ethers.formatUnits(goldCollected, 0);
         if (foodElement) foodElement.textContent = ethers.formatUnits(foodCollected, 0);
         if (diamondsElement) diamondsElement.textContent = ethers.formatUnits(diamondsCollected, 0);
         if (repElement) repElement.textContent = ethers.formatUnits(repCollected, 0);
+        if (relicsElement) relicsElement.textContent = relicsFound;
     }
 
     getStartAdventureHTML() {
@@ -679,6 +681,10 @@ export class AdventureHubPage extends BasePage {
                         <div class="status-item">
                             <span class="status-label">REP:</span>
                             <span class="status-value" data-state="repCollected">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Relics:</span>
+                            <span class="status-value" data-state="relicsFound">0</span>
                         </div>
                     </div>
                 </div>
