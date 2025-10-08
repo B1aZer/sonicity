@@ -522,13 +522,8 @@ export class AdventureHubPage extends BasePage {
         const now = Math.floor(Date.now() / 1000);
         const availableHeroes = ownedHeroes.filter(hero => hero.availableAt <= now);
 
-        // Show cooldown info only if:
-        // 1. No active adventure
-        // 2. Have scouts/heroes but they're all on cooldown
-        const hasExplorers = hasScout || ownedHeroes.length > 0;
-        const allExplorersOnCooldown = hasExplorers && !scoutAvailable && availableHeroes.length === 0;
-        
-        if (!hasActiveAdventure && allExplorersOnCooldown) {
+        // Show info if on cooldown (no active adventure, no scout available, no available heroes)
+        if (!hasActiveAdventure && !scoutAvailable && availableHeroes.length === 0) {
             this.addCooldownInfo();
         }
     }
@@ -574,16 +569,8 @@ export class AdventureHubPage extends BasePage {
             if (!canStartAdventure) {
                 if (hasActiveAdventure) {
                     startAdventureBtn.textContent = 'Adventure in Progress';
-                } else {
-                    // Check if we have explorers but they're on cooldown
-                    const hasExplorers = hasScout || ownedHeroes.length > 0;
-                    const allExplorersOnCooldown = hasExplorers && !scoutAvailable && availableHeroes.length === 0;
-                    
-                    if (allExplorersOnCooldown) {
-                        startAdventureBtn.textContent = 'On Cooldown';
-                    } else {
-                        startAdventureBtn.textContent = 'No Explorers Available';
-                    }
+                } else if (!scoutAvailable && availableHeroes.length === 0) {
+                    startAdventureBtn.textContent = 'On Cooldown';
                 }
             } else {
                 startAdventureBtn.textContent = 'Start Adventure';
@@ -601,7 +588,7 @@ export class AdventureHubPage extends BasePage {
         infoBox.innerHTML = `
             <p>
             <i class="fa fa-info-circle"></i>
-            Your explorers are on cooldown. Wait 3 hours after completing an adventure before starting a new one.
+            Your heroes are on cooldown. Wait 3 hours after completing an adventure before starting a new one.
             </p>
         `;
         
