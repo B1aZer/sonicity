@@ -473,6 +473,10 @@ export class AdventureHubPage extends BasePage {
             container.innerHTML = html;
         }
         
+        // Show cooldown info if needed and update button states AFTER HTML is rendered
+        this.updateCooldownInfo();
+        this.updateButtonStates();
+        
         Logger.info('updateAdventureUI: HTML updated successfully');
     }
 
@@ -491,6 +495,101 @@ export class AdventureHubPage extends BasePage {
         if (diamondsElement) diamondsElement.textContent = ethers.formatUnits(diamondsCollected, 0);
         if (repElement) repElement.textContent = ethers.formatUnits(repCollected, 0);
         if (relicsElement) relicsElement.textContent = relicsFound;
+    }
+
+    updateCooldownInfo() {
+        const { hasActiveAdventure, hasScout, scoutAvailable, ownedHeroes } = this.state;
+
+        // Safety check - don't show cooldown info if data isn't loaded yet
+        if (ownedHeroes === undefined) {
+            return;
+        }
+
+        // Remove existing info box
+        const existingInfoBox = this.element.querySelector('.adventure-cooldown-info');
+        if (existingInfoBox) {
+            existingInfoBox.remove();
+        }
+
+        // Check if any heroes are available (not on cooldown)
+        const now = Math.floor(Date.now() / 1000);
+        const availableHeroes = ownedHeroes.filter(hero => hero.availableAt <= now);
+
+        // Show info if on cooldown (no active adventure, no scout available, no available heroes)
+        if (!hasActiveAdventure && !scoutAvailable && availableHeroes.length === 0) {
+            this.addCooldownInfo();
+        }
+    }
+
+    updateButtonStates() {
+        const { hasActiveAdventure, hasScout, scoutAvailable, ownedHeroes } = this.state;
+
+        Logger.info('updateButtonStates: State values:', { 
+            hasActiveAdventure, 
+            hasScout,
+            scoutAvailable,
+            ownedHeroesCount: ownedHeroes?.length 
+        });
+
+        // Safety check - don't update buttons if data isn't loaded yet
+        if (ownedHeroes === undefined) {
+            Logger.info('updateButtonStates: Data not loaded yet, skipping');
+            return;
+        }
+
+        // Check if any heroes are available (not on cooldown)
+        const now = Math.floor(Date.now() / 1000);
+        const availableHeroes = ownedHeroes.filter(hero => hero.availableAt <= now);
+
+        // Update start adventure button
+        const startAdventureBtn = this.element.querySelector('.start-adventure-btn');
+        Logger.info('updateButtonStates: Found button:', !!startAdventureBtn);
+        
+        if (startAdventureBtn) {
+            // Check if we can start adventure (has scout available OR has available heroes)
+            const canStartAdventure = !hasActiveAdventure && 
+                                    ((hasScout && scoutAvailable) || availableHeroes.length > 0);
+            
+            Logger.info('updateButtonStates: Can start adventure:', canStartAdventure, {
+                hasScout,
+                scoutAvailable,
+                ownedHeroesCount: ownedHeroes.length,
+                availableHeroesCount: availableHeroes.length
+            });
+            
+            startAdventureBtn.disabled = !canStartAdventure;
+            
+            if (!canStartAdventure) {
+                if (hasActiveAdventure) {
+                    startAdventureBtn.textContent = 'Adventure in Progress';
+                } else if (!scoutAvailable && availableHeroes.length === 0) {
+                    startAdventureBtn.textContent = 'On Cooldown';
+                }
+            } else {
+                startAdventureBtn.textContent = 'Start Adventure';
+            }
+            
+            Logger.info('updateButtonStates: Button updated - disabled:', startAdventureBtn.disabled, 'text:', startAdventureBtn.textContent);
+        }
+    }
+
+    addCooldownInfo() {
+        const infoBox = document.createElement('div');
+        infoBox.className = 'adventure-cooldown-info info-box';
+        infoBox.style.display = 'block';
+        
+        infoBox.innerHTML = `
+            <p>
+            <i class="fa fa-info-circle"></i>
+            <span>Your heroes are on cooldown. Wait 3 hours after completing an adventure before starting a new one.</span>
+            </p>
+        `;
+        
+        // Insert after the adventure content
+        const adventureContent = this.element.querySelector('.adventure-content');
+        if (adventureContent) {
+            adventureContent.insertAdjacentElement('afterend', infoBox);
+        }
     }
 
     getStartAdventureHTML() {

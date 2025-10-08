@@ -22,24 +22,9 @@
     font-weight: bold;
 }
 
+/* Info box styles moved to main.css for reusability */
 .info-box {
-    margin: 1rem 0;
-    padding: 1rem;
-    background: var(--bg-dark);
-    border-radius: var(--radius-md);
-    border-left: 3px solid var(--color-primary);
     display: none; /* Hidden by default, shown when scouts are active */
-}
-
-.info-box p {
-    margin: 0;
-    font-size: var(--font-size-sm);
-    color: var(--text-muted);
-}
-
-.info-box .fa-info-circle {
-    color: var(--color-primary);
-    margin-right: 0.5rem;
 }
 
 .search-container {
