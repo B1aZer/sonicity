@@ -323,33 +323,8 @@ export class AdventureHubPage extends BasePage {
             this.loadAdventureData();
         });
         
-        // Listen for tile revealed events
-        this.contracts.adventureSystem.onTileRevealed((data) => {
-            Logger.info('Tile revealed event:', data);
-            this.loadAdventureData();
-            this.showTileResult(data);
-        });
-        
-        // Listen for adventure completed events
-        this.contracts.adventureSystem.onAdventureCompleted((data) => {
-            Logger.info('Adventure completed event:', data);
-            this.modal.success(`Adventure complete! Earned: ${ethers.formatUnits(data.goldEarned, 0)} Gold, ${ethers.formatUnits(data.foodEarned, 0)} Food, ${ethers.formatUnits(data.diamondsEarned, 0)} Diamonds, ${ethers.formatUnits(data.repEarned, 0)} REP, ${data.relicsFound} Relics!`);
-            this.loadAdventureData();
-        });
-        
-        // Listen for disaster events
-        this.contracts.adventureSystem.onAdventureDisaster((data) => {
-            Logger.info('Adventure disaster event:', data);
-            this.modal.error('DISASTER! Your hero/scout was lost and rewards were forfeited.');
-            this.loadAdventureData();
-        });
-        
-        // Listen for scout purchased events
-        this.contracts.adventureSystem.onStartingScoutPurchased((data) => {
-            Logger.info('Scout purchased event:', data);
-            this.modal.success('Starting scout purchased successfully!');
-            this.loadAdventureData();
-        });
+        // Note: All transaction results are now handled directly in the respective methods
+        // following the same simple pattern as other pages (StakeHubPage, ShopPage, CityPage)
     }
 
     showTileResult(data) {
@@ -387,43 +362,95 @@ export class AdventureHubPage extends BasePage {
     }
 
     async handlePurchaseScout() {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Purchasing starting scout...');
+        
         try {
             Logger.info('Purchasing starting scout...');
             await this.contracts.adventureSystem.purchaseStartingScout();
-            this.modal.success('Starting scout purchased! You can now embark on adventures.');
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Show success modal
+            this.modal.success('Starting scout purchased successfully!');
+            
+            // Reload data
+            await this.loadAdventureData();
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             this.handleContractError(error, 'purchase scout');
         }
     }
 
     async handleStartAdventure() {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Starting adventure...');
+        
         try {
             const { useScout, selectedHeroId } = this.state;
             Logger.info('Starting adventure:', { useScout, selectedHeroId });
             
             await this.contracts.adventureSystem.startAdventure(selectedHeroId, useScout);
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Show success modal
             this.modal.success('Adventure started! Reveal tiles to discover what awaits...');
+            
+            // Reload data
+            await this.loadAdventureData();
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             this.handleContractError(error, 'start adventure');
         }
     }
 
     async handleRevealTile(tileIndex) {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Revealing tile...');
+        
         try {
             Logger.info('Revealing tile:', tileIndex);
-            await this.contracts.adventureSystem.revealTile(tileIndex);
-            // Result will be shown via event listener
+            const result = await this.contracts.adventureSystem.revealTile(tileIndex);
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data to get updated state
+            await this.loadAdventureData();
+            
+            // Show result based on tile type
+            this.showTileResult(result);
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             this.handleContractError(error, 'reveal tile');
         }
     }
 
     async handleCompleteAdventure() {
+        // Show loading modal IMMEDIATELY to prevent multiple clicks and provide feedback
+        const loadingModal = this.modal.loading('Completing adventure...');
+        
         try {
             Logger.info('Completing adventure...');
-            await this.contracts.adventureSystem.completeAdventure();
-            // Success will be shown via event listener
+            const result = await this.contracts.adventureSystem.completeAdventure();
+            
+            // Close loading modal
+            loadingModal.close();
+            
+            // Reload data to get updated state
+            await this.loadAdventureData();
+            
+            // Show success modal with earned rewards
+            this.modal.success(`Adventure complete! Earned: ${ethers.formatUnits(result.goldEarned, 0)} Gold, ${ethers.formatUnits(result.foodEarned, 0)} Food, ${ethers.formatUnits(result.diamondsEarned, 0)} Diamonds, ${ethers.formatUnits(result.repEarned, 0)} REP, ${result.relicsFound} Relics!`);
         } catch (error) {
+            // Close loading modal on error
+            loadingModal.close();
             this.handleContractError(error, 'complete adventure');
         }
     }

@@ -102,12 +102,50 @@ export class AdventureSystemContract extends BaseContract {
     /**
      * Reveal a tile in the current adventure
      * @param {number} tileIndex - Index of the tile to reveal
-     * @returns {Promise<Object>} Transaction receipt
+     * @returns {Promise<Object>} Tile result data
      */
     async revealTile(tileIndex) {
         try {
             Logger.info('Revealing tile:', tileIndex);
-            return await this.transact('revealTile', tileIndex);
+            
+            // Use the standard transact method like other contracts
+            const receipt = await this.transact('revealTile', tileIndex);
+            Logger.info('Transaction mined:', receipt.hash);
+            
+            // Parse the TileRevealed event from the transaction receipt
+            const contract = await this.getContract();
+            const event = receipt.logs.find(log => {
+                try {
+                    const parsed = contract.interface.parseLog(log);
+                    return parsed && parsed.name === 'TileRevealed';
+                } catch (e) {
+                    return false;
+                }
+            });
+            
+            if (event) {
+                const parsed = contract.interface.parseLog(event);
+                const args = parsed.args;
+                
+                return {
+                    tileType: Number(args.tileType),
+                    goldReward: args.goldReward.toString(),
+                    foodReward: args.foodReward.toString(),
+                    diamondReward: args.diamondReward.toString(),
+                    repReward: args.repReward.toString(),
+                    relicFound: args.relicFound
+                };
+            } else {
+                // Fallback: return basic success
+                return {
+                    tileType: 0, // Safe
+                    goldReward: '0',
+                    foodReward: '0',
+                    diamondReward: '0',
+                    repReward: '0',
+                    relicFound: false
+                };
+            }
         } catch (error) {
             Logger.error('Error revealing tile:', error);
             throw error;
@@ -116,12 +154,28 @@ export class AdventureSystemContract extends BaseContract {
 
     /**
      * Complete adventure and claim rewards
-     * @returns {Promise<Object>} Transaction receipt
+     * @returns {Promise<Object>} Adventure completion data
      */
     async completeAdventure() {
         try {
             Logger.info('Completing adventure...');
-            return await this.transact('completeAdventure');
+            
+            // Get adventure data before completion (like ScoutGuildPage pattern)
+            const address = await this.getAddress();
+            const adventureStatus = await this.getAdventureStatus(address);
+            
+            // Use the standard transact method like other contracts
+            const receipt = await this.transact('completeAdventure');
+            Logger.info('Transaction mined:', receipt.hash);
+            
+            // Return the rewards that were collected
+            return {
+                goldEarned: adventureStatus.goldCollected,
+                foodEarned: adventureStatus.foodCollected,
+                diamondsEarned: adventureStatus.diamondsCollected,
+                repEarned: adventureStatus.repCollected,
+                relicsFound: Number(adventureStatus.relicsFound)
+            };
         } catch (error) {
             Logger.error('Error completing adventure:', error);
             throw error;
