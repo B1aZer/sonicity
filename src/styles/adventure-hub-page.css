@@ -224,20 +224,33 @@
     transform: translateX(-100%);
 }
 
-.grid-tile.next {
-    border-color: var(--color-accent);
-    background: linear-gradient(135deg, rgba(201, 164, 76, 0.2) 0%, #2d3748 100%);
-    animation: pulse 2s ease-in-out infinite;
+/* Tiles that can be revealed (clickable) */
+.grid-tile.can-reveal {
+    cursor: pointer;
 }
 
-.grid-tile.next::before {
-    animation: shimmer 2s ease-in-out infinite;
+.grid-tile.can-reveal:hover {
+    border-color: var(--color-accent);
+    background: linear-gradient(135deg, rgba(201, 164, 76, 0.3) 0%, #2d3748 100%);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(201, 164, 76, 0.5);
+}
+
+.grid-tile.can-reveal:hover::before {
+    animation: shimmer 1s ease-in-out;
+}
+
+/* Locked tiles (not yet available) */
+.grid-tile.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .grid-tile.revealed {
     background: linear-gradient(135deg, var(--color-success) 0%, #10b981 100%);
     border-color: var(--color-success);
     color: white;
+    cursor: default;
 }
 
 .grid-tile.revealed i {

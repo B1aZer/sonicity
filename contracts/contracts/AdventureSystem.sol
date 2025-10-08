@@ -76,6 +76,7 @@ contract AdventureSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     mapping(address => StartingScout) public playerScouts;
     mapping(uint8 => uint8) public tierToGridSize; // Tier => grid size (9,12,16,20,25)
     mapping(uint256 => uint256) public heroAvailableAt; // heroId => timestamp when available
+    mapping(address => mapping(uint8 => bool)) public revealedTiles; // player => tileIndex => revealed
     
     // Contract references
     address public gameStateAddress;
@@ -134,6 +135,14 @@ contract AdventureSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     function startAdventure(uint256 heroId, bool useStartingScout) external nonReentrant {
         require(!activeAdventures[msg.sender].active, "Adventure already active");
         
+        // Clear any old revealed tiles from previous adventures
+        Adventure storage oldAdventure = activeAdventures[msg.sender];
+        if (oldAdventure.totalTiles > 0) {
+            for (uint8 i = 0; i < oldAdventure.totalTiles; i++) {
+                delete revealedTiles[msg.sender][i];
+            }
+        }
+        
         // Get player tier from GameState
         (bool success, bytes memory data) = gameStateAddress.staticcall(
             abi.encodeWithSignature("getPlayerTier(address)", msg.sender)
@@ -191,13 +200,18 @@ contract AdventureSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
     /**
      * @dev Reveal next tile - no cooldown, can reveal all tiles continuously
      */
-    function revealTile() external nonReentrant returns (TileResult memory) {
+    function revealTile(uint8 tileIndex) external nonReentrant returns (TileResult memory) {
         Adventure storage adventure = activeAdventures[msg.sender];
         require(adventure.active, "No active adventure");
         require(adventure.tilesRevealed < adventure.totalTiles, "All tiles revealed");
+        require(tileIndex < adventure.totalTiles, "Invalid tile index");
+        require(!revealedTiles[msg.sender][tileIndex], "Tile already revealed");
+        
+        // Mark tile as revealed
+        revealedTiles[msg.sender][tileIndex] = true;
         
         // Generate random tile result
-        TileResult memory result = _generateTileResult(msg.sender, adventure.tilesRevealed);
+        TileResult memory result = _generateTileResult(msg.sender, tileIndex);
         
         adventure.tilesRevealed++;
         
@@ -296,8 +310,8 @@ contract AdventureSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
             adventure.relicsFound
         );
         
-        // Clear adventure
-        adventure.active = false;
+        // Clear adventure and revealed tiles
+        _clearAdventure(msg.sender);
     }
     
     /**
@@ -317,6 +331,22 @@ contract AdventureSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
             
             emit HeroLost(player, adventure.heroId);
         }
+    }
+    
+    /**
+     * @dev Clear adventure and revealed tiles mapping
+     */
+    function _clearAdventure(address player) internal {
+        Adventure storage adventure = activeAdventures[player];
+        uint8 totalTiles = adventure.totalTiles;
+        
+        // Clear revealed tiles mapping
+        for (uint8 i = 0; i < totalTiles; i++) {
+            delete revealedTiles[player][i];
+        }
+        
+        // Clear adventure
+        adventure.active = false;
     }
     
     /**
@@ -407,6 +437,13 @@ contract AdventureSystem is Initializable, UUPSUpgradeable, OwnableUpgradeable, 
      */
     function getGridSizeForTier(uint8 tier) external view returns (uint8) {
         return tierToGridSize[tier];
+    }
+    
+    /**
+     * @dev Check if a specific tile is revealed
+     */
+    function isTileRevealed(address player, uint8 tileIndex) external view returns (bool) {
+        return revealedTiles[player][tileIndex];
     }
     
     // Contract reference setters

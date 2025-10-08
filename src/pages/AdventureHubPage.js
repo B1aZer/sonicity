@@ -58,8 +58,7 @@ export class AdventureHubPage extends BasePage {
             
             // Load initial data
             await this.loadAdventureData();
-            this.setupEventHandlers();
-            this.setupAdventureEventListeners();
+            this.setupEventListeners();
             
             Logger.info('Adventure Hub page initialized successfully');
         } catch (error) {
@@ -94,6 +93,14 @@ export class AdventureHubPage extends BasePage {
             
             // Load grid dimensions for player tier
             const gridDimensions = await this.contracts.adventureSystem.getGridDimensions(Number(tier));
+            
+            // Load revealed tiles map if adventure is active
+            const revealedTilesMap = {};
+            if (adventureStatus.active) {
+                for (let i = 0; i < Number(gridDimensions.total); i++) {
+                    revealedTilesMap[i] = await this.contracts.adventureSystem.isTileRevealed(address, i);
+                }
+            }
             
             // Load owned heroes (check each hero class)
             const ownedHeroes = [];
@@ -151,6 +158,7 @@ export class AdventureHubPage extends BasePage {
                 diamondsCollected: adventureStatus.diamondsCollected.toString(),
                 repCollected: adventureStatus.repCollected.toString(),
                 relicsFound: Number(adventureStatus.relicsFound),
+                revealedTilesMap,
                 ownedHeroes,
                 ownedRelics,
                 isLoading: false
@@ -165,7 +173,9 @@ export class AdventureHubPage extends BasePage {
         }
     }
 
-    setupEventHandlers() {
+    setupEventListeners() {
+        // Use BasePage event management system to prevent duplicate handlers
+        
         // Purchase scout button
         this.addEventListener('#purchase-scout-btn', 'click', async (e) => {
             await this.handlePurchaseScout();
@@ -192,9 +202,38 @@ export class AdventureHubPage extends BasePage {
             const heroId = useScout ? 0 : parseInt(e.target.dataset.heroId);
             this.setState({ useScout, selectedHeroId: heroId });
         });
-    }
-
-    setupAdventureEventListeners() {
+        
+        // Tile click handlers (using event delegation on base element)
+        // This works even after HTML updates since it's attached to this.element
+        this.element.addEventListener('click', async (e) => {
+            const tile = e.target.closest('.grid-tile.can-reveal');
+            if (tile) {
+                Logger.info('Tile clicked:', {
+                    tileIndex: tile.dataset.tileIndex,
+                    tileClasses: tile.className,
+                    hasActiveAdventure: this.state.hasActiveAdventure
+                });
+                
+                const tileIndex = parseInt(tile.dataset.tileIndex, 10);
+                if (!isNaN(tileIndex)) {
+                    await this.handleRevealTile(tileIndex);
+                } else {
+                    Logger.warn('Invalid tile index:', tile.dataset.tileIndex);
+                }
+            } else {
+                // Debug: log what was clicked
+                const clickedTile = e.target.closest('.grid-tile');
+                if (clickedTile) {
+                    Logger.info('Clicked non-revealable tile:', {
+                        tileIndex: clickedTile.dataset.tileIndex,
+                        tileClasses: clickedTile.className,
+                        hasActiveAdventure: this.state.hasActiveAdventure
+                    });
+                }
+            }
+        });
+        
+        // Contract event listeners
         // Listen for adventure started events
         this.contracts.adventureSystem.onAdventureStarted((data) => {
             Logger.info('Adventure started event:', data);
@@ -286,10 +325,10 @@ export class AdventureHubPage extends BasePage {
         }
     }
 
-    async handleRevealTile() {
+    async handleRevealTile(tileIndex) {
         try {
-            Logger.info('Revealing tile...');
-            await this.contracts.adventureSystem.revealTile();
+            Logger.info('Revealing tile:', tileIndex);
+            await this.contracts.adventureSystem.revealTile(tileIndex);
             // Result will be shown via event listener
         } catch (error) {
             this.handleContractError(error, 'reveal tile');
@@ -321,9 +360,6 @@ export class AdventureHubPage extends BasePage {
         } else {
             container.innerHTML = this.getStartAdventureHTML();
         }
-        
-        // Re-attach event handlers after updating HTML
-        this.setupEventHandlers();
     }
 
     getStartAdventureHTML() {
@@ -482,16 +518,24 @@ export class AdventureHubPage extends BasePage {
     }
 
     getAdventureGridHTML() {
-        const { gridRows, gridCols, tilesRevealed } = this.state;
-        let html = '';
+        const { gridRows, gridCols, gridSize, hasActiveAdventure, revealedTilesMap } = this.state;
         
-        for (let i = 0; i < gridRows * gridCols; i++) {
-            const isRevealed = i < tilesRevealed;
-            const isNext = i === tilesRevealed;
+        if (!gridRows || !gridCols) {
+            Logger.warn('Grid dimensions not set:', { gridRows, gridCols });
+            return '<div class="grid-tile">Loading grid...</div>';
+        }
+        
+        let html = '';
+        const totalTiles = gridRows * gridCols;
+        
+        for (let i = 0; i < totalTiles; i++) {
+            const isRevealed = revealedTilesMap && revealedTilesMap[i];
+            const canReveal = hasActiveAdventure && !isRevealed;
             
             html += `
-                <div class="grid-tile ${isRevealed ? 'revealed' : ''} ${isNext ? 'next' : ''}">
-                    ${isRevealed ? '<i class="fas fa-check"></i>' : (isNext ? '<i class="fas fa-question"></i>' : '')}
+                <div class="grid-tile ${isRevealed ? 'revealed' : ''} ${canReveal ? 'can-reveal' : ''}" 
+                     data-tile-index="${i}">
+                    ${isRevealed ? '<i class="fas fa-check"></i>' : '<i class="fas fa-question"></i>'}
                 </div>
             `;
         }

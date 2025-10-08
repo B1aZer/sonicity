@@ -3,6 +3,7 @@
 ## todo
 
 - start from 1 broken home
+- 14419 hh node
 
 ## goal
 
@@ -112,7 +113,9 @@ Tweet:350$ ~ Rt:150$ ~ pin for 6 hours:+50$
 - check yiled does not upgrade
 - yield nfts should also change models based on tier
 - charge everything in bulk
-
+- upgradeble scout guild, hide wallet
+- hero arena/dungeons
+npm
 
 We have an issue with current yield station revenue system, actually 2:
 

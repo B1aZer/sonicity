@@ -101,12 +101,13 @@ export class AdventureSystemContract extends BaseContract {
 
     /**
      * Reveal a tile in the current adventure
+     * @param {number} tileIndex - Index of the tile to reveal
      * @returns {Promise<Object>} Transaction receipt
      */
-    async revealTile() {
+    async revealTile(tileIndex) {
         try {
-            Logger.info('Revealing tile...');
-            return await this.transact('revealTile');
+            Logger.info('Revealing tile:', tileIndex);
+            return await this.transact('revealTile', tileIndex);
         } catch (error) {
             Logger.error('Error revealing tile:', error);
             throw error;
@@ -260,6 +261,18 @@ export class AdventureSystemContract extends BaseContract {
             };
         } catch (error) {
             Logger.error('Error getting grid dimensions:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Check if a specific tile is revealed
+     */
+    async isTileRevealed(player, tileIndex) {
+        try {
+            return await this.call('isTileRevealed', player, tileIndex);
+        } catch (error) {
+            Logger.error('Error checking if tile is revealed:', error);
             throw error;
         }
     }
