@@ -17,8 +17,8 @@ export const CONTRACT_ADDRESSES = {
     HERO_NFT: "0x809d550fca64d94Bd9F66E60752A544199cfAC3D", // Will be updated by update-addresses.sh
     TACTICS_NFT: "0x1291Be112d480055DaFd8a610b7d1e203891C274", // Will be updated by update-addresses.sh
     COSMETIC_ITEMS: "0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575", // Will be updated by update-addresses.sh
-    RELIC_NFT: "0x49fd2BE640DB2910c2fAb69bB8531Ab6E76127ff", // Will be updated by update-addresses.sh
-    ADVENTURE_SYSTEM: "0xf953b3A269d80e3eB0F2947630Da976B896A8C5b" // Will be updated by update-addresses.sh
+    RELIC_NFT: "0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD", // Will be updated by update-addresses.sh
+    ADVENTURE_SYSTEM: "0x0355B7B8cb128fA5692729Ab3AAa199C1753f726" // Will be updated by update-addresses.sh
 };
 
 // Contract configuration
