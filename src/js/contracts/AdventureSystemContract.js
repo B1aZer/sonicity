@@ -73,7 +73,17 @@ export class AdventureSystemContract extends BaseContract {
             
             // Use blockchain time instead of local time
             const now = await this.getCurrentBlockTimestamp();
-            return Number(scout.availableAt) <= now;
+            const availableAt = Number(scout.availableAt);
+            const isAvailable = availableAt <= now;
+            
+            Logger.info('Scout availability check:', {
+                now,
+                availableAt,
+                timeRemaining: availableAt > now ? `${Math.floor((availableAt - now) / 60)} minutes` : 'available',
+                isAvailable
+            });
+            
+            return isAvailable;
         } catch (error) {
             Logger.error('Error checking scout availability:', error);
             return false;

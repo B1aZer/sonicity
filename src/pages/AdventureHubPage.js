@@ -522,8 +522,13 @@ export class AdventureHubPage extends BasePage {
         const now = Math.floor(Date.now() / 1000);
         const availableHeroes = ownedHeroes.filter(hero => hero.availableAt <= now);
 
-        // Show info if on cooldown (no active adventure, no scout available, no available heroes)
-        if (!hasActiveAdventure && !scoutAvailable && availableHeroes.length === 0) {
+        // Show cooldown info only if:
+        // 1. No active adventure
+        // 2. Have scouts/heroes but they're all on cooldown
+        const hasExplorers = hasScout || ownedHeroes.length > 0;
+        const allExplorersOnCooldown = hasExplorers && !scoutAvailable && availableHeroes.length === 0;
+        
+        if (!hasActiveAdventure && allExplorersOnCooldown) {
             this.addCooldownInfo();
         }
     }
@@ -569,8 +574,16 @@ export class AdventureHubPage extends BasePage {
             if (!canStartAdventure) {
                 if (hasActiveAdventure) {
                     startAdventureBtn.textContent = 'Adventure in Progress';
-                } else if (!scoutAvailable && availableHeroes.length === 0) {
-                    startAdventureBtn.textContent = 'On Cooldown';
+                } else {
+                    // Check if we have explorers but they're on cooldown
+                    const hasExplorers = hasScout || ownedHeroes.length > 0;
+                    const allExplorersOnCooldown = hasExplorers && !scoutAvailable && availableHeroes.length === 0;
+                    
+                    if (allExplorersOnCooldown) {
+                        startAdventureBtn.textContent = 'On Cooldown';
+                    } else {
+                        startAdventureBtn.textContent = 'No Explorers Available';
+                    }
                 }
             } else {
                 startAdventureBtn.textContent = 'Start Adventure';
@@ -588,7 +601,7 @@ export class AdventureHubPage extends BasePage {
         infoBox.innerHTML = `
             <p>
             <i class="fa fa-info-circle"></i>
-            Your heroes are on cooldown. Wait 3 hours after completing an adventure before starting a new one.
+            Your explorers are on cooldown. Wait 3 hours after completing an adventure before starting a new one.
             </p>
         `;
         
@@ -610,19 +623,6 @@ export class AdventureHubPage extends BasePage {
                 ${this.getExplorerSelectionHTML()}
             </div>
             
-            ${!hasScout ? `
-                <div class="page-section scout-purchase">
-                    <h3><i class="fas fa-user-plus"></i> Purchase Starting Scout</h3>
-                    <p class="scout-description">Don't have heroes? Purchase a starting scout to begin exploring!</p>
-                    <div class="scout-cost">
-                        <i class="fas fa-coins"></i> Cost: ${scoutCost} SONIC
-                    </div>
-                    <button class="btn btn-primary purchase-scout-btn">
-                        <i class="fas fa-shopping-cart"></i> Purchase Scout
-                    </button>
-                </div>
-            ` : ''}
-            
             <div class="page-section">
                 <h2>Start Adventure</h2>
                 <button class="btn btn-primary btn-large start-adventure-btn" ${!hasScout && ownedHeroes.length === 0 ? 'disabled' : ''}>
@@ -633,59 +633,73 @@ export class AdventureHubPage extends BasePage {
     }
 
     getExplorerSelectionHTML() {
-        const { hasScout, scoutAvailable, ownedHeroes } = this.state;
+        const { hasScout, scoutAvailable, ownedHeroes, scoutCost } = this.state;
         
         let html = '<div class="explorer-selection">';
         
-        // Scout option
-        if (hasScout) {
+        // If no scout and no heroes, show purchase option
+        if (!hasScout && ownedHeroes.length === 0) {
             html += `
-                <label class="explorer-option ${!scoutAvailable ? 'disabled' : ''}">
-                    <input type="radio" name="explorer" value="scout" class="hero-select-radio" ${scoutAvailable ? 'checked' : 'disabled'}>
+                <div class="scout-purchase-option">
                     <div class="explorer-card">
                         <div class="explorer-icon">
-                            <i class="fas fa-user"></i>
+                            <i class="fas fa-user-plus"></i>
                         </div>
                         <div class="explorer-info">
-                            <h4>Starting Scout</h4>
-                            <p class="explorer-status">${scoutAvailable ? '✓ Available' : '⏰ On Cooldown'}</p>
+                            <h4>Purchase Starting Scout</h4>
+                            <p class="explorer-description">Don't have heroes? Purchase a starting scout to begin exploring!</p>
+                            <div class="scout-cost">
+                                <i class="fas fa-coins"></i> Cost: ${scoutCost} SONIC
+                            </div>
                         </div>
                     </div>
-                </label>
+                    <button class="btn btn-primary purchase-scout-btn">
+                        <i class="fas fa-shopping-cart"></i> Purchase Scout
+                    </button>
+                </div>
             `;
-        }
-        
-        // Hero options
-        if (ownedHeroes.length > 0) {
-            ownedHeroes.forEach(hero => {
-                const now = Math.floor(Date.now() / 1000);
-                const cooldownRemaining = hero.availableAt > now ? hero.availableAt - now : 0;
-                const cooldownText = cooldownRemaining > 0 ? `⏰ ${this.formatTime(cooldownRemaining)}` : '✓ Available';
-                
+        } else {
+            // Scout option
+            if (hasScout) {
                 html += `
-                    <label class="explorer-option ${!hero.available ? 'disabled' : ''}">
-                        <input type="radio" name="explorer" value="hero" data-hero-id="${hero.id}" class="hero-select-radio" ${hero.available ? '' : 'disabled'}>
+                    <label class="explorer-option ${!scoutAvailable ? 'disabled' : ''}">
+                        <input type="radio" name="explorer" value="scout" class="hero-select-radio" ${scoutAvailable ? 'checked' : 'disabled'}>
                         <div class="explorer-card">
                             <div class="explorer-icon">
-                                <i class="fas fa-user-shield"></i>
+                                <i class="fas fa-user"></i>
                             </div>
                             <div class="explorer-info">
-                                <h4>Hero #${hero.id}</h4>
-                                <p class="explorer-status">${cooldownText}</p>
+                                <h4>Starting Scout</h4>
+                                <p class="explorer-status">${scoutAvailable ? '✓ Available' : '⏰ On Cooldown'}</p>
                             </div>
                         </div>
                     </label>
                 `;
-            });
-        }
-        
-        if (!hasScout && ownedHeroes.length === 0) {
-            html += `
-                <div class="empty-state">
-                    <i class="fas fa-user-slash fa-2x"></i>
-                    <p>No explorers available. Purchase a scout or mint a hero!</p>
-                </div>
-            `;
+            }
+            
+            // Hero options
+            if (ownedHeroes.length > 0) {
+                ownedHeroes.forEach(hero => {
+                    const now = Math.floor(Date.now() / 1000);
+                    const cooldownRemaining = hero.availableAt > now ? hero.availableAt - now : 0;
+                    const cooldownText = cooldownRemaining > 0 ? `⏰ ${this.formatTime(cooldownRemaining)}` : '✓ Available';
+                    
+                    html += `
+                        <label class="explorer-option ${!hero.available ? 'disabled' : ''}">
+                            <input type="radio" name="explorer" value="hero" data-hero-id="${hero.id}" class="hero-select-radio" ${hero.available ? '' : 'disabled'}>
+                            <div class="explorer-card">
+                                <div class="explorer-icon">
+                                    <i class="fas fa-user-shield"></i>
+                                </div>
+                                <div class="explorer-info">
+                                    <h4>Hero #${hero.id}</h4>
+                                    <p class="explorer-status">${cooldownText}</p>
+                                </div>
+                            </div>
+                        </label>
+                    `;
+                });
+            }
         }
         
         html += '</div>';

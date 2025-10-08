@@ -117,6 +117,32 @@
     margin-top: var(--spacing-md);
 }
 
+.scout-purchase-option {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+    text-align: center;
+    grid-column: 1 / -1;
+}
+
+.scout-purchase-option .explorer-card {
+    width: 100%;
+    max-width: 300px;
+}
+
+.scout-purchase-option .explorer-description {
+    color: var(--text-muted);
+    font-size: var(--font-size-sm);
+    margin: 0.5rem 0;
+}
+
+.scout-purchase-option .scout-cost {
+    color: var(--color-primary);
+    font-weight: 600;
+    margin: 0.5rem 0;
+}
+
 .explorer-option {
     cursor: pointer;
     display: block;
