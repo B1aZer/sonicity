@@ -70,6 +70,8 @@ export class AdventureHubPage extends BasePage {
             
             // Load initial data
             await this.loadAdventureData();
+            
+            // Setup event listeners after UI is rendered
             this.setupEventListeners();
             
             Logger.info('Adventure Hub page initialized successfully');
@@ -257,24 +259,27 @@ export class AdventureHubPage extends BasePage {
     }
 
     setupEventListeners() {
-        // Use BasePage event management system to prevent duplicate handlers
+        Logger.info('Setting up event listeners');
         
-        // Purchase scout button
-        this.addEventListener('#purchase-scout-btn', 'click', async (e) => {
+        // Use BasePage event management system with event delegation (like ShopPage)
+        // This works even after HTML updates since it's attached to parent elements
+        
+        // Purchase scout button (event delegation)
+        this.addEventListener('.purchase-scout-btn', 'click', async (e) => {
             await this.handlePurchaseScout();
         });
         
-        // Start adventure button
-        this.addEventListener('#start-adventure-btn', 'click', async (e) => {
+        // Start adventure button (event delegation)
+        this.addEventListener('.start-adventure-btn', 'click', async (e) => {
             await this.handleStartAdventure();
         });
         
-        // Complete adventure button
-        this.addEventListener('#complete-adventure-btn', 'click', async (e) => {
+        // Complete adventure button (event delegation)
+        this.addEventListener('.complete-adventure-btn', 'click', async (e) => {
             await this.handleCompleteAdventure();
         });
         
-        // Hero selection
+        // Hero selection (event delegation)
         this.addEventListener('.hero-select-radio', 'change', (e) => {
             const useScout = e.target.value === 'scout';
             const heroId = useScout ? 0 : parseInt(e.target.dataset.heroId);
@@ -315,11 +320,13 @@ export class AdventureHubPage extends BasePage {
         // Listen for adventure started events
         this.contracts.adventureSystem.onAdventureStarted((data) => {
             Logger.info('Adventure started event:', data);
-            this.loadAdventureData();
+            this.loadAdventureData(); // Event listeners persist due to event delegation
         });
         
         // Note: All transaction results are now handled directly in the respective methods
         // following the same simple pattern as other pages (StakeHubPage, ShopPage, CityPage)
+        
+        Logger.info('Event listeners setup complete');
     }
 
     showTileResult(data) {
@@ -370,7 +377,7 @@ export class AdventureHubPage extends BasePage {
             // Show success modal
             this.modal.success('Starting scout purchased successfully!');
             
-            // Reload data
+            // Reload data (event listeners persist due to event delegation)
             await this.loadAdventureData();
         } catch (error) {
             // Close loading modal on error
@@ -395,7 +402,7 @@ export class AdventureHubPage extends BasePage {
             // Show success modal
             this.modal.success('Adventure started! Reveal tiles to discover what awaits...');
             
-            // Reload data
+            // Reload data (event listeners persist due to event delegation)
             await this.loadAdventureData();
         } catch (error) {
             // Close loading modal on error
@@ -415,8 +422,9 @@ export class AdventureHubPage extends BasePage {
             // Close loading modal
             loadingModal.close();
             
-            // Reload data to get updated state
+            // Reload data to get updated state and re-setup event listeners
             await this.loadAdventureData();
+            this.setupEventListeners();
             
             // Show result based on tile type
             this.showTileResult(result);
@@ -438,8 +446,9 @@ export class AdventureHubPage extends BasePage {
             // Close loading modal
             loadingModal.close();
             
-            // Reload data to get updated state
+            // Reload data to get updated state and re-setup event listeners
             await this.loadAdventureData();
+            this.setupEventListeners();
             
             // Show success modal with earned rewards
             this.modal.success(`Adventure complete! Earned: ${ethers.formatUnits(result.goldEarned, 0)} Gold, ${ethers.formatUnits(result.foodEarned, 0)} Food, ${ethers.formatUnits(result.diamondsEarned, 0)} Diamonds, ${ethers.formatUnits(result.repEarned, 0)} REP, ${result.relicsFound} Relics!`);
@@ -524,14 +533,14 @@ export class AdventureHubPage extends BasePage {
                     <div class="scout-cost">
                         <i class="fas fa-coins"></i> Cost: ${scoutCost} SONIC
                     </div>
-                    <button id="purchase-scout-btn" class="btn btn-primary">
+                    <button class="btn btn-primary purchase-scout-btn">
                         <i class="fas fa-shopping-cart"></i> Purchase Scout
                     </button>
                 </div>
             ` : ''}
             
             <div class="page-section">
-                <button id="start-adventure-btn" class="btn btn-primary btn-large" ${!hasScout && ownedHeroes.length === 0 ? 'disabled' : ''}>
+                <button class="btn btn-primary btn-large start-adventure-btn" ${!hasScout && ownedHeroes.length === 0 ? 'disabled' : ''}>
                     <i class="fas fa-play"></i> Start Adventure
                 </button>
             </div>
@@ -610,7 +619,7 @@ export class AdventureHubPage extends BasePage {
             
             <div class="page-section">
                 <div class="adventure-actions">
-                    <button id="complete-adventure-btn" class="btn btn-md btn-secondary">
+                    <button class="btn btn-md btn-secondary complete-adventure-btn">
                         Complete Adventure
                     </button>
                 </div>
