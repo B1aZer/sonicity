@@ -751,7 +751,7 @@ export class AdventureHubPage extends BasePage {
     render() {
         this.element.innerHTML = `
             <div class="page-container">
-                <h1 class="page-title"><i class="fas fa-map-marked-alt"></i> Adventure Hub</h1>
+                <h1 class="page-title">Adventure Hub</h1>
                 <p class="page-description">
                     Embark on dangerous expeditions to discover <strong>resources</strong>, <em>rare relics</em>, and face potential disasters. 
                     Each tile reveals new surprises - choose wisely when to continue or return!
