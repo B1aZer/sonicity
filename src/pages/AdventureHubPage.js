@@ -481,7 +481,14 @@ export class AdventureHubPage extends BasePage {
     }
 
     updateRewardsDisplay() {
-        const { goldCollected, foodCollected, diamondsCollected, repCollected, relicsFound } = this.state;
+        const { goldCollected, foodCollected, diamondsCollected, repCollected, relicsFound, tier } = this.state;
+        
+        // Update adventure mechanics display
+        const tierElement = this.element.querySelector('[data-state="tier"]');
+        
+        if (tierElement) {
+            tierElement.textContent = tier || 0;
+        }
         
         // Update the status values in the adventure rewards section
         const goldElement = this.element.querySelector('[data-state="goldCollected"]');
@@ -581,7 +588,7 @@ export class AdventureHubPage extends BasePage {
         infoBox.innerHTML = `
             <p>
             <i class="fa fa-info-circle"></i>
-            Your heroes are on cooldown. Wait 3 hours after completing an adventure before starting a new one, or purchase a starting scout to explore immediately.
+            Your heroes are on cooldown. Wait 3 hours after completing an adventure before starting a new one.
             </p>
         `;
         
@@ -596,14 +603,7 @@ export class AdventureHubPage extends BasePage {
         const { hasScout, scoutAvailable, scoutCost, ownedHeroes, tier, gridRows, gridCols } = this.state;
         
         return `
-            <div class="page-section">
-                <h2>Start New Adventure</h2>
-                <div class="adventure-info">
-                    <p><i class="fas fa-map"></i> Grid Size: ${gridRows}×${gridCols} (Tier ${tier})</p>
-                    <p><i class="fas fa-exclamation-triangle"></i> 15% chance of disaster per tile</p>
-                    <p><i class="fas fa-gem"></i> 5% chance of special rewards (Relics/REP)</p>
-                </div>
-            </div>
+       
             
             <div class="page-section">
                 <h2>Choose Explorer</h2>
@@ -756,6 +756,24 @@ export class AdventureHubPage extends BasePage {
                     Embark on dangerous expeditions to discover <strong>resources</strong>, <em>rare relics</em>, and face potential disasters. 
                     Each tile reveals new surprises - choose wisely when to continue or return!
                 </p>
+                
+                <div class="page-section">
+                    <h2>Adventure Mechanics</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-label">Current Tier:</span>
+                            <span class="status-value" data-state="tier">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Disaster Chance:</span>
+                            <span class="status-value">15%</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Special Chance:</span>
+                            <span class="status-value">5%</span>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="page-section">
                     <h2>Adventure Rewards</h2>
