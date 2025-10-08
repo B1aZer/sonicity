@@ -624,6 +624,7 @@ export class AdventureHubPage extends BasePage {
             ` : ''}
             
             <div class="page-section">
+                <h2>Start Adventure</h2>
                 <button class="btn btn-primary btn-large start-adventure-btn" ${!hasScout && ownedHeroes.length === 0 ? 'disabled' : ''}>
                     <i class="fas fa-play"></i> Start Adventure
                 </button>
