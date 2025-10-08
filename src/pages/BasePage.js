@@ -18,6 +18,7 @@ import { RelicNFTContract } from '../js/contracts/RelicNFTContract.js';
 import { Modal } from '../js/utils/modal.js';
 import Logger from '../js/utils/logger.js';
 import { ContractErrorHandler } from '../js/utils/contractErrorHandler.js';
+import { SimpleEventDelegation } from '../js/utils/SimpleEventDelegation.js';
 
 export class BasePage {
     constructor() {
@@ -55,6 +56,9 @@ export class BasePage {
         // Create the main element
         this.element = document.createElement('div');
         this.element.className = 'base-page';
+        
+        // Add simple event delegation alongside existing system (after element is created)
+        this.delegation = new SimpleEventDelegation(this.element);
         
         // Setup wallet event listener
         this.setupWalletListener();
@@ -311,6 +315,24 @@ export class BasePage {
     // Helper method to clear all event listeners before setting up new ones
     clearEventListeners() {
         this.removeEventListeners();
+    }
+
+    /**
+     * New declarative method - works with dynamic content automatically
+     * 
+     * Usage:
+     * this.on('.btn-primary', 'click', (e) => this.handleClick(e));
+     * this.on('.hero-select-radio', 'change', (e) => this.handleHeroChange(e));
+     */
+    on(selector, event, handler) {
+        this.delegation.on(selector, event, handler);
+    }
+
+    /**
+     * Remove delegated event handler
+     */
+    off(selector, event) {
+        this.delegation.off(selector, event);
     }
 
     removeEventListeners() {

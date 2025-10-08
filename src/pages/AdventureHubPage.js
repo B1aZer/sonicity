@@ -259,60 +259,45 @@ export class AdventureHubPage extends BasePage {
     }
 
     setupEventListeners() {
-        Logger.info('Setting up event listeners');
+        Logger.info('Setting up declarative event handlers');
         
-        // Use BasePage event management system with event delegation (like ShopPage)
-        // This works even after HTML updates since it's attached to parent elements
+        // Use new declarative approach - works with dynamic content automatically
+        // No more conditional checks, no more manual re-attachment needed!
         
-        // Purchase scout button (event delegation)
-        this.addEventListener('.purchase-scout-btn', 'click', async (e) => {
+        // Purchase scout button - works automatically when element appears
+        this.on('.purchase-scout-btn', 'click', async (e) => {
             await this.handlePurchaseScout();
         });
         
-        // Start adventure button (event delegation)
-        this.addEventListener('.start-adventure-btn', 'click', async (e) => {
+        // Start adventure button - works automatically when element appears
+        this.on('.start-adventure-btn', 'click', async (e) => {
             await this.handleStartAdventure();
         });
         
-        // Complete adventure button (event delegation)
-        this.addEventListener('.complete-adventure-btn', 'click', async (e) => {
+        // Complete adventure button - works automatically when element appears
+        this.on('.complete-adventure-btn', 'click', async (e) => {
             await this.handleCompleteAdventure();
         });
         
-        // Hero selection (event delegation)
-        this.addEventListener('.hero-select-radio', 'change', (e) => {
+        // Hero selection - works automatically when elements appear
+        this.on('.hero-select-radio', 'change', (e) => {
             const useScout = e.target.value === 'scout';
             const heroId = useScout ? 0 : parseInt(e.target.dataset.heroId);
             this.setState({ useScout, selectedHeroId: heroId });
         });
         
-        // Tile click handlers (using event delegation on base element)
-        // This works even after HTML updates since it's attached to this.element
-        this.element.addEventListener('click', async (e) => {
-            const tile = e.target.closest('.grid-tile.can-reveal');
-            if (tile) {
+        // Tile clicks - works automatically with dynamic grid
+        this.on('.grid-tile.can-reveal', 'click', async (e) => {
+            const tileIndex = parseInt(e.currentTarget.dataset.tileIndex, 10);
+            if (!isNaN(tileIndex)) {
                 Logger.info('Tile clicked:', {
-                    tileIndex: tile.dataset.tileIndex,
-                    tileClasses: tile.className,
+                    tileIndex: tileIndex,
+                    tileClasses: e.currentTarget.className,
                     hasActiveAdventure: this.state.hasActiveAdventure
                 });
-                
-                const tileIndex = parseInt(tile.dataset.tileIndex, 10);
-                if (!isNaN(tileIndex)) {
-                    await this.handleRevealTile(tileIndex);
-                } else {
-                    Logger.warn('Invalid tile index:', tile.dataset.tileIndex);
-                }
+                await this.handleRevealTile(tileIndex);
             } else {
-                // Debug: log what was clicked
-                const clickedTile = e.target.closest('.grid-tile');
-                if (clickedTile) {
-                    Logger.info('Clicked non-revealable tile:', {
-                        tileIndex: clickedTile.dataset.tileIndex,
-                        tileClasses: clickedTile.className,
-                        hasActiveAdventure: this.state.hasActiveAdventure
-                    });
-                }
+                Logger.warn('Invalid tile index:', e.currentTarget.dataset.tileIndex);
             }
         });
         
@@ -320,7 +305,7 @@ export class AdventureHubPage extends BasePage {
         // Listen for adventure started events
         this.contracts.adventureSystem.onAdventureStarted((data) => {
             Logger.info('Adventure started event:', data);
-            this.loadAdventureData(); // Event listeners persist due to event delegation
+            this.loadAdventureData(); // No need to re-setup event handlers!
         });
         
         // Note: All transaction results are now handled directly in the respective methods
@@ -377,7 +362,7 @@ export class AdventureHubPage extends BasePage {
             // Show success modal
             this.modal.success('Starting scout purchased successfully!');
             
-            // Reload data (event listeners persist due to event delegation)
+            // Reload data - event handlers automatically work with new content!
             await this.loadAdventureData();
         } catch (error) {
             // Close loading modal on error
@@ -402,7 +387,7 @@ export class AdventureHubPage extends BasePage {
             // Show success modal
             this.modal.success('Adventure started! Reveal tiles to discover what awaits...');
             
-            // Reload data (event listeners persist due to event delegation)
+            // Reload data - event handlers automatically work with new content!
             await this.loadAdventureData();
         } catch (error) {
             // Close loading modal on error
