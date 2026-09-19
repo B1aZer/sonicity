@@ -1,196 +1,67 @@
-## why game is different
+# Sonicity
 
-1. Easy to access. Browser + wallet all you need similar to defi. BUT its an actual game, not steam client
-2. Build from blockchain as ground to top, meaning it aims to be robust, distrubute and allow pvp completely on blockchain
-3. Build on defi primiteves and aims to completely incorporate defi into game
-4. Fun
-5. You can actually make profit
+A browser city-builder and PvP strategy game whose state lives on-chain, on the
+[Sonic](https://www.soniclabs.com/) network. A browser and a wallet are all a player needs: buildings,
+heroes, tactics and battles are contracts, and the Three.js client is a view onto them.
 
-## ff
+Built solo between April and October 2025: about 9,000 lines of Solidity across 17 contracts, and
+about 27,000 lines of client JavaScript.
 
-npx hardhat run scripts/fast-forward.js --network localhost
+> **Assets are not included.** 3D models, textures, images, music and fonts were bought or licensed
+> and can't be redistributed, so they were removed from the whole history. The code is here; to run the
+> client you'd supply your own assets at the same paths. Source links for the packs used are in
+> [`docs/dev-notes.md`](docs/dev-notes.md).
 
-## gtp convo
+## What's in it
 
-python split_conversation.py initial-conept-conversation.txt
+**Contracts** (`contracts/contracts/`, Hardhat)
 
-# Sonicity - 3D City Building Game
+- `GameState`: central player state and resources
+- `GridBuildings`, `DistrictBuildings`: plot-level buildings (houses, farms, diamond stations, rep
+  forges, yield stations) and city-level infrastructure
+- `Altar`: stake NFTs to create buildings
+- `BattleSystem`, `MatchmakingSystem`, `AdventureSystem`: hero PvP, matchmaking, and PvE adventures
+- `HeroNFT`, `TacticsNFT`, `RelicNFT`, `CosmeticItems`: heroes, battle tactics, relics, cosmetics
+- `SonicityNFT`, `SonicityFarm`, `SonicityDiamond`, `SonicityRep`, `SonicityYieldNFT`: building NFTs
+- `SonicityArtProxy`: metadata/art proxy
 
-A 3D city building game where players can construct and manage a city with various buildings and resources.
+Deployment order and cross-contract wiring are in [`contracts/README.md`](contracts/README.md).
+Tests are in `contracts/test/`.
 
-## Features
+**Client** (`src/`, Vite + Three.js + ethers v6)
 
-- 3D city building with Three.js
-- Resource management (electricity and water)
-- Building placement and management
-- Income generation from functional buildings
-- Bulldoze functionality to remove buildings
+- `src/js/`: scene and grid managers, building placement, grass/river/trees, fog and particles, one binding class per contract
+- `src/pages/`: one page per building (City Hall, Barracks, Tavern, Scout Guild, Adventure Hub, ...)
 
-## Start
+**Design docs** (`docs/`): economy iterations, game loop, PRD, contract split plan.
 
-nvm use v20
-npm run dev
+## Running locally
 
+Node 20.
+
+```bash
+# contracts: local chain + deploy
 cd contracts
-npx hardhat node
-npm run deploy
+npm install
+cp env.example .env        # fill in your own values
+npx hardhat node           # or: npm run anvil:sonic (Anvil fork of Sonic)
+npm run deploy             # deploys all contracts and writes addresses for the client
 
-## old
+# client
+cd ..
+npm install
+npm run dev
+```
 
-npx hardhat run scripts/deploy.js --network localhost
+Testnet and mainnet deploy scripts are in `contracts/package.json` (`deploy:testnet`,
+`deploy:mainnet`); they read `PRIVATE_KEY` from `contracts/.env`.
 
-npx hardhat run scripts/approveCollection.js --network localhost 
+## Controls
 
-./scripts/update-addresses.sh
+- Left click a building to open its page
+- Right drag to orbit, scroll to zoom
+- `D` toggles the debug GUI, `P` the performance monitor
 
-## Setup and Installation
+## License
 
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/sonicity.git
-   cd sonicity
-   ```
-
-2. Install dependencies:
-   ```
-   npm install
-   ```
-
-3. Start the development server:
-   ```
-   npm start
-   ```
-
-4. Open your browser and navigate to:
-   ```
-   http://localhost:8080
-   ```  
-
-## Game Controls
-
-### Keyboard Shortcuts
-- **`D` key**: Toggle debug GUI (shows camera, lighting, renderer controls)
-- **`P` key**: Toggle performance monitor (shows FPS, GPU info, draw calls)
-
-### Mouse Controls
-- **Left Click**: Click on buildings to navigate to their pages
-- **Right Click + Drag**: Rotate camera around the scene
-- **Scroll Wheel**: Zoom in/out (constrained between 5-100 units)
-- **Middle Mouse + Drag**: Pan camera (if enabled)
-
-### Camera Constraints
-- **Zoom Range**: 5-100 units from target
-- **Rotation**: Limited to prevent going below ground level
-- **Target**: Always looks at City Hall position (0, 0, 0)
-
-### Building Interaction
-- **Click on Mine**: Navigate to mint page
-- **Click on City Hall**: Navigate to dashboard
-- **Click on Altar**: Navigate to altar page
-- **Click on House**: Navigate to house page
-- **Click on Farm**: Navigate to farm page
-- **Click on Shop**: Navigate to shop page
-- **Click on Workshop**: Navigate to workshop page
-- **Click on Barracks**: Navigate to barracks page
-- **Click on Scout Guild**: Navigate to scout guild page
-- **Click on Command Center**: Navigate to command center page
-
-### Debug Controls (when debug GUI is open)
-- **Camera**: Position X/Y/Z, FOV, Near/Far planes
-- **Sun Light**: Color, intensity, position, shadow casting
-- **Ambient Light**: Color, intensity
-- **Hemisphere Light**: Color, intensity
-- **Fog**: Color, near/far distances
-- **Sky**: Top/bottom colors, exponent
-- **Renderer**: Tone mapping exposure
-- **Shadow Map**: Enable/disable, shadow map type
-- **Grid**: Show/hide grid helper
-
-## Building Types
-
-- **House**: Generates income when functional (needs power and water)
-- **Shop**: Consumes resources
-- **Power Plant**: Generates electricity with a range effect
-- **Water Tower**: Generates water with a range effect
-
-## Development Notes
-
-- The game uses ES modules for JavaScript
-- Three.js is used for 3D rendering
-- Assets are loaded from zip files containing FBX models and textures
-
-## Future Enhancements
-
-- NFT collection integration
-- Liquidity provider rewards
-- Bribe markets
-- Team-based gameplay
-- Weekly rewards based on coalition performance
-
-## Credits
-
-- 3D models from various sources (see Concept.md for details)
-- Inspired by city-building games like SimCity
-
-## Tutorials
-
-- https://www.youtube.com/watch?v=Ol3pexLM6_k&list=PLtzt35QOXmkJ9unmoeA5gXHcscQHJVQpW&index=10
-
-## music
-
-https://www.fab.com/listings/29645efb-1b5a-467a-82eb-3321df823e58
-
-## Models
-
-- https://www.fab.com/listings/c4c8a84a-6c63-4cf0-9e44-fb99a4c5b367
-- https://www.fab.com/listings/8cde1ff2-a4e0-47ce-8bce-399226c71dd9
-- https://www.fab.com/listings/3e7ec8b1-b604-437c-94a2-9eb94d25441f
-
-## Art
-
-- https://app.leonardo.ai/image-generation
-- https://www.meshy.ai/workspace
-
-## conecpt #2
-
-- each nft collection receives whiteelist spot and minimal gold. TEAM 1
-- Certain buildings could: Increase LP rewards multipliers.Produce extra Gold. Unlock bribe markets (e.g., build a "Bribe Chamber" to accept external bribes officially 😆).
-- allow bribes from nft creates. They WOULD PAY to for their team to win
-- If players don't build or LP, gold slowly decays
-- every week the coalition with the most n receives feem rewards AND voting power by staking nft
-- ?(luidity providers vote where rewards should go)
-- If staking rewards are reinvested into LP or city upgrades, it strengthens the winning collection even more.
-
-## Game concept
-
-- create wl for fnt collection
-- allow to mint basic materials
-- recive gold
-- receive diamonds for staking LP
-- diamonds either erc20 for staking and receiveng fees
-- diamond or erc721 for voting and receiving bribes??
-- Stake fdiamonds and receive % of the revenue/bribrd/shit
-- Revenue ???
-- Each nft will work o ntheir own clan and they comete for biggere revenue
-
-
-## Demo games
-
-- [citybuidler3d](https://dgreenheck.github.io/simcity-threejs-clone/)
-
-## Blokchain dev
-
-- [best cources](https://www.youtube.com/watch?v=cMWL12Jevbg&list=PLvfQp12V0hS02sJXKPJwqTTBClwPnPEqr&index=4)
-- [crpytozombies](https://cryptozombies.io/en/lesson/10/chapter/4)
-
-## Asset creator
-
-- https://www.meshy.ai/workspace
-- from
-- https://blog.pocketcitygame.com/isometric-city-art-first-look/
-
-## Assets
-
-- 
-- https://www.cgtrader.com/3d-models/exterior/cityscape/city-low-poly-4-tile-pack
-- https://free3d.com/3d-model/isometric-low-poly-city-cartoon-buildings-cars-and-forest-pack-415.html
+MIT, for the code. See [LICENSE](LICENSE).
