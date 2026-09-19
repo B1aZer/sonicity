@@ -7,6 +7,11 @@ heroes, tactics and battles are contracts, and the Three.js client is a view ont
 Built solo between April and October 2025: about 9,000 lines of Solidity across 17 contracts, and
 about 27,000 lines of client JavaScript.
 
+<p align="center">
+  <a href="https://x.com/SolicityFi/status/1971239223564042311"><img src="docs/media/trailer-preview.gif" width="720" alt="Sonicity trailer, sped up: connect wallet, testnet faucet, unlock tech, start battle"></a>
+</p>
+<p align="center"><em>The trailer at 5x speed. Click to watch the full 80-second version on X.</em></p>
+
 > **Assets are not included.** 3D models, textures, images, music and fonts were bought or licensed
 > and can't be redistributed, so they were removed from the whole history. The code is here; to run the
 > client you'd supply your own assets at the same paths. Source links for the packs used are in
